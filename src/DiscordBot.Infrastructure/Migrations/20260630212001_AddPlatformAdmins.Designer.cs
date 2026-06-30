@@ -12,7 +12,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace DiscordBot.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    [Migration("20260630210409_AddPlatformAdmins")]
+    [Migration("20260630212001_AddPlatformAdmins")]
     partial class AddPlatformAdmins
     {
         /// <inheritdoc />
