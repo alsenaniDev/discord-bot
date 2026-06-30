@@ -1,0 +1,17 @@
+.callback-card {
+  min-width: min(420px, 100%);
+  text-align: center;
+}
+
+.callback-error {
+  padding: 1rem 0;
+}
+
+.callback-error .btn {
+  margin-top: 1rem;
+}
+
+.empty-icon {
+  font-size: 2rem;
+  margin-bottom: 0.75rem;
+}

@@ -1,0 +1,14 @@
+<div class="page-center">
+  <div class="card login-card scale-in">
+    <div class="login-badge"><app-ui-icon name="bot" size="lg"></app-ui-icon></div>
+    <h1>{{ 'auth.loginTitle' | translate }}</h1>
+    <p class="muted">{{ 'auth.loginSubtitle' | translate }}</p>
+
+    <button class="btn btn-discord" (click)="loginWithDiscord()" [disabled]="loading">
+      <span class="spinner inline" *ngIf="loading"></span>
+      {{ (loading ? 'auth.redirecting' : 'auth.loginButton') | translate }}
+    </button>
+
+    <div class="alert alert-error" *ngIf="error">{{ error }}</div>
+  </div>
+</div>

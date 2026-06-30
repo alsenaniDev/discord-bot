@@ -1,0 +1,14 @@
+<div class="page-center">
+  <div class="card callback-card">
+    <app-loading-state *ngIf="loading && !error" [message]="'auth.callbackLoading' | translate"></app-loading-state>
+
+    <app-empty-state
+      *ngIf="error"
+      icon="⚠️"
+      [title]="'auth.callbackError' | translate"
+      [description]="error"
+    >
+      <a routerLink="/login" class="btn btn-primary">{{ 'auth.loginButton' | translate }}</a>
+    </app-empty-state>
+  </div>
+</div>

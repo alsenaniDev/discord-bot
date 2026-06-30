@@ -1,0 +1,13 @@
+.page-content {
+  max-width: 760px;
+}
+
+@media (max-width: 640px) {
+  .card-section-header {
+    flex-direction: column;
+  }
+
+  .card-section-header .btn {
+    width: 100%;
+  }
+}

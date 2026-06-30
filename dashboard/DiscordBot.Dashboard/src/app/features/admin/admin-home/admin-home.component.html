@@ -1,0 +1,57 @@
+<div class="page-content">
+  <app-loading-state *ngIf="loading" [message]="'admin.statsLoading' | translate"></app-loading-state>
+
+  <app-empty-state
+    *ngIf="!loading && error"
+    icon="⚠️"
+    [title]="'admin.statsError' | translate"
+    [description]="error"
+  >
+    <button type="button" class="btn btn-primary btn-sm" (click)="loadStats()">{{ 'common.tryAgain' | translate }}</button>
+  </app-empty-state>
+
+  <ng-container *ngIf="!loading && !error && stats">
+    <section class="stats-grid">
+      <article class="stat-card card">
+        <span class="stat-label">{{ 'admin.totalGuilds' | translate }}</span>
+        <strong class="stat-value">{{ stats.totalGuilds }}</strong>
+      </article>
+      <article class="stat-card card">
+        <span class="stat-label">{{ 'admin.activeGuilds' | translate }}</span>
+        <strong class="stat-value">{{ stats.activeGuilds }}</strong>
+      </article>
+      <article class="stat-card card">
+        <span class="stat-label">{{ 'admin.totalUsers' | translate }}</span>
+        <strong class="stat-value">{{ stats.totalUsers }}</strong>
+      </article>
+      <article class="stat-card card">
+        <span class="stat-label">{{ 'admin.totalTickets' | translate }}</span>
+        <strong class="stat-value">{{ stats.totalTickets }}</strong>
+      </article>
+      <article class="stat-card card">
+        <span class="stat-label">{{ 'admin.openTickets' | translate }}</span>
+        <strong class="stat-value">{{ stats.openTickets }}</strong>
+      </article>
+    </section>
+
+    <section class="card detail-card" *ngIf="stats.planCounts.length > 0">
+      <h2>{{ 'admin.planCounts' | translate }}</h2>
+      <div class="detail-grid">
+        <div class="detail-item" *ngFor="let plan of stats.planCounts">
+          <span class="detail-label">{{ plan.planName }}</span>
+          <strong>{{ plan.count }}</strong>
+        </div>
+      </div>
+    </section>
+
+    <section class="card detail-card" *ngIf="stats.moduleUsageCounts.length > 0">
+      <h2>{{ 'admin.moduleUsage' | translate }}</h2>
+      <div class="detail-grid">
+        <div class="detail-item" *ngFor="let module of stats.moduleUsageCounts">
+          <span class="detail-label">{{ module.moduleName }}</span>
+          <strong>{{ module.enabledGuildCount }} {{ 'common.guilds' | translate }}</strong>
+        </div>
+      </div>
+    </section>
+  </ng-container>
+</div>

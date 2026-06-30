@@ -1,0 +1,119 @@
+<div class="page-content">
+  <app-loading-state *ngIf="loading" [message]="'moderation.loading' | translate"></app-loading-state>
+
+  <app-empty-state
+    *ngIf="!loading && error"
+    icon="⚠️"
+    [title]="'moderation.loadError' | translate"
+    [description]="error"
+  >
+    <button type="button" class="btn btn-primary btn-sm" (click)="loadData()">{{ 'common.tryAgain' | translate }}</button>
+  </app-empty-state>
+
+  <ng-container *ngIf="!loading && !error">
+    <section class="card filters-card">
+      <h2>{{ 'moderation.filters' | translate }}</h2>
+      <div class="filters-grid">
+        <label>
+          {{ 'moderation.targetUserId' | translate }}
+          <input type="text" [(ngModel)]="filters.targetUserId" placeholder="Discord user snowflake" />
+        </label>
+        <label>
+          {{ 'moderation.type' | translate }}
+          <select [(ngModel)]="filters.type">
+            <option value="">{{ 'moderation.allTypes' | translate }}</option>
+            <option value="Warn">{{ 'moderation.warn' | translate }}</option>
+            <option value="Kick">{{ 'moderation.kick' | translate }}</option>
+            <option value="Clear">{{ 'moderation.clear' | translate }}</option>
+          </select>
+        </label>
+        <label>
+          {{ 'moderation.from' | translate }}
+          <input type="date" [(ngModel)]="filters.from" />
+        </label>
+        <label>
+          {{ 'moderation.to' | translate }}
+          <input type="date" [(ngModel)]="filters.to" />
+        </label>
+      </div>
+      <div class="filter-actions">
+        <button type="button" class="btn btn-primary btn-sm" (click)="applyFilters()">{{ 'common.apply' | translate }}</button>
+        <button type="button" class="btn btn-secondary btn-sm" (click)="clearFilters()">{{ 'common.clear' | translate }}</button>
+      </div>
+    </section>
+
+    <section class="card table-card">
+      <div class="section-header">
+        <h2>{{ 'moderation.warnings' | translate }}</h2>
+        <p class="muted small">{{ warnings.length }}</p>
+      </div>
+
+      <div class="empty-inline" *ngIf="warnings.length === 0">
+        <p class="muted small">{{ 'moderation.noWarnings' | translate }}</p>
+      </div>
+
+      <div class="table-wrap" *ngIf="warnings.length > 0">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>{{ 'moderation.target' | translate }}</th>
+              <th>{{ 'moderation.moderator' | translate }}</th>
+              <th>{{ 'moderation.reason' | translate }}</th>
+              <th>{{ 'moderation.date' | translate }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let warning of warnings">
+              <td class="mono">{{ warning.targetDiscordUserId }}</td>
+              <td class="mono">{{ warning.moderatorDiscordUserId }}</td>
+              <td>{{ warning.reason }}</td>
+              <td>{{ warning.createdAt | date: 'medium' }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="card table-card">
+      <div class="section-header">
+        <h2>{{ 'moderation.cases' | translate }}</h2>
+        <p class="muted small">{{ cases.length }}</p>
+      </div>
+
+      <div class="empty-inline" *ngIf="cases.length === 0">
+        <p class="muted small">{{ 'moderation.noCases' | translate }}</p>
+      </div>
+
+      <div class="table-wrap" *ngIf="cases.length > 0">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>{{ 'moderation.type' | translate }}</th>
+              <th>{{ 'moderation.target' | translate }}</th>
+              <th>{{ 'moderation.moderator' | translate }}</th>
+              <th>{{ 'moderation.reason' | translate }}</th>
+              <th>{{ 'moderation.details' | translate }}</th>
+              <th>{{ 'moderation.date' | translate }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let item of cases">
+              <td>
+                <span class="badge">{{ caseTypeLabel(item.type) | translate }}</span>
+              </td>
+              <td class="mono">{{ item.targetDiscordUserId || '—' }}</td>
+              <td class="mono">{{ item.moderatorDiscordUserId }}</td>
+              <td>{{ item.reason || '—' }}</td>
+              <td class="mono">
+                <ng-container *ngIf="item.messageCount">{{ item.messageCount }} msgs</ng-container>
+                <ng-container *ngIf="item.channelDiscordId"> · ch {{ item.channelDiscordId }}</ng-container>
+                <ng-container *ngIf="!item.messageCount && !item.channelDiscordId">—</ng-container>
+              </td>
+              <td>{{ item.createdAt | date: 'medium' }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </ng-container>
+</div>

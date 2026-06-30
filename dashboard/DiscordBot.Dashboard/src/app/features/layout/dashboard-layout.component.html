@@ -1,0 +1,117 @@
+<div class="dashboard-shell" [class.sidebar-open]="sidebarOpen">
+  <div class="sidebar-backdrop" (click)="closeSidebar()" *ngIf="sidebarOpen"></div>
+
+  <aside class="sidebar" aria-label="Main navigation">
+    <div class="sidebar-brand">
+      <span class="brand-mark"><app-ui-icon name="bot" size="sm"></app-ui-icon></span>
+      <div>
+        <strong>{{ 'common.appName' | translate }}</strong>
+        <span class="brand-tag">{{ 'common.dashboard' | translate }}</span>
+      </div>
+    </div>
+
+    <div class="server-switcher-wrap">
+      <app-server-switcher [guilds]="guilds" [selected]="selectedGuild"></app-server-switcher>
+    </div>
+
+    <nav class="sidebar-nav">
+      <a routerLink="/servers" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }" (click)="closeSidebar()">
+        <app-ui-icon name="servers" size="sm"></app-ui-icon>
+        {{ 'nav.servers' | translate }}
+      </a>
+
+      <ng-container *ngIf="user?.isAdmin">
+        <div class="nav-section-label">{{ 'nav.platformAdmin' | translate }}</div>
+        <a routerLink="/admin" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }" (click)="closeSidebar()">
+          <app-ui-icon name="admin" size="sm"></app-ui-icon>
+          {{ 'nav.adminOverview' | translate }}
+        </a>
+        <a routerLink="/admin/guilds" routerLinkActive="active" (click)="closeSidebar()">
+          <app-ui-icon name="guilds" size="sm"></app-ui-icon>
+          {{ 'nav.allGuilds' | translate }}
+        </a>
+        <a routerLink="/admin/users" routerLinkActive="active" (click)="closeSidebar()">
+          <app-ui-icon name="users" size="sm"></app-ui-icon>
+          {{ 'nav.users' | translate }}
+        </a>
+      </ng-container>
+
+      <ng-container *ngIf="showGuildNav">
+        <div class="nav-section-label">{{ selectedGuild?.name }}</div>
+        <a [routerLink]="['/guilds', selectedGuild!.id, 'overview']" routerLinkActive="active" (click)="closeSidebar()">
+          <app-ui-icon name="overview" size="sm"></app-ui-icon>
+          {{ 'common.overview' | translate }}
+        </a>
+        <a [routerLink]="['/guilds', selectedGuild!.id, 'settings']" routerLinkActive="active" (click)="closeSidebar()">
+          <app-ui-icon name="settings" size="sm"></app-ui-icon>
+          {{ 'common.settings' | translate }}
+        </a>
+        <a [routerLink]="['/guilds', selectedGuild!.id, 'tickets']" routerLinkActive="active" (click)="closeSidebar()">
+          <app-ui-icon name="tickets" size="sm"></app-ui-icon>
+          {{ 'common.tickets' | translate }}
+        </a>
+        <a [routerLink]="['/guilds', selectedGuild!.id, 'moderation']" routerLinkActive="active" (click)="closeSidebar()">
+          <app-ui-icon name="shield" size="sm"></app-ui-icon>
+          {{ 'nav.moderation' | translate }}
+        </a>
+        <a [routerLink]="['/guilds', selectedGuild!.id, 'modules']" routerLinkActive="active" (click)="closeSidebar()">
+          <app-ui-icon name="modules" size="sm"></app-ui-icon>
+          {{ 'common.modules' | translate }}
+        </a>
+        <a [routerLink]="['/guilds', selectedGuild!.id, 'subscription']" routerLinkActive="active" (click)="closeSidebar()">
+          <app-ui-icon name="subscription" size="sm"></app-ui-icon>
+          {{ 'common.subscription' | translate }}
+        </a>
+        <a [routerLink]="['/guilds', selectedGuild!.id, 'logs']" routerLinkActive="active" (click)="closeSidebar()">
+          <app-ui-icon name="logs" size="sm"></app-ui-icon>
+          {{ 'nav.logs' | translate }}
+        </a>
+        <a [routerLink]="['/guilds', selectedGuild!.id, 'reaction-roles']" routerLinkActive="active" (click)="closeSidebar()">
+          <app-ui-icon name="roles" size="sm"></app-ui-icon>
+          {{ 'nav.reactionRoles' | translate }}
+        </a>
+      </ng-container>
+    </nav>
+  </aside>
+
+  <div class="dashboard-main">
+    <header class="topbar">
+      <div class="topbar-start">
+        <button type="button" class="icon-btn menu-toggle" (click)="toggleSidebar()" [attr.aria-label]="'common.menu' | translate">
+          <app-ui-icon name="menu" size="sm"></app-ui-icon>
+        </button>
+        <div class="topbar-titles">
+          <app-breadcrumbs [items]="breadcrumbs"></app-breadcrumbs>
+          <h1>{{ pageTitleText || (pageTitleKey | translate: pageSubtitleParams) }}</h1>
+          <p class="muted small" *ngIf="pageSubtitleKey">{{ pageSubtitleKey | translate: pageSubtitleParams }}</p>
+        </div>
+      </div>
+
+      <div class="topbar-end">
+        <a
+          *ngIf="discordServerUrl"
+          [href]="discordServerUrl"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="btn btn-secondary btn-sm"
+        >
+          <app-ui-icon name="external" size="sm"></app-ui-icon>
+          <span class="hide-mobile">{{ 'common.openDiscord' | translate }}</span>
+        </a>
+
+        <div class="ds-dropdown notifications">
+          <button type="button" class="icon-btn" [attr.aria-label]="'common.notifications' | translate">
+            <app-ui-icon name="bell" size="sm"></app-ui-icon>
+          </button>
+        </div>
+
+        <app-language-switcher></app-language-switcher>
+        <app-profile-menu [user]="user" (logoutClick)="logout()"></app-profile-menu>
+      </div>
+    </header>
+
+    <main class="dashboard-content">
+      <router-outlet></router-outlet>
+    </main>
+  </div>
+</div>

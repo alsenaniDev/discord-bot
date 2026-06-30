@@ -1,0 +1,45 @@
+<div class="page-content">
+  <app-loading-state *ngIf="loading" [message]="'admin.usersLoading' | translate"></app-loading-state>
+
+  <app-empty-state
+    *ngIf="!loading && error"
+    icon="⚠️"
+    [title]="'admin.usersError' | translate"
+    [description]="error"
+  >
+    <button type="button" class="btn btn-primary btn-sm" (click)="loadUsers()">{{ 'common.tryAgain' | translate }}</button>
+  </app-empty-state>
+
+  <app-empty-state
+    *ngIf="!loading && !error && users.length === 0"
+    icon="👤"
+    [title]="'admin.noUsers' | translate"
+    [description]="'admin.noUsersHint' | translate"
+  ></app-empty-state>
+
+  <div class="card table-card" *ngIf="!loading && !error && users.length > 0">
+    <div class="table-wrap">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>{{ 'admin.username' | translate }}</th>
+            <th>{{ 'admin.discordUserId' | translate }}</th>
+            <th>{{ 'admin.lastLogin' | translate }}</th>
+            <th>{{ 'common.created' | translate }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let user of users">
+            <td>
+              <strong>{{ displayName(user) }}</strong>
+              <div class="muted small" *ngIf="user.globalName">@{{ user.username }}</div>
+            </td>
+            <td class="mono">{{ user.discordUserId }}</td>
+            <td>{{ user.lastLoginAt ? (user.lastLoginAt | date: 'medium') : '—' }}</td>
+            <td>{{ user.createdAt | date: 'medium' }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

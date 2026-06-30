@@ -1,0 +1,113 @@
+:root {
+  /* Brand */
+  --color-brand: #5865f2;
+  --color-brand-hover: #4752c4;
+  --color-brand-soft: rgba(88, 101, 242, 0.12);
+  --color-brand-secondary: #7289da;
+  --color-accent: #00b8a9;
+
+  /* Semantic aliases */
+  --color-bg: var(--color-bg-app);
+  --color-bg-surface: var(--color-bg-card);
+  --color-bg-surface-elevated: var(--color-bg-elevated);
+  --color-primary: var(--color-brand);
+  --color-danger: var(--color-error);
+  --color-danger-soft: var(--color-error-soft);
+  --color-text-primary: var(--color-text);
+  --color-text-on-brand: #ffffff;
+  --color-text-brand: #c4c9ff;
+  --color-text-success: #6ee7a0;
+  --color-text-warning: #ffd166;
+  --color-text-danger: #ff8a8e;
+  --color-text-info: #7dd3fc;
+
+  /* Surfaces — dark gaming SaaS shell */
+  --color-bg-app: #0b0c0e;
+  --color-bg-elevated: #121316;
+  --color-bg-panel: #181a1f;
+  --color-bg-card: #1e2026;
+  --color-bg-card-hover: #252830;
+  --color-bg-input: #121316;
+  --color-bg-input-disabled: #0f1012;
+  --color-bg-sidebar: #101114;
+  --color-bg-topbar: rgba(16, 17, 20, 0.85);
+
+  /* Borders */
+  --color-border: #2a2d35;
+  --color-border-strong: #363945;
+  --color-border-focus: var(--color-brand);
+
+  /* Text */
+  --color-text: #f2f3f5;
+  --color-text-secondary: #b5bac1;
+  --color-text-muted: #80848e;
+  --color-text-placeholder: #6b7280;
+  --color-text-inverse: #0b0c0e;
+
+  /* Status */
+  --color-success: #23a559;
+  --color-success-soft: rgba(35, 165, 89, 0.15);
+  --color-warning: #f0b232;
+  --color-warning-soft: rgba(240, 178, 50, 0.15);
+  --color-error: #da373c;
+  --color-error-soft: rgba(218, 55, 60, 0.15);
+  --color-info: #00a8fc;
+  --color-info-soft: rgba(0, 168, 252, 0.12);
+
+  /* Typography */
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  --font-ar: 'Noto Sans Arabic', 'Inter', sans-serif;
+  --font-mono: ui-monospace, 'SF Mono', Menlo, Monaco, Consolas, monospace;
+
+  --text-xs: 0.75rem;
+  --text-sm: 0.8125rem;
+  --text-base: 0.9375rem;
+  --text-lg: 1.0625rem;
+  --text-xl: 1.25rem;
+  --text-2xl: 1.5rem;
+  --text-3xl: 1.875rem;
+
+  --leading-tight: 1.25;
+  --leading-normal: 1.5;
+  --leading-relaxed: 1.65;
+
+  /* Spacing */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-10: 2.5rem;
+  --space-12: 3rem;
+
+  /* Radius */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 18px;
+  --radius-full: 9999px;
+
+  /* Shadows */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.24);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.28);
+  --shadow-lg: 0 12px 40px rgba(0, 0, 0, 0.4);
+  --shadow-glow: 0 0 0 1px rgba(88, 101, 242, 0.25), 0 8px 24px rgba(88, 101, 242, 0.12);
+
+  /* Layout */
+  --sidebar-width: 272px;
+  --topbar-height: 64px;
+  --content-max-width: 1200px;
+
+  /* Motion */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --duration-fast: 150ms;
+  --duration-normal: 250ms;
+  --duration-slow: 400ms;
+
+  /* Toggle */
+  --toggle-track-off: var(--color-border-strong);
+  --toggle-track-on: var(--color-brand);
+  --toggle-thumb: var(--color-text-primary);
+}

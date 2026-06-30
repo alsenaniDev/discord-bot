@@ -1,0 +1,37 @@
+# Discord Bot Platform — Angular dashboard (Railway static)
+# Build context: repository root
+# Set build arg API_URL to your Railway API public URL before deploy.
+
+FROM node:20-alpine AS build
+WORKDIR /app
+
+ARG API_URL=https://api.your-domain.com
+ENV API_URL=${API_URL}
+
+COPY dashboard/DiscordBot.Dashboard/package.json dashboard/DiscordBot.Dashboard/package-lock.json* ./
+RUN npm ci
+
+COPY dashboard/DiscordBot.Dashboard/ .
+
+RUN node -e "\
+  const fs = require('fs');\
+  const url = process.env.API_URL;\
+  const path = 'src/environments/environment.ts';\
+  let content = fs.readFileSync(path, 'utf8');\
+  content = content.replace(/apiUrl:\\s*'[^']*'/, \"apiUrl: '\" + url + \"'\");\
+  fs.writeFileSync(path, content);"
+
+RUN npm run build
+
+FROM nginx:1.27-alpine AS runtime
+
+COPY deploy/railway/nginx.dashboard.conf /etc/nginx/templates/default.conf.template
+
+ENV NGINX_ENVSUBST_OUTPUT_DIR=/etc/nginx/conf.d
+ENV PORT=8080
+
+COPY --from=build /app/dist/discord-bot.dashboard /usr/share/nginx/html
+
+EXPOSE 8080
+
+CMD ["/docker-entrypoint.sh"]

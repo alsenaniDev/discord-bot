@@ -1,0 +1,12 @@
+# Example Railway service config for the Angular dashboard (Option A).
+# Set build arg API_URL in Railway → Variables → Build:
+#   API_URL=https://YOUR_API_SERVICE.up.railway.app
+
+[build]
+builder = "DOCKERFILE"
+dockerfilePath = "deploy/railway/Dockerfile.dashboard"
+
+[deploy]
+healthcheckPath = "/"
+healthcheckTimeout = 60
+restartPolicyType = "ON_FAILURE"

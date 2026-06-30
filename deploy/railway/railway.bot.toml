@@ -1,0 +1,11 @@
+# Example Railway service config for the Bot worker.
+# Disable public networking in Railway UI (Settings → Networking → Public Networking: Off).
+
+[build]
+builder = "DOCKERFILE"
+dockerfilePath = "deploy/railway/Dockerfile.bot"
+
+[deploy]
+# Worker has no HTTP endpoint; Railway keeps the process running.
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 10

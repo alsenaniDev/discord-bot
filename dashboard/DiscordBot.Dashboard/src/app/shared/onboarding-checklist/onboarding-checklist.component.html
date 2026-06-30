@@ -1,0 +1,60 @@
+<div class="checklist-card card slide-up" *ngIf="checklist">
+  <div class="checklist-header" *ngIf="showProgress">
+    <div>
+      <h2>{{ 'onboarding.checklistTitle' | translate }}</h2>
+      <p class="muted small">
+        {{ 'onboarding.progress' | translate:{ completed: checklist.completedCount, total: checklist.totalCount } }}
+      </p>
+    </div>
+    <strong class="progress-value">{{ checklist.progressPercent }}%</strong>
+  </div>
+
+  <div class="progress-bar" *ngIf="showProgress">
+    <div class="progress-fill" [style.width.%]="checklist.progressPercent"></div>
+  </div>
+
+  <ul class="checklist">
+    <li [class.done]="checklist.botInvited">
+      <span class="check-icon"><app-ui-icon *ngIf="checklist.botInvited" name="check" size="sm"></app-ui-icon></span>
+      <div>
+        <strong>{{ 'onboarding.botInvited' | translate }}</strong>
+        <p class="muted small">{{ 'onboarding.botInvitedHint' | translate }}</p>
+      </div>
+    </li>
+    <li [class.done]="checklist.resourcesSynced">
+      <span class="check-icon"><app-ui-icon *ngIf="checklist.resourcesSynced" name="check" size="sm"></app-ui-icon></span>
+      <div>
+        <strong>{{ 'onboarding.resourcesSynced' | translate }}</strong>
+        <p class="muted small">{{ 'onboarding.resourcesSyncedHint' | translate }}</p>
+      </div>
+    </li>
+    <li [class.done]="checklist.planSelected">
+      <span class="check-icon"><app-ui-icon *ngIf="checklist.planSelected" name="check" size="sm"></app-ui-icon></span>
+      <div>
+        <strong>{{ 'onboarding.planSelected' | translate }}</strong>
+        <p class="muted small">{{ 'onboarding.planSelectedHint' | translate }}</p>
+      </div>
+    </li>
+    <li [class.done]="checklist.modulesEnabled">
+      <span class="check-icon"><app-ui-icon *ngIf="checklist.modulesEnabled" name="check" size="sm"></app-ui-icon></span>
+      <div>
+        <strong>{{ 'onboarding.modulesEnabled' | translate }}</strong>
+        <p class="muted small">{{ 'onboarding.modulesEnabledHint' | translate }}</p>
+      </div>
+    </li>
+    <li [class.done]="checklist.welcomeConfigured">
+      <span class="check-icon"><app-ui-icon *ngIf="checklist.welcomeConfigured" name="check" size="sm"></app-ui-icon></span>
+      <div>
+        <strong>{{ 'onboarding.welcomeConfigured' | translate }}</strong>
+        <p class="muted small">{{ 'onboarding.welcomeConfiguredHint' | translate }}</p>
+      </div>
+    </li>
+    <li [class.done]="checklist.ticketsConfigured">
+      <span class="check-icon"><app-ui-icon *ngIf="checklist.ticketsConfigured" name="check" size="sm"></app-ui-icon></span>
+      <div>
+        <strong>{{ 'onboarding.ticketsConfigured' | translate }}</strong>
+        <p class="muted small">{{ 'onboarding.ticketsConfiguredHint' | translate }}</p>
+      </div>
+    </li>
+  </ul>
+</div>

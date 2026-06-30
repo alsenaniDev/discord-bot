@@ -1,0 +1,64 @@
+<div class="page-content">
+  <app-loading-state *ngIf="loading" [message]="'admin.guildsLoading' | translate"></app-loading-state>
+
+  <app-empty-state
+    *ngIf="!loading && error"
+    icon="⚠️"
+    [title]="'admin.guildsError' | translate"
+    [description]="error"
+  >
+    <button type="button" class="btn btn-primary btn-sm" (click)="loadData()">{{ 'common.tryAgain' | translate }}</button>
+  </app-empty-state>
+
+  <app-empty-state
+    *ngIf="!loading && !error && guilds.length === 0"
+    icon="🏠"
+    [title]="'admin.noGuilds' | translate"
+    [description]="'admin.noGuildsHint' | translate"
+  ></app-empty-state>
+
+  <div class="card table-card" *ngIf="!loading && !error && guilds.length > 0">
+    <div class="table-wrap">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>{{ 'admin.guild' | translate }}</th>
+            <th>{{ 'admin.ownerId' | translate }}</th>
+            <th>{{ 'admin.plan' | translate }}</th>
+            <th>{{ 'admin.modulesCount' | translate }}</th>
+            <th>{{ 'admin.ticketsCount' | translate }}</th>
+            <th>{{ 'admin.lastSync' | translate }}</th>
+            <th>{{ 'common.status' | translate }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let guild of guilds">
+            <td>
+              <strong>{{ guild.name }}</strong>
+              <div class="muted small mono">{{ guild.discordGuildId }}</div>
+            </td>
+            <td class="mono">{{ guild.ownerDiscordUserId }}</td>
+            <td>
+              <select
+                class="plan-select"
+                [value]="guild.planKey"
+                [disabled]="isSaving(guild)"
+                (change)="onPlanChange(guild, $any($event.target).value)"
+              >
+                <option *ngFor="let plan of plans" [value]="plan.key">{{ plan.name }}</option>
+              </select>
+            </td>
+            <td>{{ guild.enabledModulesCount }}</td>
+            <td>{{ guild.ticketsCount }}</td>
+            <td>{{ formatLastSync(guild.resourcesSyncedAt) }}</td>
+            <td>
+              <span class="badge" [class.badge-open]="guild.isActive" [class.badge-closed]="!guild.isActive">
+                {{ (guild.isActive ? 'common.active' : 'common.inactive') | translate }}
+              </span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

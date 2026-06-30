@@ -1,0 +1,96 @@
+<div class="page-content">
+  <app-loading-state *ngIf="loading" [message]="'overview.loading' | translate"></app-loading-state>
+
+  <app-empty-state
+    *ngIf="!loading && error"
+    icon="⚠️"
+    [title]="'overview.loadError' | translate"
+    [description]="error"
+  >
+    <button type="button" class="btn btn-primary btn-sm" (click)="loadOverview()">{{ 'common.tryAgain' | translate }}</button>
+  </app-empty-state>
+
+  <ng-container *ngIf="!loading && !error && overview">
+    <section class="overview-header card slide-up">
+      <div class="overview-header-main">
+        <div class="overview-avatar" [class.has-image]="overview.iconUrl">
+          <img *ngIf="overview.iconUrl" [src]="overview.iconUrl" [alt]="overview.name" />
+          <span *ngIf="!overview.iconUrl">{{ overview.name.charAt(0) }}</span>
+        </div>
+        <div>
+          <h2>{{ overview.name }}</h2>
+          <p class="muted small">{{ 'overview.subtitle' | translate }}</p>
+        </div>
+      </div>
+
+      <div class="overview-actions">
+        <button type="button" class="btn btn-primary btn-sm" (click)="goToSettings()">{{ 'common.settings' | translate }}</button>
+        <button type="button" class="btn btn-secondary btn-sm" (click)="goToModules()">{{ 'common.modules' | translate }}</button>
+        <button type="button" class="btn btn-secondary btn-sm" (click)="goToSubscription()">{{ 'common.subscription' | translate }}</button>
+        <button type="button" class="btn btn-secondary btn-sm" (click)="syncDiscordData()" [disabled]="syncing">
+          <span class="spinner inline" *ngIf="syncing"></span>
+          {{ (syncing ? 'overview.syncing' : 'overview.syncDiscord') | translate }}
+        </button>
+      </div>
+    </section>
+
+    <app-onboarding-checklist
+      *ngIf="overview.onboarding && overview.onboarding.progressPercent < 100"
+      [checklist]="overview.onboarding"
+      [guildId]="guildId"
+    ></app-onboarding-checklist>
+
+    <section class="stats-grid">
+      <article class="stat-card">
+        <span class="stat-label">{{ 'overview.botStatus' | translate }}</span>
+        <strong class="stat-value" [class.status-on]="overview.isActive" [class.status-off]="!overview.isActive">
+          {{ (overview.isActive ? 'common.active' : 'common.inactive') | translate }}
+        </strong>
+      </article>
+      <article class="stat-card">
+        <span class="stat-label">{{ 'overview.channels' | translate }}</span>
+        <strong class="stat-value">{{ overview.totalChannels }}</strong>
+      </article>
+      <article class="stat-card">
+        <span class="stat-label">{{ 'overview.roles' | translate }}</span>
+        <strong class="stat-value">{{ overview.totalRoles }}</strong>
+      </article>
+      <article class="stat-card">
+        <span class="stat-label">{{ 'overview.totalTickets' | translate }}</span>
+        <strong class="stat-value">{{ overview.totalTickets }}</strong>
+      </article>
+      <article class="stat-card">
+        <span class="stat-label">{{ 'overview.openTickets' | translate }}</span>
+        <strong class="stat-value">{{ overview.openTickets }}</strong>
+      </article>
+      <article class="stat-card">
+        <span class="stat-label">{{ 'overview.lastSync' | translate }}</span>
+        <strong class="stat-value stat-value-sm">{{ overview.resourcesSyncedAt ? formatLastSync(overview.resourcesSyncedAt) : ('overview.neverSynced' | translate) }}</strong>
+      </article>
+      <article class="stat-card">
+        <span class="stat-label">{{ 'overview.welcome' | translate }}</span>
+        <strong class="stat-value" [ngClass]="featureClass(overview.welcomeEnabled)">
+          {{ featureStatus(overview.welcomeEnabled) | translate }}
+        </strong>
+      </article>
+      <article class="stat-card">
+        <span class="stat-label">{{ 'overview.autoRole' | translate }}</span>
+        <strong class="stat-value" [ngClass]="featureClass(overview.autoRoleEnabled)">
+          {{ featureStatus(overview.autoRoleEnabled) | translate }}
+        </strong>
+      </article>
+      <article class="stat-card">
+        <span class="stat-label">{{ 'overview.logs' | translate }}</span>
+        <strong class="stat-value" [ngClass]="featureClass(overview.logsEnabled)">
+          {{ featureStatus(overview.logsEnabled) | translate }}
+        </strong>
+      </article>
+      <article class="stat-card">
+        <span class="stat-label">{{ 'overview.ticketsModule' | translate }}</span>
+        <strong class="stat-value" [ngClass]="featureClass(overview.ticketsEnabled)">
+          {{ featureStatus(overview.ticketsEnabled) | translate }}
+        </strong>
+      </article>
+    </section>
+  </ng-container>
+</div>

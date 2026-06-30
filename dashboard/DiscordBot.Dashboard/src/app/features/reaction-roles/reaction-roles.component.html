@@ -1,0 +1,71 @@
+<div class="page-content">
+  <app-loading-state *ngIf="loading" [message]="'reactionRoles.loading' | translate"></app-loading-state>
+
+  <app-empty-state
+    *ngIf="!loading && error"
+    icon="⚠️"
+    [title]="'reactionRoles.loadError' | translate"
+    [description]="error"
+  >
+    <button type="button" class="btn btn-primary btn-sm" (click)="loadData()">{{ 'common.tryAgain' | translate }}</button>
+  </app-empty-state>
+
+  <ng-container *ngIf="!loading && !error">
+    <section class="card intro-card">
+      <h2>{{ 'reactionRoles.panelsTitle' | translate }}</h2>
+      <p class="muted">{{ 'reactionRoles.panelsSubtitle' | translate }}</p>
+    </section>
+
+    <section class="card table-card">
+      <div class="section-header">
+        <h2>{{ 'reactionRoles.panels' | translate }}</h2>
+        <p class="muted small">{{ panels.length }}</p>
+      </div>
+
+      <div class="empty-inline" *ngIf="panels.length === 0">
+        <p class="muted small">{{ 'reactionRoles.empty' | translate }}</p>
+      </div>
+
+      <div class="table-wrap" *ngIf="panels.length > 0">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>{{ 'reactionRoles.title' | translate }}</th>
+              <th>{{ 'reactionRoles.channel' | translate }}</th>
+              <th>{{ 'reactionRoles.role' | translate }}</th>
+              <th>{{ 'common.status' | translate }}</th>
+              <th>{{ 'common.created' | translate }}</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let panel of panels">
+              <td>
+                <strong>{{ panel.title }}</strong>
+                <p class="muted small panel-desc">{{ panel.description }}</p>
+              </td>
+              <td>{{ channelName(panel.channelDiscordId) }}</td>
+              <td>{{ roleName(panel.roleDiscordId) }}</td>
+              <td>
+                <span class="status-pill" [class.active]="panel.isActive" [class.inactive]="!panel.isActive">
+                  {{ (panel.isActive ? 'common.active' : 'common.inactive') | translate }}
+                </span>
+              </td>
+              <td>{{ panel.createdAt | date: 'medium' }}</td>
+              <td>
+                <button
+                  type="button"
+                  class="btn btn-secondary btn-sm"
+                  [disabled]="!panel.isActive || isDeactivating(panel)"
+                  (click)="deactivate(panel)"
+                >
+                  {{ (isDeactivating(panel) ? 'reactionRoles.deactivating' : 'reactionRoles.deactivate') | translate }}
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </ng-container>
+</div>

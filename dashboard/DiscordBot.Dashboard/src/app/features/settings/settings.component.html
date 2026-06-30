@@ -1,0 +1,135 @@
+<div class="page-content">
+  <app-loading-state *ngIf="loading" [message]="'settings.loading' | translate"></app-loading-state>
+
+  <app-empty-state
+    *ngIf="!loading && error"
+    icon="⚠️"
+    [title]="'settings.loadError' | translate"
+    [description]="error"
+  >
+    <button type="button" class="btn btn-primary btn-sm" (click)="loadPageData()">{{ 'common.tryAgain' | translate }}</button>
+  </app-empty-state>
+
+  <form class="settings-stack" [formGroup]="form" (ngSubmit)="save()" *ngIf="!loading && !error">
+    <section class="card card-section">
+      <div class="card-section-header">
+        <div>
+          <h2>{{ 'settings.discordData' | translate }}</h2>
+          <p class="muted small">{{ 'settings.discordDataHint' | translate }}</p>
+        </div>
+        <button type="button" class="btn btn-secondary btn-sm" (click)="syncDiscordData()" [disabled]="syncing">
+          <span class="spinner inline" *ngIf="syncing"></span>
+          {{ (syncing ? 'settings.syncing' : 'settings.syncDiscord') | translate }}
+        </button>
+      </div>
+
+      <div class="empty-inline" *ngIf="textChannels.length === 0 && roles.length === 0">
+        <p class="muted small">{{ 'settings.noDiscordData' | translate }}</p>
+      </div>
+    </section>
+
+    <section class="card card-section">
+      <div class="card-section-header">
+        <div>
+          <h2>{{ 'settings.welcome' | translate }}</h2>
+          <p class="muted small">{{ 'settings.welcomeHint' | translate }}</p>
+        </div>
+      </div>
+
+      <label class="checkbox">
+        <input type="checkbox" formControlName="welcomeEnabled" />
+        {{ 'settings.enableWelcome' | translate }}
+      </label>
+      <label>
+        {{ 'settings.welcomeChannel' | translate }}
+        <select formControlName="welcomeChannelId">
+          <option value="">{{ 'settings.selectChannel' | translate }}</option>
+          <option *ngFor="let channel of textChannels" [value]="channel.discordChannelId">
+            {{ channelLabel(channel) }}
+          </option>
+        </select>
+        <span class="field-error" *ngIf="fieldError('welcomeChannelId')">{{ fieldError('welcomeChannelId') }}</span>
+      </label>
+      <label>
+        {{ 'settings.welcomeMessage' | translate }}
+        <textarea formControlName="welcomeMessage" rows="3"></textarea>
+        <span class="hint">{{ 'settings.welcomePlaceholderHint' | translate }}</span>
+        <span class="field-error" *ngIf="fieldError('welcomeMessage')">{{ fieldError('welcomeMessage') }}</span>
+      </label>
+    </section>
+
+    <section class="card card-section">
+      <div class="card-section-header">
+        <div>
+          <h2>{{ 'settings.autoRole' | translate }}</h2>
+          <p class="muted small">{{ 'settings.autoRoleHint' | translate }}</p>
+        </div>
+      </div>
+
+      <label class="checkbox">
+        <input type="checkbox" formControlName="autoRoleEnabled" />
+        {{ 'settings.enableAutoRole' | translate }}
+      </label>
+      <label>
+        {{ 'settings.role' | translate }}
+        <select formControlName="autoRoleId">
+          <option value="">{{ 'settings.selectRole' | translate }}</option>
+          <option *ngFor="let role of assignableRoles" [value]="role.discordRoleId">
+            {{ roleLabel(role) }}
+          </option>
+        </select>
+        <span class="field-error" *ngIf="fieldError('autoRoleId')">{{ fieldError('autoRoleId') }}</span>
+      </label>
+    </section>
+
+    <section class="card card-section">
+      <div class="card-section-header">
+        <div>
+          <h2>{{ 'settings.logs' | translate }}</h2>
+          <p class="muted small">{{ 'settings.logsHint' | translate }}</p>
+        </div>
+      </div>
+
+      <label class="checkbox">
+        <input type="checkbox" formControlName="logsEnabled" />
+        {{ 'settings.enableLogs' | translate }}
+      </label>
+      <label>
+        {{ 'settings.logChannel' | translate }}
+        <select formControlName="logChannelId">
+          <option value="">{{ 'settings.selectChannel' | translate }}</option>
+          <option *ngFor="let channel of textChannels" [value]="channel.discordChannelId">
+            {{ channelLabel(channel) }}
+          </option>
+        </select>
+        <span class="field-error" *ngIf="fieldError('logChannelId')">{{ fieldError('logChannelId') }}</span>
+      </label>
+    </section>
+
+    <section class="card card-section" *ngIf="ticketsEnabled">
+      <div class="card-section-header">
+        <div>
+          <h2>{{ 'settings.tickets' | translate }}</h2>
+          <p class="muted small">{{ 'settings.ticketsHint' | translate }}</p>
+        </div>
+      </div>
+
+      <label>
+        {{ 'settings.ticketCategory' | translate }}
+        <select formControlName="ticketCategoryId">
+          <option value="">{{ 'settings.selectCategory' | translate }}</option>
+          <option *ngFor="let category of categories" [value]="category.discordChannelId">
+            {{ channelLabel(category) }}
+          </option>
+        </select>
+      </label>
+    </section>
+
+    <div class="form-actions">
+      <button type="submit" class="btn btn-primary" [disabled]="saving || form.invalid">
+        <span class="spinner inline" *ngIf="saving"></span>
+        {{ 'common.save' | translate }}
+      </button>
+    </div>
+  </form>
+</div>

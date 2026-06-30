@@ -1,0 +1,81 @@
+<div class="page-content">
+  <app-loading-state *ngIf="loading" [message]="'servers.loading' | translate"></app-loading-state>
+
+  <app-empty-state
+    *ngIf="!loading && error"
+    icon="⚠️"
+    [title]="'servers.loadError' | translate"
+    [description]="error"
+  >
+    <button type="button" class="btn btn-primary btn-sm" (click)="loadData()">{{ 'common.tryAgain' | translate }}</button>
+  </app-empty-state>
+
+  <section class="onboarding-page" *ngIf="showOnboarding">
+    <article class="onboarding-hero card scale-in">
+      <div class="empty-icon">🚀</div>
+      <h2>{{ 'servers.welcomeTitle' | translate }}</h2>
+      <p class="muted">{{ 'servers.welcomeBody' | translate }}</p>
+
+      <div class="onboarding-actions">
+        <a
+          *ngIf="botInviteUrl"
+          class="btn btn-primary"
+          [href]="botInviteUrl"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          <app-ui-icon name="external" size="sm"></app-ui-icon>
+          {{ 'servers.inviteBot' | translate }}
+        </a>
+        <button type="button" class="btn btn-secondary" (click)="refreshOnboarding()" [disabled]="refreshing">
+          <span class="spinner inline" *ngIf="refreshing"></span>
+          <app-ui-icon *ngIf="!refreshing" name="refresh" size="sm"></app-ui-icon>
+          {{ (refreshing ? 'servers.checking' : 'servers.invitedRefresh') | translate }}
+        </button>
+      </div>
+    </article>
+
+    <article class="card onboarding-steps slide-up">
+      <h3>{{ 'servers.gettingStarted' | translate }}</h3>
+      <ol>
+        <li>{{ 'servers.stepInvite' | translate }}</li>
+        <li>{{ 'servers.stepSetup' | translate }}</li>
+        <li>{{ 'servers.stepSync' | translate }}</li>
+        <li>{{ 'servers.stepRefresh' | translate }}</li>
+        <li>{{ 'servers.stepConfigure' | translate }}</li>
+      </ol>
+    </article>
+
+    <app-onboarding-checklist [checklist]="onboardingChecklist" [showProgress]="true"></app-onboarding-checklist>
+  </section>
+
+  <div class="server-grid" *ngIf="!loading && !error && guilds.length > 0">
+    <article class="server-card card slide-up" *ngFor="let guild of guilds">
+      <div class="server-card-header">
+        <div class="server-avatar" [class.has-image]="guild.iconUrl">
+          <img *ngIf="guild.iconUrl" [src]="guild.iconUrl" [alt]="guild.name" />
+          <span *ngIf="!guild.iconUrl">{{ guild.name.charAt(0) }}</span>
+        </div>
+        <div class="server-card-info">
+          <h2>{{ guild.name }}</h2>
+          <p class="muted small mono">{{ guild.discordGuildId }}</p>
+          <p class="setup-progress small" *ngIf="checklistForGuild(guild.id) as checklist">
+            {{ 'servers.setupProgress' | translate:{ percent: checklist.progressPercent } }}
+          </p>
+        </div>
+      </div>
+
+      <div class="server-card-actions">
+        <button type="button" class="btn btn-primary btn-sm" (click)="openOverview(guild)">
+          {{ 'common.openDashboard' | translate }}
+        </button>
+        <button type="button" class="btn btn-secondary btn-sm" (click)="openSettings(guild)">
+          {{ 'servers.openSettings' | translate }}
+        </button>
+        <a class="btn btn-ghost btn-sm" [href]="discordUrl(guild)" target="_blank" rel="noopener noreferrer">
+          {{ 'servers.openInDiscord' | translate }}
+        </a>
+      </div>
+    </article>
+  </div>
+</div>

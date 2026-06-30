@@ -1,0 +1,51 @@
+<div class="page-content">
+  <app-loading-state *ngIf="loading" [message]="'subscription.loading' | translate"></app-loading-state>
+
+  <app-empty-state
+    *ngIf="!loading && error"
+    icon="⚠️"
+    [title]="'subscription.loadError' | translate"
+    [description]="error"
+  >
+    <button type="button" class="btn btn-primary btn-sm" (click)="loadData()">{{ 'common.tryAgain' | translate }}</button>
+  </app-empty-state>
+
+  <ng-container *ngIf="!loading && !error && subscription">
+    <section class="card current-plan-card">
+      <h2>{{ 'subscription.currentPlan' | translate }}</h2>
+      <p class="plan-name">{{ subscription.planName }}</p>
+      <p class="muted">{{ subscription.planDescription }}</p>
+      <p class="modules-line">
+        <strong>{{ 'subscription.includedModules' | translate }}</strong> {{ formatModules(subscription.allowedModules) }}
+      </p>
+      <p class="muted small dev-note">{{ 'subscription.devNote' | translate }}</p>
+    </section>
+
+    <section class="plans-grid">
+      <article
+        class="card plan-card"
+        *ngFor="let plan of plans"
+        [class.current]="isCurrentPlan(plan)"
+      >
+        <div class="plan-card-header">
+          <h3>{{ plan.name }}</h3>
+          <span class="current-badge" *ngIf="isCurrentPlan(plan)">{{ 'common.current' | translate }}</span>
+        </div>
+        <p class="muted">{{ plan.description }}</p>
+        <p class="modules-line">
+          <strong>{{ 'subscription.modules' | translate }}</strong> {{ formatModules(plan.allowedModules) }}
+        </p>
+        <button
+          type="button"
+          class="btn btn-primary btn-sm btn-block"
+          [disabled]="isCurrentPlan(plan) || isSaving(plan)"
+          (click)="selectPlan(plan)"
+        >
+          <ng-container *ngIf="isSaving(plan)">{{ 'subscription.switching' | translate }}</ng-container>
+          <ng-container *ngIf="!isSaving(plan) && isCurrentPlan(plan)">{{ 'common.current' | translate }}</ng-container>
+          <ng-container *ngIf="!isSaving(plan) && !isCurrentPlan(plan)">{{ 'subscription.switchTo' | translate:{ name: plan.name } }}</ng-container>
+        </button>
+      </article>
+    </section>
+  </ng-container>
+</div>

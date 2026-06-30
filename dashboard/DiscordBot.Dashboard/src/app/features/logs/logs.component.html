@@ -1,0 +1,84 @@
+<div class="page-content">
+  <app-loading-state *ngIf="loading" [message]="'logs.loading' | translate"></app-loading-state>
+
+  <app-empty-state
+    *ngIf="!loading && error"
+    icon="⚠️"
+    [title]="'logs.loadError' | translate"
+    [description]="error"
+  >
+    <button type="button" class="btn btn-primary btn-sm" (click)="loadLogs()">{{ 'common.tryAgain' | translate }}</button>
+  </app-empty-state>
+
+  <ng-container *ngIf="!loading && !error">
+    <section class="card filters-card">
+      <h2>{{ 'logs.filters' | translate }}</h2>
+      <div class="filters-grid">
+        <label>
+          {{ 'logs.eventType' | translate }}
+          <select [(ngModel)]="filters.type">
+            <option *ngFor="let option of typeOptions" [value]="option.value">
+              {{ option.labelKey | translate }}
+            </option>
+          </select>
+        </label>
+        <label>
+          {{ 'moderation.from' | translate }}
+          <input type="date" [(ngModel)]="filters.from" />
+        </label>
+        <label>
+          {{ 'moderation.to' | translate }}
+          <input type="date" [(ngModel)]="filters.to" />
+        </label>
+        <label class="search-field">
+          {{ 'logs.search' | translate }}
+          <input
+            type="text"
+            [(ngModel)]="filters.search"
+            [placeholder]="'logs.searchPlaceholder' | translate"
+          />
+        </label>
+      </div>
+      <div class="filter-actions">
+        <button type="button" class="btn btn-primary btn-sm" (click)="applyFilters()">{{ 'common.apply' | translate }}</button>
+        <button type="button" class="btn btn-secondary btn-sm" (click)="clearFilters()">{{ 'common.clear' | translate }}</button>
+      </div>
+    </section>
+
+    <section class="card table-card">
+      <div class="section-header">
+        <h2>{{ 'logs.activityLog' | translate }}</h2>
+        <p class="muted small">{{ logs.length }}</p>
+      </div>
+
+      <div class="empty-inline" *ngIf="logs.length === 0">
+        <p class="muted small">{{ 'logs.noLogs' | translate }}</p>
+      </div>
+
+      <div class="table-wrap" *ngIf="logs.length > 0">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>{{ 'moderation.date' | translate }}</th>
+              <th>{{ 'moderation.type' | translate }}</th>
+              <th>{{ 'logs.message' | translate }}</th>
+              <th>{{ 'logs.actor' | translate }}</th>
+              <th>{{ 'logs.target' | translate }}</th>
+              <th>{{ 'logs.channel' | translate }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let log of logs">
+              <td>{{ log.createdAt | date: 'medium' }}</td>
+              <td>{{ log.typeLabel }}</td>
+              <td>{{ log.message }}</td>
+              <td class="mono">{{ displayValue(log.actorDiscordUserId) }}</td>
+              <td class="mono">{{ displayValue(log.targetDiscordUserId) }}</td>
+              <td class="mono">{{ displayValue(log.channelDiscordId) }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </ng-container>
+</div>

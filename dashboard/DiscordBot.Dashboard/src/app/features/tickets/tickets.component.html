@@ -1,0 +1,50 @@
+<div class="page-content">
+  <app-loading-state *ngIf="loading" [message]="'tickets.loading' | translate"></app-loading-state>
+
+  <app-empty-state
+    *ngIf="!loading && error"
+    icon="⚠️"
+    [title]="'tickets.loadError' | translate"
+    [description]="error"
+  >
+    <button type="button" class="btn btn-primary btn-sm" (click)="loadTickets()">{{ 'common.tryAgain' | translate }}</button>
+  </app-empty-state>
+
+  <app-empty-state
+    *ngIf="!loading && !error && tickets.length === 0"
+    icon="🎫"
+    [title]="'tickets.emptyTitle' | translate"
+    [description]="'tickets.emptyBody' | translate"
+  ></app-empty-state>
+
+  <div class="card table-card" *ngIf="!loading && !error && tickets.length > 0">
+    <div class="table-wrap">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>{{ 'tickets.number' | translate }}</th>
+            <th>{{ 'common.status' | translate }}</th>
+            <th>{{ 'tickets.owner' | translate }}</th>
+            <th>{{ 'tickets.channelId' | translate }}</th>
+            <th>{{ 'common.created' | translate }}</th>
+            <th>{{ 'common.closed' | translate }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let ticket of tickets">
+            <td>{{ ticket.ticketNumber }}</td>
+            <td>
+              <span class="badge" [class.badge-open]="ticket.status === 0 || ticket.status === 'Open'">
+                {{ statusLabel(ticket.status) | translate }}
+              </span>
+            </td>
+            <td>{{ ticket.ownerDiscordUserId }}</td>
+            <td class="mono">{{ ticket.channelDiscordId }}</td>
+            <td>{{ ticket.createdAt | date: 'medium' }}</td>
+            <td>{{ ticket.closedAt ? (ticket.closedAt | date: 'medium') : '—' }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

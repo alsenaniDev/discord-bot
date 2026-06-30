@@ -1,0 +1,475 @@
+using System.Net.Http.Json;
+using DiscordBot.Bot.Api.Models;
+using DiscordBot.Bot.Configuration;
+using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
+
+namespace DiscordBot.Bot.Api;
+
+/// <summary>
+/// HTTP client for calling the .NET API. The bot never accesses the database directly.
+/// </summary>
+public class BotApiClient
+{
+    private readonly HttpClient _httpClient;
+    private readonly ILogger<BotApiClient> _logger;
+
+    public BotApiClient(HttpClient httpClient, IOptions<ApiOptions> apiOptions, ILogger<BotApiClient> logger)
+    {
+        _httpClient = httpClient;
+        _logger = logger;
+
+        var options = apiOptions.Value;
+        _httpClient.BaseAddress = new Uri(options.BaseUrl.TrimEnd('/') + "/");
+        _httpClient.DefaultRequestHeaders.Add("X-Bot-Api-Key", options.ApiKey);
+    }
+
+    public async Task<RegisterGuildResponse?> RegisterGuildAsync(
+        RegisterGuildRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var response = await _httpClient.PostAsJsonAsync(
+                "api/bot/guilds/join",
+                request,
+                cancellationToken);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                _logger.LogWarning(
+                    "Failed to register guild {GuildId}. Status: {Status}",
+                    request.DiscordGuildId,
+                    response.StatusCode);
+                return null;
+            }
+
+            return await response.Content.ReadFromJsonAsync<RegisterGuildResponse>(cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error registering guild {GuildId}", request.DiscordGuildId);
+            return null;
+        }
+    }
+
+    public async Task<GuildSettingsResponse?> GetSettingsAsync(
+        string discordGuildId,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var response = await _httpClient.GetAsync(
+                $"api/bot/guilds/{discordGuildId}/settings",
+                cancellationToken);
+
+            if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
+            {
+                return null;
+            }
+
+            if (!response.IsSuccessStatusCode)
+            {
+                _logger.LogWarning(
+                    "Failed to get settings for guild {GuildId}. Status: {Status}",
+                    discordGuildId,
+                    response.StatusCode);
+                return null;
+            }
+
+            return await response.Content.ReadFromJsonAsync<GuildSettingsResponse>(cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error fetching settings for guild {GuildId}", discordGuildId);
+            return null;
+        }
+    }
+
+    public async Task<bool> SetupTicketsAsync(
+        string discordGuildId,
+        string ticketCategoryId,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var response = await _httpClient.PostAsJsonAsync(
+                $"api/bot/guilds/{discordGuildId}/tickets/setup",
+                new SetupTicketsApiRequest { TicketCategoryId = ticketCategoryId },
+                cancellationToken);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                _logger.LogWarning(
+                    "Failed to setup tickets for guild {GuildId}. Status: {Status}",
+                    discordGuildId,
+                    response.StatusCode);
+                return false;
+            }
+
+            return true;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error setting up tickets for guild {GuildId}", discordGuildId);
+            return false;
+        }
+    }
+
+    public async Task<(TicketResponse? Ticket, string? ErrorMessage)> CreateTicketAsync(
+        CreateTicketApiRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var response = await _httpClient.PostAsJsonAsync(
+                "api/bot/tickets",
+                request,
+                cancellationToken);
+
+            if (response.IsSuccessStatusCode)
+            {
+                var ticket = await response.Content.ReadFromJsonAsync<TicketResponse>(cancellationToken);
+                return (ticket, null);
+            }
+
+            var error = await response.Content.ReadFromJsonAsync<ApiErrorResponse>(cancellationToken);
+            return (null, error?.Message ?? "Failed to create ticket.");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error creating ticket for guild {GuildId}", request.DiscordGuildId);
+            return (null, "Could not reach the API.");
+        }
+    }
+
+    public async Task<TicketResponse?> GetTicketByChannelAsync(
+        string channelDiscordId,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var response = await _httpClient.GetAsync(
+                $"api/bot/tickets/by-channel/{channelDiscordId}",
+                cancellationToken);
+
+            if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
+            {
+                return null;
+            }
+
+            if (!response.IsSuccessStatusCode)
+            {
+                return null;
+            }
+
+            return await response.Content.ReadFromJsonAsync<TicketResponse>(cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error fetching ticket for channel {ChannelId}", channelDiscordId);
+            return null;
+        }
+    }
+
+    public async Task<TicketResponse?> CloseTicketAsync(
+        Guid ticketId,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var response = await _httpClient.PatchAsync(
+                $"api/bot/tickets/{ticketId}/close",
+                null,
+                cancellationToken);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                return null;
+            }
+
+            return await response.Content.ReadFromJsonAsync<TicketResponse>(cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error closing ticket {TicketId}", ticketId);
+            return null;
+        }
+    }
+
+    public async Task<bool> SyncResourcesAsync(
+        string discordGuildId,
+        SyncResourcesApiRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var response = await _httpClient.PostAsJsonAsync(
+                $"api/bot/guilds/{discordGuildId}/resources",
+                request,
+                cancellationToken);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                _logger.LogWarning(
+                    "Failed to sync resources for guild {GuildId}. Status: {Status}",
+                    discordGuildId,
+                    response.StatusCode);
+                return false;
+            }
+
+            return true;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error syncing resources for guild {GuildId}", discordGuildId);
+            return false;
+        }
+    }
+
+    public async Task<IReadOnlyList<string>> GetPendingSyncRequestsAsync(
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var response = await _httpClient.GetAsync(
+                "api/bot/guilds/sync-requests",
+                cancellationToken);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                return [];
+            }
+
+            return await response.Content.ReadFromJsonAsync<List<string>>(cancellationToken) ?? [];
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error fetching pending resource sync requests.");
+            return [];
+        }
+    }
+
+    public async Task<WarningApiResponse?> CreateWarningAsync(
+        CreateWarningApiRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var response = await _httpClient.PostAsJsonAsync(
+                "api/bot/moderation/warnings",
+                request,
+                cancellationToken);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                _logger.LogWarning(
+                    "Failed to create warning for guild {GuildId}. Status: {Status}",
+                    request.DiscordGuildId,
+                    response.StatusCode);
+                return null;
+            }
+
+            return await response.Content.ReadFromJsonAsync<WarningApiResponse>(cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error creating warning for guild {GuildId}", request.DiscordGuildId);
+            return null;
+        }
+    }
+
+    public async Task<bool> CreateModerationCaseAsync(
+        CreateModerationCaseApiRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var response = await _httpClient.PostAsJsonAsync(
+                "api/bot/moderation/cases",
+                request,
+                cancellationToken);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                _logger.LogWarning(
+                    "Failed to create moderation case for guild {GuildId}. Status: {Status}",
+                    request.DiscordGuildId,
+                    response.StatusCode);
+                return false;
+            }
+
+            return true;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error creating moderation case for guild {GuildId}", request.DiscordGuildId);
+            return false;
+        }
+    }
+
+    public async Task<IReadOnlyList<WarningApiResponse>> GetWarningsAsync(
+        string discordGuildId,
+        string targetUserId,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var response = await _httpClient.GetAsync(
+                $"api/bot/moderation/warnings?discordGuildId={Uri.EscapeDataString(discordGuildId)}&targetUserId={Uri.EscapeDataString(targetUserId)}",
+                cancellationToken);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                return [];
+            }
+
+            return await response.Content.ReadFromJsonAsync<List<WarningApiResponse>>(cancellationToken) ?? [];
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error fetching warnings for guild {GuildId}", discordGuildId);
+            return [];
+        }
+    }
+
+    public async Task<GuildModuleStatusResponse?> GetModuleStatusAsync(
+        string discordGuildId,
+        string moduleKey,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var response = await _httpClient.GetAsync(
+                $"api/bot/guilds/{discordGuildId}/modules/{Uri.EscapeDataString(moduleKey)}",
+                cancellationToken);
+
+            if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
+            {
+                return null;
+            }
+
+            if (!response.IsSuccessStatusCode)
+            {
+                _logger.LogWarning(
+                    "Failed to get module status for guild {GuildId}, module {ModuleKey}. Status: {Status}",
+                    discordGuildId,
+                    moduleKey,
+                    response.StatusCode);
+                return null;
+            }
+
+            return await response.Content.ReadFromJsonAsync<GuildModuleStatusResponse>(cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(
+                ex,
+                "Error fetching module status for guild {GuildId}, module {ModuleKey}",
+                discordGuildId,
+                moduleKey);
+            return null;
+        }
+    }
+
+    public async Task<bool> IsModuleEnabledAsync(
+        string discordGuildId,
+        string moduleKey,
+        CancellationToken cancellationToken = default)
+    {
+        var status = await GetModuleStatusAsync(discordGuildId, moduleKey, cancellationToken);
+        return status is { IsEnabled: true, AllowedByPlan: true };
+    }
+
+    public async Task CreateLogAsync(
+        CreateLogApiRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var response = await _httpClient.PostAsJsonAsync(
+                "api/bot/logs",
+                request,
+                cancellationToken);
+
+            if (!response.IsSuccessStatusCode && response.StatusCode != System.Net.HttpStatusCode.Accepted)
+            {
+                _logger.LogWarning(
+                    "Failed to create log for guild {GuildId}. Status: {Status}",
+                    request.DiscordGuildId,
+                    response.StatusCode);
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error creating log for guild {GuildId}", request.DiscordGuildId);
+        }
+    }
+
+    public async Task<ReactionRoleApiResponse?> CreateReactionRoleAsync(
+        CreateReactionRoleApiRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var response = await _httpClient.PostAsJsonAsync(
+                "api/bot/reaction-roles",
+                request,
+                cancellationToken);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                _logger.LogWarning(
+                    "Failed to create reaction role for guild {GuildId}. Status: {Status}",
+                    request.DiscordGuildId,
+                    response.StatusCode);
+                return null;
+            }
+
+            return await response.Content.ReadFromJsonAsync<ReactionRoleApiResponse>(cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error creating reaction role for guild {GuildId}", request.DiscordGuildId);
+            return null;
+        }
+    }
+
+    public async Task<ReactionRoleApiResponse?> GetReactionRoleByButtonAsync(
+        string buttonCustomId,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var response = await _httpClient.GetAsync(
+                $"api/bot/reaction-roles/by-button/{Uri.EscapeDataString(buttonCustomId)}",
+                cancellationToken);
+
+            if (response.StatusCode == System.Net.HttpStatusCode.NotFound)
+            {
+                return null;
+            }
+
+            if (!response.IsSuccessStatusCode)
+            {
+                _logger.LogWarning(
+                    "Failed to get reaction role for button {CustomId}. Status: {Status}",
+                    buttonCustomId,
+                    response.StatusCode);
+                return null;
+            }
+
+            return await response.Content.ReadFromJsonAsync<ReactionRoleApiResponse>(cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error fetching reaction role for button {CustomId}", buttonCustomId);
+            return null;
+        }
+    }
+}
+
+public sealed class ApiErrorResponse
+{
+    public string? Message { get; set; }
+}

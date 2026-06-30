@@ -1,0 +1,57 @@
+/* RTL — prefer logical properties in global CSS; these rules cover edge cases */
+
+html[dir='rtl'] body {
+  text-align: start;
+}
+
+html[dir='rtl'] .sidebar-nav a,
+html[dir='rtl'] .ds-dropdown-item,
+html[dir='rtl'] .breadcrumbs,
+html[dir='rtl'] .switcher-trigger,
+html[dir='rtl'] .profile-trigger,
+html[dir='rtl'] .checklist li {
+  direction: rtl;
+}
+
+html[dir='rtl'] .data-table th,
+html[dir='rtl'] .data-table td,
+html[dir='rtl'] .ds-table th,
+html[dir='rtl'] .ds-table td {
+  text-align: start;
+}
+
+html[dir='rtl'] .breadcrumb-sep {
+  transform: scaleX(-1);
+}
+
+html[dir='rtl'] .toast-success,
+html[dir='rtl'] .toast-error {
+  border-inline-start: none;
+  border-inline-end: 3px solid var(--color-success);
+}
+
+html[dir='rtl'] .toast-error {
+  border-inline-end-color: var(--color-error);
+}
+
+html[dir='rtl'] .onboarding-steps ol {
+  padding-inline-start: 1.25rem;
+}
+
+@media (max-width: 900px) {
+  html[dir='rtl'] .sidebar {
+    inset-inline-start: auto;
+    inset-inline-end: 0;
+    transform: translateX(calc(100% + 8px));
+  }
+
+  html[dir='rtl'] .dashboard-shell.sidebar-open .sidebar {
+    transform: translateX(0);
+  }
+}
+
+@media (max-width: 640px) {
+  html[dir='rtl'] .toast-stack {
+    inset-inline: var(--space-4);
+  }
+}

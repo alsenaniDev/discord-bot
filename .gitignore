@@ -1,0 +1,36 @@
+# .NET
+bin/
+obj/
+*.user
+*.suo
+.vs/
+*.DotSettings.user
+
+# Environment & secrets — never commit real values
+.env
+.env.*
+!.env.example
+**/appsettings.Development.local.json
+**/appsettings.Production.json
+**/appsettings.Production.local.json
+**/appsettings.local.json
+**/appsettings.Secrets.json
+secrets.json
+
+# Angular
+dashboard/DiscordBot.Dashboard/node_modules/
+dashboard/DiscordBot.Dashboard/dist/
+dashboard/DiscordBot.Dashboard/.angular/
+dashboard/DiscordBot.Dashboard/src/environments/environment.local.ts
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+*.swp
+*.swo
+
+# Logs
+*.log
