@@ -2,5 +2,5 @@
 // Copy from environment.production.example.ts and set your beta/production API URL.
 export const environment = {
   production: true,
-  apiUrl: 'https://api.your-domain.com'
+  apiUrl: 'https://discord-bot-production-b872.up.railway.app'
 };
