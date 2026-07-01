@@ -24,3 +24,8 @@
 .login-card .btn-discord {
   margin-top: var(--space-5);
 }
+
+.login-api-hint {
+  margin-top: var(--space-4);
+  word-break: break-all;
+}

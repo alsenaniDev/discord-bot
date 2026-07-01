@@ -62,7 +62,7 @@ public static class ConfigurationValidationExtensions
         if (strict)
         {
             CheckProductionUrl(errors, "Discord:RedirectUri", discord.RedirectUri);
-            CheckProductionUrl(errors, "Discord:DashboardUrl", discord.DashboardUrl);
+            CheckProductionUrls(errors, "Discord:DashboardUrl", discord.DashboardUrl);
         }
 
         var jwt = configuration.GetSection(JwtOptions.SectionName).Get<JwtOptions>() ?? new JwtOptions();
@@ -98,6 +98,19 @@ public static class ConfigurationValidationExtensions
         if (strict && IsPlaceholder(value))
         {
             errors.Add($"{key} is still a placeholder value.");
+        }
+    }
+
+    private static void CheckProductionUrls(List<string> errors, string key, string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return;
+        }
+
+        foreach (var origin in value.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+        {
+            CheckProductionUrl(errors, key, origin);
         }
     }
 

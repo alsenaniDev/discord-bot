@@ -14,6 +14,6 @@ public class DiscordOptions
     /// <summary>API callback URL registered in the Discord Developer Portal.</summary>
     public string RedirectUri { get; set; } = string.Empty;
 
-    /// <summary>Angular app URL — user is sent here after login with the JWT.</summary>
+    /// <summary>Angular app URL(s) for CORS — comma-separated for multiple domains (e.g. Vercel + custom).</summary>
     public string DashboardUrl { get; set; } = "http://localhost:4200";
 }

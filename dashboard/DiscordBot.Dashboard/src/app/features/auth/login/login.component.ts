@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
 import { AuthService } from '../../../core/services/auth.service';
 import { getApiErrorMessage } from '../../../core/utils/api-error.util';
+import { environment } from '../../../../environments/environment';
 
 @Component({
   selector: 'app-login',
@@ -11,6 +12,7 @@ import { getApiErrorMessage } from '../../../core/utils/api-error.util';
 export class LoginComponent implements OnInit {
   loading = false;
   error = '';
+  readonly apiUrl = environment.apiUrl;
 
   constructor(private auth: AuthService, private router: Router) {}
 

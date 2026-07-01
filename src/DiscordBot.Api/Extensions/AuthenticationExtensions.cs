@@ -48,11 +48,22 @@ public static class AuthenticationExtensions
         var dashboardUrl = configuration.GetSection(DiscordOptions.SectionName)
             .Get<DiscordOptions>()?.DashboardUrl ?? "http://localhost:4200";
 
+        var allowedOrigins = dashboardUrl
+            .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .Where(origin => !string.IsNullOrWhiteSpace(origin))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+
+        if (allowedOrigins.Length == 0)
+        {
+            allowedOrigins = ["http://localhost:4200"];
+        }
+
         services.AddCors(options =>
         {
             options.AddPolicy("Dashboard", policy =>
             {
-                policy.WithOrigins(dashboardUrl)
+                policy.WithOrigins(allowedOrigins)
                     .AllowAnyHeader()
                     .AllowAnyMethod();
             });

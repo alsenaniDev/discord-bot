@@ -67,7 +67,10 @@ public class AuthController : ControllerBase
             var result = await _authService.SignInWithDiscordAsync(code, state, cancellationToken);
             var exchangeCode = _authCodeService.CreateExchangeCode(result.AccessToken);
 
-            var dashboardBase = _discordOptions.DashboardUrl.TrimEnd('/');
+            var dashboardBase = _discordOptions.DashboardUrl
+                .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+                .FirstOrDefault()
+                ?.TrimEnd('/') ?? "http://localhost:4200";
             var redirectUrl =
                 $"{dashboardBase}/auth/callback" +
                 $"?code={Uri.EscapeDataString(exchangeCode)}";
