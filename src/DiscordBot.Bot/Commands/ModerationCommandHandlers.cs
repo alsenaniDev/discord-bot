@@ -33,6 +33,10 @@ public class ModerationCommandHandlers
         }
 
         var (guild, moderator) = context.Value;
+        if (!await EnsurePermissionAsync(interaction, guild, moderator, p => p.CanWarn, "warn members"))
+        {
+            return;
+        }
 
         var target = command.Data.Options.FirstOrDefault(o => o.Name == "user")?.Value as SocketGuildUser;
         var reason = command.Data.Options.FirstOrDefault(o => o.Name == "reason")?.Value?.ToString();
@@ -64,7 +68,9 @@ public class ModerationCommandHandlers
             DiscordGuildId = guild.Id.ToString(),
             TargetDiscordUserId = target.Id.ToString(),
             ModeratorDiscordUserId = moderator.Id.ToString(),
-            Reason = reason.Trim()
+            Reason = reason.Trim(),
+            ModeratorDisplayName = moderator.GlobalName ?? moderator.DisplayName,
+            TargetDisplayName = target.GlobalName ?? target.DisplayName
         });
 
         if (warning is null)
@@ -93,6 +99,16 @@ public class ModerationCommandHandlers
         }
 
         var (guild, _) = context.Value;
+        var moderator = interaction.User as SocketGuildUser;
+        if (moderator is null)
+        {
+            return;
+        }
+
+        if (!await EnsurePermissionAsync(interaction, guild, moderator, p => p.CanWarn || p.CanAccessModeration, "view warnings"))
+        {
+            return;
+        }
 
         var target = command.Data.Options.FirstOrDefault(o => o.Name == "user")?.Value as SocketGuildUser;
         if (target is null)
@@ -146,6 +162,11 @@ public class ModerationCommandHandlers
         }
 
         var (guild, moderator) = context.Value;
+
+        if (!await EnsurePermissionAsync(interaction, guild, moderator, p => p.CanClearMessages, "clear messages"))
+        {
+            return;
+        }
 
         if (interaction.Channel is not SocketTextChannel textChannel)
         {
@@ -219,7 +240,9 @@ public class ModerationCommandHandlers
             ModeratorDiscordUserId = moderator.Id.ToString(),
             MessageCount = deletable.Count,
             ChannelDiscordId = textChannel.Id.ToString(),
-            Reason = $"Cleared {deletable.Count} message(s)"
+            Reason = $"Cleared {deletable.Count} message(s)",
+            ModeratorDisplayName = moderator.GlobalName ?? moderator.DisplayName,
+            ChannelDisplayName = textChannel.Name
         });
 
         if (!saved)
@@ -248,6 +271,11 @@ public class ModerationCommandHandlers
         }
 
         var (guild, moderator) = context.Value;
+
+        if (!await EnsurePermissionAsync(interaction, guild, moderator, p => p.CanKick, "kick members"))
+        {
+            return;
+        }
 
         if (!moderator.GuildPermissions.KickMembers)
         {
@@ -325,7 +353,9 @@ public class ModerationCommandHandlers
             Type = 1,
             TargetDiscordUserId = target.Id.ToString(),
             ModeratorDiscordUserId = moderator.Id.ToString(),
-            Reason = reason.Trim()
+            Reason = reason.Trim(),
+            ModeratorDisplayName = moderator.GlobalName ?? moderator.DisplayName,
+            TargetDisplayName = target.GlobalName ?? target.DisplayName
         });
 
         if (!saved)
@@ -371,16 +401,6 @@ public class ModerationCommandHandlers
             return null;
         }
 
-        if (!CanModerate(moderator))
-        {
-            await InteractionResponseHelper.RespondErrorAsync(
-                interaction,
-                _embeds,
-                "Permission denied",
-                "You need **Manage Messages** or **Kick Members** to use moderation commands.");
-            return null;
-        }
-
         if (!await _moduleGuard.EnsureEnabledForInteractionAsync(
                 interaction,
                 guild.Id.ToString(),
@@ -389,9 +409,62 @@ public class ModerationCommandHandlers
             return null;
         }
 
+        if (!await HasModerationAccessAsync(guild, moderator))
+        {
+            await InteractionResponseHelper.RespondErrorAsync(
+                interaction,
+                _embeds,
+                "Permission denied",
+                "Your Discord role is not mapped to a moderation permission role. Ask the server owner to configure **Staff → Roles & permissions** in the dashboard.");
+            return null;
+        }
+
         return (guild, moderator);
     }
 
-    private static bool CanModerate(SocketGuildUser user) =>
-        user.GuildPermissions.ManageMessages || user.GuildPermissions.KickMembers;
+    private async Task<bool> HasModerationAccessAsync(SocketGuild guild, SocketGuildUser user)
+    {
+        if (guild.OwnerId == user.Id)
+        {
+            return true;
+        }
+
+        var permissions = await GetPermissionsAsync(guild, user);
+        return permissions?.CanAccessModeration == true;
+    }
+
+    private Task<EvaluatePermissionsApiResponse?> GetPermissionsAsync(SocketGuild guild, SocketGuildUser user)
+    {
+        var roleIds = user.Roles.Select(r => r.Id.ToString()).ToList();
+        return _apiClient.EvaluatePermissionsAsync(
+            guild.Id.ToString(),
+            user.Id.ToString(),
+            roleIds);
+    }
+
+    private async Task<bool> EnsurePermissionAsync(
+        SocketInteraction interaction,
+        SocketGuild guild,
+        SocketGuildUser user,
+        Func<EvaluatePermissionsApiResponse, bool> predicate,
+        string actionLabel)
+    {
+        if (guild.OwnerId == user.Id)
+        {
+            return true;
+        }
+
+        var permissions = await GetPermissionsAsync(guild, user);
+        if (permissions is not null && predicate(permissions))
+        {
+            return true;
+        }
+
+        await InteractionResponseHelper.RespondErrorAsync(
+            interaction,
+            _embeds,
+            "Permission denied",
+            $"Your role is not allowed to {actionLabel}. Configure permissions under **Staff → Roles & permissions** in the dashboard.");
+        return false;
+    }
 }

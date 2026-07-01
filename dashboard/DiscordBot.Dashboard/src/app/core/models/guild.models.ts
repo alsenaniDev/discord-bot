@@ -1,4 +1,5 @@
 import { OnboardingChecklist } from './onboarding.models';
+import { CommandPanelButton } from './command-panel.models';
 
 export interface GuildSummary {
   id: string;
@@ -21,6 +22,16 @@ export interface GuildSettings {
   logChannelId?: string;
   ticketsEnabled: boolean;
   ticketCategoryId?: string;
+  ticketWelcomeTitle: string;
+  ticketWelcomeMessage: string;
+  ticketClosedMessage: string;
+  ticketClosedFromDashboardMessage: string;
+  ticketStaffReplyPrefix: string;
+  commandPanelEnabled: boolean;
+  commandPanelChannelId?: string;
+  commandPanelTitle: string;
+  commandPanelDescription: string;
+  commandPanelButtons: CommandPanelButton[];
 }
 
 export interface UpdateGuildSettings {
@@ -32,6 +43,16 @@ export interface UpdateGuildSettings {
   logsEnabled: boolean;
   logChannelId?: string | null;
   ticketCategoryId?: string | null;
+  ticketWelcomeTitle: string;
+  ticketWelcomeMessage: string;
+  ticketClosedMessage: string;
+  ticketClosedFromDashboardMessage: string;
+  ticketStaffReplyPrefix: string;
+  commandPanelEnabled: boolean;
+  commandPanelChannelId?: string | null;
+  commandPanelTitle: string;
+  commandPanelDescription: string;
+  commandPanelButtons: CommandPanelButton[];
 }
 
 export interface DiscordChannel {

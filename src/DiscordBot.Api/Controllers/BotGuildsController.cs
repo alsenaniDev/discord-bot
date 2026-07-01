@@ -19,15 +19,21 @@ public class BotGuildsController : ControllerBase
     private readonly IGuildService _guildService;
     private readonly IGuildResourceService _resourceService;
     private readonly IModuleService _moduleService;
+    private readonly IGuildPermissionResolver _permissionResolver;
+    private readonly IAutoReplyService _autoReplyService;
 
     public BotGuildsController(
         IGuildService guildService,
         IGuildResourceService resourceService,
-        IModuleService moduleService)
+        IModuleService moduleService,
+        IGuildPermissionResolver permissionResolver,
+        IAutoReplyService autoReplyService)
     {
         _guildService = guildService;
         _resourceService = resourceService;
         _moduleService = moduleService;
+        _permissionResolver = permissionResolver;
+        _autoReplyService = autoReplyService;
     }
 
     /// <summary>
@@ -66,6 +72,15 @@ public class BotGuildsController : ControllerBase
         return Ok(settings);
     }
 
+    [HttpGet("{discordGuildId}/auto-replies")]
+    public async Task<ActionResult<IReadOnlyList<AutoReplyRuleDto>>> GetAutoReplies(
+        string discordGuildId,
+        CancellationToken cancellationToken)
+    {
+        var rules = await _autoReplyService.GetEnabledRulesByDiscordGuildIdAsync(discordGuildId, cancellationToken);
+        return Ok(rules);
+    }
+
     /// <summary>
     /// Returns Discord guild ids that requested a resource sync from the dashboard.
     /// </summary>
@@ -87,9 +102,9 @@ public class BotGuildsController : ControllerBase
         [FromBody] SyncResourcesRequest request,
         CancellationToken cancellationToken)
     {
-        if (request.Channels.Count == 0 && request.Roles.Count == 0)
+        if (request.Channels.Count == 0 && request.Roles.Count == 0 && request.Members.Count == 0)
         {
-            return BadRequest(new { message = "At least one channel or role is required." });
+            return BadRequest(new { message = "At least one channel, role, or member is required." });
         }
 
         var success = await _resourceService.SyncResourcesAsync(discordGuildId, request, cancellationToken);
@@ -117,5 +132,39 @@ public class BotGuildsController : ControllerBase
         }
 
         return Ok(status);
+    }
+
+    [HttpPost("{discordGuildId}/permissions/evaluate")]
+    public async Task<ActionResult<EvaluatePermissionsResponse>> EvaluatePermissions(
+        string discordGuildId,
+        [FromBody] EvaluatePermissionsRequest request,
+        CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrWhiteSpace(request.DiscordUserId))
+        {
+            return BadRequest(new { message = "DiscordUserId is required." });
+        }
+
+        var resolved = await _permissionResolver.ResolveByDiscordGuildIdAsync(
+            discordGuildId,
+            request.DiscordUserId,
+            request.DiscordRoleIds,
+            cancellationToken);
+
+        if (resolved is null)
+        {
+            return Ok(new EvaluatePermissionsResponse());
+        }
+
+        var access = GuildPermissionMapper.ToAccessDto(resolved);
+        return Ok(new EvaluatePermissionsResponse
+        {
+            Permissions = resolved.Permissions,
+            CanWarn = access.CanWarn,
+            CanKick = access.CanKick,
+            CanTimeout = access.CanTimeout,
+            CanClearMessages = access.CanClearMessages,
+            CanAccessModeration = access.CanAccessModeration
+        });
     }
 }

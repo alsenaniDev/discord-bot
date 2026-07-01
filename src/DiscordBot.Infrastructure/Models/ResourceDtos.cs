@@ -19,10 +19,20 @@ public sealed class DiscordRoleDto
     public bool IsManaged { get; init; }
 }
 
+public sealed class DiscordGuildMemberDto
+{
+    public string DiscordUserId { get; init; } = string.Empty;
+    public string Username { get; init; } = string.Empty;
+    public string? GlobalName { get; init; }
+    public string? Nickname { get; init; }
+    public string DisplayName { get; init; } = string.Empty;
+}
+
 public sealed class SyncResourcesRequest
 {
     public List<SyncChannelItem> Channels { get; set; } = [];
     public List<SyncRoleItem> Roles { get; set; } = [];
+    public List<SyncMemberItem> Members { get; set; } = [];
 }
 
 public sealed class SyncChannelItem
@@ -40,6 +50,15 @@ public sealed class SyncRoleItem
     public int? Color { get; set; }
     public int Position { get; set; }
     public bool IsManaged { get; set; }
+}
+
+public sealed class SyncMemberItem
+{
+    public required string DiscordUserId { get; set; }
+    public required string Username { get; set; }
+    public string? GlobalName { get; set; }
+    public string? Nickname { get; set; }
+    public List<string> DiscordRoleIds { get; set; } = [];
 }
 
 public sealed class RequestResourceSyncResponse

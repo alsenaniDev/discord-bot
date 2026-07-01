@@ -14,10 +14,12 @@
     <section class="card filters-card">
       <h2>{{ 'moderation.filters' | translate }}</h2>
       <div class="filters-grid">
-        <label>
-          {{ 'moderation.targetUserId' | translate }}
-          <input type="text" [(ngModel)]="filters.targetUserId" placeholder="Discord user snowflake" />
-        </label>
+        <app-member-select
+          [guildId]="guildId"
+          [label]="'moderation.targetUser' | translate"
+          [placeholder]="'memberSelect.placeholder' | translate"
+          [(ngModel)]="filters.targetUserId"
+        ></app-member-select>
         <label>
           {{ 'moderation.type' | translate }}
           <select [(ngModel)]="filters.type">
@@ -64,8 +66,18 @@
           </thead>
           <tbody>
             <tr *ngFor="let warning of warnings">
-              <td class="mono">{{ warning.targetDiscordUserId }}</td>
-              <td class="mono">{{ warning.moderatorDiscordUserId }}</td>
+              <td>
+                <div class="identity-cell">
+                  <span class="identity-name">{{ displayMember(warning.targetDisplayName, warning.targetDiscordUserId) }}</span>
+                  <span class="muted small mono" *ngIf="warning.targetDisplayName">{{ warning.targetDiscordUserId }}</span>
+                </div>
+              </td>
+              <td>
+                <div class="identity-cell">
+                  <span class="identity-name">{{ displayMember(warning.moderatorDisplayName, warning.moderatorDiscordUserId) }}</span>
+                  <span class="muted small mono" *ngIf="warning.moderatorDisplayName">{{ warning.moderatorDiscordUserId }}</span>
+                </div>
+              </td>
               <td>{{ warning.reason }}</td>
               <td>{{ warning.createdAt | date: 'medium' }}</td>
             </tr>
@@ -101,12 +113,25 @@
               <td>
                 <span class="badge">{{ caseTypeLabel(item.type) | translate }}</span>
               </td>
-              <td class="mono">{{ item.targetDiscordUserId || '—' }}</td>
-              <td class="mono">{{ item.moderatorDiscordUserId }}</td>
+              <td>
+                <div class="identity-cell" *ngIf="item.targetDiscordUserId; else noTarget">
+                  <span class="identity-name">{{ displayMember(item.targetDisplayName, item.targetDiscordUserId) }}</span>
+                  <span class="muted small mono" *ngIf="item.targetDisplayName">{{ item.targetDiscordUserId }}</span>
+                </div>
+                <ng-template #noTarget>—</ng-template>
+              </td>
+              <td>
+                <div class="identity-cell">
+                  <span class="identity-name">{{ displayMember(item.moderatorDisplayName, item.moderatorDiscordUserId) }}</span>
+                  <span class="muted small mono" *ngIf="item.moderatorDisplayName">{{ item.moderatorDiscordUserId }}</span>
+                </div>
+              </td>
               <td>{{ item.reason || '—' }}</td>
-              <td class="mono">
+              <td>
                 <ng-container *ngIf="item.messageCount">{{ item.messageCount }} msgs</ng-container>
-                <ng-container *ngIf="item.channelDiscordId"> · ch {{ item.channelDiscordId }}</ng-container>
+                <ng-container *ngIf="item.channelDiscordId">
+                  · {{ displayChannel(item.channelName, item.channelDiscordId) }}
+                </ng-container>
                 <ng-container *ngIf="!item.messageCount && !item.channelDiscordId">—</ng-container>
               </td>
               <td>{{ item.createdAt | date: 'medium' }}</td>

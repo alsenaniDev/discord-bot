@@ -138,7 +138,7 @@ public class TicketInteractionHandlers
             $"Ticket #{result.TicketNumber} has been closed.");
     }
 
-    private async Task HandleCreateButtonAsync(SocketMessageComponent component)
+    public async Task HandleCreateButtonAsync(SocketMessageComponent component)
     {
         var guild = (component.User as SocketGuildUser)?.Guild;
         var user = component.User as SocketGuildUser;

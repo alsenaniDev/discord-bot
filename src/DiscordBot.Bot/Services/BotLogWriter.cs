@@ -23,6 +23,9 @@ public class BotLogWriter
         string? actorDiscordUserId = null,
         string? targetDiscordUserId = null,
         string? channelDiscordId = null,
+        string? actorDisplayName = null,
+        string? targetDisplayName = null,
+        string? channelDisplayName = null,
         string? metadataJson = null,
         CancellationToken cancellationToken = default) =>
         _apiClient.CreateLogAsync(new CreateLogApiRequest
@@ -33,6 +36,9 @@ public class BotLogWriter
             ActorDiscordUserId = actorDiscordUserId,
             TargetDiscordUserId = targetDiscordUserId,
             ChannelDiscordId = channelDiscordId,
+            ActorDisplayName = actorDisplayName,
+            TargetDisplayName = targetDisplayName,
+            ChannelDisplayName = channelDisplayName,
             MetadataJson = metadataJson
         }, cancellationToken);
 }

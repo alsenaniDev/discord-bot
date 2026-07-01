@@ -26,9 +26,10 @@ public class ResourceSyncService
         if (success)
         {
             _logger.LogInformation(
-                "Synced {ChannelCount} channels and {RoleCount} roles for guild {GuildName}.",
+                "Synced {ChannelCount} channels, {RoleCount} roles, and {MemberCount} members for guild {GuildName}.",
                 payload.Channels.Count,
                 payload.Roles.Count,
+                payload.Members.Count,
                 guild.Name);
         }
         else

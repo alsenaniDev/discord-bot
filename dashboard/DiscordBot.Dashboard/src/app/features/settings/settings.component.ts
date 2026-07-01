@@ -16,6 +16,20 @@ import {
   isTextChannel,
   roleLabel
 } from '../../core/models/guild.models';
+import {
+  COMMAND_PANEL_ACTIONS,
+  COMMAND_PANEL_STYLES,
+  CommandPanelButton,
+  DEFAULT_COMMAND_PANEL_BUTTONS
+} from '../../core/models/command-panel.models';
+import {
+  AUTO_REPLY_MATCH_MODES,
+  AUTO_REPLY_SCOPES,
+  AutoReplyRule,
+  AutoReplyMatchMode,
+  AutoReplyScope,
+  CreateAutoReplyRule
+} from '../../core/models/auto-reply.models';
 import { getApiErrorMessage } from '../../core/utils/api-error.util';
 import { requiredWhenEnabled } from '../../core/utils/settings.validators';
 
@@ -37,6 +51,35 @@ export class SettingsComponent implements OnInit {
   roles: DiscordRole[] = [];
   assignableRoles: DiscordRole[] = [];
   ticketsEnabled = false;
+  panelButtons: CommandPanelButton[] = [];
+  autoReplies: AutoReplyRule[] = [];
+  autoReplyLoading = false;
+  autoReplySaving = false;
+  editingAutoReplyId = '';
+  activeTab: SettingsTabId = 'general';
+  autoReplyForm = {
+    trigger: '',
+    response: '',
+    matchMode: 'Contains' as AutoReplyMatchMode,
+    scope: 'AllChannels' as AutoReplyScope,
+    enabled: true,
+    priority: 0
+  };
+
+  readonly panelActions = COMMAND_PANEL_ACTIONS;
+  readonly panelStyles = COMMAND_PANEL_STYLES;
+  readonly autoReplyMatchModes = AUTO_REPLY_MATCH_MODES;
+  readonly autoReplyScopes = AUTO_REPLY_SCOPES;
+
+  readonly settingsTabs: SettingsTab[] = [
+    { id: 'general', labelKey: 'settings.tabs.general' },
+    { id: 'welcome', labelKey: 'settings.tabs.welcome' },
+    { id: 'autoRole', labelKey: 'settings.tabs.autoRole' },
+    { id: 'logs', labelKey: 'settings.tabs.logs' },
+    { id: 'tickets', labelKey: 'settings.tabs.tickets', requiresTickets: true },
+    { id: 'autoReplies', labelKey: 'settings.tabs.autoReplies' },
+    { id: 'panel', labelKey: 'settings.tabs.panel' }
+  ];
 
   channelLabel = channelLabel;
   roleLabel = roleLabel;
@@ -70,14 +113,52 @@ export class SettingsComponent implements OnInit {
       autoRoleId: ['', [requiredWhenEnabled('autoRoleEnabled')]],
       logsEnabled: [false],
       logChannelId: ['', [requiredWhenEnabled('logsEnabled')]],
-      ticketCategoryId: ['']
+      ticketCategoryId: [''],
+      ticketWelcomeTitle: ['Ticket #{ticket}', [Validators.required, Validators.maxLength(256)]],
+      ticketWelcomeMessage: [
+        '{mention}, thanks for reaching out.\n\nA staff member will assist you shortly. Use the **Close ticket** button when your issue is resolved.',
+        [Validators.required, Validators.maxLength(2000)]
+      ],
+      ticketClosedMessage: ['Ticket #{ticket} was closed by {mention}.', [Validators.required, Validators.maxLength(2000)]],
+      ticketClosedFromDashboardMessage: [
+        'Ticket #{ticket} was closed from the dashboard. This channel will be deleted shortly.',
+        [Validators.required, Validators.maxLength(2000)]
+      ],
+      ticketStaffReplyPrefix: ['**{staff}** replied from the dashboard:', [Validators.required, Validators.maxLength(2000)]],
+      commandPanelEnabled: [false],
+      commandPanelChannelId: ['', [requiredWhenEnabled('commandPanelEnabled')]],
+      commandPanelTitle: ['How can we help?', [Validators.required, Validators.maxLength(256)]],
+      commandPanelDescription: [
+        'Use the buttons below — no commands needed.',
+        [Validators.required, Validators.maxLength(2000)]
+      ]
     });
 
     this.form.get('welcomeEnabled')?.valueChanges.subscribe(() => this.form.get('welcomeChannelId')?.updateValueAndValidity());
     this.form.get('autoRoleEnabled')?.valueChanges.subscribe(() => this.form.get('autoRoleId')?.updateValueAndValidity());
     this.form.get('logsEnabled')?.valueChanges.subscribe(() => this.form.get('logChannelId')?.updateValueAndValidity());
+    this.form.get('commandPanelEnabled')?.valueChanges.subscribe(() =>
+      this.form.get('commandPanelChannelId')?.updateValueAndValidity()
+    );
 
     this.loadPageData();
+    this.loadAutoReplies();
+  }
+
+  loadAutoReplies(): void {
+    this.autoReplyLoading = true;
+    this.guildService.getAutoReplies(this.guildId).subscribe({
+      next: rules => {
+        this.autoReplies = rules;
+        this.autoReplyLoading = false;
+      },
+      error: err => {
+        this.autoReplyLoading = false;
+        if (err.status !== 401) {
+          this.toast.error(getApiErrorMessage(err, this.translate.instant('settings.autoReplies.loadError')));
+        }
+      }
+    });
   }
 
   loadPageData(): void {
@@ -92,10 +173,14 @@ export class SettingsComponent implements OnInit {
     }).subscribe({
       next: ({ settings, channels, categories, roles }) => {
         this.ticketsEnabled = settings.ticketsEnabled;
+        if (this.activeTab === 'tickets' && !settings.ticketsEnabled) {
+          this.activeTab = 'general';
+        }
         this.textChannels = channels.filter(isTextChannel);
         this.categories = categories.length > 0 ? categories : channels.filter(isCategoryChannel);
         this.roles = roles;
         this.assignableRoles = roles.filter(isAssignableRole);
+        this.panelButtons = this.normalizePanelButtons(settings.commandPanelButtons);
 
         this.form.patchValue({
           welcomeEnabled: settings.welcomeEnabled,
@@ -105,7 +190,20 @@ export class SettingsComponent implements OnInit {
           autoRoleId: settings.autoRoleId ?? '',
           logsEnabled: settings.logsEnabled,
           logChannelId: settings.logChannelId ?? '',
-          ticketCategoryId: settings.ticketCategoryId ?? ''
+          ticketCategoryId: settings.ticketCategoryId ?? '',
+          ticketWelcomeTitle: settings.ticketWelcomeTitle || 'Ticket #{ticket}',
+          ticketWelcomeMessage:
+            settings.ticketWelcomeMessage ||
+            '{mention}, thanks for reaching out.\n\nA staff member will assist you shortly. Use the **Close ticket** button when your issue is resolved.',
+          ticketClosedMessage: settings.ticketClosedMessage || 'Ticket #{ticket} was closed by {mention}.',
+          ticketClosedFromDashboardMessage:
+            settings.ticketClosedFromDashboardMessage ||
+            'Ticket #{ticket} was closed from the dashboard. This channel will be deleted shortly.',
+          ticketStaffReplyPrefix: settings.ticketStaffReplyPrefix || '**{staff}** replied from the dashboard:',
+          commandPanelEnabled: settings.commandPanelEnabled,
+          commandPanelChannelId: settings.commandPanelChannelId ?? '',
+          commandPanelTitle: settings.commandPanelTitle,
+          commandPanelDescription: settings.commandPanelDescription
         });
 
         this.loading = false;
@@ -168,6 +266,11 @@ export class SettingsComponent implements OnInit {
       return;
     }
 
+    if (this.form.value.commandPanelEnabled && this.enabledPanelButtonCount === 0) {
+      this.toast.error(this.translate.instant('settings.panel.validation.noButtons'));
+      return;
+    }
+
     this.saving = true;
 
     const value = this.form.value;
@@ -179,7 +282,17 @@ export class SettingsComponent implements OnInit {
       autoRoleId: value.autoRoleId || null,
       logsEnabled: value.logsEnabled,
       logChannelId: value.logChannelId || null,
-      ticketCategoryId: value.ticketCategoryId || null
+      ticketCategoryId: value.ticketCategoryId || null,
+      ticketWelcomeTitle: value.ticketWelcomeTitle?.trim(),
+      ticketWelcomeMessage: value.ticketWelcomeMessage?.trim(),
+      ticketClosedMessage: value.ticketClosedMessage?.trim(),
+      ticketClosedFromDashboardMessage: value.ticketClosedFromDashboardMessage?.trim(),
+      ticketStaffReplyPrefix: value.ticketStaffReplyPrefix?.trim(),
+      commandPanelEnabled: value.commandPanelEnabled,
+      commandPanelChannelId: value.commandPanelChannelId || null,
+      commandPanelTitle: value.commandPanelTitle?.trim(),
+      commandPanelDescription: value.commandPanelDescription?.trim(),
+      commandPanelButtons: this.preparePanelButtonsForSave()
     };
 
     this.guildService.updateSettings(this.guildId, payload).subscribe({
@@ -198,6 +311,139 @@ export class SettingsComponent implements OnInit {
     });
   }
 
+  addPanelButton(): void {
+    if (this.panelButtons.length >= 5) {
+      return;
+    }
+
+    this.panelButtons = [
+      ...this.panelButtons,
+      {
+        id: `btn-${Date.now()}`,
+        action: 'ticket_open',
+        label: 'New button',
+        style: 'Secondary',
+        enabled: true,
+        order: this.panelButtons.length
+      }
+    ];
+  }
+
+  removePanelButton(index: number): void {
+    this.panelButtons = this.panelButtons.filter((_, i) => i !== index);
+  }
+
+  movePanelButton(index: number, direction: -1 | 1): void {
+    const target = index + direction;
+    if (target < 0 || target >= this.panelButtons.length) {
+      return;
+    }
+
+    const buttons = [...this.panelButtons];
+    [buttons[index], buttons[target]] = [buttons[target], buttons[index]];
+    this.panelButtons = buttons.map((button, order) => ({ ...button, order }));
+  }
+
+  get enabledPanelButtonCount(): number {
+    return this.panelButtons.filter(button => button.enabled).length;
+  }
+
+  resetAutoReplyForm(): void {
+    this.editingAutoReplyId = '';
+    this.autoReplyForm = {
+      trigger: '',
+      response: '',
+      matchMode: 'Contains',
+      scope: 'AllChannels',
+      enabled: true,
+      priority: 0
+    };
+  }
+
+  editAutoReply(rule: AutoReplyRule): void {
+    this.activeTab = 'autoReplies';
+    this.editingAutoReplyId = rule.id;
+    this.autoReplyForm = {
+      trigger: rule.trigger,
+      response: rule.response,
+      matchMode: (rule.matchMode as AutoReplyMatchMode) || 'Contains',
+      scope: (rule.scope as AutoReplyScope) || 'AllChannels',
+      enabled: rule.enabled,
+      priority: rule.priority
+    };
+  }
+
+  saveAutoReply(): void {
+    const trigger = this.autoReplyForm.trigger.trim();
+    const response = this.autoReplyForm.response.trim();
+    if (!trigger || !response) {
+      this.toast.error(this.translate.instant('settings.autoReplies.validation.required'));
+      return;
+    }
+
+    this.autoReplySaving = true;
+    const payload: CreateAutoReplyRule = {
+      trigger,
+      response,
+      matchMode: this.autoReplyForm.matchMode,
+      scope: this.autoReplyForm.scope,
+      enabled: this.autoReplyForm.enabled,
+      priority: this.autoReplyForm.priority
+    };
+
+    const request = this.editingAutoReplyId
+      ? this.guildService.updateAutoReply(this.guildId, this.editingAutoReplyId, payload)
+      : this.guildService.createAutoReply(this.guildId, payload);
+
+    request.subscribe({
+      next: () => {
+        this.autoReplySaving = false;
+        this.toast.success(this.translate.instant('settings.autoReplies.saved'));
+        this.resetAutoReplyForm();
+        this.loadAutoReplies();
+      },
+      error: err => {
+        this.autoReplySaving = false;
+        this.toast.error(getApiErrorMessage(err, this.translate.instant('settings.autoReplies.saveError')));
+      }
+    });
+  }
+
+  deleteAutoReply(rule: AutoReplyRule): void {
+    if (!window.confirm(this.translate.instant('settings.autoReplies.deleteConfirm', { trigger: rule.trigger }))) {
+      return;
+    }
+
+    this.guildService.deleteAutoReply(this.guildId, rule.id).subscribe({
+      next: () => {
+        this.toast.success(this.translate.instant('settings.autoReplies.deleted'));
+        if (this.editingAutoReplyId === rule.id) {
+          this.resetAutoReplyForm();
+        }
+        this.loadAutoReplies();
+      },
+      error: err => {
+        this.toast.error(getApiErrorMessage(err, this.translate.instant('settings.autoReplies.deleteError')));
+      }
+    });
+  }
+
+  selectTab(tabId: SettingsTabId): void {
+    this.activeTab = tabId;
+  }
+
+  isTabActive(tabId: SettingsTabId): boolean {
+    return this.activeTab === tabId;
+  }
+
+  isTabVisible(tab: SettingsTab): boolean {
+    return !tab.requiresTickets || this.ticketsEnabled;
+  }
+
+  get showSaveButton(): boolean {
+    return this.activeTab !== 'general' && this.activeTab !== 'autoReplies';
+  }
+
   fieldError(controlName: string): string | null {
     const control = this.form.get(controlName);
     if (!control || !control.touched || !control.errors) {
@@ -214,8 +460,35 @@ export class SettingsComponent implements OnInit {
     return this.translate.instant('settings.validation.invalid');
   }
 
+  private normalizePanelButtons(buttons?: CommandPanelButton[]): CommandPanelButton[] {
+    if (!buttons?.length) {
+      return DEFAULT_COMMAND_PANEL_BUTTONS.map(button => ({ ...button }));
+    }
+
+    return buttons.map((button, index) => ({
+      ...button,
+      order: button.order ?? index
+    }));
+  }
+
+  private preparePanelButtonsForSave(): CommandPanelButton[] {
+    return this.panelButtons.map((button, index) => ({
+      ...button,
+      label: button.label.trim(),
+      order: index
+    }));
+  }
+
   private handleAuthError(): void {
     this.auth.logout();
     this.router.navigate(['/login']);
   }
+}
+
+type SettingsTabId = 'general' | 'welcome' | 'autoRole' | 'logs' | 'tickets' | 'autoReplies' | 'panel';
+
+interface SettingsTab {
+  id: SettingsTabId;
+  labelKey: string;
+  requiresTickets?: boolean;
 }

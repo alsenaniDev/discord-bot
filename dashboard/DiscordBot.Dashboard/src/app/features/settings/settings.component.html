@@ -11,7 +11,21 @@
   </app-empty-state>
 
   <form class="settings-stack" [formGroup]="form" (ngSubmit)="save()" *ngIf="!loading && !error">
-    <section class="card card-section">
+    <nav class="settings-tabs" [attr.aria-label]="'settings.tabs.label' | translate">
+      <ng-container *ngFor="let tab of settingsTabs">
+        <button
+          type="button"
+          class="settings-tab"
+          *ngIf="isTabVisible(tab)"
+          [class.active]="isTabActive(tab.id)"
+          (click)="selectTab(tab.id)"
+        >
+          {{ tab.labelKey | translate }}
+        </button>
+      </ng-container>
+    </nav>
+
+    <section class="card card-section" *ngIf="activeTab === 'general'">
       <div class="card-section-header">
         <div>
           <h2>{{ 'settings.discordData' | translate }}</h2>
@@ -28,7 +42,7 @@
       </div>
     </section>
 
-    <section class="card card-section">
+    <section class="card card-section" *ngIf="activeTab === 'welcome'">
       <div class="card-section-header">
         <div>
           <h2>{{ 'settings.welcome' | translate }}</h2>
@@ -58,7 +72,7 @@
       </label>
     </section>
 
-    <section class="card card-section">
+    <section class="card card-section" *ngIf="activeTab === 'autoRole'">
       <div class="card-section-header">
         <div>
           <h2>{{ 'settings.autoRole' | translate }}</h2>
@@ -82,7 +96,7 @@
       </label>
     </section>
 
-    <section class="card card-section">
+    <section class="card card-section" *ngIf="activeTab === 'logs'">
       <div class="card-section-header">
         <div>
           <h2>{{ 'settings.logs' | translate }}</h2>
@@ -106,7 +120,7 @@
       </label>
     </section>
 
-    <section class="card card-section" *ngIf="ticketsEnabled">
+    <section class="card card-section" *ngIf="activeTab === 'tickets' && ticketsEnabled">
       <div class="card-section-header">
         <div>
           <h2>{{ 'settings.tickets' | translate }}</h2>
@@ -123,9 +137,206 @@
           </option>
         </select>
       </label>
+
+      <label>
+        {{ 'settings.ticketWelcomeTitle' | translate }}
+        <input type="text" formControlName="ticketWelcomeTitle" maxlength="256" />
+        <span class="hint">{{ 'settings.ticketTemplateHint' | translate }}</span>
+        <span class="field-error" *ngIf="fieldError('ticketWelcomeTitle')">{{ fieldError('ticketWelcomeTitle') }}</span>
+      </label>
+
+      <label>
+        {{ 'settings.ticketWelcomeMessage' | translate }}
+        <textarea formControlName="ticketWelcomeMessage" rows="4"></textarea>
+        <span class="hint">{{ 'settings.ticketTemplateHint' | translate }}</span>
+        <span class="field-error" *ngIf="fieldError('ticketWelcomeMessage')">{{ fieldError('ticketWelcomeMessage') }}</span>
+      </label>
+
+      <label>
+        {{ 'settings.ticketClosedMessage' | translate }}
+        <textarea formControlName="ticketClosedMessage" rows="3"></textarea>
+        <span class="hint">{{ 'settings.ticketTemplateHint' | translate }}</span>
+        <span class="field-error" *ngIf="fieldError('ticketClosedMessage')">{{ fieldError('ticketClosedMessage') }}</span>
+      </label>
+
+      <label>
+        {{ 'settings.ticketClosedFromDashboardMessage' | translate }}
+        <textarea formControlName="ticketClosedFromDashboardMessage" rows="3"></textarea>
+        <span class="hint">{{ 'settings.ticketTemplateHint' | translate }}</span>
+        <span class="field-error" *ngIf="fieldError('ticketClosedFromDashboardMessage')">{{ fieldError('ticketClosedFromDashboardMessage') }}</span>
+      </label>
+
+      <label>
+        {{ 'settings.ticketStaffReplyPrefix' | translate }}
+        <textarea formControlName="ticketStaffReplyPrefix" rows="2"></textarea>
+        <span class="hint">{{ 'settings.ticketStaffReplyHint' | translate }}</span>
+        <span class="field-error" *ngIf="fieldError('ticketStaffReplyPrefix')">{{ fieldError('ticketStaffReplyPrefix') }}</span>
+      </label>
     </section>
 
-    <div class="form-actions">
+    <section class="card card-section" *ngIf="activeTab === 'autoReplies'">
+      <div class="card-section-header">
+        <div>
+          <h2>{{ 'settings.autoReplies.title' | translate }}</h2>
+          <p class="muted small">{{ 'settings.autoReplies.hint' | translate }}</p>
+        </div>
+      </div>
+
+      <app-loading-state *ngIf="autoReplyLoading" [message]="'settings.autoReplies.loading' | translate"></app-loading-state>
+
+      <div class="auto-reply-list" *ngIf="!autoReplyLoading && autoReplies.length > 0">
+        <div class="auto-reply-item" *ngFor="let rule of autoReplies">
+          <div>
+            <strong>{{ rule.trigger }}</strong>
+            <span class="muted small"> → {{ rule.response }}</span>
+          </div>
+          <div class="muted small">
+            {{ 'settings.autoReplies.matchMode' | translate }}: {{ rule.matchMode }} ·
+            {{ 'settings.autoReplies.scope' | translate }}: {{ rule.scope }} ·
+            {{ rule.enabled ? ('common.enabled' | translate) : ('common.disabled' | translate) }}
+          </div>
+          <div class="inline-actions">
+            <button type="button" class="btn btn-secondary btn-sm" (click)="editAutoReply(rule)">
+              {{ 'common.edit' | translate }}
+            </button>
+            <button type="button" class="btn btn-danger btn-sm" (click)="deleteAutoReply(rule)">
+              {{ 'common.remove' | translate }}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <p class="muted small" *ngIf="!autoReplyLoading && autoReplies.length === 0">
+        {{ 'settings.autoReplies.empty' | translate }}
+      </p>
+
+      <div class="auto-reply-form">
+        <h3>{{ (editingAutoReplyId ? 'settings.autoReplies.editTitle' : 'settings.autoReplies.addTitle') | translate }}</h3>
+        <label>
+          {{ 'settings.autoReplies.trigger' | translate }}
+          <input type="text" [(ngModel)]="autoReplyForm.trigger" [ngModelOptions]="{ standalone: true }" maxlength="500" />
+        </label>
+        <label>
+          {{ 'settings.autoReplies.response' | translate }}
+          <textarea [(ngModel)]="autoReplyForm.response" [ngModelOptions]="{ standalone: true }" rows="3" maxlength="2000"></textarea>
+        </label>
+        <label>
+          {{ 'settings.autoReplies.matchMode' | translate }}
+          <select [(ngModel)]="autoReplyForm.matchMode" [ngModelOptions]="{ standalone: true }">
+            <option *ngFor="let mode of autoReplyMatchModes" [value]="mode">{{ mode }}</option>
+          </select>
+        </label>
+        <label>
+          {{ 'settings.autoReplies.scope' | translate }}
+          <select [(ngModel)]="autoReplyForm.scope" [ngModelOptions]="{ standalone: true }">
+            <option *ngFor="let scope of autoReplyScopes" [value]="scope">{{ scope }}</option>
+          </select>
+        </label>
+        <label class="checkbox">
+          <input type="checkbox" [(ngModel)]="autoReplyForm.enabled" [ngModelOptions]="{ standalone: true }" />
+          {{ 'settings.autoReplies.enabled' | translate }}
+        </label>
+        <label>
+          {{ 'settings.autoReplies.priority' | translate }}
+          <input type="number" [(ngModel)]="autoReplyForm.priority" [ngModelOptions]="{ standalone: true }" />
+        </label>
+        <div class="inline-actions">
+          <button type="button" class="btn btn-primary btn-sm" [disabled]="autoReplySaving" (click)="saveAutoReply()">
+            <span class="spinner inline" *ngIf="autoReplySaving"></span>
+            {{ (editingAutoReplyId ? 'common.save' : 'settings.autoReplies.add') | translate }}
+          </button>
+          <button type="button" class="btn btn-secondary btn-sm" *ngIf="editingAutoReplyId" (click)="resetAutoReplyForm()">
+            {{ 'common.cancel' | translate }}
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <section class="card card-section" *ngIf="activeTab === 'panel'">
+      <div class="card-section-header">
+        <div>
+          <h2>{{ 'settings.panel.title' | translate }}</h2>
+          <p class="muted small">{{ 'settings.panel.hint' | translate }}</p>
+        </div>
+      </div>
+
+      <label class="checkbox">
+        <input type="checkbox" formControlName="commandPanelEnabled" />
+        {{ 'settings.panel.enable' | translate }}
+      </label>
+
+      <label>
+        {{ 'settings.panel.channel' | translate }}
+        <select formControlName="commandPanelChannelId">
+          <option value="">{{ 'settings.selectChannel' | translate }}</option>
+          <option *ngFor="let channel of textChannels" [value]="channel.discordChannelId">
+            {{ channelLabel(channel) }}
+          </option>
+        </select>
+        <span class="field-error" *ngIf="fieldError('commandPanelChannelId')">{{ fieldError('commandPanelChannelId') }}</span>
+      </label>
+
+      <label>
+        {{ 'settings.panel.panelTitle' | translate }}
+        <input type="text" formControlName="commandPanelTitle" maxlength="256" />
+        <span class="field-error" *ngIf="fieldError('commandPanelTitle')">{{ fieldError('commandPanelTitle') }}</span>
+      </label>
+
+      <label>
+        {{ 'settings.panel.description' | translate }}
+        <textarea formControlName="commandPanelDescription" rows="3"></textarea>
+        <span class="field-error" *ngIf="fieldError('commandPanelDescription')">{{ fieldError('commandPanelDescription') }}</span>
+      </label>
+
+      <div class="panel-buttons-editor">
+        <div class="panel-buttons-header">
+          <h3>{{ 'settings.panel.buttonsTitle' | translate }}</h3>
+          <button type="button" class="btn btn-secondary btn-sm" (click)="addPanelButton()" [disabled]="panelButtons.length >= 5">
+            {{ 'settings.panel.addButton' | translate }}
+          </button>
+        </div>
+
+        <p class="muted small" *ngIf="panelButtons.length === 0">{{ 'settings.panel.noButtons' | translate }}</p>
+
+        <div class="panel-button-row" *ngFor="let button of panelButtons; let i = index">
+          <label class="checkbox">
+            <input type="checkbox" [(ngModel)]="button.enabled" [ngModelOptions]="{ standalone: true }" />
+            {{ 'settings.panel.enabled' | translate }}
+          </label>
+
+          <label>
+            {{ 'settings.panel.buttonLabel' | translate }}
+            <input type="text" [(ngModel)]="button.label" [ngModelOptions]="{ standalone: true }" maxlength="80" />
+          </label>
+
+          <label>
+            {{ 'settings.panel.buttonAction' | translate }}
+            <select [(ngModel)]="button.action" [ngModelOptions]="{ standalone: true }">
+              <option *ngFor="let action of panelActions" [value]="action.value">
+                {{ action.labelKey | translate }}
+              </option>
+            </select>
+          </label>
+
+          <label>
+            {{ 'settings.panel.buttonStyle' | translate }}
+            <select [(ngModel)]="button.style" [ngModelOptions]="{ standalone: true }">
+              <option *ngFor="let style of panelStyles" [value]="style.value">
+                {{ style.labelKey | translate }}
+              </option>
+            </select>
+          </label>
+
+          <div class="panel-button-actions">
+            <button type="button" class="btn btn-secondary btn-sm" (click)="movePanelButton(i, -1)" [disabled]="i === 0">↑</button>
+            <button type="button" class="btn btn-secondary btn-sm" (click)="movePanelButton(i, 1)" [disabled]="i === panelButtons.length - 1">↓</button>
+            <button type="button" class="btn btn-danger btn-sm" (click)="removePanelButton(i)">{{ 'common.remove' | translate }}</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <div class="form-actions" *ngIf="showSaveButton">
       <button type="submit" class="btn btn-primary" [disabled]="saving || form.invalid">
         <span class="spinner inline" *ngIf="saving"></span>
         {{ 'common.save' | translate }}

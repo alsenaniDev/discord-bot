@@ -57,7 +57,16 @@ export class DashboardLayoutComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
-    this.auth.getCurrentUser().subscribe({ next: user => { this.user = user; this.updateTitles(); } });
+    this.auth.getCurrentUser().subscribe({
+      next: user => {
+        this.user = user;
+        this.updateTitles();
+      },
+      error: () => {
+        this.auth.logout();
+        this.router.navigate(['/login']);
+      }
+    });
     this.guildService.getGuilds().subscribe({ next: guilds => { this.guilds = guilds; } });
 
     this.guildSub = this.guildContext.selectedGuild$.subscribe(guild => {
@@ -120,54 +129,34 @@ export class DashboardLayoutComponent implements OnInit, OnDestroy {
   private updateTitles(): void {
     const url = this.router.url;
     const guildName = this.selectedGuild?.name ?? '';
+    const guildId = this.selectedGuild?.id;
 
     if (url.startsWith('/guilds/') && url.includes('/overview')) {
-      this.setPage('titles.overview', 'titles.overviewSubtitle', guildName, [
-        { label: guildName, link: ['/guilds', this.selectedGuild!.id, 'overview'], translate: false },
-        { label: 'common.overview' }
-      ], true);
+      this.setGuildPage('titles.overview', 'titles.overviewSubtitle', guildName, guildId, 'common.overview');
       return;
     }
     if (url.includes('/settings')) {
-      this.setPage('titles.settings', 'titles.settingsSubtitle', guildName, [
-        { label: guildName, link: ['/guilds', this.selectedGuild!.id, 'overview'], translate: false },
-        { label: 'common.settings' }
-      ], true);
+      this.setGuildPage('titles.settings', 'titles.settingsSubtitle', guildName, guildId, 'common.settings');
       return;
     }
     if (url.includes('/tickets')) {
-      this.setPage('titles.tickets', 'titles.ticketsSubtitle', guildName, [
-        { label: guildName, link: ['/guilds', this.selectedGuild!.id, 'overview'], translate: false },
-        { label: 'common.tickets' }
-      ], true);
+      this.setGuildPage('titles.tickets', 'titles.ticketsSubtitle', guildName, guildId, 'common.tickets');
       return;
     }
     if (url.includes('/moderation')) {
-      this.setPage('titles.moderation', 'titles.moderationSubtitle', guildName, [
-        { label: guildName, link: ['/guilds', this.selectedGuild!.id, 'overview'], translate: false },
-        { label: 'nav.moderation' }
-      ], true);
+      this.setGuildPage('titles.moderation', 'titles.moderationSubtitle', guildName, guildId, 'nav.moderation');
       return;
     }
     if (url.includes('/modules')) {
-      this.setPage('titles.modules', 'titles.modulesSubtitle', guildName, [
-        { label: guildName, link: ['/guilds', this.selectedGuild!.id, 'overview'], translate: false },
-        { label: 'common.modules' }
-      ], true);
+      this.setGuildPage('titles.modules', 'titles.modulesSubtitle', guildName, guildId, 'common.modules');
       return;
     }
     if (url.includes('/subscription')) {
-      this.setPage('titles.subscription', 'titles.subscriptionSubtitle', guildName, [
-        { label: guildName, link: ['/guilds', this.selectedGuild!.id, 'overview'], translate: false },
-        { label: 'common.subscription' }
-      ], true);
+      this.setGuildPage('titles.subscription', 'titles.subscriptionSubtitle', guildName, guildId, 'common.subscription');
       return;
     }
     if (url.includes('/logs')) {
-      this.setPage('titles.logs', 'titles.logsSubtitle', guildName, [
-        { label: guildName, link: ['/guilds', this.selectedGuild!.id, 'overview'], translate: false },
-        { label: 'nav.logs' }
-      ], true);
+      this.setGuildPage('titles.logs', 'titles.logsSubtitle', guildName, guildId, 'nav.logs');
       return;
     }
     if (url.startsWith('/admin/upgrade-requests')) {
@@ -178,17 +167,11 @@ export class DashboardLayoutComponent implements OnInit, OnDestroy {
       return;
     }
     if (url.includes('/reaction-roles')) {
-      this.setPage('titles.reactionRoles', 'titles.reactionRolesSubtitle', guildName, [
-        { label: guildName, link: ['/guilds', this.selectedGuild!.id, 'overview'], translate: false },
-        { label: 'nav.reactionRoles' }
-      ], true);
+      this.setGuildPage('titles.reactionRoles', 'titles.reactionRolesSubtitle', guildName, guildId, 'nav.reactionRoles');
       return;
     }
     if (url.includes('/staff')) {
-      this.setPage('titles.staff', 'titles.staffSubtitle', guildName, [
-        { label: guildName, link: ['/guilds', this.selectedGuild!.id, 'overview'], translate: false },
-        { label: 'nav.staff' }
-      ], true);
+      this.setGuildPage('titles.staff', 'titles.staffSubtitle', guildName, guildId, 'nav.staff');
       return;
     }
     if (url === '/admin' || url.startsWith('/admin?')) {
@@ -220,6 +203,25 @@ export class DashboardLayoutComponent implements OnInit, OnDestroy {
       ? { name: this.user.globalName || this.user.username }
       : {};
     this.breadcrumbs = [{ label: 'nav.servers' }];
+  }
+
+  private setGuildPage(
+    titleKey: string,
+    subtitleKey: string,
+    guildName: string,
+    guildId: string | undefined,
+    pageLabel: string
+  ): void {
+    const crumbs: BreadcrumbItem[] = [];
+    if (guildId && guildName) {
+      crumbs.push({
+        label: guildName,
+        link: ['/guilds', guildId, 'overview'],
+        translate: false
+      });
+    }
+    crumbs.push({ label: pageLabel });
+    this.setPage(titleKey, subtitleKey, guildName, crumbs, !!guildName);
   }
 
   private setPage(

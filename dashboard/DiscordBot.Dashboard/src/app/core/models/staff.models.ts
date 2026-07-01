@@ -1,23 +1,42 @@
-export type GuildStaffRole = 'Moderator' | 'Manager';
+export type GuildPermissionKey =
+  | 'Warn'
+  | 'Kick'
+  | 'Timeout'
+  | 'ClearMessages'
+  | 'AccessModeration'
+  | 'AccessLogs'
+  | 'AccessTickets';
 
-export interface GuildStaffMember {
+export interface GuildPermissionRole {
   id: string;
   guildId: string;
-  discordUserId: string;
-  role: GuildStaffRole;
+  name: string;
+  discordRoleId: string;
+  discordRoleName?: string | null;
+  permissionKeys: string[];
   createdAt: string;
-  createdByDiscordUserId: string;
 }
 
-export interface AddGuildStaffRequest {
-  discordUserId: string;
-  role: GuildStaffRole;
+export interface CreateGuildPermissionRoleRequest {
+  name: string;
+  discordRoleId: string;
+  permissionKeys: GuildPermissionKey[];
+}
+
+export interface UpdateGuildPermissionRoleRequest {
+  name: string;
+  discordRoleId: string;
+  permissionKeys: GuildPermissionKey[];
 }
 
 export interface GuildAccess {
   isOwner: boolean;
   isPlatformAdmin: boolean;
   staffRole?: string | null;
+  canWarn: boolean;
+  canKick: boolean;
+  canTimeout: boolean;
+  canClearMessages: boolean;
   canManageSettings: boolean;
   canManageModules: boolean;
   canManageSubscription: boolean;
@@ -27,3 +46,13 @@ export interface GuildAccess {
   canAccessTickets: boolean;
   canAccessOverview: boolean;
 }
+
+export const GUILD_PERMISSION_OPTIONS: { value: GuildPermissionKey; labelKey: string }[] = [
+  { value: 'Warn', labelKey: 'staff.permissions.warn' },
+  { value: 'Kick', labelKey: 'staff.permissions.kick' },
+  { value: 'Timeout', labelKey: 'staff.permissions.timeout' },
+  { value: 'ClearMessages', labelKey: 'staff.permissions.clearMessages' },
+  { value: 'AccessModeration', labelKey: 'staff.permissions.accessModeration' },
+  { value: 'AccessLogs', labelKey: 'staff.permissions.accessLogs' },
+  { value: 'AccessTickets', labelKey: 'staff.permissions.accessTickets' }
+];

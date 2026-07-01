@@ -23,6 +23,9 @@ export interface LogEntry {
   actorDiscordUserId?: string | null;
   targetDiscordUserId?: string | null;
   channelDiscordId?: string | null;
+  actorDisplayName?: string | null;
+  targetDisplayName?: string | null;
+  channelName?: string | null;
   metadataJson?: string | null;
   createdAt: string;
 }
@@ -32,6 +35,7 @@ export interface LogFilters {
   from?: string;
   to?: string;
   search?: string;
+  userId?: string;
 }
 
 export const LOG_EVENT_TYPE_OPTIONS: { value: LogEventType | ''; labelKey: string }[] = [

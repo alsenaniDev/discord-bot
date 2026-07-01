@@ -81,22 +81,55 @@ public class GuildService : IGuildService
             })
             .ToListAsync(cancellationToken);
 
-        var staffGuilds = await _dbContext.GuildStaff
+        var staffGuilds = new List<GuildSummaryDto>();
+        var memberRecords = await _dbContext.DiscordGuildMembers
             .AsNoTracking()
-            .Where(s => s.DiscordUserId == discordUserId)
-            .Where(s => s.Guild.IsActive)
-            .Where(s => s.Guild.OwnerDiscordUserId != discordUserId)
-            .Select(s => new GuildSummaryDto
+            .Where(m => m.DiscordUserId == discordUserId)
+            .Where(m => m.Guild.IsActive)
+            .Where(m => m.Guild.OwnerDiscordUserId != discordUserId)
+            .Select(m => new
             {
-                Id = s.Guild.Id,
-                DiscordGuildId = s.Guild.DiscordGuildId,
-                Name = s.Guild.Name,
-                IconUrl = s.Guild.IconUrl,
-                IsActive = s.Guild.IsActive,
-                IsOwner = false,
-                StaffRole = s.Role.ToString()
+                m.GuildId,
+                m.Guild.DiscordGuildId,
+                m.Guild.Name,
+                m.Guild.IconUrl,
+                m.Guild.IsActive,
+                m.DiscordRoleIdsJson
             })
             .ToListAsync(cancellationToken);
+
+        if (memberRecords.Count > 0)
+        {
+            var guildIds = memberRecords.Select(m => m.GuildId).Distinct().ToList();
+            var permissionRoles = await _dbContext.GuildPermissionRoles
+                .AsNoTracking()
+                .Where(r => guildIds.Contains(r.GuildId))
+                .ToListAsync(cancellationToken);
+
+            foreach (var member in memberRecords)
+            {
+                var userRoleIds = GuildPermissionResolver.ParseRoleIds(member.DiscordRoleIdsJson);
+                var matched = permissionRoles
+                    .Where(r => r.GuildId == member.GuildId && userRoleIds.Contains(r.DiscordRoleId))
+                    .ToList();
+
+                if (matched.Count == 0 || matched.All(r => r.Permissions == GuildPermissions.None))
+                {
+                    continue;
+                }
+
+                staffGuilds.Add(new GuildSummaryDto
+                {
+                    Id = member.GuildId,
+                    DiscordGuildId = member.DiscordGuildId,
+                    Name = member.Name,
+                    IconUrl = member.IconUrl,
+                    IsActive = member.IsActive,
+                    IsOwner = false,
+                    StaffRole = string.Join(", ", matched.Select(r => r.Name))
+                });
+            }
+        }
 
         return ownedGuilds
             .Concat(staffGuilds)
@@ -155,6 +188,34 @@ public class GuildService : IGuildService
         guild.Settings.LogsEnabled = request.LogsEnabled;
         guild.Settings.LogChannelId = request.LogChannelId;
         guild.Settings.TicketCategoryId = request.TicketCategoryId;
+        guild.Settings.TicketWelcomeTitle = request.TicketWelcomeTitle.Trim();
+        guild.Settings.TicketWelcomeMessage = request.TicketWelcomeMessage.Trim();
+        guild.Settings.TicketClosedMessage = request.TicketClosedMessage.Trim();
+        guild.Settings.TicketClosedFromDashboardMessage = request.TicketClosedFromDashboardMessage.Trim();
+        guild.Settings.TicketStaffReplyPrefix = request.TicketStaffReplyPrefix.Trim();
+
+        var normalizedButtons = CommandPanelSerializer.SerializeButtons(request.CommandPanelButtons);
+        var panelChanged = CommandPanelService.ShouldRequestRefresh(guild.Settings, request);
+
+        guild.Settings.CommandPanelEnabled = request.CommandPanelEnabled;
+        guild.Settings.CommandPanelChannelId = request.CommandPanelChannelId;
+        guild.Settings.CommandPanelTitle = request.CommandPanelTitle.Trim();
+        guild.Settings.CommandPanelDescription = request.CommandPanelDescription.Trim();
+        guild.Settings.CommandPanelButtonsJson = normalizedButtons;
+
+        if (request.CommandPanelEnabled
+            && !string.IsNullOrWhiteSpace(request.CommandPanelChannelId))
+        {
+            guild.Settings.CommandPanelRefreshRequested = true;
+        }
+        else if (panelChanged)
+        {
+            guild.Settings.CommandPanelRefreshRequested = true;
+        }
+        else if (!request.CommandPanelEnabled)
+        {
+            guild.Settings.CommandPanelRefreshRequested = false;
+        }
 
         await _dbContext.SaveChangesAsync(cancellationToken);
 
@@ -310,6 +371,16 @@ public class GuildService : IGuildService
             LogsEnabled = settings.LogsEnabled,
             LogChannelId = settings.LogChannelId,
             TicketsEnabled = settings.TicketsEnabled,
-            TicketCategoryId = settings.TicketCategoryId
+            TicketCategoryId = settings.TicketCategoryId,
+            TicketWelcomeTitle = settings.TicketWelcomeTitle,
+            TicketWelcomeMessage = settings.TicketWelcomeMessage,
+            TicketClosedMessage = settings.TicketClosedMessage,
+            TicketClosedFromDashboardMessage = settings.TicketClosedFromDashboardMessage,
+            TicketStaffReplyPrefix = settings.TicketStaffReplyPrefix,
+            CommandPanelEnabled = settings.CommandPanelEnabled,
+            CommandPanelChannelId = settings.CommandPanelChannelId,
+            CommandPanelTitle = settings.CommandPanelTitle,
+            CommandPanelDescription = settings.CommandPanelDescription,
+            CommandPanelButtons = CommandPanelSerializer.ParseButtons(settings.CommandPanelButtonsJson)
         };
 }

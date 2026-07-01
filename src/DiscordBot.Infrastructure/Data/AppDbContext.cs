@@ -16,6 +16,7 @@ public class AppDbContext : DbContext
     public DbSet<Ticket> Tickets => Set<Ticket>();
     public DbSet<DiscordChannel> DiscordChannels => Set<DiscordChannel>();
     public DbSet<DiscordRole> DiscordRoles => Set<DiscordRole>();
+    public DbSet<DiscordGuildMember> DiscordGuildMembers => Set<DiscordGuildMember>();
     public DbSet<Warning> Warnings => Set<Warning>();
     public DbSet<ModerationCase> ModerationCases => Set<ModerationCase>();
     public DbSet<Module> Modules => Set<Module>();
@@ -26,6 +27,9 @@ public class AppDbContext : DbContext
     public DbSet<PlatformAdmin> PlatformAdmins => Set<PlatformAdmin>();
     public DbSet<PlanUpgradeRequest> PlanUpgradeRequests => Set<PlanUpgradeRequest>();
     public DbSet<GuildStaff> GuildStaff => Set<GuildStaff>();
+    public DbSet<GuildPermissionRole> GuildPermissionRoles => Set<GuildPermissionRole>();
+    public DbSet<AutoReplyRule> AutoReplyRules => Set<AutoReplyRule>();
+    public DbSet<TicketOutboundMessage> TicketOutboundMessages => Set<TicketOutboundMessage>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

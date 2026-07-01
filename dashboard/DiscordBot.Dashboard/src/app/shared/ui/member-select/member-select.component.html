@@ -1,0 +1,42 @@
+<label class="member-select" [class.is-disabled]="disabled">
+  <span *ngIf="label">{{ label }}</span>
+  <div class="member-select-control">
+    <input
+      type="text"
+      class="input"
+      [placeholder]="placeholder"
+      [(ngModel)]="query"
+      (ngModelChange)="onQueryChange($event)"
+      (focus)="onFocus()"
+      [disabled]="disabled"
+      autocomplete="off"
+    />
+    <button
+      *ngIf="allowClear && hasSelection"
+      type="button"
+      class="member-select-clear"
+      (click)="clearSelection()"
+      [disabled]="disabled"
+      aria-label="Clear"
+    >
+      ×
+    </button>
+  </div>
+
+  <div class="member-select-dropdown" *ngIf="open && !disabled">
+    <p class="member-select-status muted small" *ngIf="loading">{{ 'memberSelect.loading' | translate }}</p>
+    <p class="member-select-status muted small" *ngIf="loadError">{{ 'memberSelect.loadError' | translate }}</p>
+    <p class="member-select-status muted small" *ngIf="!loading && !loadError && members.length === 0">
+      {{ 'memberSelect.empty' | translate }}
+    </p>
+    <button
+      type="button"
+      class="member-select-option"
+      *ngFor="let member of members"
+      (click)="selectMember(member)"
+    >
+      <span class="member-select-name">{{ member.displayName }}</span>
+      <span class="member-select-meta muted small">@{{ member.username }} · {{ member.discordUserId }}</span>
+    </button>
+  </div>
+</label>

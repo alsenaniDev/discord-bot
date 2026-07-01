@@ -5,11 +5,12 @@ using DiscordBot.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Local overrides (gitignored). Loaded after default JSON; env vars still win in Production.
+// Local overrides (gitignored). Re-apply env vars afterward so CLI overrides (e.g. production migrations) win.
 builder.Configuration.AddJsonFile(
     $"appsettings.{builder.Environment.EnvironmentName}.local.json",
     optional: true,
     reloadOnChange: true);
+builder.Configuration.AddEnvironmentVariables();
 
 // Railway (and similar PaaS) inject PORT; bind HTTP on all interfaces.
 var port = Environment.GetEnvironmentVariable("PORT");

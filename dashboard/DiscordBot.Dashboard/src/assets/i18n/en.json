@@ -41,6 +41,8 @@
     "status": "Status",
     "created": "Created",
     "actions": "Actions",
+    "remove": "Remove",
+    "edit": "Edit",
     "guilds": "guilds",
     "emptyValue": "—"
   },
@@ -53,7 +55,7 @@
     "moderation": "Moderation",
     "logs": "Logs",
     "reactionRoles": "Reaction Roles",
-    "staff": "Staff",
+    "staff": "Roles & permissions",
     "upgradeRequests": "Upgrade Requests",
     "breadcrumbHome": "Home"
   },
@@ -85,8 +87,8 @@
     "adminUsersSubtitle": "People who logged in via Discord",
     "adminUpgradeRequests": "Upgrade requests",
     "adminUpgradeRequestsSubtitle": "Review manual plan upgrade requests",
-    "staff": "Staff",
-    "staffSubtitle": "Add moderators who can access moderation pages"
+    "staff": "Roles & permissions",
+    "staffSubtitle": "Map Discord roles to dashboard and bot permissions"
   },
   "auth": {
     "loginTitle": "Discord Bot Dashboard",
@@ -153,6 +155,16 @@
     "loadError": "Could not load settings",
     "saved": "Settings saved.",
     "saveError": "Could not save settings.",
+    "tabs": {
+      "label": "Settings sections",
+      "general": "General",
+      "welcome": "Welcome",
+      "autoRole": "Auto role",
+      "logs": "Logs",
+      "tickets": "Tickets",
+      "autoReplies": "Auto replies",
+      "panel": "Button panel"
+    },
     "discordData": "Discord data",
     "discordDataHint": "Sync channels and roles from your server for the dropdowns below.",
     "syncDiscord": "Sync Discord Data",
@@ -178,28 +190,104 @@
     "ticketsHint": "Support ticket category for your server.",
     "ticketCategory": "Ticket category",
     "selectCategory": "Select a category…",
+    "ticketWelcomeTitle": "Ticket welcome title",
+    "ticketWelcomeMessage": "Ticket welcome message",
+    "ticketClosedMessage": "Ticket closed message (Discord)",
+    "ticketClosedFromDashboardMessage": "Ticket closed message (dashboard)",
+    "ticketStaffReplyPrefix": "Staff reply prefix (dashboard)",
+    "ticketTemplateHint": "Placeholders: {ticket}, {mention}, {user}, {username}",
+    "ticketStaffReplyHint": "Placeholders: {staff}. The reply text from the dashboard is sent below this line.",
+    "autoReplies": {
+      "title": "Auto replies",
+      "hint": "Automatically respond when a message matches a trigger (e.g. greeting → reply).",
+      "loading": "Loading auto replies…",
+      "loadError": "Could not load auto replies.",
+      "saved": "Auto reply saved.",
+      "saveError": "Could not save auto reply.",
+      "deleted": "Auto reply removed.",
+      "deleteError": "Could not remove auto reply.",
+      "deleteConfirm": "Remove auto reply for \"{{trigger}}\"?",
+      "empty": "No auto replies yet.",
+      "addTitle": "Add auto reply",
+      "editTitle": "Edit auto reply",
+      "add": "Add rule",
+      "trigger": "When message contains / equals",
+      "response": "Bot reply",
+      "matchMode": "Match mode",
+      "scope": "Scope",
+      "enabled": "Enabled",
+      "priority": "Priority (lower runs first)",
+      "validation": {
+        "required": "Trigger and response are required."
+      }
+    },
     "validation": {
       "requiredWhenEnabled": "This field is required when the feature is enabled.",
       "maxLength": "Message is too long (max 2000 characters).",
       "invalid": "Invalid value.",
       "fixBeforeSave": "Please fix the highlighted fields before saving."
     },
-    "syncReloadFailed": "Sync completed but failed to reload dropdown data."
+    "syncReloadFailed": "Sync completed but failed to reload dropdown data.",
+    "panel": {
+      "title": "Member button panel",
+      "hint": "Post a message with buttons so members do not need to type commands. The bot updates the panel within about 30 seconds after you save.",
+      "enable": "Enable member button panel",
+      "channel": "Panel channel",
+      "panelTitle": "Panel title",
+      "description": "Panel description",
+      "buttonsTitle": "Buttons",
+      "addButton": "Add button",
+      "noButtons": "No buttons configured yet.",
+      "enabled": "Enabled",
+      "buttonLabel": "Button label",
+      "buttonAction": "Action",
+      "buttonStyle": "Color",
+      "actions": {
+        "ticketOpen": "Create ticket",
+        "ticketHelp": "Ticket help",
+        "ping": "Bot status (ping)",
+        "serverInfo": "Server info",
+        "moderationHelp": "Moderation help",
+        "reactionRolesHelp": "Reaction roles help",
+        "platformHelp": "Platform help"
+      },
+      "styles": {
+        "primary": "Blue",
+        "secondary": "Gray",
+        "success": "Green",
+        "danger": "Red"
+      },
+      "validation": {
+        "noButtons": "Enable at least one button when the member panel is enabled."
+      }
+    }
   },
   "tickets": {
     "loading": "Loading tickets…",
     "loadError": "Could not load tickets",
     "emptyTitle": "No tickets yet",
-    "emptyBody": "When members run /ticket open in Discord, tickets will appear here.",
+    "emptyBody": "When members use the Create Ticket button in Discord, tickets will appear here.",
     "number": "#",
     "owner": "Owner",
-    "channelId": "Channel ID"
+    "channel": "Channel",
+    "channelId": "Channel ID",
+    "close": "Close ticket",
+    "closeConfirm": "Close ticket #{{number}}? The Discord channel will be deleted by the bot.",
+    "closeSuccess": "Ticket closed.",
+    "closeError": "Could not close the ticket.",
+    "reply": "Reply",
+    "replyPlaceholder": "Type a message to send in the ticket channel…",
+    "replySend": "Send reply",
+    "replySuccess": "Reply queued. The bot will post it in Discord shortly.",
+    "replyError": "Could not send the reply.",
+    "replyEmpty": "Enter a message before sending."
   },
   "moderation": {
     "loading": "Loading moderation data…",
     "loadError": "Could not load moderation data",
     "filters": "Filters",
     "targetUserId": "Target user ID",
+    "targetUser": "Target member",
     "from": "From",
     "to": "To",
     "type": "Type",
@@ -288,6 +376,7 @@
     "allTypes": "All types",
     "search": "Search",
     "searchPlaceholder": "Search messages…",
+    "member": "Member",
     "activityLog": "Activity log",
     "noLogs": "No logs match the current filters.",
     "message": "Message",
@@ -372,30 +461,46 @@
     "upgradeReviewError": "Could not review upgrade request."
   },
   "staff": {
-    "loading": "Loading staff…",
-    "loadError": "Could not load staff",
-    "addTitle": "Add staff member",
-    "addHint": "Enter a Discord user ID. That user must log in to the dashboard with the same Discord account.",
-    "discordUserId": "Discord user ID",
-    "discordUserIdPlaceholder": "e.g. 123456789012345678",
-    "role": "Role",
-    "addButton": "Add staff",
+    "loading": "Loading roles…",
+    "loadError": "Could not load permission roles",
+    "addTitle": "Add permission role",
+    "addHint": "Map a Discord server role to dashboard and bot permissions. Anyone with that Discord role gets the selected permissions after you run /sync.",
+    "roleName": "Role name",
+    "roleNamePlaceholder": "e.g. Admin, Moderator",
+    "discordRole": "Discord role",
+    "discordRolePlaceholder": "Select a synced Discord role",
+    "permissionsTitle": "Permissions",
+    "addButton": "Add role",
     "adding": "Adding…",
-    "added": "Staff member added.",
-    "addError": "Could not add staff member.",
+    "added": "Permission role added.",
+    "addError": "Could not add permission role.",
     "remove": "Remove",
-    "removed": "Staff member removed.",
-    "removeError": "Could not remove staff member.",
-    "listTitle": "Current staff",
-    "emptyTitle": "No staff yet",
-    "emptyBody": "Add moderators to help with tickets, moderation, and logs.",
-    "roles": {
-      "moderator": "Moderator",
-      "manager": "Manager"
+    "removed": "Permission role removed.",
+    "removeError": "Could not remove permission role.",
+    "listTitle": "Permission roles",
+    "emptyTitle": "No permission roles yet",
+    "emptyBody": "Create roles like Admin or Moderator and link them to Discord roles. Members inherit permissions from their Discord role — not from individual user IDs.",
+    "validation": {
+      "required": "Enter a name, choose a Discord role, and select at least one permission."
+    },
+    "permissions": {
+      "warn": "Warn members",
+      "kick": "Kick members",
+      "timeout": "Timeout / suspend members",
+      "clearMessages": "Clear messages",
+      "accessModeration": "Access moderation pages",
+      "accessLogs": "Access logs",
+      "accessTickets": "Access tickets"
     }
   },
   "toast": {
     "dismiss": "Dismiss notification"
+  },
+  "memberSelect": {
+    "placeholder": "Search by name or user ID…",
+    "loading": "Loading members…",
+    "loadError": "Could not load members. Run /sync in Discord first.",
+    "empty": "No members found."
   },
   "errors": {
     "generic": "Something went wrong. Please try again.",

@@ -4,7 +4,13 @@ import { TranslateService } from '@ngx-translate/core';
 import { GuildService } from '../../core/services/guild.service';
 import { GuildContextService } from '../../core/services/guild-context.service';
 import { ToastService } from '../../core/services/toast.service';
-import { AddGuildStaffRequest, GuildStaffMember, GuildStaffRole } from '../../core/models/staff.models';
+import {
+  CreateGuildPermissionRoleRequest,
+  GUILD_PERMISSION_OPTIONS,
+  GuildPermissionKey,
+  GuildPermissionRole
+} from '../../core/models/staff.models';
+import { DiscordRole } from '../../core/models/guild.models';
 import { getApiErrorMessage } from '../../core/utils/api-error.util';
 
 @Component({
@@ -14,14 +20,15 @@ import { getApiErrorMessage } from '../../core/utils/api-error.util';
 })
 export class StaffComponent implements OnInit {
   guildId = '';
-  staff: GuildStaffMember[] = [];
+  roles: GuildPermissionRole[] = [];
+  discordRoles: DiscordRole[] = [];
   loading = true;
   error = '';
   saving = false;
-  discordUserId = '';
-  role: GuildStaffRole = 'Moderator';
-
-  readonly roles: GuildStaffRole[] = ['Moderator', 'Manager'];
+  roleName = '';
+  discordRoleId = '';
+  selectedPermissions: Record<GuildPermissionKey, boolean> = this.emptyPermissions();
+  readonly permissionOptions = GUILD_PERMISSION_OPTIONS;
 
   constructor(
     private route: ActivatedRoute,
@@ -40,16 +47,16 @@ export class StaffComponent implements OnInit {
     }
 
     this.guildContext.ensureGuild(this.guildId, this.guildService);
-    this.loadStaff();
+    this.loadData();
   }
 
-  loadStaff(): void {
+  loadData(): void {
     this.loading = true;
     this.error = '';
 
     this.guildService.getStaff(this.guildId).subscribe({
-      next: staff => {
-        this.staff = staff;
+      next: roles => {
+        this.roles = roles;
         this.loading = false;
       },
       error: err => {
@@ -57,25 +64,34 @@ export class StaffComponent implements OnInit {
         this.loading = false;
       }
     });
+
+    this.guildService.getRoles(this.guildId).subscribe({
+      next: roles => { this.discordRoles = roles; },
+      error: () => { this.discordRoles = []; }
+    });
   }
 
-  addStaff(): void {
-    const discordUserId = this.discordUserId.trim();
-    if (!discordUserId || this.saving) {
+  addRole(): void {
+    const name = this.roleName.trim();
+    const discordRoleId = this.discordRoleId.trim();
+    const permissionKeys = this.selectedPermissionKeys();
+
+    if (!name || !discordRoleId || permissionKeys.length === 0 || this.saving) {
+      this.toast.error(this.translate.instant('staff.validation.required'));
       return;
     }
 
     this.saving = true;
-    const request: AddGuildStaffRequest = {
-      discordUserId,
-      role: this.role
+    const request: CreateGuildPermissionRoleRequest = {
+      name,
+      discordRoleId,
+      permissionKeys
     };
 
     this.guildService.addStaff(this.guildId, request).subscribe({
-      next: member => {
-        this.staff = [...this.staff, member];
-        this.discordUserId = '';
-        this.role = 'Moderator';
+      next: role => {
+        this.roles = [...this.roles, role];
+        this.resetForm();
         this.saving = false;
         this.toast.success(this.translate.instant('staff.added'));
       },
@@ -86,10 +102,10 @@ export class StaffComponent implements OnInit {
     });
   }
 
-  removeStaff(member: GuildStaffMember): void {
-    this.guildService.removeStaff(this.guildId, member.id).subscribe({
+  removeRole(role: GuildPermissionRole): void {
+    this.guildService.removeStaff(this.guildId, role.id).subscribe({
       next: () => {
-        this.staff = this.staff.filter(s => s.id !== member.id);
+        this.roles = this.roles.filter(item => item.id !== role.id);
         this.toast.success(this.translate.instant('staff.removed'));
       },
       error: err => {
@@ -98,7 +114,46 @@ export class StaffComponent implements OnInit {
     });
   }
 
-  roleLabel(role: GuildStaffRole): string {
-    return this.translate.instant(`staff.roles.${role.toLowerCase()}`);
+  formatPermissions(role: GuildPermissionRole): string {
+    if (!role.permissionKeys?.length) {
+      return '—';
+    }
+
+    return role.permissionKeys
+      .map(key => {
+        const option = this.permissionOptions.find(item => item.value === key);
+        return option ? this.translate.instant(option.labelKey) : key;
+      })
+      .join(', ');
+  }
+
+  discordRoleLabel(role: GuildPermissionRole): string {
+    return role.discordRoleName
+      ? `@${role.discordRoleName}`
+      : role.discordRoleId;
+  }
+
+  private selectedPermissionKeys(): GuildPermissionKey[] {
+    return this.permissionOptions
+      .map(option => option.value)
+      .filter(key => this.selectedPermissions[key]);
+  }
+
+  private resetForm(): void {
+    this.roleName = '';
+    this.discordRoleId = '';
+    this.selectedPermissions = this.emptyPermissions();
+  }
+
+  private emptyPermissions(): Record<GuildPermissionKey, boolean> {
+    return {
+      Warn: false,
+      Kick: false,
+      Timeout: false,
+      ClearMessages: false,
+      AccessModeration: false,
+      AccessLogs: false,
+      AccessTickets: false
+    };
   }
 }

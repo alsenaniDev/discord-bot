@@ -25,6 +25,7 @@ builder.Services.AddSingleton<DiscordSocketClient>(_ =>
         GatewayIntents = GatewayIntents.Guilds
             | GatewayIntents.GuildMembers
             | GatewayIntents.GuildMessages
+            | GatewayIntents.MessageContent
     };
 
     return new DiscordSocketClient(config);
@@ -36,6 +37,7 @@ builder.Services.AddSingleton<ComponentBuilderService>();
 builder.Services.AddSingleton<SlashCommandHandlers>();
 builder.Services.AddSingleton<TicketCommandHandlers>();
 builder.Services.AddSingleton<TicketInteractionHandlers>();
+builder.Services.AddSingleton<PanelInteractionHandlers>();
 builder.Services.AddSingleton<ModerationCommandHandlers>();
 builder.Services.AddSingleton<ReactionRoleCommandHandlers>();
 builder.Services.AddSingleton<ReactionRoleInteractionHandlers>();
@@ -44,6 +46,11 @@ builder.Services.AddSingleton<BotLogWriter>();
 builder.Services.AddSingleton<WelcomeMessageService>();
 builder.Services.AddSingleton<ResourceSyncService>();
 builder.Services.AddHostedService<DiscordBotHostedService>();
+builder.Services.AddSingleton<CommandPanelSyncService>();
+builder.Services.AddSingleton<TicketChannelCleanupService>();
+builder.Services.AddSingleton<TicketOutboundMessageService>();
+builder.Services.AddSingleton<AutoReplyMessageService>();
+builder.Services.AddHostedService<GuildMaintenanceWorker>();
 builder.Services.AddHostedService<GuildResourceSyncWorker>();
 
 builder.Logging.AddConsole();

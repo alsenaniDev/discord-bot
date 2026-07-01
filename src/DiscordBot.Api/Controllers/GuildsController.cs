@@ -24,6 +24,8 @@ public class GuildsController : ControllerBase
     private readonly IGuildAccessService _guildAccessService;
     private readonly IPlanUpgradeRequestService _planUpgradeRequestService;
     private readonly IGuildStaffService _guildStaffService;
+    private readonly IGuildPermissionRoleService _guildPermissionRoleService;
+    private readonly IAutoReplyService _autoReplyService;
 
     public GuildsController(
         IGuildService guildService,
@@ -36,7 +38,9 @@ public class GuildsController : ControllerBase
         ISubscriptionService subscriptionService,
         IGuildAccessService guildAccessService,
         IPlanUpgradeRequestService planUpgradeRequestService,
-        IGuildStaffService guildStaffService)
+        IGuildStaffService guildStaffService,
+        IGuildPermissionRoleService guildPermissionRoleService,
+        IAutoReplyService autoReplyService)
     {
         _guildService = guildService;
         _resourceService = resourceService;
@@ -49,6 +53,8 @@ public class GuildsController : ControllerBase
         _guildAccessService = guildAccessService;
         _planUpgradeRequestService = planUpgradeRequestService;
         _guildStaffService = guildStaffService;
+        _guildPermissionRoleService = guildPermissionRoleService;
+        _autoReplyService = autoReplyService;
     }
 
     /// <summary>
@@ -172,6 +178,169 @@ public class GuildsController : ControllerBase
     }
 
     /// <summary>
+    /// Closes an open ticket from the dashboard.
+    /// </summary>
+    [HttpPatch("{id:guid}/tickets/{ticketId:guid}/close")]
+    public async Task<ActionResult<TicketDto>> CloseTicket(
+        Guid id,
+        Guid ticketId,
+        CancellationToken cancellationToken)
+    {
+        var discordUserId = User.GetDiscordUserId();
+        if (string.IsNullOrWhiteSpace(discordUserId))
+        {
+            return Unauthorized(new { message = "Missing Discord user identity in token." });
+        }
+
+        var ticket = await _ticketService.CloseTicketForGuildAsync(
+            id,
+            ticketId,
+            discordUserId,
+            cancellationToken);
+
+        if (ticket is null)
+        {
+            return NotFound(new { message = "Ticket not found, already closed, or access denied." });
+        }
+
+        return Ok(ticket);
+    }
+
+    /// <summary>
+    /// Sends a staff reply into an open ticket channel via the bot.
+    /// </summary>
+    [HttpPost("{id:guid}/tickets/{ticketId:guid}/messages")]
+    public async Task<ActionResult<TicketOutboundMessageDto>> SendTicketMessage(
+        Guid id,
+        Guid ticketId,
+        [FromBody] SendTicketMessageRequest request,
+        CancellationToken cancellationToken)
+    {
+        var discordUserId = User.GetDiscordUserId();
+        if (string.IsNullOrWhiteSpace(discordUserId))
+        {
+            return Unauthorized(new { message = "Missing Discord user identity in token." });
+        }
+
+        try
+        {
+            var message = await _ticketService.SendTicketMessageAsync(
+                id,
+                ticketId,
+                discordUserId,
+                request,
+                cancellationToken);
+
+            if (message is null)
+            {
+                return NotFound(new { message = "Ticket not found, not open, or access denied." });
+            }
+
+            return Ok(message);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
+    [HttpGet("{id:guid}/auto-replies")]
+    public async Task<ActionResult<IReadOnlyList<AutoReplyRuleDto>>> GetAutoReplies(
+        Guid id,
+        CancellationToken cancellationToken)
+    {
+        var discordUserId = User.GetDiscordUserId();
+        if (string.IsNullOrWhiteSpace(discordUserId))
+        {
+            return Unauthorized(new { message = "Missing Discord user identity in token." });
+        }
+
+        var rules = await _autoReplyService.GetRulesAsync(id, discordUserId, cancellationToken);
+        if (rules.Count == 0 && !await _guildAccessService.IsOwnerAsync(id, discordUserId, cancellationToken))
+        {
+            return NotFound(new { message = "Guild not found or access denied." });
+        }
+
+        return Ok(rules);
+    }
+
+    [HttpPost("{id:guid}/auto-replies")]
+    public async Task<ActionResult<AutoReplyRuleDto>> CreateAutoReply(
+        Guid id,
+        [FromBody] CreateAutoReplyRuleRequest request,
+        CancellationToken cancellationToken)
+    {
+        var validationErrors = AutoReplyValidator.ValidateCreate(request);
+        if (validationErrors.Count > 0)
+        {
+            return BadRequest(new { message = "Validation failed.", errors = validationErrors });
+        }
+
+        var discordUserId = User.GetDiscordUserId();
+        if (string.IsNullOrWhiteSpace(discordUserId))
+        {
+            return Unauthorized(new { message = "Missing Discord user identity in token." });
+        }
+
+        var rule = await _autoReplyService.CreateAsync(id, discordUserId, request, cancellationToken);
+        if (rule is null)
+        {
+            return NotFound(new { message = "Guild not found or access denied." });
+        }
+
+        return Ok(rule);
+    }
+
+    [HttpPut("{id:guid}/auto-replies/{ruleId:guid}")]
+    public async Task<ActionResult<AutoReplyRuleDto>> UpdateAutoReply(
+        Guid id,
+        Guid ruleId,
+        [FromBody] UpdateAutoReplyRuleRequest request,
+        CancellationToken cancellationToken)
+    {
+        var validationErrors = AutoReplyValidator.ValidateUpdate(request);
+        if (validationErrors.Count > 0)
+        {
+            return BadRequest(new { message = "Validation failed.", errors = validationErrors });
+        }
+
+        var discordUserId = User.GetDiscordUserId();
+        if (string.IsNullOrWhiteSpace(discordUserId))
+        {
+            return Unauthorized(new { message = "Missing Discord user identity in token." });
+        }
+
+        var rule = await _autoReplyService.UpdateAsync(id, ruleId, discordUserId, request, cancellationToken);
+        if (rule is null)
+        {
+            return NotFound(new { message = "Auto-reply rule not found or access denied." });
+        }
+
+        return Ok(rule);
+    }
+
+    [HttpDelete("{id:guid}/auto-replies/{ruleId:guid}")]
+    public async Task<IActionResult> DeleteAutoReply(
+        Guid id,
+        Guid ruleId,
+        CancellationToken cancellationToken)
+    {
+        var discordUserId = User.GetDiscordUserId();
+        if (string.IsNullOrWhiteSpace(discordUserId))
+        {
+            return Unauthorized(new { message = "Missing Discord user identity in token." });
+        }
+
+        var success = await _autoReplyService.DeleteAsync(id, ruleId, discordUserId, cancellationToken);
+        if (!success)
+        {
+            return NotFound(new { message = "Auto-reply rule not found or access denied." });
+        }
+
+        return Ok(new { message = "Auto-reply rule removed." });
+    }
+
+    /// <summary>
     /// Lists synced Discord channels for a guild the user owns.
     /// </summary>
     [HttpGet("{id:guid}/channels")]
@@ -223,6 +392,34 @@ public class GuildsController : ControllerBase
         }
 
         return Ok(roles);
+    }
+
+    /// <summary>
+    /// Lists synced Discord members for a guild the user can access.
+    /// </summary>
+    [HttpGet("{id:guid}/members")]
+    public async Task<ActionResult<IReadOnlyList<DiscordGuildMemberDto>>> GetMembers(
+        Guid id,
+        [FromQuery] string? search,
+        CancellationToken cancellationToken)
+    {
+        var discordUserId = User.GetDiscordUserId();
+        if (string.IsNullOrWhiteSpace(discordUserId))
+        {
+            return Unauthorized(new { message = "Missing Discord user identity in token." });
+        }
+
+        var members = await _resourceService.GetMembersAsync(id, discordUserId, search, cancellationToken);
+        if (members.Count == 0)
+        {
+            var hasAccess = await _guildAccessService.GetAccessAsync(id, discordUserId, cancellationToken);
+            if (hasAccess is null)
+            {
+                return NotFound(new { message = "Guild not found or access denied." });
+            }
+        }
+
+        return Ok(members);
     }
 
     /// <summary>
@@ -424,6 +621,7 @@ public class GuildsController : ControllerBase
         [FromQuery] DateTimeOffset? from,
         [FromQuery] DateTimeOffset? to,
         [FromQuery] string? search,
+        [FromQuery] string? userId,
         CancellationToken cancellationToken)
     {
         var discordUserId = User.GetDiscordUserId();
@@ -437,7 +635,8 @@ public class GuildsController : ControllerBase
             Type = type,
             From = from,
             To = to,
-            Search = search
+            Search = search,
+            UserId = userId
         };
 
         var logs = await _logService.GetLogsAsync(id, discordUserId, filter, cancellationToken);
@@ -691,5 +890,103 @@ public class GuildsController : ControllerBase
         }
 
         return Ok(new { message = "Staff member removed." });
+    }
+
+    [HttpGet("{id:guid}/permission-roles")]
+    public async Task<ActionResult<IReadOnlyList<GuildPermissionRoleDto>>> GetPermissionRoles(
+        Guid id,
+        CancellationToken cancellationToken)
+    {
+        var discordUserId = User.GetDiscordUserId();
+        if (string.IsNullOrWhiteSpace(discordUserId))
+        {
+            return Unauthorized(new { message = "Missing Discord user identity in token." });
+        }
+
+        var roles = await _guildPermissionRoleService.GetRolesAsync(id, discordUserId, cancellationToken);
+        if (roles.Count == 0 && !await _guildAccessService.CanManageStaffAsync(id, discordUserId, cancellationToken))
+        {
+            return NotFound(new { message = "Guild not found or access denied." });
+        }
+
+        return Ok(roles);
+    }
+
+    [HttpPost("{id:guid}/permission-roles")]
+    public async Task<ActionResult<GuildPermissionRoleDto>> CreatePermissionRole(
+        Guid id,
+        [FromBody] CreateGuildPermissionRoleRequest request,
+        CancellationToken cancellationToken)
+    {
+        var discordUserId = User.GetDiscordUserId();
+        if (string.IsNullOrWhiteSpace(discordUserId))
+        {
+            return Unauthorized(new { message = "Missing Discord user identity in token." });
+        }
+
+        try
+        {
+            var role = await _guildPermissionRoleService.CreateAsync(id, discordUserId, request, cancellationToken);
+            if (role is null)
+            {
+                return NotFound(new { message = "Guild not found or access denied." });
+            }
+
+            return Ok(role);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
+    [HttpPut("{id:guid}/permission-roles/{roleId:guid}")]
+    public async Task<ActionResult<GuildPermissionRoleDto>> UpdatePermissionRole(
+        Guid id,
+        Guid roleId,
+        [FromBody] UpdateGuildPermissionRoleRequest request,
+        CancellationToken cancellationToken)
+    {
+        var discordUserId = User.GetDiscordUserId();
+        if (string.IsNullOrWhiteSpace(discordUserId))
+        {
+            return Unauthorized(new { message = "Missing Discord user identity in token." });
+        }
+
+        try
+        {
+            var role = await _guildPermissionRoleService.UpdateAsync(id, roleId, discordUserId, request, cancellationToken);
+            if (role is null)
+            {
+                return NotFound(new { message = "Permission role not found or access denied." });
+            }
+
+            return Ok(role);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
+    [HttpDelete("{id:guid}/permission-roles/{roleId:guid}")]
+    public async Task<IActionResult> DeletePermissionRole(
+        Guid id,
+        Guid roleId,
+        CancellationToken cancellationToken)
+    {
+        var discordUserId = User.GetDiscordUserId();
+        if (string.IsNullOrWhiteSpace(discordUserId))
+        {
+            return Unauthorized(new { message = "Missing Discord user identity in token." });
+        }
+
+        var success = await _guildPermissionRoleService.DeleteAsync(id, roleId, discordUserId, cancellationToken);
+        if (!success)
+        {
+            return NotFound(new { message = "Permission role not found or access denied." });
+        }
+
+        return Ok(new { message = "Permission role removed." });
     }
 }

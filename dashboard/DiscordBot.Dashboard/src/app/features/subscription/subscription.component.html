@@ -1,13 +1,10 @@
 <div class="page-content">
   <app-loading-state *ngIf="loading" [message]="'subscription.loading' | translate"></app-loading-state>
 
-  <app-empty-state
-    *ngIf="!loading && error"
-    icon="⚠️"
-    [title]="'subscription.loadError' | translate"
-    [description]="error"
-  >
-    <button type="button" class="btn btn-primary btn-sm" (click)="loadData()">{{ 'common.tryAgain' | translate }}</button>
+  <app-empty-state *ngIf="!loading && error" icon="⚠️" [title]="'subscription.loadError' | translate"
+    [description]="error">
+    <button type="button" class="btn btn-primary btn-sm" (click)="loadData()">{{ 'common.tryAgain' | translate
+      }}</button>
   </app-empty-state>
 
   <ng-container *ngIf="!loading && !error && subscription">
@@ -15,9 +12,9 @@
       <h2>{{ 'subscription.pendingRequestTitle' | translate }}</h2>
       <p>
         {{ 'subscription.pendingRequestBody' | translate:{
-          plan: pendingRequest!.requestedPlanName,
-          months: pendingRequest!.durationMonths,
-          status: statusLabel(pendingRequest!.status)
+        plan: pendingRequest!.requestedPlanName,
+        months: pendingRequest!.durationMonths,
+        status: statusLabel(pendingRequest!.status)
         } }}
       </p>
       <p class="muted small">{{ 'subscription.pendingApprovalNote' | translate }}</p>
@@ -28,7 +25,8 @@
       <p class="plan-name">{{ subscription.planName }}</p>
       <p class="muted">{{ subscription.planDescription }}</p>
       <p class="modules-line">
-        <strong>{{ 'subscription.includedModules' | translate }}</strong> {{ formatModules(subscription.allowedModules) }}
+        <strong>{{ 'subscription.includedModules' | translate }}</strong> {{ formatModules(subscription.allowedModules)
+        }}
       </p>
       <p class="subscription-meta" *ngIf="subscription.status">
         <strong>{{ 'common.status' | translate }}:</strong> {{ subscriptionStatusLabel(subscription.status) }}
@@ -67,28 +65,20 @@
 
         <p class="estimated-expiry muted" *ngIf="selectedPlan">
           {{ 'subscription.estimatedExpiry' | translate:{
-            plan: selectedPlan!.name,
-            date: (estimatedExpiryDate | date:'medium')
+          plan: selectedPlan!.name,
+          date: (estimatedExpiryDate | date:'medium')
           } }}
         </p>
 
-        <button
-          type="button"
-          class="btn btn-primary"
-          [disabled]="!selectedPlan || submitting || hasPendingRequest"
-          (click)="requestUpgrade()"
-        >
+        <button type="button" class="btn btn-primary" [disabled]="!selectedPlan || submitting || hasPendingRequest"
+          (click)="requestUpgrade()">
           {{ (submitting ? 'subscription.requesting' : 'subscription.requestUpgradeButton') | translate }}
         </button>
       </div>
     </section>
 
     <section class="plans-grid">
-      <article
-        class="card plan-card"
-        *ngFor="let plan of plans"
-        [class.current]="isCurrentPlan(plan)"
-      >
+      <article class="card plan-card" *ngFor="let plan of plans" [class.current]="isCurrentPlan(plan)">
         <div class="plan-card-header">
           <h3>{{ plan.name }}</h3>
           <span class="current-badge" *ngIf="isCurrentPlan(plan)">{{ 'common.current' | translate }}</span>
@@ -100,7 +90,7 @@
       </article>
     </section>
 
-    <section class="card" *ngIf="upgradeRequests.length > 0">
+    <section class="card" style="margin: 20px 0px;" *ngIf="upgradeRequests.length > 0">
       <h2>{{ 'subscription.requestHistory' | translate }}</h2>
       <div class="table-wrap">
         <table class="data-table">

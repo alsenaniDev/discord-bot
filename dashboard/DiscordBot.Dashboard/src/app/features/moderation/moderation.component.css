@@ -1,3 +1,13 @@
 .page-content {
   max-width: 960px;
 }
+
+.identity-cell {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.identity-name {
+  font-weight: 500;
+}

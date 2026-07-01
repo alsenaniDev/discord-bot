@@ -45,6 +45,9 @@ public class BotLogsController : ControllerBase
             ActorDiscordUserId = request.ActorDiscordUserId,
             TargetDiscordUserId = request.TargetDiscordUserId,
             ChannelDiscordId = request.ChannelDiscordId,
+            ActorDisplayName = request.ActorDisplayName,
+            TargetDisplayName = request.TargetDisplayName,
+            ChannelDisplayName = request.ChannelDisplayName,
             MetadataJson = request.MetadataJson
         }, cancellationToken);
 
@@ -65,5 +68,8 @@ public sealed class BotCreateLogRequest
     public string? ActorDiscordUserId { get; set; }
     public string? TargetDiscordUserId { get; set; }
     public string? ChannelDiscordId { get; set; }
+    public string? ActorDisplayName { get; set; }
+    public string? TargetDisplayName { get; set; }
+    public string? ChannelDisplayName { get; set; }
     public string? MetadataJson { get; set; }
 }

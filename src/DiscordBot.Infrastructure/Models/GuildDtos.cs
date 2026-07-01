@@ -1,5 +1,7 @@
 namespace DiscordBot.Infrastructure.Models;
 
+using DiscordBot.Domain.Constants;
+
 public sealed class GuildSummaryDto
 {
     public Guid Id { get; init; }
@@ -23,6 +25,16 @@ public sealed class GuildSettingsDto
     public string? LogChannelId { get; init; }
     public bool TicketsEnabled { get; init; }
     public string? TicketCategoryId { get; init; }
+    public string TicketWelcomeTitle { get; init; } = string.Empty;
+    public string TicketWelcomeMessage { get; init; } = string.Empty;
+    public string TicketClosedMessage { get; init; } = string.Empty;
+    public string TicketClosedFromDashboardMessage { get; init; } = string.Empty;
+    public string TicketStaffReplyPrefix { get; init; } = string.Empty;
+    public bool CommandPanelEnabled { get; init; }
+    public string? CommandPanelChannelId { get; init; }
+    public string CommandPanelTitle { get; init; } = string.Empty;
+    public string CommandPanelDescription { get; init; } = string.Empty;
+    public IReadOnlyList<CommandPanelButtonDefinition> CommandPanelButtons { get; init; } = [];
 }
 
 public sealed class UpdateGuildSettingsRequest
@@ -35,6 +47,16 @@ public sealed class UpdateGuildSettingsRequest
     public bool LogsEnabled { get; set; }
     public string? LogChannelId { get; set; }
     public string? TicketCategoryId { get; set; }
+    public string TicketWelcomeTitle { get; set; } = TicketMessageDefaults.WelcomeTitle;
+    public string TicketWelcomeMessage { get; set; } = TicketMessageDefaults.WelcomeMessage;
+    public string TicketClosedMessage { get; set; } = TicketMessageDefaults.ClosedMessage;
+    public string TicketClosedFromDashboardMessage { get; set; } = TicketMessageDefaults.ClosedFromDashboardMessage;
+    public string TicketStaffReplyPrefix { get; set; } = TicketMessageDefaults.StaffReplyPrefix;
+    public bool CommandPanelEnabled { get; set; }
+    public string? CommandPanelChannelId { get; set; }
+    public string CommandPanelTitle { get; set; } = "How can we help?";
+    public string CommandPanelDescription { get; set; } = "Use the buttons below — no commands needed.";
+    public List<CommandPanelButtonDefinition> CommandPanelButtons { get; set; } = [];
 }
 
 public sealed class GuildOverviewDto

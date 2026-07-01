@@ -249,7 +249,9 @@ public class TicketCommandHandlers
         {
             DiscordGuildId = guild.Id.ToString(),
             OwnerDiscordUserId = user.Id.ToString(),
-            ChannelDiscordId = channel.Id.ToString()
+            ChannelDiscordId = channel.Id.ToString(),
+            OwnerDisplayName = user.GlobalName ?? user.DisplayName,
+            ChannelDisplayName = channel.Name
         });
 
         if (ticket is null)
@@ -264,7 +266,7 @@ public class TicketCommandHandlers
         await channel.ModifyAsync(props => props.Name = $"ticket-{ticket.TicketNumber}");
 
         await channel.SendMessageAsync(
-            embed: _embeds.BuildTicketWelcome(user, ticket.TicketNumber),
+            embed: _embeds.BuildTicketWelcome(user, ticket.TicketNumber, settings!),
             components: _components.BuildTicketChannelComponents(channel.Id));
 
         return new TicketCreateResult(true, channel, ticket.TicketNumber);
@@ -293,7 +295,12 @@ public class TicketCommandHandlers
                 ErrorDescription: "This channel is not linked to an open support ticket.");
         }
 
-        var closed = await _apiClient.CloseTicketAsync(ticket.Id);
+        var closed = await _apiClient.CloseTicketAsync(ticket.Id, new CloseTicketApiRequest
+        {
+            ClosedByDiscordUserId = user.Id.ToString(),
+            ClosedByDisplayName = user.Username,
+            ChannelDisplayName = channel.Name
+        });
         if (closed is null)
         {
             return new TicketCloseResult(
@@ -302,7 +309,12 @@ public class TicketCommandHandlers
                 ErrorDescription: "This ticket is already closed or could not be updated.");
         }
 
-        await channel.SendMessageAsync(embed: _embeds.BuildTicketClosed(ticket.TicketNumber, user));
+        var settings = await _apiClient.GetSettingsAsync(guild.Id.ToString());
+        await channel.SendMessageAsync(
+            embed: _embeds.BuildTicketClosed(
+                ticket.TicketNumber,
+                user,
+                settings ?? new GuildSettingsResponse()));
         await Task.Delay(TimeSpan.FromSeconds(3));
         await channel.DeleteAsync();
 

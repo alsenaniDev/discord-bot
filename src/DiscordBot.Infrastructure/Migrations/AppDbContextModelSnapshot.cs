@@ -22,6 +22,50 @@ namespace DiscordBot.Infrastructure.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("DiscordBot.Domain.Entities.AutoReplyRule", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<bool>("Enabled")
+                        .HasColumnType("boolean");
+
+                    b.Property<Guid>("GuildId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("MatchMode")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("Priority")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Response")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.Property<int>("Scope")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Trigger")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("GuildId", "Priority");
+
+                    b.ToTable("AutoReplyRules", (string)null);
+                });
+
             modelBuilder.Entity("DiscordBot.Domain.Entities.DiscordChannel", b =>
                 {
                     b.Property<Guid>("Id")
@@ -63,6 +107,52 @@ namespace DiscordBot.Infrastructure.Migrations
                     b.HasIndex("GuildId", "Type");
 
                     b.ToTable("DiscordChannels", (string)null);
+                });
+
+            modelBuilder.Entity("DiscordBot.Domain.Entities.DiscordGuildMember", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("DiscordRoleIdsJson")
+                        .IsRequired()
+                        .HasMaxLength(4000)
+                        .HasColumnType("character varying(4000)");
+
+                    b.Property<string>("DiscordUserId")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<string>("GlobalName")
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<Guid>("GuildId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Nickname")
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Username")
+                        .IsRequired()
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("GuildId", "DiscordUserId")
+                        .IsUnique();
+
+                    b.ToTable("DiscordGuildMembers", (string)null);
                 });
 
             modelBuilder.Entity("DiscordBot.Domain.Entities.DiscordRole", b =>
@@ -186,6 +276,42 @@ namespace DiscordBot.Infrastructure.Migrations
                     b.ToTable("GuildModules", (string)null);
                 });
 
+            modelBuilder.Entity("DiscordBot.Domain.Entities.GuildPermissionRole", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("DiscordRoleId")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<Guid>("GuildId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<int>("Permissions")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("GuildId", "DiscordRoleId")
+                        .IsUnique();
+
+                    b.ToTable("GuildPermissionRoles", (string)null);
+                });
+
             modelBuilder.Entity("DiscordBot.Domain.Entities.GuildSettings", b =>
                 {
                     b.Property<Guid>("Id")
@@ -198,6 +324,35 @@ namespace DiscordBot.Infrastructure.Migrations
                     b.Property<string>("AutoRoleId")
                         .HasMaxLength(32)
                         .HasColumnType("character varying(32)");
+
+                    b.Property<string>("CommandPanelButtonsJson")
+                        .IsRequired()
+                        .HasMaxLength(4000)
+                        .HasColumnType("character varying(4000)");
+
+                    b.Property<string>("CommandPanelChannelId")
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<string>("CommandPanelDescription")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.Property<bool>("CommandPanelEnabled")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("CommandPanelMessageId")
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<bool>("CommandPanelRefreshRequested")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("CommandPanelTitle")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
 
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
@@ -215,6 +370,31 @@ namespace DiscordBot.Infrastructure.Migrations
                     b.Property<string>("TicketCategoryId")
                         .HasMaxLength(32)
                         .HasColumnType("character varying(32)");
+
+                    b.Property<string>("TicketClosedFromDashboardMessage")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.Property<string>("TicketClosedMessage")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.Property<string>("TicketStaffReplyPrefix")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<string>("TicketWelcomeMessage")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.Property<string>("TicketWelcomeTitle")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
 
                     b.Property<bool>("TicketsEnabled")
                         .HasColumnType("boolean");
@@ -644,6 +824,9 @@ namespace DiscordBot.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
+                    b.Property<bool>("ChannelCleanupRequested")
+                        .HasColumnType("boolean");
+
                     b.Property<string>("ChannelDiscordId")
                         .IsRequired()
                         .HasMaxLength(32)
@@ -685,6 +868,53 @@ namespace DiscordBot.Infrastructure.Migrations
                         .IsUnique();
 
                     b.ToTable("Tickets", (string)null);
+                });
+
+            modelBuilder.Entity("DiscordBot.Domain.Entities.TicketOutboundMessage", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Content")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTimeOffset?>("DeliveredAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("GuildId")
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("IsDelivered")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("SenderDiscordUserId")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<string>("SenderDisplayName")
+                        .HasMaxLength(128)
+                        .HasColumnType("character varying(128)");
+
+                    b.Property<Guid>("TicketId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TicketId");
+
+                    b.HasIndex("GuildId", "IsDelivered", "CreatedAt");
+
+                    b.ToTable("TicketOutboundMessages", (string)null);
                 });
 
             modelBuilder.Entity("DiscordBot.Domain.Entities.User", b =>
@@ -765,10 +995,32 @@ namespace DiscordBot.Infrastructure.Migrations
                     b.ToTable("Warnings", (string)null);
                 });
 
+            modelBuilder.Entity("DiscordBot.Domain.Entities.AutoReplyRule", b =>
+                {
+                    b.HasOne("DiscordBot.Domain.Entities.Guild", "Guild")
+                        .WithMany()
+                        .HasForeignKey("GuildId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Guild");
+                });
+
             modelBuilder.Entity("DiscordBot.Domain.Entities.DiscordChannel", b =>
                 {
                     b.HasOne("DiscordBot.Domain.Entities.Guild", "Guild")
                         .WithMany("Channels")
+                        .HasForeignKey("GuildId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Guild");
+                });
+
+            modelBuilder.Entity("DiscordBot.Domain.Entities.DiscordGuildMember", b =>
+                {
+                    b.HasOne("DiscordBot.Domain.Entities.Guild", "Guild")
+                        .WithMany()
                         .HasForeignKey("GuildId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -804,6 +1056,17 @@ namespace DiscordBot.Infrastructure.Migrations
                     b.Navigation("Guild");
 
                     b.Navigation("Module");
+                });
+
+            modelBuilder.Entity("DiscordBot.Domain.Entities.GuildPermissionRole", b =>
+                {
+                    b.HasOne("DiscordBot.Domain.Entities.Guild", "Guild")
+                        .WithMany()
+                        .HasForeignKey("GuildId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Guild");
                 });
 
             modelBuilder.Entity("DiscordBot.Domain.Entities.GuildSettings", b =>
@@ -938,6 +1201,25 @@ namespace DiscordBot.Infrastructure.Migrations
                         .IsRequired();
 
                     b.Navigation("Guild");
+                });
+
+            modelBuilder.Entity("DiscordBot.Domain.Entities.TicketOutboundMessage", b =>
+                {
+                    b.HasOne("DiscordBot.Domain.Entities.Guild", "Guild")
+                        .WithMany()
+                        .HasForeignKey("GuildId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("DiscordBot.Domain.Entities.Ticket", "Ticket")
+                        .WithMany()
+                        .HasForeignKey("TicketId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Guild");
+
+                    b.Navigation("Ticket");
                 });
 
             modelBuilder.Entity("DiscordBot.Domain.Entities.Warning", b =>

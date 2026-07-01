@@ -12,4 +12,5 @@ public class Ticket : BaseEntity
     public string ChannelDiscordId { get; set; } = string.Empty;
     public TicketStatus Status { get; set; } = TicketStatus.Open;
     public DateTimeOffset? ClosedAt { get; set; }
+    public bool ChannelCleanupRequested { get; set; }
 }

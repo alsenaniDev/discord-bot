@@ -5,7 +5,7 @@ import { forkJoin } from 'rxjs';
 import { GuildService } from '../../core/services/guild.service';
 import { GuildContextService } from '../../core/services/guild-context.service';
 import { ToastService } from '../../core/services/toast.service';
-import { ModerationCase, ModerationFilters, Warning, moderationCaseTypeLabel } from '../../core/models/moderation.models';
+import { ModerationCase, ModerationFilters, Warning, displayMemberLabel, moderationCaseTypeLabel } from '../../core/models/moderation.models';
 import { getApiErrorMessage } from '../../core/utils/api-error.util';
 
 @Component({
@@ -89,5 +89,13 @@ export class ModerationComponent implements OnInit {
       from: this.filters.from || undefined,
       to: this.filters.to || undefined
     };
+  }
+
+  displayMember(name?: string | null, id?: string | null): string {
+    return displayMemberLabel(name, id);
+  }
+
+  displayChannel(name?: string | null, id?: string | null): string {
+    return name?.trim() ? `#${name.trim()}` : id?.trim() ? id.trim() : '—';
   }
 }

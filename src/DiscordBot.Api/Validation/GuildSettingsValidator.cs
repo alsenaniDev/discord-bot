@@ -55,7 +55,68 @@ public static partial class GuildSettingsValidator
             errors.Add("Ticket category ID must be a numeric Discord snowflake.");
         }
 
+        ValidateTicketTemplateField(errors, "Ticket welcome title", request.TicketWelcomeTitle, 256, required: true);
+        ValidateTicketTemplateField(errors, "Ticket welcome message", request.TicketWelcomeMessage, MaxMessageLength, required: true);
+        ValidateTicketTemplateField(errors, "Ticket closed message", request.TicketClosedMessage, MaxMessageLength, required: true);
+        ValidateTicketTemplateField(errors, "Ticket closed from dashboard message", request.TicketClosedFromDashboardMessage, MaxMessageLength, required: true);
+        ValidateTicketTemplateField(errors, "Ticket staff reply prefix", request.TicketStaffReplyPrefix, MaxMessageLength, required: true);
+
+        if (request.CommandPanelEnabled && !IsValidSnowflake(request.CommandPanelChannelId))
+        {
+            errors.Add("Command panel channel is required when the member panel is enabled.");
+        }
+
+        if (string.IsNullOrWhiteSpace(request.CommandPanelTitle))
+        {
+            errors.Add("Command panel title is required.");
+        }
+        else if (request.CommandPanelTitle.Length > 256)
+        {
+            errors.Add("Command panel title must be 256 characters or less.");
+        }
+
+        if (string.IsNullOrWhiteSpace(request.CommandPanelDescription))
+        {
+            errors.Add("Command panel description is required.");
+        }
+        else if (request.CommandPanelDescription.Length > 2000)
+        {
+            errors.Add("Command panel description must be 2000 characters or less.");
+        }
+
+        if (request.CommandPanelEnabled)
+        {
+            var enabledButtons = request.CommandPanelButtons.Count(b => b.Enabled);
+            if (enabledButtons == 0)
+            {
+                errors.Add("Enable at least one panel button when the member panel is enabled.");
+            }
+        }
+
         return errors;
+    }
+
+    private static void ValidateTicketTemplateField(
+        List<string> errors,
+        string label,
+        string? value,
+        int maxLength,
+        bool required)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            if (required)
+            {
+                errors.Add($"{label} is required.");
+            }
+
+            return;
+        }
+
+        if (value.Length > maxLength)
+        {
+            errors.Add($"{label} must be {maxLength} characters or less.");
+        }
     }
 
     private static bool IsValidSnowflake(string? value) =>

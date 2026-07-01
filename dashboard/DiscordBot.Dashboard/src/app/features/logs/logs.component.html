@@ -30,6 +30,13 @@
           {{ 'moderation.to' | translate }}
           <input type="date" [(ngModel)]="filters.to" />
         </label>
+        <app-member-select
+          class="search-field"
+          [guildId]="guildId"
+          [label]="'logs.member' | translate"
+          [placeholder]="'memberSelect.placeholder' | translate"
+          [(ngModel)]="filters.userId"
+        ></app-member-select>
         <label class="search-field">
           {{ 'logs.search' | translate }}
           <input
@@ -72,9 +79,9 @@
               <td>{{ log.createdAt | date: 'medium' }}</td>
               <td>{{ log.typeLabel }}</td>
               <td>{{ log.message }}</td>
-              <td class="mono">{{ displayValue(log.actorDiscordUserId) }}</td>
-              <td class="mono">{{ displayValue(log.targetDiscordUserId) }}</td>
-              <td class="mono">{{ displayValue(log.channelDiscordId) }}</td>
+              <td>{{ displayValue(log.actorDisplayName) }}</td>
+              <td>{{ displayValue(log.targetDisplayName) }}</td>
+              <td>{{ displayValue(log.channelName) }}</td>
             </tr>
           </tbody>
         </table>

@@ -25,23 +25,72 @@
             <th>{{ 'tickets.number' | translate }}</th>
             <th>{{ 'common.status' | translate }}</th>
             <th>{{ 'tickets.owner' | translate }}</th>
-            <th>{{ 'tickets.channelId' | translate }}</th>
+            <th>{{ 'tickets.channel' | translate }}</th>
             <th>{{ 'common.created' | translate }}</th>
             <th>{{ 'common.closed' | translate }}</th>
+            <th>{{ 'common.actions' | translate }}</th>
           </tr>
         </thead>
         <tbody>
           <tr *ngFor="let ticket of tickets">
             <td>{{ ticket.ticketNumber }}</td>
             <td>
-              <span class="badge" [class.badge-open]="ticket.status === 0 || ticket.status === 'Open'">
+              <span class="badge" [class.badge-open]="isOpen(ticket)">
                 {{ statusLabel(ticket.status) | translate }}
               </span>
             </td>
-            <td>{{ ticket.ownerDiscordUserId }}</td>
-            <td class="mono">{{ ticket.channelDiscordId }}</td>
+            <td>
+              <div class="identity-cell">
+                <span class="identity-name">{{ displayMember(ticket.ownerDisplayName, ticket.ownerDiscordUserId) }}</span>
+                <span class="muted small mono" *ngIf="ticket.ownerDisplayName">{{ ticket.ownerDiscordUserId }}</span>
+              </div>
+            </td>
+            <td>
+              <div class="identity-cell">
+                <span class="identity-name">{{ displayChannel(ticket.channelName, ticket.channelDiscordId) }}</span>
+                <span class="muted small mono" *ngIf="ticket.channelName">{{ ticket.channelDiscordId }}</span>
+              </div>
+            </td>
             <td>{{ ticket.createdAt | date: 'medium' }}</td>
             <td>{{ ticket.closedAt ? (ticket.closedAt | date: 'medium') : '—' }}</td>
+            <td>
+              <div class="ticket-actions">
+                <button
+                  type="button"
+                  class="btn btn-secondary btn-sm"
+                  *ngIf="isOpen(ticket)"
+                  (click)="toggleReply(ticket)"
+                >
+                  {{ 'tickets.reply' | translate }}
+                </button>
+                <button
+                  type="button"
+                  class="btn btn-danger btn-sm"
+                  *ngIf="isOpen(ticket)"
+                  [disabled]="isClosing(ticket)"
+                  (click)="closeTicket(ticket)"
+                >
+                  <span class="spinner inline" *ngIf="isClosing(ticket)"></span>
+                  {{ 'tickets.close' | translate }}
+                </button>
+              </div>
+              <div class="ticket-reply-box" *ngIf="isReplying(ticket)">
+                <textarea
+                  rows="3"
+                  [(ngModel)]="replyDrafts[ticket.id]"
+                  [placeholder]="'tickets.replyPlaceholder' | translate"
+                ></textarea>
+                <button
+                  type="button"
+                  class="btn btn-primary btn-sm"
+                  [disabled]="isSendingReply(ticket)"
+                  (click)="sendReply(ticket)"
+                >
+                  <span class="spinner inline" *ngIf="isSendingReply(ticket)"></span>
+                  {{ 'tickets.replySend' | translate }}
+                </button>
+              </div>
+            </td>
           </tr>
         </tbody>
       </table>

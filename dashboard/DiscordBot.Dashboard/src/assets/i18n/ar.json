@@ -41,6 +41,8 @@
     "status": "الحالة",
     "created": "تاريخ الإنشاء",
     "actions": "إجراءات",
+    "remove": "إزالة",
+    "edit": "تعديل",
     "guilds": "سيرفرات",
     "emptyValue": "—"
   },
@@ -153,6 +155,16 @@
     "loadError": "تعذر تحميل الإعدادات",
     "saved": "تم حفظ الإعدادات.",
     "saveError": "تعذر حفظ الإعدادات.",
+    "tabs": {
+      "label": "أقسام الإعدادات",
+      "general": "عام",
+      "welcome": "الترحيب",
+      "autoRole": "الدور التلقائي",
+      "logs": "السجلات",
+      "tickets": "التذاكر",
+      "autoReplies": "الردود التلقائية",
+      "panel": "لوحة الأزرار"
+    },
     "discordData": "بيانات Discord",
     "discordDataHint": "مزامنة القنوات والأدوار من سيرفرك للقوائم أدناه.",
     "syncDiscord": "مزامنة بيانات Discord",
@@ -178,28 +190,104 @@
     "ticketsHint": "فئة تذاكر الدعم لسيرفرك.",
     "ticketCategory": "فئة التذاكر",
     "selectCategory": "اختر فئة…",
+    "ticketWelcomeTitle": "عنوان رسالة الترحيب بالتذكرة",
+    "ticketWelcomeMessage": "رسالة الترحيب بالتذكرة",
+    "ticketClosedMessage": "رسالة إغلاق التذكرة (Discord)",
+    "ticketClosedFromDashboardMessage": "رسالة إغلاق التذكرة (لوحة التحكم)",
+    "ticketStaffReplyPrefix": "بادئة رد المو staff (لوحة التحكم)",
+    "ticketTemplateHint": "متغيرات: {ticket}، {mention}، {user}، {username}",
+    "ticketStaffReplyHint": "متغيرات: {staff}. يرسل نص الرد من لوحة التحكم أسفل هذا السطر.",
+    "autoReplies": {
+      "title": "الردود التلقائية",
+      "hint": "رد تلقائياً عندما تطابق الرسالة محفّزاً (مثل: السلام عليكم → وعليكم السلام).",
+      "loading": "جاري تحميل الردود التلقائية…",
+      "loadError": "تعذر تحميل الردود التلقائية.",
+      "saved": "تم حفظ الرد التلقائي.",
+      "saveError": "تعذر حفظ الرد التلقائي.",
+      "deleted": "تم حذف الرد التلقائي.",
+      "deleteError": "تعذر حذف الرد التلقائي.",
+      "deleteConfirm": "حذف الرد التلقائي لـ \"{{trigger}}\"؟",
+      "empty": "لا توجد ردود تلقائية بعد.",
+      "addTitle": "إضافة رد تلقائي",
+      "editTitle": "تعديل رد تلقائي",
+      "add": "إضافة قاعدة",
+      "trigger": "عندما تحتوي الرسالة على / تساوي",
+      "response": "رد البوت",
+      "matchMode": "طريقة المطابقة",
+      "scope": "النطاق",
+      "enabled": "مفعّل",
+      "priority": "الأولوية (الأقل يُنفَّذ أولاً)",
+      "validation": {
+        "required": "المحفّز والرد مطلوبان."
+      }
+    },
     "validation": {
       "requiredWhenEnabled": "هذا الحقل مطلوب عند تفعيل الميزة.",
       "maxLength": "الرسالة طويلة جداً (الحد الأقصى 2000 حرف).",
       "invalid": "قيمة غير صالحة.",
       "fixBeforeSave": "يرجى تصحيح الحقول المظللة قبل الحفظ."
     },
-    "syncReloadFailed": "اكتملت المزامنة لكن فشل إعادة تحميل القوائم."
+    "syncReloadFailed": "اكتملت المزامنة لكن فشل إعادة تحميل القوائم.",
+    "panel": {
+      "title": "لوحة أزرار الأعضاء",
+      "hint": "انشر رسالة بأزرار حتى لا يحتاج الأعضاء لكتابة أوامر. يحدّث البوت اللوحة خلال نحو 30 ثانية بعد الحفظ.",
+      "enable": "تفعيل لوحة أزرار الأعضاء",
+      "channel": "قناة اللوحة",
+      "panelTitle": "عنوان اللوحة",
+      "description": "وصف اللوحة",
+      "buttonsTitle": "الأزرار",
+      "addButton": "إضافة زر",
+      "noButtons": "لا توجد أزرار بعد.",
+      "enabled": "مفعّل",
+      "buttonLabel": "نص الزر",
+      "buttonAction": "الإجراء",
+      "buttonStyle": "اللون",
+      "actions": {
+        "ticketOpen": "إنشاء تذكرة",
+        "ticketHelp": "مساعدة التذاكر",
+        "ping": "حالة البوت",
+        "serverInfo": "معلومات السيرفر",
+        "moderationHelp": "مساعدة الإشراف",
+        "reactionRolesHelp": "مساعدة أدوار التفاعل",
+        "platformHelp": "مساعدة المنصة"
+      },
+      "styles": {
+        "primary": "أزرق",
+        "secondary": "رمادي",
+        "success": "أخضر",
+        "danger": "أحمر"
+      },
+      "validation": {
+        "noButtons": "فعّل زراً واحداً على الأقل عند تفعيل لوحة الأعضاء."
+      }
+    }
   },
   "tickets": {
     "loading": "جاري تحميل التذاكر…",
     "loadError": "تعذر تحميل التذاكر",
     "emptyTitle": "لا توجد تذاكر بعد",
-    "emptyBody": "عندما ينفّذ الأعضاء /ticket open في Discord، ستظهر التذاكر هنا.",
+    "emptyBody": "عندما يستخدم الأعضاء زر إنشاء تذكرة في Discord، ستظهر التذاكر هنا.",
     "number": "#",
     "owner": "المالك",
-    "channelId": "معرف القناة"
+    "channel": "القناة",
+    "channelId": "معرف القناة",
+    "close": "إغلاق التذكرة",
+    "closeConfirm": "إغلاق التذكرة #{{number}}؟ سيحذف البوت قناة Discord.",
+    "closeSuccess": "تم إغلاق التذكرة.",
+    "closeError": "تعذر إغلاق التذكرة.",
+    "reply": "رد",
+    "replyPlaceholder": "اكتب رسالة لإرسالها في قناة التذكرة…",
+    "replySend": "إرسال الرد",
+    "replySuccess": "تمت جدولة الرد. سينشره البوت في Discord قريباً.",
+    "replyError": "تعذر إرسال الرد.",
+    "replyEmpty": "أدخل رسالة قبل الإرسال."
   },
   "moderation": {
     "loading": "جاري تحميل بيانات الإشراف…",
     "loadError": "تعذر تحميل بيانات الإشراف",
     "filters": "الفلاتر",
     "targetUserId": "معرف المستخدم المستهدف",
+    "targetUser": "العضو المستهدف",
     "from": "من",
     "to": "إلى",
     "type": "النوع",
@@ -288,6 +376,7 @@
     "allTypes": "جميع الأنواع",
     "search": "بحث",
     "searchPlaceholder": "البحث في الرسائل…",
+    "member": "عضو",
     "activityLog": "سجل النشاط",
     "noLogs": "لا توجد سجلات مطابقة للفلاتر الحالية.",
     "message": "الرسالة",
@@ -372,30 +461,46 @@
     "upgradeReviewError": "تعذر مراجعة طلب الترقية."
   },
   "staff": {
-    "loading": "جاري تحميل الطاقم…",
-    "loadError": "تعذر تحميل الطاقم",
-    "addTitle": "إضافة عضو طاقم",
-    "addHint": "أدخل معرف مستخدم Discord. يجب على هذا المستخدم تسجيل الدخول إلى لوحة التحكم بنفس حساب Discord.",
-    "discordUserId": "معرف Discord",
-    "discordUserIdPlaceholder": "مثال: 123456789012345678",
-    "role": "الدور",
-    "addButton": "إضافة",
+    "loading": "جاري تحميل الأدوار…",
+    "loadError": "تعذر تحميل أدوار الصلاحيات",
+    "addTitle": "إضافة دور صلاحيات",
+    "addHint": "اربط دور Discord في السيرفر بصلاحيات لوحة التحكم والبوت. أي عضو يملك هذا الدور يحصل على الصلاحيات بعد تنفيذ /sync.",
+    "roleName": "اسم الدور",
+    "roleNamePlaceholder": "مثال: Admin، Moderator",
+    "discordRole": "دور Discord",
+    "discordRolePlaceholder": "اختر دور Discord متزامن",
+    "permissionsTitle": "الصلاحيات",
+    "addButton": "إضافة دور",
     "adding": "جاري الإضافة…",
-    "added": "تمت إضافة عضو الطاقم.",
-    "addError": "تعذر إضافة عضو الطاقم.",
+    "added": "تمت إضافة دور الصلاحيات.",
+    "addError": "تعذر إضافة دور الصلاحيات.",
     "remove": "إزالة",
-    "removed": "تمت إزالة عضو الطاقم.",
-    "removeError": "تعذر إزالة عضو الطاقم.",
-    "listTitle": "الطاقم الحالي",
-    "emptyTitle": "لا يوجد طاقم بعد",
-    "emptyBody": "أضف مشرفين للمساعدة في التذاكر والإشراف والسجلات.",
-    "roles": {
-      "moderator": "مشرف",
-      "manager": "مدير"
+    "removed": "تمت إزالة دور الصلاحيات.",
+    "removeError": "تعذر إزالة دور الصلاحيات.",
+    "listTitle": "أدوار الصلاحيات",
+    "emptyTitle": "لا توجد أدوار صلاحيات بعد",
+    "emptyBody": "أنشئ أدواراً مثل Admin أو Moderator واربطها بأدوار Discord. يرث الأعضاء الصلاحيات من دور Discord — وليس من معرفات المستخدمين.",
+    "validation": {
+      "required": "أدخل اسماً واختر دور Discord وحدد صلاحية واحدة على الأقل."
+    },
+    "permissions": {
+      "warn": "تحذير الأعضاء",
+      "kick": "طرد الأعضاء",
+      "timeout": "إيقاف / تعليق الأعضاء",
+      "clearMessages": "مسح الرسائل",
+      "accessModeration": "الوصول لصفحات الإشراف",
+      "accessLogs": "الوصول للسجلات",
+      "accessTickets": "الوصول للتذاكر"
     }
   },
   "toast": {
     "dismiss": "إغلاق الإشعار"
+  },
+  "memberSelect": {
+    "placeholder": "ابحث بالاسم أو معرف المستخدم…",
+    "loading": "جاري تحميل الأعضاء…",
+    "loadError": "تعذر تحميل الأعضاء. نفّذ /sync في Discord أولاً.",
+    "empty": "لم يتم العثور على أعضاء."
   },
   "errors": {
     "generic": "حدث خطأ ما. يرجى المحاولة مرة أخرى.",

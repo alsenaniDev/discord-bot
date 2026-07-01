@@ -12,6 +12,7 @@ public static class DiscordCustomIds
     public const string TicketCloseModalPrefix = "ticket:close_modal:";
 
     public const string ReactionRoleTogglePrefix = "reaction-role:toggle:";
+    public const string PanelPrefix = "panel:";
 
     public const string TicketSelectClose = "close";
     public const string TicketSelectHelp = "help";
@@ -23,6 +24,24 @@ public static class DiscordCustomIds
     public static string TicketCloseModal(ulong channelId) => $"{TicketCloseModalPrefix}{channelId}";
 
     public static string ReactionRoleToggle(Guid panelId) => $"{ReactionRoleTogglePrefix}{panelId:D}";
+
+    public static string PanelButton(string action, string buttonId) =>
+        $"{PanelPrefix}{action}:{buttonId}";
+
+    public static bool TryParsePanelAction(string customId, out string action)
+    {
+        action = string.Empty;
+
+        if (!customId.StartsWith(PanelPrefix, StringComparison.Ordinal))
+        {
+            return false;
+        }
+
+        var remainder = customId[PanelPrefix.Length..];
+        var separatorIndex = remainder.IndexOf(':');
+        action = separatorIndex >= 0 ? remainder[..separatorIndex] : remainder;
+        return !string.IsNullOrWhiteSpace(action);
+    }
 
     public static bool TryParseReactionRoleToggleId(string customId, out Guid panelId)
     {

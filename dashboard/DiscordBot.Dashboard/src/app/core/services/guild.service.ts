@@ -3,14 +3,21 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { GuildSettings, GuildSummary, DiscordChannel, DiscordRole, GuildOverview, RequestResourceSyncResponse, UpdateGuildSettings } from '../models/guild.models';
+import { GuildMember } from '../models/guild-member.models';
 import { Ticket } from '../models/ticket.models';
+import { AutoReplyRule, CreateAutoReplyRule, UpdateAutoReplyRule } from '../models/auto-reply.models';
 import { ModerationCase, ModerationFilters, Warning } from '../models/moderation.models';
 import { GuildModule, UpdateGuildModuleRequest } from '../models/module.models';
 import { LogEntry, LogFilters } from '../models/log.models';
 import { ReactionRolePanel } from '../models/reaction-role.models';
 import { GuildSubscription, SubscriptionPlan } from '../models/subscription.models';
 import { PlanUpgradeRequest, CreatePlanUpgradeRequest } from '../models/upgrade-request.models';
-import { AddGuildStaffRequest, GuildAccess, GuildStaffMember } from '../models/staff.models';
+import {
+  CreateGuildPermissionRoleRequest,
+  GuildAccess,
+  GuildPermissionRole,
+  UpdateGuildPermissionRoleRequest
+} from '../models/staff.models';
 
 @Injectable({ providedIn: 'root' })
 export class GuildService {
@@ -41,6 +48,39 @@ export class GuildService {
     return this.http.get<Ticket[]>(`${this.baseUrl}/api/guilds/${guildId}/tickets`);
   }
 
+  closeTicket(guildId: string, ticketId: string): Observable<Ticket> {
+    return this.http.patch<Ticket>(
+      `${this.baseUrl}/api/guilds/${guildId}/tickets/${ticketId}/close`,
+      {}
+    );
+  }
+
+  sendTicketMessage(guildId: string, ticketId: string, content: string): Observable<{ id: string }> {
+    return this.http.post<{ id: string }>(
+      `${this.baseUrl}/api/guilds/${guildId}/tickets/${ticketId}/messages`,
+      { content }
+    );
+  }
+
+  getAutoReplies(guildId: string): Observable<AutoReplyRule[]> {
+    return this.http.get<AutoReplyRule[]>(`${this.baseUrl}/api/guilds/${guildId}/auto-replies`);
+  }
+
+  createAutoReply(guildId: string, request: CreateAutoReplyRule): Observable<AutoReplyRule> {
+    return this.http.post<AutoReplyRule>(`${this.baseUrl}/api/guilds/${guildId}/auto-replies`, request);
+  }
+
+  updateAutoReply(guildId: string, ruleId: string, request: UpdateAutoReplyRule): Observable<AutoReplyRule> {
+    return this.http.put<AutoReplyRule>(
+      `${this.baseUrl}/api/guilds/${guildId}/auto-replies/${ruleId}`,
+      request
+    );
+  }
+
+  deleteAutoReply(guildId: string, ruleId: string): Observable<void> {
+    return this.http.delete<void>(`${this.baseUrl}/api/guilds/${guildId}/auto-replies/${ruleId}`);
+  }
+
   getChannels(guildId: string): Observable<DiscordChannel[]> {
     return this.http.get<DiscordChannel[]>(`${this.baseUrl}/api/guilds/${guildId}/channels`);
   }
@@ -51,6 +91,15 @@ export class GuildService {
 
   getRoles(guildId: string): Observable<DiscordRole[]> {
     return this.http.get<DiscordRole[]>(`${this.baseUrl}/api/guilds/${guildId}/roles`);
+  }
+
+  getMembers(guildId: string, search = ''): Observable<GuildMember[]> {
+    const params: Record<string, string> = {};
+    if (search.trim()) {
+      params['search'] = search.trim();
+    }
+
+    return this.http.get<GuildMember[]>(`${this.baseUrl}/api/guilds/${guildId}/members`, { params });
   }
 
   requestResourceSync(guildId: string): Observable<RequestResourceSyncResponse> {
@@ -126,6 +175,9 @@ export class GuildService {
     if (filters.search?.trim()) {
       params['search'] = filters.search.trim();
     }
+    if (filters.userId?.trim()) {
+      params['userId'] = filters.userId.trim();
+    }
 
     return params;
   }
@@ -168,17 +220,28 @@ export class GuildService {
     );
   }
 
-  getStaff(guildId: string): Observable<GuildStaffMember[]> {
-    return this.http.get<GuildStaffMember[]>(`${this.baseUrl}/api/guilds/${guildId}/staff`);
+  getStaff(guildId: string): Observable<GuildPermissionRole[]> {
+    return this.http.get<GuildPermissionRole[]>(`${this.baseUrl}/api/guilds/${guildId}/permission-roles`);
   }
 
-  addStaff(guildId: string, request: AddGuildStaffRequest): Observable<GuildStaffMember> {
-    return this.http.post<GuildStaffMember>(`${this.baseUrl}/api/guilds/${guildId}/staff`, request);
+  addStaff(guildId: string, request: CreateGuildPermissionRoleRequest): Observable<GuildPermissionRole> {
+    return this.http.post<GuildPermissionRole>(`${this.baseUrl}/api/guilds/${guildId}/permission-roles`, request);
+  }
+
+  updatePermissionRole(
+    guildId: string,
+    roleId: string,
+    request: UpdateGuildPermissionRoleRequest
+  ): Observable<GuildPermissionRole> {
+    return this.http.put<GuildPermissionRole>(
+      `${this.baseUrl}/api/guilds/${guildId}/permission-roles/${roleId}`,
+      request
+    );
   }
 
   removeStaff(guildId: string, staffId: string): Observable<{ message: string }> {
     return this.http.delete<{ message: string }>(
-      `${this.baseUrl}/api/guilds/${guildId}/staff/${staffId}`
+      `${this.baseUrl}/api/guilds/${guildId}/permission-roles/${staffId}`
     );
   }
 }

@@ -145,6 +145,7 @@ public class ReactionRoleInteractionHandlers
                 LogEventType.ReactionRoleRemoved,
                 $"Removed role {role.Name} from {member.Username}.",
                 targetDiscordUserId: member.Id.ToString(),
+                targetDisplayName: member.Username,
                 metadataJson: $"{{\"roleId\":\"{role.Id}\",\"panelId\":\"{panel.Id}\"}}");
 
             await InteractionResponseHelper.RespondSuccessAsync(
@@ -160,6 +161,7 @@ public class ReactionRoleInteractionHandlers
                 LogEventType.ReactionRoleAssigned,
                 $"Assigned role {role.Name} to {member.Username}.",
                 targetDiscordUserId: member.Id.ToString(),
+                targetDisplayName: member.Username,
                 metadataJson: $"{{\"roleId\":\"{role.Id}\",\"panelId\":\"{panel.Id}\"}}");
 
             await InteractionResponseHelper.RespondSuccessAsync(

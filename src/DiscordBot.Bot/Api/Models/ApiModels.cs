@@ -1,3 +1,5 @@
+using DiscordBot.Domain.Enums;
+
 namespace DiscordBot.Bot.Api.Models;
 
 public sealed class RegisterGuildRequest
@@ -28,6 +30,11 @@ public sealed class GuildSettingsResponse
     public string? LogChannelId { get; set; }
     public bool TicketsEnabled { get; set; }
     public string? TicketCategoryId { get; set; }
+    public string TicketWelcomeTitle { get; set; } = string.Empty;
+    public string TicketWelcomeMessage { get; set; } = string.Empty;
+    public string TicketClosedMessage { get; set; } = string.Empty;
+    public string TicketClosedFromDashboardMessage { get; set; } = string.Empty;
+    public string TicketStaffReplyPrefix { get; set; } = string.Empty;
 }
 
 public sealed class GuildModuleStatusResponse
@@ -45,6 +52,9 @@ public sealed class CreateLogApiRequest
     public string? ActorDiscordUserId { get; set; }
     public string? TargetDiscordUserId { get; set; }
     public string? ChannelDiscordId { get; set; }
+    public string? ActorDisplayName { get; set; }
+    public string? TargetDisplayName { get; set; }
+    public string? ChannelDisplayName { get; set; }
     public string? MetadataJson { get; set; }
 }
 
@@ -55,7 +65,7 @@ public sealed class TicketResponse
     public int TicketNumber { get; set; }
     public string OwnerDiscordUserId { get; set; } = string.Empty;
     public string ChannelDiscordId { get; set; } = string.Empty;
-    public int Status { get; set; }
+    public TicketStatus Status { get; set; }
     public DateTimeOffset CreatedAt { get; set; }
     public DateTimeOffset? ClosedAt { get; set; }
 }
@@ -65,6 +75,15 @@ public sealed class CreateTicketApiRequest
     public required string DiscordGuildId { get; set; }
     public required string OwnerDiscordUserId { get; set; }
     public required string ChannelDiscordId { get; set; }
+    public string? OwnerDisplayName { get; set; }
+    public string? ChannelDisplayName { get; set; }
+}
+
+public sealed class CloseTicketApiRequest
+{
+    public string? ClosedByDiscordUserId { get; set; }
+    public string? ClosedByDisplayName { get; set; }
+    public string? ChannelDisplayName { get; set; }
 }
 
 public sealed class SetupTicketsApiRequest
@@ -83,6 +102,7 @@ public sealed class SyncResourcesApiRequest
 {
     public List<SyncChannelApiItem> Channels { get; set; } = [];
     public List<SyncRoleApiItem> Roles { get; set; } = [];
+    public List<SyncMemberApiItem> Members { get; set; } = [];
 }
 
 public sealed class SyncChannelApiItem
@@ -102,12 +122,23 @@ public sealed class SyncRoleApiItem
     public bool IsManaged { get; set; }
 }
 
+public sealed class SyncMemberApiItem
+{
+    public required string DiscordUserId { get; set; }
+    public required string Username { get; set; }
+    public string? GlobalName { get; set; }
+    public string? Nickname { get; set; }
+    public List<string> DiscordRoleIds { get; set; } = [];
+}
+
 public sealed class CreateWarningApiRequest
 {
     public required string DiscordGuildId { get; set; }
     public required string TargetDiscordUserId { get; set; }
     public required string ModeratorDiscordUserId { get; set; }
     public required string Reason { get; set; }
+    public string? ModeratorDisplayName { get; set; }
+    public string? TargetDisplayName { get; set; }
 }
 
 public sealed class CreateModerationCaseApiRequest
@@ -119,6 +150,9 @@ public sealed class CreateModerationCaseApiRequest
     public string? Reason { get; set; }
     public int? MessageCount { get; set; }
     public string? ChannelDiscordId { get; set; }
+    public string? ModeratorDisplayName { get; set; }
+    public string? TargetDisplayName { get; set; }
+    public string? ChannelDisplayName { get; set; }
 }
 
 public sealed class WarningApiResponse
@@ -156,4 +190,81 @@ public sealed class ReactionRoleApiResponse
     public string ButtonLabel { get; set; } = string.Empty;
     public bool IsActive { get; set; }
     public DateTimeOffset CreatedAt { get; set; }
+}
+
+public sealed class CommandPanelRefreshApiResponse
+{
+    public string DiscordGuildId { get; set; } = string.Empty;
+    public CommandPanelConfigApiResponse Config { get; set; } = new();
+}
+
+public sealed class CommandPanelConfigApiResponse
+{
+    public bool Enabled { get; set; }
+    public string? ChannelId { get; set; }
+    public string? MessageId { get; set; }
+    public string Title { get; set; } = string.Empty;
+    public string Description { get; set; } = string.Empty;
+    public List<CommandPanelButtonApiResponse> Buttons { get; set; } = [];
+}
+
+public sealed class CommandPanelButtonApiResponse
+{
+    public string Id { get; set; } = string.Empty;
+    public string Action { get; set; } = string.Empty;
+    public string Label { get; set; } = string.Empty;
+    public string Style { get; set; } = "Secondary";
+    public bool Enabled { get; set; } = true;
+    public int Order { get; set; }
+}
+
+public sealed class AckCommandPanelApiRequest
+{
+    public string? MessageId { get; set; }
+}
+
+public sealed class TicketCleanupApiResponse
+{
+    public Guid TicketId { get; set; }
+    public string DiscordGuildId { get; set; } = string.Empty;
+    public string ChannelDiscordId { get; set; } = string.Empty;
+    public int TicketNumber { get; set; }
+    public string TicketClosedFromDashboardMessage { get; set; } = string.Empty;
+}
+
+public sealed class AutoReplyRuleApiResponse
+{
+    public Guid Id { get; set; }
+    public string Trigger { get; set; } = string.Empty;
+    public string Response { get; set; } = string.Empty;
+    public AutoReplyMatchMode MatchMode { get; set; }
+    public AutoReplyScope Scope { get; set; }
+    public bool Enabled { get; set; }
+    public int Priority { get; set; }
+}
+
+public sealed class PendingTicketMessageApiResponse
+{
+    public Guid Id { get; set; }
+    public Guid TicketId { get; set; }
+    public string DiscordGuildId { get; set; } = string.Empty;
+    public string ChannelDiscordId { get; set; } = string.Empty;
+    public string Content { get; set; } = string.Empty;
+    public string? SenderDisplayName { get; set; }
+    public string StaffReplyPrefix { get; set; } = string.Empty;
+}
+
+public sealed class EvaluatePermissionsApiRequest
+{
+    public required string DiscordUserId { get; set; }
+    public List<string> DiscordRoleIds { get; set; } = [];
+}
+
+public sealed class EvaluatePermissionsApiResponse
+{
+    public bool CanWarn { get; set; }
+    public bool CanKick { get; set; }
+    public bool CanTimeout { get; set; }
+    public bool CanClearMessages { get; set; }
+    public bool CanAccessModeration { get; set; }
 }

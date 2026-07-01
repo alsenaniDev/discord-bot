@@ -1,12 +1,28 @@
 .add-staff-form {
   display: grid;
-  gap: 1rem;
-  max-width: 32rem;
+  gap: var(--space-4);
+  max-width: 42rem;
+}
+
+.permission-grid {
+  display: grid;
+  gap: var(--space-2);
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+}
+
+.permission-grid-label {
+  grid-column: 1 / -1;
+  font-weight: 600;
+}
+
+.permission-option {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
 }
 
 @media (min-width: 768px) {
   .add-staff-form {
-    grid-template-columns: 1fr 12rem auto;
-    align-items: end;
+    max-width: none;
   }
 }

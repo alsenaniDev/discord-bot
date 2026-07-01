@@ -50,10 +50,23 @@ public static class ResourceCollector
             })
             .ToList();
 
+        var members = guild.Users
+            .OrderBy(u => u.DisplayName, StringComparer.OrdinalIgnoreCase)
+            .Select(u => new SyncMemberApiItem
+            {
+                DiscordUserId = u.Id.ToString(),
+                Username = u.Username,
+                GlobalName = u.GlobalName,
+                Nickname = u.Nickname,
+                DiscordRoleIds = u.Roles.Select(r => r.Id.ToString()).ToList()
+            })
+            .ToList();
+
         return new SyncResourcesApiRequest
         {
             Channels = channels,
-            Roles = roles
+            Roles = roles,
+            Members = members
         };
     }
 }

@@ -23,7 +23,8 @@ export class LogsComponent implements OnInit {
     type: '',
     from: '',
     to: '',
-    search: ''
+    search: '',
+    userId: ''
   };
 
   constructor(
@@ -67,7 +68,7 @@ export class LogsComponent implements OnInit {
   }
 
   clearFilters(): void {
-    this.filters = { type: '', from: '', to: '', search: '' };
+    this.filters = { type: '', from: '', to: '', search: '', userId: '' };
     this.loadLogs();
   }
 
@@ -80,7 +81,8 @@ export class LogsComponent implements OnInit {
       type: this.filters.type || undefined,
       from: this.filters.from || undefined,
       to: this.filters.to || undefined,
-      search: this.filters.search?.trim() || undefined
+      search: this.filters.search?.trim() || undefined,
+      userId: this.filters.userId?.trim() || undefined
     };
   }
 }

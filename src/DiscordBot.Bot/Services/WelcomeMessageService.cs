@@ -66,7 +66,9 @@ public class WelcomeMessageService
             LogEventType.WelcomeSent,
             $"Welcome message sent to {user.Username}.",
             targetDiscordUserId: user.Id.ToString(),
+            targetDisplayName: user.Username,
             channelDiscordId: channelId.ToString(),
+            channelDisplayName: channel is IGuildChannel guildChannel ? guildChannel.Name : null,
             cancellationToken: cancellationToken);
     }
 }

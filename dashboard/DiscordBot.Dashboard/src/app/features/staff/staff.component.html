@@ -7,7 +7,7 @@
     [title]="'staff.loadError' | translate"
     [description]="error"
   >
-    <button type="button" class="btn btn-primary btn-sm" (click)="loadStaff()">{{ 'common.tryAgain' | translate }}</button>
+    <button type="button" class="btn btn-primary btn-sm" (click)="loadData()">{{ 'common.tryAgain' | translate }}</button>
   </app-empty-state>
 
   <ng-container *ngIf="!loading && !error">
@@ -16,21 +16,26 @@
       <p class="muted">{{ 'staff.addHint' | translate }}</p>
       <div class="add-staff-form">
         <label class="form-field">
-          <span>{{ 'staff.discordUserId' | translate }}</span>
-          <input
-            type="text"
-            class="input"
-            [(ngModel)]="discordUserId"
-            [placeholder]="'staff.discordUserIdPlaceholder' | translate"
-          />
+          <span>{{ 'staff.roleName' | translate }}</span>
+          <input type="text" class="input" [(ngModel)]="roleName" [placeholder]="'staff.roleNamePlaceholder' | translate" />
         </label>
         <label class="form-field">
-          <span>{{ 'staff.role' | translate }}</span>
-          <select class="input" [(ngModel)]="role">
-            <option *ngFor="let item of roles" [ngValue]="item">{{ roleLabel(item) }}</option>
+          <span>{{ 'staff.discordRole' | translate }}</span>
+          <select class="input" [(ngModel)]="discordRoleId">
+            <option value="">{{ 'staff.discordRolePlaceholder' | translate }}</option>
+            <option *ngFor="let role of discordRoles" [value]="role.discordRoleId">
+              {{ role.name }}
+            </option>
           </select>
         </label>
-        <button type="button" class="btn btn-primary" [disabled]="saving || !discordUserId.trim()" (click)="addStaff()">
+        <div class="permission-grid">
+          <span class="permission-grid-label">{{ 'staff.permissionsTitle' | translate }}</span>
+          <label class="permission-option" *ngFor="let option of permissionOptions">
+            <input type="checkbox" [(ngModel)]="selectedPermissions[option.value]" />
+            <span>{{ option.labelKey | translate }}</span>
+          </label>
+        </div>
+        <button type="button" class="btn btn-primary" [disabled]="saving" (click)="addRole()">
           {{ (saving ? 'staff.adding' : 'staff.addButton') | translate }}
         </button>
       </div>
@@ -39,31 +44,29 @@
     <section class="card table-card">
       <h2>{{ 'staff.listTitle' | translate }}</h2>
       <app-empty-state
-        *ngIf="staff.length === 0"
-        icon="👥"
+        *ngIf="roles.length === 0"
+        icon="🛡️"
         [title]="'staff.emptyTitle' | translate"
         [description]="'staff.emptyBody' | translate"
       ></app-empty-state>
 
-      <div class="table-wrap" *ngIf="staff.length > 0">
+      <div class="table-wrap" *ngIf="roles.length > 0">
         <table class="data-table">
           <thead>
             <tr>
-              <th>{{ 'staff.discordUserId' | translate }}</th>
-              <th>{{ 'staff.role' | translate }}</th>
-              <th>{{ 'common.created' | translate }}</th>
+              <th>{{ 'staff.roleName' | translate }}</th>
+              <th>{{ 'staff.discordRole' | translate }}</th>
+              <th>{{ 'staff.permissionsTitle' | translate }}</th>
               <th>{{ 'common.actions' | translate }}</th>
             </tr>
           </thead>
           <tbody>
-            <tr *ngFor="let member of staff">
-              <td class="mono">{{ member.discordUserId }}</td>
+            <tr *ngFor="let role of roles">
+              <td>{{ role.name }}</td>
+              <td>{{ discordRoleLabel(role) }}</td>
+              <td>{{ formatPermissions(role) }}</td>
               <td>
-                <span class="badge badge-open">{{ roleLabel(member.role) }}</span>
-              </td>
-              <td>{{ member.createdAt | date:'medium' }}</td>
-              <td>
-                <button type="button" class="btn btn-secondary btn-sm" (click)="removeStaff(member)">
+                <button type="button" class="btn btn-secondary btn-sm" (click)="removeRole(role)">
                   {{ 'staff.remove' | translate }}
                 </button>
               </td>

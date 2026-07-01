@@ -31,7 +31,9 @@ public static class DependencyInjection
         services.AddScoped<IAuthService, AuthService>();
         services.AddScoped<IGuildService, GuildService>();
         services.AddScoped<IGuildResourceService, GuildResourceService>();
+        services.AddScoped<ICommandPanelService, CommandPanelService>();
         services.AddScoped<ITicketService, TicketService>();
+        services.AddScoped<IAutoReplyService, AutoReplyService>();
         services.AddScoped<IModerationService, ModerationService>();
         services.AddScoped<IModuleService, ModuleService>();
         services.AddScoped<ILogService, LogService>();
@@ -40,6 +42,8 @@ public static class DependencyInjection
         services.AddScoped<IPlatformAdminService, PlatformAdminService>();
         services.AddScoped<IAdminService, AdminService>();
         services.AddScoped<IGuildAccessService, GuildAccessService>();
+        services.AddScoped<IGuildPermissionResolver, GuildPermissionResolver>();
+        services.AddScoped<IGuildPermissionRoleService, GuildPermissionRoleService>();
         services.AddScoped<IPlanUpgradeRequestService, PlanUpgradeRequestService>();
         services.AddScoped<IGuildStaffService, GuildStaffService>();
         services.AddScoped<IOnboardingService, OnboardingService>();

@@ -36,6 +36,7 @@ import { ServerSwitcherComponent } from './shared/ui/server-switcher/server-swit
 import { BreadcrumbsComponent } from './shared/ui/breadcrumbs/breadcrumbs.component';
 import { EmptyStateComponent } from './shared/ui/empty-state/empty-state.component';
 import { LoadingStateComponent } from './shared/ui/loading-state/loading-state.component';
+import { MemberSelectComponent } from './shared/ui/member-select/member-select.component';
 
 export function HttpLoaderFactory(http: HttpClient) {
   return new TranslateHttpLoader(http, './assets/i18n/', '.json');
@@ -69,7 +70,8 @@ export function HttpLoaderFactory(http: HttpClient) {
     ServerSwitcherComponent,
     BreadcrumbsComponent,
     EmptyStateComponent,
-    LoadingStateComponent
+    LoadingStateComponent,
+    MemberSelectComponent
   ],
   imports: [
     BrowserModule,

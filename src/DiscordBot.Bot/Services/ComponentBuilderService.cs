@@ -1,4 +1,5 @@
 using Discord;
+using DiscordBot.Bot.Api.Models;
 using DiscordBot.Bot.UI;
 
 namespace DiscordBot.Bot.Services;
@@ -56,6 +57,40 @@ public class ComponentBuilderService
                 emote: new Emoji("🎭"),
                 customId: customId)
             .Build();
+
+    public MessageComponent BuildCommandPanelComponents(IEnumerable<CommandPanelButtonApiResponse> buttons)
+    {
+        var builder = new ComponentBuilder();
+        var row = 0;
+        var buttonsInRow = 0;
+
+        foreach (var button in buttons.Where(b => b.Enabled).OrderBy(b => b.Order))
+        {
+            if (buttonsInRow == 5)
+            {
+                row++;
+                buttonsInRow = 0;
+            }
+
+            builder.WithButton(
+                label: button.Label,
+                style: MapButtonStyle(button.Style),
+                customId: DiscordCustomIds.PanelButton(button.Action, button.Id),
+                row: row);
+            buttonsInRow++;
+        }
+
+        return builder.Build();
+    }
+
+    private static ButtonStyle MapButtonStyle(string? style) =>
+        style?.Trim() switch
+        {
+            "Primary" => ButtonStyle.Primary,
+            "Success" => ButtonStyle.Success,
+            "Danger" => ButtonStyle.Danger,
+            _ => ButtonStyle.Secondary
+        };
 
     public Modal BuildCloseTicketModal(ulong channelId) =>
         new ModalBuilder()

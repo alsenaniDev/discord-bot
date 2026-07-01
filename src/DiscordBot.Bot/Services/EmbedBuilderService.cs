@@ -2,6 +2,8 @@ using Discord;
 using Discord.WebSocket;
 using DiscordBot.Bot.Api.Models;
 using DiscordBot.Bot.UI;
+using DiscordBot.Domain.Constants;
+using DiscordBot.Domain.Helpers;
 
 namespace DiscordBot.Bot.Services;
 
@@ -155,30 +157,90 @@ public class EmbedBuilderService
             .Build();
     }
 
-    public Embed BuildTicketWelcome(SocketGuildUser owner, int ticketNumber) =>
-        new Discord.EmbedBuilder()
-            .WithTitle($"Ticket #{ticketNumber}")
-            .WithDescription(
-                $"{owner.Mention}, thanks for reaching out.\n\n" +
-                "A staff member will assist you shortly. Use the button, menu, or `/ticket close` when your issue is resolved.")
+    public Embed BuildTicketWelcome(SocketGuildUser owner, int ticketNumber, GuildSettingsResponse settings)
+    {
+        var tokens = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+        {
+            ["ticket"] = ticketNumber.ToString(),
+            ["mention"] = owner.Mention,
+            ["user"] = owner.Mention,
+            ["username"] = owner.Username
+        };
+
+        var title = MessageTemplateFormatter.Format(
+            string.IsNullOrWhiteSpace(settings.TicketWelcomeTitle)
+                ? TicketMessageDefaults.WelcomeTitle
+                : settings.TicketWelcomeTitle,
+            tokens);
+
+        var description = MessageTemplateFormatter.Format(
+            string.IsNullOrWhiteSpace(settings.TicketWelcomeMessage)
+                ? TicketMessageDefaults.WelcomeMessage
+                : settings.TicketWelcomeMessage,
+            tokens);
+
+        return new Discord.EmbedBuilder()
+            .WithTitle(title)
+            .WithDescription(description)
             .WithColor(BotColors.Ticket)
             .AddField("Opened by", owner.Mention, inline: true)
             .AddField("Status", "Open", inline: true)
             .WithFooter(FooterText)
             .WithTimestamp(DateTimeOffset.UtcNow)
             .Build();
+    }
 
-    public Embed BuildTicketClosed(int ticketNumber, IUser closedBy)
+    public Embed BuildTicketClosedFromDashboard(int ticketNumber, string messageTemplate)
     {
+        var description = MessageTemplateFormatter.Format(
+            string.IsNullOrWhiteSpace(messageTemplate)
+                ? TicketMessageDefaults.ClosedFromDashboardMessage
+                : messageTemplate,
+            new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+            {
+                ["ticket"] = ticketNumber.ToString()
+            });
+
         return new Discord.EmbedBuilder()
             .WithTitle("Ticket closed")
-            .WithDescription(
-                $"Ticket #{ticketNumber} has been closed by {closedBy.Mention}. This channel will be deleted shortly.")
+            .WithDescription(description)
+            .WithColor(BotColors.Warning)
+            .WithFooter(FooterText)
+            .WithTimestamp(DateTimeOffset.UtcNow)
+            .Build();
+    }
+
+    public Embed BuildTicketClosed(int ticketNumber, IUser closedBy, GuildSettingsResponse settings)
+    {
+        var description = MessageTemplateFormatter.Format(
+            string.IsNullOrWhiteSpace(settings.TicketClosedMessage)
+                ? TicketMessageDefaults.ClosedMessage
+                : settings.TicketClosedMessage,
+            new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+            {
+                ["ticket"] = ticketNumber.ToString(),
+                ["mention"] = closedBy.Mention,
+                ["user"] = closedBy.Mention,
+                ["username"] = closedBy.Username
+            });
+
+        return new Discord.EmbedBuilder()
+            .WithTitle("Ticket closed")
+            .WithDescription(description)
             .WithColor(BotColors.Success)
             .WithFooter(FooterText)
             .WithTimestamp(DateTimeOffset.UtcNow)
             .Build();
     }
+
+    public Embed BuildCommandPanel(string title, string description) =>
+        new Discord.EmbedBuilder()
+            .WithTitle(title)
+            .WithDescription(description)
+            .WithColor(BotColors.Info)
+            .WithFooter(FooterText)
+            .WithTimestamp(DateTimeOffset.UtcNow)
+            .Build();
 
     public Embed BuildTicketHelp()
     {
@@ -188,6 +250,56 @@ public class EmbedBuilderService
                 "Use **Close ticket** or `/ticket close` inside your ticket channel when you are done.\n" +
                 "Only the ticket owner or server staff can close a ticket.")
             .WithColor(BotColors.Info)
+            .WithFooter(FooterText)
+            .WithTimestamp(DateTimeOffset.UtcNow)
+            .Build();
+    }
+
+    public Embed BuildModerationHelp()
+    {
+        return new Discord.EmbedBuilder()
+            .WithTitle("Moderation help")
+            .WithDescription("Staff can use these slash commands in Discord:")
+            .WithColor(BotColors.Info)
+            .AddField("Warn a member", "`/warn user:<member> reason:<text>`", inline: false)
+            .AddField("View warnings", "`/warnings user:<member>`", inline: false)
+            .AddField("Kick a member", "`/kick user:<member> reason:<text>`", inline: false)
+            .AddField("Clear messages", "`/clear amount:<1-100>`", inline: false)
+            .WithFooter(FooterText)
+            .WithTimestamp(DateTimeOffset.UtcNow)
+            .Build();
+    }
+
+    public Embed BuildReactionRolesHelp()
+    {
+        return new Discord.EmbedBuilder()
+            .WithTitle("Reaction roles help")
+            .WithDescription(
+                "Reaction role panels let members toggle roles with a button.\n" +
+                "Staff can create panels with `/reaction-role create` in Discord.")
+            .WithColor(BotColors.Info)
+            .AddField("How it works", "Click a panel button to add or remove the linked role.", inline: false)
+            .WithFooter(FooterText)
+            .WithTimestamp(DateTimeOffset.UtcNow)
+            .Build();
+    }
+
+    public Embed BuildPlatformHelp(string dashboardUrl)
+    {
+        var builder = new Discord.EmbedBuilder()
+            .WithTitle("Bot platform help")
+            .WithDescription(
+                "Manage welcome messages, tickets, moderation, modules, and more from the dashboard.\n" +
+                "Use `/sync` in Discord after changing channels or roles.")
+            .WithColor(BotColors.Info)
+            .AddField("Useful commands", "`/ping` · `/server` · `/ticket open` · `/sync`", inline: false);
+
+        if (!string.IsNullOrWhiteSpace(dashboardUrl))
+        {
+            builder.AddField("Dashboard", dashboardUrl.TrimEnd('/'), inline: false);
+        }
+
+        return builder
             .WithFooter(FooterText)
             .WithTimestamp(DateTimeOffset.UtcNow)
             .Build();

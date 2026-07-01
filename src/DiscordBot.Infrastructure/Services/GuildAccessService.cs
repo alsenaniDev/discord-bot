@@ -1,5 +1,3 @@
-using DiscordBot.Domain.Entities;
-using DiscordBot.Domain.Enums;
 using DiscordBot.Infrastructure.Data;
 using DiscordBot.Infrastructure.Models;
 using Microsoft.EntityFrameworkCore;
@@ -34,11 +32,16 @@ public interface IGuildAccessService
 public class GuildAccessService : IGuildAccessService
 {
     private readonly AppDbContext _dbContext;
+    private readonly IGuildPermissionResolver _permissionResolver;
     private readonly IPlatformAdminService _platformAdminService;
 
-    public GuildAccessService(AppDbContext dbContext, IPlatformAdminService platformAdminService)
+    public GuildAccessService(
+        AppDbContext dbContext,
+        IGuildPermissionResolver permissionResolver,
+        IPlatformAdminService platformAdminService)
     {
         _dbContext = dbContext;
+        _permissionResolver = permissionResolver;
         _platformAdminService = platformAdminService;
     }
 
@@ -50,53 +53,8 @@ public class GuildAccessService : IGuildAccessService
         string discordUserId,
         CancellationToken cancellationToken = default)
     {
-        var guild = await _dbContext.Guilds
-            .AsNoTracking()
-            .FirstOrDefaultAsync(g => g.Id == guildId && g.IsActive, cancellationToken);
-
-        if (guild is null)
-        {
-            return null;
-        }
-
-        var isPlatformAdmin = await IsPlatformAdminAsync(discordUserId, cancellationToken);
-        var isOwner = guild.OwnerDiscordUserId == discordUserId;
-
-        GuildStaffRole? staffRole = null;
-        if (!isOwner && !isPlatformAdmin)
-        {
-            var staff = await _dbContext.GuildStaff
-                .AsNoTracking()
-                .FirstOrDefaultAsync(
-                    s => s.GuildId == guildId && s.DiscordUserId == discordUserId,
-                    cancellationToken);
-
-            if (staff is null)
-            {
-                return null;
-            }
-
-            staffRole = staff.Role;
-        }
-
-        var isStaff = staffRole.HasValue;
-        var canModerate = isOwner || isPlatformAdmin || isStaff;
-        var canManage = isOwner || isPlatformAdmin;
-
-        return new GuildAccessDto
-        {
-            IsOwner = isOwner,
-            IsPlatformAdmin = isPlatformAdmin,
-            StaffRole = staffRole?.ToString(),
-            CanManageSettings = canManage,
-            CanManageModules = canManage,
-            CanManageSubscription = canManage,
-            CanManageStaff = canManage,
-            CanAccessModeration = canModerate,
-            CanAccessLogs = canModerate,
-            CanAccessTickets = canModerate,
-            CanAccessOverview = canManage
-        };
+        var resolved = await _permissionResolver.ResolveAsync(guildId, discordUserId, cancellationToken: cancellationToken);
+        return resolved is null ? null : GuildPermissionMapper.ToAccessDto(resolved);
     }
 
     public async Task<bool> CanAccessModerationPagesAsync(

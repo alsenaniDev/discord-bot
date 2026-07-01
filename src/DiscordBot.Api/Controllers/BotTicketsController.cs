@@ -62,15 +62,62 @@ public class BotTicketsController : ControllerBase
     }
 
     [HttpPatch("{id:guid}/close")]
-    public async Task<ActionResult<TicketDto>> CloseTicket(Guid id, CancellationToken cancellationToken)
+    public async Task<ActionResult<TicketDto>> CloseTicket(
+        Guid id,
+        [FromBody] CloseTicketRequest? request,
+        CancellationToken cancellationToken)
     {
-        var ticket = await _ticketService.CloseTicketAsync(id, cancellationToken);
+        var ticket = await _ticketService.CloseTicketAsync(id, request, cancellationToken);
         if (ticket is null)
         {
             return NotFound(new { message = "Ticket not found or already closed." });
         }
 
         return Ok(ticket);
+    }
+
+    [HttpGet("pending-cleanups")]
+    public async Task<ActionResult<IReadOnlyList<TicketChannelCleanupDto>>> GetPendingCleanups(
+        CancellationToken cancellationToken)
+    {
+        var pending = await _ticketService.GetPendingChannelCleanupsAsync(cancellationToken);
+        return Ok(pending);
+    }
+
+    [HttpPost("{ticketId:guid}/ack-cleanup")]
+    public async Task<IActionResult> AcknowledgeCleanup(
+        Guid ticketId,
+        CancellationToken cancellationToken)
+    {
+        var success = await _ticketService.AcknowledgeChannelCleanupAsync(ticketId, cancellationToken);
+        if (!success)
+        {
+            return NotFound(new { message = "Ticket not found." });
+        }
+
+        return Ok(new { message = "Ticket channel cleanup acknowledged." });
+    }
+
+    [HttpGet("pending-messages")]
+    public async Task<ActionResult<IReadOnlyList<PendingTicketMessageDto>>> GetPendingMessages(
+        CancellationToken cancellationToken)
+    {
+        var pending = await _ticketService.GetPendingOutboundMessagesAsync(cancellationToken);
+        return Ok(pending);
+    }
+
+    [HttpPost("messages/{messageId:guid}/ack")]
+    public async Task<IActionResult> AcknowledgeMessage(
+        Guid messageId,
+        CancellationToken cancellationToken)
+    {
+        var success = await _ticketService.AcknowledgeOutboundMessageAsync(messageId, cancellationToken);
+        if (!success)
+        {
+            return NotFound(new { message = "Outbound message not found." });
+        }
+
+        return Ok(new { message = "Outbound ticket message acknowledged." });
     }
 }
 

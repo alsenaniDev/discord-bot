@@ -24,6 +24,7 @@ public class DiscordBotHostedService : IHostedService
     private readonly SlashCommandHandlers _commandHandlers;
     private readonly TicketCommandHandlers _ticketHandlers;
     private readonly TicketInteractionHandlers _ticketInteractionHandlers;
+    private readonly PanelInteractionHandlers _panelInteractionHandlers;
     private readonly ModerationCommandHandlers _moderationHandlers;
     private readonly ReactionRoleCommandHandlers _reactionRoleHandlers;
     private readonly ReactionRoleInteractionHandlers _reactionRoleInteractionHandlers;
@@ -32,6 +33,7 @@ public class DiscordBotHostedService : IHostedService
     private readonly ResourceSyncService _resourceSyncService;
     private readonly ModuleGuard _moduleGuard;
     private readonly BotLogWriter _logWriter;
+    private readonly AutoReplyMessageService _autoReplyMessageService;
     private readonly BotOptions _botOptions;
     private readonly ILogger<DiscordBotHostedService> _logger;
 
@@ -41,6 +43,7 @@ public class DiscordBotHostedService : IHostedService
         SlashCommandHandlers commandHandlers,
         TicketCommandHandlers ticketHandlers,
         TicketInteractionHandlers ticketInteractionHandlers,
+        PanelInteractionHandlers panelInteractionHandlers,
         ModerationCommandHandlers moderationHandlers,
         ReactionRoleCommandHandlers reactionRoleHandlers,
         ReactionRoleInteractionHandlers reactionRoleInteractionHandlers,
@@ -49,6 +52,7 @@ public class DiscordBotHostedService : IHostedService
         ResourceSyncService resourceSyncService,
         ModuleGuard moduleGuard,
         BotLogWriter logWriter,
+        AutoReplyMessageService autoReplyMessageService,
         IOptions<BotOptions> botOptions,
         ILogger<DiscordBotHostedService> logger)
     {
@@ -57,6 +61,7 @@ public class DiscordBotHostedService : IHostedService
         _commandHandlers = commandHandlers;
         _ticketHandlers = ticketHandlers;
         _ticketInteractionHandlers = ticketInteractionHandlers;
+        _panelInteractionHandlers = panelInteractionHandlers;
         _moderationHandlers = moderationHandlers;
         _reactionRoleHandlers = reactionRoleHandlers;
         _reactionRoleInteractionHandlers = reactionRoleInteractionHandlers;
@@ -65,6 +70,7 @@ public class DiscordBotHostedService : IHostedService
         _resourceSyncService = resourceSyncService;
         _moduleGuard = moduleGuard;
         _logWriter = logWriter;
+        _autoReplyMessageService = autoReplyMessageService;
         _botOptions = botOptions.Value;
         _logger = logger;
     }
@@ -97,6 +103,7 @@ public class DiscordBotHostedService : IHostedService
         _client.InteractionCreated += OnInteractionCreatedAsync;
         _client.JoinedGuild += OnJoinedGuildAsync;
         _client.UserJoined += OnUserJoinedAsync;
+        _client.MessageReceived += OnMessageReceivedAsync;
 
         await _client.LoginAsync(TokenType.Bot, _botOptions.Token);
         await _client.StartAsync();
@@ -230,6 +237,12 @@ public class DiscordBotHostedService : IHostedService
             return;
         }
 
+        if (customId.StartsWith(DiscordCustomIds.PanelPrefix, StringComparison.Ordinal))
+        {
+            await _panelInteractionHandlers.HandleButtonAsync(component);
+            return;
+        }
+
         if (customId.StartsWith(DiscordCustomIds.TicketSelectPrefix, StringComparison.Ordinal))
         {
             await _ticketInteractionHandlers.HandleSelectMenuAsync(component);
@@ -317,7 +330,8 @@ public class DiscordBotHostedService : IHostedService
             guildId,
             LogEventType.MemberJoined,
             $"{user.Username} joined the server.",
-            targetDiscordUserId: user.Id.ToString());
+            targetDiscordUserId: user.Id.ToString(),
+            targetDisplayName: user.Username);
 
         if (await _moduleGuard.IsEnabledAsync(guildId, ModuleKeys.Welcome))
         {
@@ -364,6 +378,7 @@ public class DiscordBotHostedService : IHostedService
                 LogEventType.AutoRoleAssigned,
                 $"Assigned role {role.Name} to {user.Username}.",
                 targetDiscordUserId: user.Id.ToString(),
+                targetDisplayName: user.Username,
                 metadataJson: $"{{\"roleId\":\"{role.Id}\"}}");
         }
         catch (Exception ex)
@@ -404,5 +419,17 @@ public class DiscordBotHostedService : IHostedService
             result.IsNew);
 
         await _resourceSyncService.SyncGuildAsync(guild);
+    }
+
+    private async Task OnMessageReceivedAsync(SocketMessage message)
+    {
+        try
+        {
+            await _autoReplyMessageService.HandleMessageAsync(message);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error handling message for auto-reply.");
+        }
     }
 }

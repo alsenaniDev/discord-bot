@@ -81,6 +81,20 @@ public class ModerationService : IModerationService
             Reason = request.Reason.Trim()
         });
 
+        await MemberDisplayNameHelper.EnsureMemberKnownAsync(
+            _dbContext,
+            guild.Id,
+            request.TargetDiscordUserId,
+            request.TargetDisplayName,
+            cancellationToken);
+
+        await MemberDisplayNameHelper.EnsureMemberKnownAsync(
+            _dbContext,
+            guild.Id,
+            request.ModeratorDiscordUserId,
+            request.ModeratorDisplayName,
+            cancellationToken);
+
         await _dbContext.SaveChangesAsync(cancellationToken);
 
         await _logService.CreateLogAsync(new CreateLogRequest
@@ -89,7 +103,9 @@ public class ModerationService : IModerationService
             Type = LogEventType.WarningCreated,
             Message = $"Warning issued: {request.Reason.Trim()}",
             ActorDiscordUserId = request.ModeratorDiscordUserId,
-            TargetDiscordUserId = request.TargetDiscordUserId
+            TargetDiscordUserId = request.TargetDiscordUserId,
+            ActorDisplayName = request.ModeratorDisplayName,
+            TargetDisplayName = request.TargetDisplayName
         }, cancellationToken);
 
         return MapWarning(warning);
@@ -119,6 +135,34 @@ public class ModerationService : IModerationService
         };
 
         _dbContext.ModerationCases.Add(moderationCase);
+
+        if (!string.IsNullOrWhiteSpace(request.TargetDiscordUserId))
+        {
+            await MemberDisplayNameHelper.EnsureMemberKnownAsync(
+                _dbContext,
+                guild.Id,
+                request.TargetDiscordUserId,
+                request.TargetDisplayName,
+                cancellationToken);
+        }
+
+        await MemberDisplayNameHelper.EnsureMemberKnownAsync(
+            _dbContext,
+            guild.Id,
+            request.ModeratorDiscordUserId,
+            request.ModeratorDisplayName,
+            cancellationToken);
+
+        if (!string.IsNullOrWhiteSpace(request.ChannelDiscordId))
+        {
+            await MemberDisplayNameHelper.EnsureChannelKnownAsync(
+                _dbContext,
+                guild.Id,
+                request.ChannelDiscordId,
+                request.ChannelDisplayName,
+                cancellationToken);
+        }
+
         await _dbContext.SaveChangesAsync(cancellationToken);
 
         await WriteCaseLogAsync(request, moderationCase, cancellationToken);
@@ -150,6 +194,9 @@ public class ModerationService : IModerationService
             ActorDiscordUserId = request.ModeratorDiscordUserId,
             TargetDiscordUserId = request.TargetDiscordUserId,
             ChannelDiscordId = request.ChannelDiscordId,
+            ActorDisplayName = request.ModeratorDisplayName,
+            TargetDisplayName = request.TargetDisplayName,
+            ChannelDisplayName = request.ChannelDisplayName,
             MetadataJson = request.Type == ModerationCaseType.Clear
                 ? LogService.BuildMetadataJson(new { request.MessageCount })
                 : null
@@ -174,17 +221,11 @@ public class ModerationService : IModerationService
 
         query = ApplyWarningFilters(query, filter);
 
-        return await query
+        var warnings = await query
             .OrderByDescending(w => w.CreatedAt)
-            .Select(w => new WarningDto
-            {
-                Id = w.Id,
-                TargetDiscordUserId = w.TargetDiscordUserId,
-                ModeratorDiscordUserId = w.ModeratorDiscordUserId,
-                Reason = w.Reason,
-                CreatedAt = w.CreatedAt
-            })
             .ToListAsync(cancellationToken);
+
+        return await EnrichWarningsAsync(guildId, warnings, cancellationToken);
     }
 
     public async Task<IReadOnlyList<ModerationCaseDto>> GetCasesAsync(
@@ -205,20 +246,11 @@ public class ModerationService : IModerationService
 
         query = ApplyCaseFilters(query, filter);
 
-        return await query
+        var cases = await query
             .OrderByDescending(c => c.CreatedAt)
-            .Select(c => new ModerationCaseDto
-            {
-                Id = c.Id,
-                Type = c.Type,
-                TargetDiscordUserId = c.TargetDiscordUserId,
-                ModeratorDiscordUserId = c.ModeratorDiscordUserId,
-                Reason = c.Reason,
-                MessageCount = c.MessageCount,
-                ChannelDiscordId = c.ChannelDiscordId,
-                CreatedAt = c.CreatedAt
-            })
             .ToListAsync(cancellationToken);
+
+        return await EnrichCasesAsync(guildId, cases, cancellationToken);
     }
 
     public async Task<IReadOnlyList<WarningDto>> GetWarningsByDiscordGuildAsync(
@@ -286,6 +318,80 @@ public class ModerationService : IModerationService
         }
 
         return query;
+    }
+
+    private async Task<IReadOnlyList<WarningDto>> EnrichWarningsAsync(
+        Guid guildId,
+        IReadOnlyList<Warning> warnings,
+        CancellationToken cancellationToken)
+    {
+        if (warnings.Count == 0)
+        {
+            return [];
+        }
+
+        var memberNames = await MemberDisplayNameHelper.ResolveMemberNamesAsync(
+            _dbContext,
+            guildId,
+            warnings.SelectMany(w => new[] { w.TargetDiscordUserId, w.ModeratorDiscordUserId }),
+            cancellationToken);
+
+        return warnings
+            .Select(warning => new WarningDto
+            {
+                Id = warning.Id,
+                TargetDiscordUserId = warning.TargetDiscordUserId,
+                TargetDisplayName = memberNames.GetValueOrDefault(warning.TargetDiscordUserId),
+                ModeratorDiscordUserId = warning.ModeratorDiscordUserId,
+                ModeratorDisplayName = memberNames.GetValueOrDefault(warning.ModeratorDiscordUserId),
+                Reason = warning.Reason,
+                CreatedAt = warning.CreatedAt
+            })
+            .ToList();
+    }
+
+    private async Task<IReadOnlyList<ModerationCaseDto>> EnrichCasesAsync(
+        Guid guildId,
+        IReadOnlyList<ModerationCase> cases,
+        CancellationToken cancellationToken)
+    {
+        if (cases.Count == 0)
+        {
+            return [];
+        }
+
+        var memberNames = await MemberDisplayNameHelper.ResolveMemberNamesAsync(
+            _dbContext,
+            guildId,
+            cases.SelectMany(c => new[] { c.TargetDiscordUserId, c.ModeratorDiscordUserId }),
+            cancellationToken);
+
+        var channelNames = await MemberDisplayNameHelper.ResolveChannelNamesAsync(
+            _dbContext,
+            guildId,
+            cases.Select(c => c.ChannelDiscordId),
+            cancellationToken);
+
+        return cases
+            .Select(moderationCase => new ModerationCaseDto
+            {
+                Id = moderationCase.Id,
+                Type = moderationCase.Type,
+                TargetDiscordUserId = moderationCase.TargetDiscordUserId,
+                TargetDisplayName = moderationCase.TargetDiscordUserId is null
+                    ? null
+                    : memberNames.GetValueOrDefault(moderationCase.TargetDiscordUserId),
+                ModeratorDiscordUserId = moderationCase.ModeratorDiscordUserId,
+                ModeratorDisplayName = memberNames.GetValueOrDefault(moderationCase.ModeratorDiscordUserId),
+                Reason = moderationCase.Reason,
+                MessageCount = moderationCase.MessageCount,
+                ChannelDiscordId = moderationCase.ChannelDiscordId,
+                ChannelName = moderationCase.ChannelDiscordId is null
+                    ? null
+                    : channelNames.GetValueOrDefault(moderationCase.ChannelDiscordId),
+                CreatedAt = moderationCase.CreatedAt
+            })
+            .ToList();
     }
 
     private static WarningDto MapWarning(Warning warning) =>

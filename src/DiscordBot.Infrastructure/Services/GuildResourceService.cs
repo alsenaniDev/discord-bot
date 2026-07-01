@@ -1,3 +1,4 @@
+using System.Text.Json;
 using DiscordBot.Domain.Entities;
 using DiscordBot.Domain.Enums;
 using DiscordBot.Infrastructure.Data;
@@ -23,6 +24,12 @@ public interface IGuildResourceService
         string ownerDiscordUserId,
         CancellationToken cancellationToken = default);
 
+    Task<IReadOnlyList<DiscordGuildMemberDto>> GetMembersAsync(
+        Guid guildId,
+        string discordUserId,
+        string? search,
+        CancellationToken cancellationToken = default);
+
     Task<RequestResourceSyncResponse?> RequestSyncAsync(
         Guid guildId,
         string ownerDiscordUserId,
@@ -41,11 +48,16 @@ public class GuildResourceService : IGuildResourceService
 {
     private readonly AppDbContext _dbContext;
     private readonly ILogService _logService;
+    private readonly IGuildAccessService _guildAccessService;
 
-    public GuildResourceService(AppDbContext dbContext, ILogService logService)
+    public GuildResourceService(
+        AppDbContext dbContext,
+        ILogService logService,
+        IGuildAccessService guildAccessService)
     {
         _dbContext = dbContext;
         _logService = logService;
+        _guildAccessService = guildAccessService;
     }
 
     public async Task<IReadOnlyList<DiscordChannelDto>> GetChannelsAsync(
@@ -126,6 +138,47 @@ public class GuildResourceService : IGuildResourceService
             .ToListAsync(cancellationToken);
     }
 
+    public async Task<IReadOnlyList<DiscordGuildMemberDto>> GetMembersAsync(
+        Guid guildId,
+        string discordUserId,
+        string? search,
+        CancellationToken cancellationToken = default)
+    {
+        var access = await _guildAccessService.GetAccessAsync(guildId, discordUserId, cancellationToken);
+        if (access is null)
+        {
+            return [];
+        }
+
+        var query = _dbContext.DiscordGuildMembers
+            .AsNoTracking()
+            .Where(m => m.GuildId == guildId);
+
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            var term = $"%{search.Trim()}%";
+            query = query.Where(m =>
+                EF.Functions.ILike(m.DiscordUserId, term)
+                || EF.Functions.ILike(m.Username, term)
+                || (m.GlobalName != null && EF.Functions.ILike(m.GlobalName, term))
+                || (m.Nickname != null && EF.Functions.ILike(m.Nickname, term)));
+        }
+
+        return await query
+            .OrderBy(m => m.GlobalName ?? m.Nickname ?? m.Username)
+            .ThenBy(m => m.Username)
+            .Take(100)
+            .Select(m => new DiscordGuildMemberDto
+            {
+                DiscordUserId = m.DiscordUserId,
+                Username = m.Username,
+                GlobalName = m.GlobalName,
+                Nickname = m.Nickname,
+                DisplayName = m.Nickname ?? m.GlobalName ?? m.Username
+            })
+            .ToListAsync(cancellationToken);
+    }
+
     public async Task<RequestResourceSyncResponse?> RequestSyncAsync(
         Guid guildId,
         string ownerDiscordUserId,
@@ -146,7 +199,7 @@ public class GuildResourceService : IGuildResourceService
 
         return new RequestResourceSyncResponse
         {
-            Message = "Sync requested. The bot will update channels and roles shortly.",
+            Message = "Sync requested. The bot will update channels, roles, and members shortly.",
             ResourcesSyncedAt = guild.ResourcesSyncedAt
         };
     }
@@ -182,8 +235,13 @@ public class GuildResourceService : IGuildResourceService
             .Where(r => r.GuildId == guild.Id)
             .ToListAsync(cancellationToken);
 
+        var existingMembers = await _dbContext.DiscordGuildMembers
+            .Where(m => m.GuildId == guild.Id)
+            .ToListAsync(cancellationToken);
+
         _dbContext.DiscordChannels.RemoveRange(existingChannels);
         _dbContext.DiscordRoles.RemoveRange(existingRoles);
+        _dbContext.DiscordGuildMembers.RemoveRange(existingMembers);
 
         foreach (var channel in request.Channels)
         {
@@ -210,6 +268,19 @@ public class GuildResourceService : IGuildResourceService
             });
         }
 
+        foreach (var member in request.Members)
+        {
+            _dbContext.DiscordGuildMembers.Add(new DiscordGuildMember
+            {
+                GuildId = guild.Id,
+                DiscordUserId = member.DiscordUserId,
+                Username = member.Username,
+                GlobalName = member.GlobalName,
+                Nickname = member.Nickname,
+                DiscordRoleIdsJson = JsonSerializer.Serialize(member.DiscordRoleIds)
+            });
+        }
+
         guild.ResourceSyncRequested = false;
         guild.ResourcesSyncedAt = DateTimeOffset.UtcNow;
 
@@ -219,11 +290,12 @@ public class GuildResourceService : IGuildResourceService
         {
             DiscordGuildId = discordGuildId,
             Type = LogEventType.ResourceSyncCompleted,
-            Message = $"Synced {request.Channels.Count} channel(s) and {request.Roles.Count} role(s).",
+            Message = $"Synced {request.Channels.Count} channel(s), {request.Roles.Count} role(s), and {request.Members.Count} member(s).",
             MetadataJson = LogService.BuildMetadataJson(new
             {
                 channelCount = request.Channels.Count,
-                roleCount = request.Roles.Count
+                roleCount = request.Roles.Count,
+                memberCount = request.Members.Count
             })
         }, cancellationToken);
 
