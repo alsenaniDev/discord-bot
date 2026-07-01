@@ -1,4 +1,5 @@
 import { HttpErrorResponse } from '@angular/common/http';
+import { environment } from '../../../environments/environment';
 
 export interface ApiErrorBody {
   message?: string;
@@ -34,7 +35,7 @@ export function getApiErrorMessage(error: unknown, fallback: string): string {
   }
 
   if (error.status === 0) {
-    return 'Cannot reach the API. Is it running on http://localhost:5217?';
+    return `Cannot reach the API at ${environment.apiUrl}. Check that the API is online and CORS allows this dashboard URL.`;
   }
 
   if (error.status === 401) {
