@@ -40,6 +40,8 @@ var app = builder.Build();
 
 app.ValidateRequiredConfiguration();
 
+app.UseCors("Dashboard");
+
 app.UseMiddleware<ExceptionHandlingMiddleware>();
 app.UseMiddleware<RequestLoggingMiddleware>();
 
@@ -53,8 +55,6 @@ if (app.Environment.IsDevelopment())
     });
     app.UseHttpsRedirection();
 }
-
-app.UseCors("Dashboard");
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();

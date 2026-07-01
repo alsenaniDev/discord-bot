@@ -35,7 +35,11 @@ export function getApiErrorMessage(error: unknown, fallback: string): string {
   }
 
   if (error.status === 0) {
-    return `Cannot reach the API at ${environment.apiUrl}. Check that the API is online and CORS allows this dashboard URL.`;
+    const origin =
+      typeof window !== 'undefined' && window.location.origin
+        ? window.location.origin
+        : 'your dashboard URL';
+    return `Cannot reach the API at ${environment.apiUrl}. Set Railway Discord__DashboardUrl to ${origin} (no trailing slash), redeploy the API, then try again.`;
   }
 
   if (error.status === 401) {

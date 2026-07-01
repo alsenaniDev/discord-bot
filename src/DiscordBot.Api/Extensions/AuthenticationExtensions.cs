@@ -45,25 +45,47 @@ public static class AuthenticationExtensions
         this IServiceCollection services,
         IConfiguration configuration)
     {
-        var dashboardUrl = configuration.GetSection(DiscordOptions.SectionName)
-            .Get<DiscordOptions>()?.DashboardUrl ?? "http://localhost:4200";
-
-        var allowedOrigins = dashboardUrl
+        var discordOptions = configuration.GetSection(DiscordOptions.SectionName).Get<DiscordOptions>() ?? new DiscordOptions();
+        var allowedOrigins = discordOptions.DashboardUrl
             .Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .Select(NormalizeOrigin)
             .Where(origin => !string.IsNullOrWhiteSpace(origin))
             .Distinct(StringComparer.OrdinalIgnoreCase)
-            .ToArray();
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
 
-        if (allowedOrigins.Length == 0)
+        if (allowedOrigins.Count == 0)
         {
-            allowedOrigins = ["http://localhost:4200"];
+            allowedOrigins.Add(NormalizeOrigin("http://localhost:4200"));
         }
+
+        var allowVercelOrigins = discordOptions.AllowVercelOrigins;
 
         services.AddCors(options =>
         {
             options.AddPolicy("Dashboard", policy =>
             {
-                policy.WithOrigins(allowedOrigins)
+                policy.SetIsOriginAllowed(origin =>
+                {
+                    if (string.IsNullOrWhiteSpace(origin))
+                    {
+                        return false;
+                    }
+
+                    var normalized = NormalizeOrigin(origin);
+                    if (allowedOrigins.Contains(normalized))
+                    {
+                        return true;
+                    }
+
+                    if (!allowVercelOrigins)
+                    {
+                        return false;
+                    }
+
+                    return Uri.TryCreate(normalized, UriKind.Absolute, out var uri)
+                        && string.Equals(uri.Scheme, Uri.UriSchemeHttps, StringComparison.OrdinalIgnoreCase)
+                        && uri.Host.EndsWith(".vercel.app", StringComparison.OrdinalIgnoreCase);
+                })
                     .AllowAnyHeader()
                     .AllowAnyMethod();
             });
@@ -71,4 +93,6 @@ public static class AuthenticationExtensions
 
         return services;
     }
+
+    private static string NormalizeOrigin(string origin) => origin.Trim().TrimEnd('/');
 }

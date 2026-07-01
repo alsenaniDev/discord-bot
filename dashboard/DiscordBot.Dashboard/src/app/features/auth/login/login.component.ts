@@ -13,6 +13,7 @@ export class LoginComponent implements OnInit {
   loading = false;
   error = '';
   readonly apiUrl = environment.apiUrl;
+  readonly dashboardOrigin = typeof window !== 'undefined' ? window.location.origin : '';
 
   constructor(private auth: AuthService, private router: Router) {}
 

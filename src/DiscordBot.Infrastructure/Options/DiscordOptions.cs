@@ -16,4 +16,7 @@ public class DiscordOptions
 
     /// <summary>Angular app URL(s) for CORS — comma-separated for multiple domains (e.g. Vercel + custom).</summary>
     public string DashboardUrl { get; set; } = "http://localhost:4200";
+
+    /// <summary>When true, also allow any https://*.vercel.app origin (Vercel preview deployments).</summary>
+    public bool AllowVercelOrigins { get; set; } = true;
 }
