@@ -1,0 +1,12 @@
+.add-staff-form {
+  display: grid;
+  gap: 1rem;
+  max-width: 32rem;
+}
+
+@media (min-width: 768px) {
+  .add-staff-form {
+    grid-template-columns: 1fr 12rem auto;
+    align-items: end;
+  }
+}

@@ -8,7 +8,9 @@ import { ModerationCase, ModerationFilters, Warning } from '../models/moderation
 import { GuildModule, UpdateGuildModuleRequest } from '../models/module.models';
 import { LogEntry, LogFilters } from '../models/log.models';
 import { ReactionRolePanel } from '../models/reaction-role.models';
-import { GuildSubscription, SubscriptionPlan, UpdateGuildSubscriptionRequest } from '../models/subscription.models';
+import { GuildSubscription, SubscriptionPlan } from '../models/subscription.models';
+import { PlanUpgradeRequest, CreatePlanUpgradeRequest } from '../models/upgrade-request.models';
+import { AddGuildStaffRequest, GuildAccess, GuildStaffMember } from '../models/staff.models';
 
 @Injectable({ providedIn: 'root' })
 export class GuildService {
@@ -146,13 +148,37 @@ export class GuildService {
     return this.http.get<GuildSubscription>(`${this.baseUrl}/api/guilds/${guildId}/subscription`);
   }
 
-  updateSubscription(
+  getGuildAccess(guildId: string): Observable<GuildAccess> {
+    return this.http.get<GuildAccess>(`${this.baseUrl}/api/guilds/${guildId}/access`);
+  }
+
+  getUpgradeRequests(guildId: string): Observable<PlanUpgradeRequest[]> {
+    return this.http.get<PlanUpgradeRequest[]>(
+      `${this.baseUrl}/api/guilds/${guildId}/subscription/upgrade-requests`
+    );
+  }
+
+  createUpgradeRequest(
     guildId: string,
-    request: UpdateGuildSubscriptionRequest
-  ): Observable<GuildSubscription> {
-    return this.http.put<GuildSubscription>(
-      `${this.baseUrl}/api/guilds/${guildId}/subscription`,
+    request: CreatePlanUpgradeRequest
+  ): Observable<PlanUpgradeRequest> {
+    return this.http.post<PlanUpgradeRequest>(
+      `${this.baseUrl}/api/guilds/${guildId}/subscription/upgrade-requests`,
       request
+    );
+  }
+
+  getStaff(guildId: string): Observable<GuildStaffMember[]> {
+    return this.http.get<GuildStaffMember[]>(`${this.baseUrl}/api/guilds/${guildId}/staff`);
+  }
+
+  addStaff(guildId: string, request: AddGuildStaffRequest): Observable<GuildStaffMember> {
+    return this.http.post<GuildStaffMember>(`${this.baseUrl}/api/guilds/${guildId}/staff`, request);
+  }
+
+  removeStaff(guildId: string, staffId: string): Observable<{ message: string }> {
+    return this.http.delete<{ message: string }>(
+      `${this.baseUrl}/api/guilds/${guildId}/staff/${staffId}`
     );
   }
 }

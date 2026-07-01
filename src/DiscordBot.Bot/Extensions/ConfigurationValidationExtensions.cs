@@ -11,6 +11,7 @@ public static class ConfigurationValidationExtensions
     [
         "YOUR_",
         "CHANGE_ME",
+        "REPLACE_WITH",
         "your-domain.com"
     ];
 
@@ -64,15 +65,8 @@ public static class ConfigurationValidationExtensions
 
         if (strict)
         {
-            if (api.BaseUrl.StartsWith("http://", StringComparison.OrdinalIgnoreCase))
-            {
-                errors.Add("Api:BaseUrl must use HTTPS in Production.");
-            }
-
-            if (platform.DashboardUrl.StartsWith("http://", StringComparison.OrdinalIgnoreCase))
-            {
-                errors.Add("Platform:DashboardUrl must use HTTPS in Production.");
-            }
+            CheckProductionUrl(errors, "Api:BaseUrl", api.BaseUrl);
+            CheckProductionUrl(errors, "Platform:DashboardUrl", platform.DashboardUrl);
         }
 
         return errors;
@@ -92,9 +86,33 @@ public static class ConfigurationValidationExtensions
         }
     }
 
+    private static void CheckProductionUrl(List<string> errors, string key, string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return;
+        }
+
+        if (value.StartsWith("http://", StringComparison.OrdinalIgnoreCase))
+        {
+            errors.Add($"{key} must use HTTPS in Production.");
+        }
+
+        if (IsLocalhost(value))
+        {
+            errors.Add($"{key} must not use localhost in Production.");
+        }
+    }
+
     private static bool IsPlaceholder(string value)
     {
         return PlaceholderFragments.Any(fragment =>
             value.Contains(fragment, StringComparison.OrdinalIgnoreCase));
+    }
+
+    private static bool IsLocalhost(string value)
+    {
+        return value.Contains("localhost", StringComparison.OrdinalIgnoreCase)
+            || value.Contains("127.0.0.1", StringComparison.OrdinalIgnoreCase);
     }
 }

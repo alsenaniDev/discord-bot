@@ -44,38 +44,64 @@ public class GuildService : IGuildService
     private readonly ILogService _logService;
     private readonly ISubscriptionService _subscriptionService;
     private readonly IOnboardingService _onboardingService;
+    private readonly IGuildAccessService _guildAccessService;
 
     public GuildService(
         AppDbContext dbContext,
         IModuleService moduleService,
         ILogService logService,
         ISubscriptionService subscriptionService,
-        IOnboardingService onboardingService)
+        IOnboardingService onboardingService,
+        IGuildAccessService guildAccessService)
     {
         _dbContext = dbContext;
         _moduleService = moduleService;
         _logService = logService;
         _subscriptionService = subscriptionService;
         _onboardingService = onboardingService;
+        _guildAccessService = guildAccessService;
     }
 
     public async Task<IReadOnlyList<GuildSummaryDto>> GetAccessibleGuildsAsync(
         string discordUserId,
         CancellationToken cancellationToken = default)
     {
-        return await _dbContext.Guilds
+        var ownedGuilds = await _dbContext.Guilds
             .AsNoTracking()
             .Where(g => g.OwnerDiscordUserId == discordUserId && g.IsActive)
-            .OrderBy(g => g.Name)
             .Select(g => new GuildSummaryDto
             {
                 Id = g.Id,
                 DiscordGuildId = g.DiscordGuildId,
                 Name = g.Name,
                 IconUrl = g.IconUrl,
-                IsActive = g.IsActive
+                IsActive = g.IsActive,
+                IsOwner = true,
+                StaffRole = null
             })
             .ToListAsync(cancellationToken);
+
+        var staffGuilds = await _dbContext.GuildStaff
+            .AsNoTracking()
+            .Where(s => s.DiscordUserId == discordUserId)
+            .Where(s => s.Guild.IsActive)
+            .Where(s => s.Guild.OwnerDiscordUserId != discordUserId)
+            .Select(s => new GuildSummaryDto
+            {
+                Id = s.Guild.Id,
+                DiscordGuildId = s.Guild.DiscordGuildId,
+                Name = s.Guild.Name,
+                IconUrl = s.Guild.IconUrl,
+                IsActive = s.Guild.IsActive,
+                IsOwner = false,
+                StaffRole = s.Role.ToString()
+            })
+            .ToListAsync(cancellationToken);
+
+        return ownedGuilds
+            .Concat(staffGuilds)
+            .OrderBy(g => g.Name)
+            .ToList();
     }
 
     public async Task<GuildSettingsDto?> GetSettingsAsync(
@@ -219,9 +245,15 @@ public class GuildService : IGuildService
         string discordUserId,
         CancellationToken cancellationToken = default)
     {
+        var access = await _guildAccessService.GetAccessAsync(guildId, discordUserId, cancellationToken);
+        if (access is null || !access.CanAccessOverview)
+        {
+            return null;
+        }
+
         var overview = await _dbContext.Guilds
             .AsNoTracking()
-            .Where(g => g.Id == guildId && g.OwnerDiscordUserId == discordUserId && g.IsActive)
+            .Where(g => g.Id == guildId && g.IsActive)
             .Select(g => new GuildOverviewDto
             {
                 Name = g.Name,

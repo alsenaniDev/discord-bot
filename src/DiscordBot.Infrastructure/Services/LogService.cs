@@ -25,10 +25,12 @@ public interface ILogService
 public class LogService : ILogService
 {
     private readonly AppDbContext _dbContext;
+    private readonly IGuildAccessService _guildAccessService;
 
-    public LogService(AppDbContext dbContext)
+    public LogService(AppDbContext dbContext, IGuildAccessService guildAccessService)
     {
         _dbContext = dbContext;
+        _guildAccessService = guildAccessService;
     }
 
     public async Task<LogEntryDto?> CreateLogAsync(
@@ -74,13 +76,12 @@ public class LogService : ILogService
         LogListFilter filter,
         CancellationToken cancellationToken = default)
     {
-        var ownsGuild = await _dbContext.Guilds
-            .AsNoTracking()
-            .AnyAsync(
-                g => g.Id == guildId && g.OwnerDiscordUserId == ownerDiscordUserId && g.IsActive,
-                cancellationToken);
+        var hasAccess = await _guildAccessService.CanAccessModerationPagesAsync(
+            guildId,
+            ownerDiscordUserId,
+            cancellationToken);
 
-        if (!ownsGuild)
+        if (!hasAccess)
         {
             return [];
         }

@@ -22,9 +22,11 @@ import { ModulesComponent } from './features/modules/modules.component';
 import { LogsComponent } from './features/logs/logs.component';
 import { ReactionRolesComponent } from './features/reaction-roles/reaction-roles.component';
 import { SubscriptionComponent } from './features/subscription/subscription.component';
+import { StaffComponent } from './features/staff/staff.component';
 import { AdminHomeComponent } from './features/admin/admin-home/admin-home.component';
 import { AdminGuildsComponent } from './features/admin/admin-guilds/admin-guilds.component';
 import { AdminUsersComponent } from './features/admin/admin-users/admin-users.component';
+import { AdminUpgradeRequestsComponent } from './features/admin/admin-upgrade-requests/admin-upgrade-requests.component';
 import { ToastContainerComponent } from './shared/toast-container/toast-container.component';
 import { OnboardingChecklistComponent } from './shared/onboarding-checklist/onboarding-checklist.component';
 import { UiIconComponent } from './shared/ui/ui-icon/ui-icon.component';
@@ -54,9 +56,11 @@ export function HttpLoaderFactory(http: HttpClient) {
     LogsComponent,
     ReactionRolesComponent,
     SubscriptionComponent,
+    StaffComponent,
     AdminHomeComponent,
     AdminGuildsComponent,
     AdminUsersComponent,
+    AdminUpgradeRequestsComponent,
     OnboardingChecklistComponent,
     ToastContainerComponent,
     UiIconComponent,

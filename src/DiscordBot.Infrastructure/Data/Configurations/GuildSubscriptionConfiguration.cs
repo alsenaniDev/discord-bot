@@ -11,5 +11,12 @@ public class GuildSubscriptionConfiguration : IEntityTypeConfiguration<GuildSubs
         builder.ToTable("GuildSubscriptions");
         builder.HasKey(x => x.Id);
         builder.HasIndex(x => x.GuildId).IsUnique();
+
+        builder.Property(x => x.Status).IsRequired();
+
+        builder.HasOne(x => x.ApprovedRequest)
+            .WithMany()
+            .HasForeignKey(x => x.ApprovedRequestId)
+            .OnDelete(DeleteBehavior.SetNull);
     }
 }

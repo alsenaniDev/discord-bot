@@ -1,8 +1,16 @@
+using System.Text.Json.Serialization;
 using DiscordBot.Api.Extensions;
 using DiscordBot.Api.Middleware;
 using DiscordBot.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Local overrides (gitignored). Loaded after default JSON; env vars still win in Production.
+builder.Configuration.AddJsonFile(
+    $"appsettings.{builder.Environment.EnvironmentName}.local.json",
+    optional: true,
+    reloadOnChange: true);
+
 // Railway (and similar PaaS) inject PORT; bind HTTP on all interfaces.
 var port = Environment.GetEnvironmentVariable("PORT");
 if (!string.IsNullOrWhiteSpace(port))
@@ -10,12 +18,11 @@ if (!string.IsNullOrWhiteSpace(port))
     builder.WebHost.UseUrls($"http://0.0.0.0:{port}");
 }
 
-builder.Configuration.AddJsonFile(
-    $"appsettings.{builder.Environment.EnvironmentName}.local.json",
-    optional: true,
-    reloadOnChange: true);
-
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+    });
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
 {
@@ -32,7 +39,8 @@ var app = builder.Build();
 
 app.ValidateRequiredConfiguration();
 
-app.UseMiddleware<ExceptionHandlingMiddleware>();app.UseMiddleware<RequestLoggingMiddleware>();
+app.UseMiddleware<ExceptionHandlingMiddleware>();
+app.UseMiddleware<RequestLoggingMiddleware>();
 
 if (app.Environment.IsDevelopment())
 {
@@ -44,6 +52,7 @@ if (app.Environment.IsDevelopment())
     });
     app.UseHttpsRedirection();
 }
+
 app.UseCors("Dashboard");
 app.UseAuthentication();
 app.UseAuthorization();

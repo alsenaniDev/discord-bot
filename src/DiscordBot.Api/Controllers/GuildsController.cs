@@ -21,6 +21,9 @@ public class GuildsController : ControllerBase
     private readonly ILogService _logService;
     private readonly IReactionRoleService _reactionRoleService;
     private readonly ISubscriptionService _subscriptionService;
+    private readonly IGuildAccessService _guildAccessService;
+    private readonly IPlanUpgradeRequestService _planUpgradeRequestService;
+    private readonly IGuildStaffService _guildStaffService;
 
     public GuildsController(
         IGuildService guildService,
@@ -30,7 +33,10 @@ public class GuildsController : ControllerBase
         IModuleService moduleService,
         ILogService logService,
         IReactionRoleService reactionRoleService,
-        ISubscriptionService subscriptionService)
+        ISubscriptionService subscriptionService,
+        IGuildAccessService guildAccessService,
+        IPlanUpgradeRequestService planUpgradeRequestService,
+        IGuildStaffService guildStaffService)
     {
         _guildService = guildService;
         _resourceService = resourceService;
@@ -40,10 +46,13 @@ public class GuildsController : ControllerBase
         _logService = logService;
         _reactionRoleService = reactionRoleService;
         _subscriptionService = subscriptionService;
+        _guildAccessService = guildAccessService;
+        _planUpgradeRequestService = planUpgradeRequestService;
+        _guildStaffService = guildStaffService;
     }
 
     /// <summary>
-    /// Lists guilds owned by the logged-in Discord user.
+    /// Lists guilds the logged-in user can access (owned or staff).
     /// </summary>
     [HttpGet]
     public async Task<ActionResult<IReadOnlyList<GuildSummaryDto>>> GetGuilds(
@@ -152,8 +161,8 @@ public class GuildsController : ControllerBase
         var tickets = await _ticketService.GetGuildTicketsAsync(id, discordUserId, cancellationToken);
         if (tickets.Count == 0)
         {
-            var guildExists = await _guildService.GetSettingsAsync(id, discordUserId, cancellationToken);
-            if (guildExists is null)
+            var hasAccess = await _guildAccessService.CanAccessModerationPagesAsync(id, discordUserId, cancellationToken);
+            if (!hasAccess)
             {
                 return NotFound(new { message = "Guild not found or access denied." });
             }
@@ -293,8 +302,8 @@ public class GuildsController : ControllerBase
         var warnings = await _moderationService.GetWarningsAsync(id, discordUserId, filter, cancellationToken);
         if (warnings.Count == 0)
         {
-            var guildExists = await _guildService.GetSettingsAsync(id, discordUserId, cancellationToken);
-            if (guildExists is null)
+            var hasAccess = await _guildAccessService.CanAccessModerationPagesAsync(id, discordUserId, cancellationToken);
+            if (!hasAccess)
             {
                 return NotFound(new { message = "Guild not found or access denied." });
             }
@@ -332,8 +341,8 @@ public class GuildsController : ControllerBase
         var cases = await _moderationService.GetCasesAsync(id, discordUserId, filter, cancellationToken);
         if (cases.Count == 0)
         {
-            var guildExists = await _guildService.GetSettingsAsync(id, discordUserId, cancellationToken);
-            if (guildExists is null)
+            var hasAccess = await _guildAccessService.CanAccessModerationPagesAsync(id, discordUserId, cancellationToken);
+            if (!hasAccess)
             {
                 return NotFound(new { message = "Guild not found or access denied." });
             }
@@ -434,8 +443,8 @@ public class GuildsController : ControllerBase
         var logs = await _logService.GetLogsAsync(id, discordUserId, filter, cancellationToken);
         if (logs.Count == 0)
         {
-            var guildExists = await _guildService.GetSettingsAsync(id, discordUserId, cancellationToken);
-            if (guildExists is null)
+            var hasAccess = await _guildAccessService.CanAccessModerationPagesAsync(id, discordUserId, cancellationToken);
+            if (!hasAccess)
             {
                 return NotFound(new { message = "Guild not found or access denied." });
             }
@@ -516,9 +525,17 @@ public class GuildsController : ControllerBase
     }
 
     [HttpPut("{id:guid}/subscription")]
-    public async Task<ActionResult<GuildSubscriptionDto>> UpdateSubscription(
+    public IActionResult UpdateSubscription(Guid id)
+    {
+        return StatusCode(StatusCodes.Status403Forbidden, new
+        {
+            message = "Plan changes require admin approval. Submit an upgrade request instead."
+        });
+    }
+
+    [HttpGet("{id:guid}/access")]
+    public async Task<ActionResult<GuildAccessDto>> GetAccess(
         Guid id,
-        [FromBody] UpdateGuildSubscriptionRequest request,
         CancellationToken cancellationToken)
     {
         var discordUserId = User.GetDiscordUserId();
@@ -527,22 +544,152 @@ public class GuildsController : ControllerBase
             return Unauthorized(new { message = "Missing Discord user identity in token." });
         }
 
+        var access = await _guildAccessService.GetAccessAsync(id, discordUserId, cancellationToken);
+        if (access is null)
+        {
+            return NotFound(new { message = "Guild not found or access denied." });
+        }
+
+        return Ok(access);
+    }
+
+    [HttpGet("{id:guid}/subscription/upgrade-requests")]
+    public async Task<ActionResult<IReadOnlyList<PlanUpgradeRequestDto>>> GetUpgradeRequests(
+        Guid id,
+        CancellationToken cancellationToken)
+    {
+        var discordUserId = User.GetDiscordUserId();
+        if (string.IsNullOrWhiteSpace(discordUserId))
+        {
+            return Unauthorized(new { message = "Missing Discord user identity in token." });
+        }
+
+        var requests = await _planUpgradeRequestService.GetGuildRequestsAsync(id, discordUserId, cancellationToken);
+        if (requests.Count == 0 && !await _guildAccessService.IsOwnerAsync(id, discordUserId, cancellationToken))
+        {
+            return NotFound(new { message = "Guild not found or access denied." });
+        }
+
+        return Ok(requests);
+    }
+
+    [HttpPost("{id:guid}/subscription/upgrade-requests")]
+    public async Task<ActionResult<PlanUpgradeRequestDto>> CreateUpgradeRequest(
+        Guid id,
+        [FromBody] CreatePlanUpgradeRequest request,
+        CancellationToken cancellationToken)
+    {
+        var discordUserId = User.GetDiscordUserId();
+        var userId = User.GetUserId();
+        if (string.IsNullOrWhiteSpace(discordUserId) || userId is null)
+        {
+            return Unauthorized(new { message = "Missing user identity in token." });
+        }
+
         if (string.IsNullOrWhiteSpace(request.PlanKey))
         {
             return BadRequest(new { message = "PlanKey is required." });
         }
 
-        var subscription = await _subscriptionService.UpdateGuildSubscriptionAsync(
-            id,
-            discordUserId,
-            request.PlanKey,
-            cancellationToken);
-
-        if (subscription is null)
+        if (request.DurationMonths <= 0)
         {
-            return NotFound(new { message = "Guild or plan not found, or access denied." });
+            return BadRequest(new { message = "DurationMonths is required." });
         }
 
-        return Ok(subscription);
+        try
+        {
+            var created = await _planUpgradeRequestService.CreateRequestAsync(
+                id,
+                discordUserId,
+                userId.Value,
+                request.PlanKey,
+                request.DurationMonths,
+                cancellationToken);
+
+            if (created is null)
+            {
+                return NotFound(new { message = "Guild or plan not found, or access denied." });
+            }
+
+            return Ok(created);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
+    [HttpGet("{id:guid}/staff")]
+    public async Task<ActionResult<IReadOnlyList<GuildStaffDto>>> GetStaff(
+        Guid id,
+        CancellationToken cancellationToken)
+    {
+        var discordUserId = User.GetDiscordUserId();
+        if (string.IsNullOrWhiteSpace(discordUserId))
+        {
+            return Unauthorized(new { message = "Missing Discord user identity in token." });
+        }
+
+        var staff = await _guildStaffService.GetStaffAsync(id, discordUserId, cancellationToken);
+        if (staff.Count == 0 && !await _guildAccessService.CanManageStaffAsync(id, discordUserId, cancellationToken))
+        {
+            return NotFound(new { message = "Guild not found or access denied." });
+        }
+
+        return Ok(staff);
+    }
+
+    [HttpPost("{id:guid}/staff")]
+    public async Task<ActionResult<GuildStaffDto>> AddStaff(
+        Guid id,
+        [FromBody] AddGuildStaffRequest request,
+        CancellationToken cancellationToken)
+    {
+        var discordUserId = User.GetDiscordUserId();
+        if (string.IsNullOrWhiteSpace(discordUserId))
+        {
+            return Unauthorized(new { message = "Missing Discord user identity in token." });
+        }
+
+        if (string.IsNullOrWhiteSpace(request.DiscordUserId))
+        {
+            return BadRequest(new { message = "DiscordUserId is required." });
+        }
+
+        try
+        {
+            var staff = await _guildStaffService.AddStaffAsync(id, discordUserId, request, cancellationToken);
+            if (staff is null)
+            {
+                return NotFound(new { message = "Guild not found, user invalid, or access denied." });
+            }
+
+            return Ok(staff);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
+    [HttpDelete("{id:guid}/staff/{staffId:guid}")]
+    public async Task<IActionResult> RemoveStaff(
+        Guid id,
+        Guid staffId,
+        CancellationToken cancellationToken)
+    {
+        var discordUserId = User.GetDiscordUserId();
+        if (string.IsNullOrWhiteSpace(discordUserId))
+        {
+            return Unauthorized(new { message = "Missing Discord user identity in token." });
+        }
+
+        var success = await _guildStaffService.RemoveStaffAsync(id, staffId, discordUserId, cancellationToken);
+        if (!success)
+        {
+            return NotFound(new { message = "Staff member not found or access denied." });
+        }
+
+        return Ok(new { message = "Staff member removed." });
     }
 }

@@ -38,11 +38,16 @@ public class ModerationService : IModerationService
 {
     private readonly AppDbContext _dbContext;
     private readonly ILogService _logService;
+    private readonly IGuildAccessService _guildAccessService;
 
-    public ModerationService(AppDbContext dbContext, ILogService logService)
+    public ModerationService(
+        AppDbContext dbContext,
+        ILogService logService,
+        IGuildAccessService guildAccessService)
     {
         _dbContext = dbContext;
         _logService = logService;
+        _guildAccessService = guildAccessService;
     }
 
     public async Task<WarningDto?> CreateWarningAsync(
@@ -157,7 +162,8 @@ public class ModerationService : IModerationService
         ModerationListFilter filter,
         CancellationToken cancellationToken = default)
     {
-        if (!await OwnsGuildAsync(guildId, ownerDiscordUserId, cancellationToken))
+        if (!await _guildAccessService.CanAccessModerationPagesAsync(
+                guildId, ownerDiscordUserId, cancellationToken))
         {
             return [];
         }
@@ -187,7 +193,8 @@ public class ModerationService : IModerationService
         ModerationListFilter filter,
         CancellationToken cancellationToken = default)
     {
-        if (!await OwnsGuildAsync(guildId, ownerDiscordUserId, cancellationToken))
+        if (!await _guildAccessService.CanAccessModerationPagesAsync(
+                guildId, ownerDiscordUserId, cancellationToken))
         {
             return [];
         }
@@ -279,18 +286,6 @@ public class ModerationService : IModerationService
         }
 
         return query;
-    }
-
-    private async Task<bool> OwnsGuildAsync(
-        Guid guildId,
-        string ownerDiscordUserId,
-        CancellationToken cancellationToken)
-    {
-        return await _dbContext.Guilds
-            .AsNoTracking()
-            .AnyAsync(
-                g => g.Id == guildId && g.OwnerDiscordUserId == ownerDiscordUserId && g.IsActive,
-                cancellationToken);
     }
 
     private static WarningDto MapWarning(Warning warning) =>

@@ -1,0 +1,76 @@
+<div class="page-content">
+  <app-loading-state *ngIf="loading" [message]="'staff.loading' | translate"></app-loading-state>
+
+  <app-empty-state
+    *ngIf="!loading && error"
+    icon="⚠️"
+    [title]="'staff.loadError' | translate"
+    [description]="error"
+  >
+    <button type="button" class="btn btn-primary btn-sm" (click)="loadStaff()">{{ 'common.tryAgain' | translate }}</button>
+  </app-empty-state>
+
+  <ng-container *ngIf="!loading && !error">
+    <section class="card add-staff-card">
+      <h2>{{ 'staff.addTitle' | translate }}</h2>
+      <p class="muted">{{ 'staff.addHint' | translate }}</p>
+      <div class="add-staff-form">
+        <label class="form-field">
+          <span>{{ 'staff.discordUserId' | translate }}</span>
+          <input
+            type="text"
+            class="input"
+            [(ngModel)]="discordUserId"
+            [placeholder]="'staff.discordUserIdPlaceholder' | translate"
+          />
+        </label>
+        <label class="form-field">
+          <span>{{ 'staff.role' | translate }}</span>
+          <select class="input" [(ngModel)]="role">
+            <option *ngFor="let item of roles" [ngValue]="item">{{ roleLabel(item) }}</option>
+          </select>
+        </label>
+        <button type="button" class="btn btn-primary" [disabled]="saving || !discordUserId.trim()" (click)="addStaff()">
+          {{ (saving ? 'staff.adding' : 'staff.addButton') | translate }}
+        </button>
+      </div>
+    </section>
+
+    <section class="card table-card">
+      <h2>{{ 'staff.listTitle' | translate }}</h2>
+      <app-empty-state
+        *ngIf="staff.length === 0"
+        icon="👥"
+        [title]="'staff.emptyTitle' | translate"
+        [description]="'staff.emptyBody' | translate"
+      ></app-empty-state>
+
+      <div class="table-wrap" *ngIf="staff.length > 0">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>{{ 'staff.discordUserId' | translate }}</th>
+              <th>{{ 'staff.role' | translate }}</th>
+              <th>{{ 'common.created' | translate }}</th>
+              <th>{{ 'common.actions' | translate }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let member of staff">
+              <td class="mono">{{ member.discordUserId }}</td>
+              <td>
+                <span class="badge badge-open">{{ roleLabel(member.role) }}</span>
+              </td>
+              <td>{{ member.createdAt | date:'medium' }}</td>
+              <td>
+                <button type="button" class="btn btn-secondary btn-sm" (click)="removeStaff(member)">
+                  {{ 'staff.remove' | translate }}
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </ng-container>
+</div>

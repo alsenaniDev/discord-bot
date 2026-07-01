@@ -24,6 +24,8 @@ public class AppDbContext : DbContext
     public DbSet<SubscriptionPlan> SubscriptionPlans => Set<SubscriptionPlan>();
     public DbSet<GuildSubscription> GuildSubscriptions => Set<GuildSubscription>();
     public DbSet<PlatformAdmin> PlatformAdmins => Set<PlatformAdmin>();
+    public DbSet<PlanUpgradeRequest> PlanUpgradeRequests => Set<PlanUpgradeRequest>();
+    public DbSet<GuildStaff> GuildStaff => Set<GuildStaff>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

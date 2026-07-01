@@ -242,7 +242,7 @@ namespace DiscordBot.Infrastructure.Migrations
                     b.ToTable("GuildSettings", (string)null);
                 });
 
-            modelBuilder.Entity("DiscordBot.Domain.Entities.GuildSubscription", b =>
+            modelBuilder.Entity("DiscordBot.Domain.Entities.GuildStaff", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
@@ -251,8 +251,56 @@ namespace DiscordBot.Infrastructure.Migrations
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<string>("CreatedByDiscordUserId")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<string>("DiscordUserId")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
                     b.Property<Guid>("GuildId")
                         .HasColumnType("uuid");
+
+                    b.Property<int>("Role")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("GuildId", "DiscordUserId")
+                        .IsUnique();
+
+                    b.ToTable("GuildStaff", (string)null);
+                });
+
+            modelBuilder.Entity("DiscordBot.Domain.Entities.GuildSubscription", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid?>("ApprovedRequestId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTimeOffset?>("ExpiresAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("GuildId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset?>("StartedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("integer");
 
                     b.Property<Guid>("SubscriptionPlanId")
                         .HasColumnType("uuid");
@@ -261,6 +309,8 @@ namespace DiscordBot.Infrastructure.Migrations
                         .HasColumnType("timestamp with time zone");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("ApprovedRequestId");
 
                     b.HasIndex("GuildId")
                         .IsUnique();
@@ -400,6 +450,61 @@ namespace DiscordBot.Infrastructure.Migrations
                         .IsUnique();
 
                     b.ToTable("Modules", (string)null);
+                });
+
+            modelBuilder.Entity("DiscordBot.Domain.Entities.PlanUpgradeRequest", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("AdminNote")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("CurrentPlanId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("DurationMonths")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid>("GuildId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("RequestedByUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("RequestedPlanId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset?>("ReviewedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("ReviewedByAdminId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CurrentPlanId");
+
+                    b.HasIndex("RequestedByUserId");
+
+                    b.HasIndex("RequestedPlanId");
+
+                    b.HasIndex("ReviewedByAdminId");
+
+                    b.HasIndex("GuildId", "Status");
+
+                    b.ToTable("PlanUpgradeRequests", (string)null);
                 });
 
             modelBuilder.Entity("DiscordBot.Domain.Entities.PlatformAdmin", b =>
@@ -712,8 +817,24 @@ namespace DiscordBot.Infrastructure.Migrations
                     b.Navigation("Guild");
                 });
 
+            modelBuilder.Entity("DiscordBot.Domain.Entities.GuildStaff", b =>
+                {
+                    b.HasOne("DiscordBot.Domain.Entities.Guild", "Guild")
+                        .WithMany()
+                        .HasForeignKey("GuildId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Guild");
+                });
+
             modelBuilder.Entity("DiscordBot.Domain.Entities.GuildSubscription", b =>
                 {
+                    b.HasOne("DiscordBot.Domain.Entities.PlanUpgradeRequest", "ApprovedRequest")
+                        .WithMany()
+                        .HasForeignKey("ApprovedRequestId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
                     b.HasOne("DiscordBot.Domain.Entities.Guild", "Guild")
                         .WithOne("Subscription")
                         .HasForeignKey("DiscordBot.Domain.Entities.GuildSubscription", "GuildId")
@@ -725,6 +846,8 @@ namespace DiscordBot.Infrastructure.Migrations
                         .HasForeignKey("SubscriptionPlanId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.Navigation("ApprovedRequest");
 
                     b.Navigation("Guild");
 
@@ -751,6 +874,48 @@ namespace DiscordBot.Infrastructure.Migrations
                         .IsRequired();
 
                     b.Navigation("Guild");
+                });
+
+            modelBuilder.Entity("DiscordBot.Domain.Entities.PlanUpgradeRequest", b =>
+                {
+                    b.HasOne("DiscordBot.Domain.Entities.SubscriptionPlan", "CurrentPlan")
+                        .WithMany()
+                        .HasForeignKey("CurrentPlanId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("DiscordBot.Domain.Entities.Guild", "Guild")
+                        .WithMany()
+                        .HasForeignKey("GuildId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("DiscordBot.Domain.Entities.User", "RequestedByUser")
+                        .WithMany()
+                        .HasForeignKey("RequestedByUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("DiscordBot.Domain.Entities.SubscriptionPlan", "RequestedPlan")
+                        .WithMany()
+                        .HasForeignKey("RequestedPlanId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("DiscordBot.Domain.Entities.User", "ReviewedByAdmin")
+                        .WithMany()
+                        .HasForeignKey("ReviewedByAdminId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("CurrentPlan");
+
+                    b.Navigation("Guild");
+
+                    b.Navigation("RequestedByUser");
+
+                    b.Navigation("RequestedPlan");
+
+                    b.Navigation("ReviewedByAdmin");
                 });
 
             modelBuilder.Entity("DiscordBot.Domain.Entities.ReactionRole", b =>

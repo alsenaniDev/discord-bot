@@ -1,0 +1,85 @@
+<div class="page-content">
+  <app-loading-state *ngIf="loading" [message]="'admin.upgradeRequestsLoading' | translate"></app-loading-state>
+
+  <app-empty-state
+    *ngIf="!loading && error"
+    icon="⚠️"
+    [title]="'admin.upgradeRequestsError' | translate"
+    [description]="error"
+  >
+    <button type="button" class="btn btn-primary btn-sm" (click)="loadData()">{{ 'common.tryAgain' | translate }}</button>
+  </app-empty-state>
+
+  <app-empty-state
+    *ngIf="!loading && !error && requests.length === 0"
+    icon="📋"
+    [title]="'admin.noUpgradeRequests' | translate"
+    [description]="'admin.noUpgradeRequestsHint' | translate"
+  ></app-empty-state>
+
+  <div class="card table-card" *ngIf="!loading && !error && requests.length > 0">
+    <div class="table-wrap">
+      <table class="data-table">
+        <thead>
+          <tr>
+            <th>{{ 'admin.guild' | translate }}</th>
+            <th>{{ 'admin.currentPlan' | translate }}</th>
+            <th>{{ 'admin.requestedPlan' | translate }}</th>
+            <th>{{ 'subscription.duration' | translate }}</th>
+            <th>{{ 'subscription.expiresAt' | translate }}</th>
+            <th>{{ 'admin.requester' | translate }}</th>
+            <th>{{ 'common.created' | translate }}</th>
+            <th>{{ 'common.status' | translate }}</th>
+            <th>{{ 'subscription.adminNote' | translate }}</th>
+            <th>{{ 'common.actions' | translate }}</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let request of requests">
+            <td>
+              <strong>{{ request.guildName }}</strong>
+              <div class="muted small mono">{{ request.guildId }}</div>
+            </td>
+            <td>{{ request.currentPlanName }}</td>
+            <td>{{ request.requestedPlanName }}</td>
+            <td>{{ durationLabel(request.durationMonths) }}</td>
+            <td>{{ request.estimatedExpiresAtIfApprovedToday | date:'medium' }}</td>
+            <td>
+              <div>{{ request.requestedByUsername }}</div>
+              <div class="muted small mono">{{ request.requestedByDiscordUserId }}</div>
+            </td>
+            <td>{{ request.createdAt | date:'medium' }}</td>
+            <td>{{ statusLabel(request.status) }}</td>
+            <td>
+              <input
+                type="text"
+                class="input input-sm"
+                [(ngModel)]="notes[request.id]"
+                [placeholder]="'admin.adminNotePlaceholder' | translate"
+                [disabled]="request.status !== 'Pending'"
+              />
+            </td>
+            <td class="actions-cell">
+              <button
+                type="button"
+                class="btn btn-primary btn-sm"
+                [disabled]="request.status !== 'Pending' || isProcessing(request)"
+                (click)="approve(request)"
+              >
+                {{ 'admin.approve' | translate }}
+              </button>
+              <button
+                type="button"
+                class="btn btn-secondary btn-sm"
+                [disabled]="request.status !== 'Pending' || isProcessing(request)"
+                (click)="reject(request)"
+              >
+                {{ 'admin.reject' | translate }}
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

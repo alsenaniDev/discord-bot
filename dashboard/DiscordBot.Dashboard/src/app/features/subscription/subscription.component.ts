@@ -5,7 +5,15 @@ import { forkJoin } from 'rxjs';
 import { GuildService } from '../../core/services/guild.service';
 import { GuildContextService } from '../../core/services/guild-context.service';
 import { ToastService } from '../../core/services/toast.service';
-import { GuildSubscription, SubscriptionPlan } from '../../core/models/subscription.models';
+import {
+  GuildSubscription,
+  SubscriptionDurationMonths,
+  SubscriptionPlan,
+  SUBSCRIPTION_DURATION_OPTIONS,
+  addMonths,
+  isPaidPlan
+} from '../../core/models/subscription.models';
+import { PlanUpgradeRequest } from '../../core/models/upgrade-request.models';
 import { getApiErrorMessage } from '../../core/utils/api-error.util';
 
 @Component({
@@ -17,9 +25,14 @@ export class SubscriptionComponent implements OnInit {
   guildId = '';
   subscription: GuildSubscription | null = null;
   plans: SubscriptionPlan[] = [];
+  upgradeRequests: PlanUpgradeRequest[] = [];
   loading = true;
   error = '';
-  savingPlanKey: string | null = null;
+  submitting = false;
+
+  selectedPlanKey = '';
+  selectedDurationMonths: SubscriptionDurationMonths = 1;
+  readonly durationOptions = SUBSCRIPTION_DURATION_OPTIONS;
 
   constructor(
     private route: ActivatedRoute,
@@ -47,11 +60,16 @@ export class SubscriptionComponent implements OnInit {
 
     forkJoin({
       subscription: this.guildService.getSubscription(this.guildId),
-      plans: this.guildService.getPlans()
+      plans: this.guildService.getPlans(),
+      upgradeRequests: this.guildService.getUpgradeRequests(this.guildId)
     }).subscribe({
-      next: ({ subscription, plans }) => {
+      next: ({ subscription, plans, upgradeRequests }) => {
         this.subscription = subscription;
-        this.plans = plans;
+        this.plans = plans.filter(plan => isPaidPlan(plan.key));
+        this.upgradeRequests = upgradeRequests;
+        if (!this.selectedPlanKey && this.plans.length > 0) {
+          this.selectedPlanKey = this.plans[0].key;
+        }
         this.loading = false;
       },
       error: err => {
@@ -61,34 +79,53 @@ export class SubscriptionComponent implements OnInit {
     });
   }
 
-  selectPlan(plan: SubscriptionPlan): void {
-    if (this.savingPlanKey || plan.key === this.subscription?.planKey) {
+  requestUpgrade(): void {
+    const plan = this.selectedPlan;
+    if (!plan || this.submitting || this.hasPendingRequest) {
       return;
     }
 
-    this.savingPlanKey = plan.key;
+    this.submitting = true;
 
-    this.guildService.updateSubscription(this.guildId, { planKey: plan.key }).subscribe({
-      next: subscription => {
-        this.subscription = subscription;
-        this.savingPlanKey = null;
+    this.guildService.createUpgradeRequest(this.guildId, {
+      planKey: plan.key,
+      durationMonths: this.selectedDurationMonths
+    }).subscribe({
+      next: request => {
+        this.upgradeRequests = [request, ...this.upgradeRequests.filter(r => r.id !== request.id)];
+        this.submitting = false;
         this.toast.success(
-          this.translate.instant('subscription.planChanged', { name: subscription.planName })
+          this.translate.instant('subscription.upgradeRequested', {
+            name: plan.name,
+            months: this.selectedDurationMonths
+          })
         );
       },
       error: err => {
-        this.savingPlanKey = null;
-        this.toast.error(getApiErrorMessage(err, this.translate.instant('subscription.planChangeError')));
+        this.submitting = false;
+        this.toast.error(getApiErrorMessage(err, this.translate.instant('subscription.upgradeRequestError')));
       }
     });
   }
 
-  isCurrentPlan(plan: SubscriptionPlan): boolean {
-    return plan.key === this.subscription?.planKey;
+  get selectedPlan(): SubscriptionPlan | undefined {
+    return this.plans.find(plan => plan.key === this.selectedPlanKey);
   }
 
-  isSaving(plan: SubscriptionPlan): boolean {
-    return this.savingPlanKey === plan.key;
+  get pendingRequest(): PlanUpgradeRequest | undefined {
+    return this.upgradeRequests.find(r => r.status === 'Pending');
+  }
+
+  get hasPendingRequest(): boolean {
+    return !!this.pendingRequest;
+  }
+
+  get estimatedExpiryDate(): Date {
+    return addMonths(new Date(), this.selectedDurationMonths);
+  }
+
+  isCurrentPlan(plan: SubscriptionPlan): boolean {
+    return plan.key === this.subscription?.planKey && this.subscription?.status === 'Active';
   }
 
   formatModules(modules: string[]): string {
@@ -103,5 +140,17 @@ export class SubscriptionComponent implements OnInit {
         return translated === labelKey ? key : translated;
       })
       .join(', ');
+  }
+
+  statusLabel(status: PlanUpgradeRequest['status']): string {
+    return this.translate.instant(`subscription.requestStatus.${status.toLowerCase()}`);
+  }
+
+  subscriptionStatusLabel(status: GuildSubscription['status']): string {
+    return this.translate.instant(`subscription.subscriptionStatus.${status.toLowerCase()}`);
+  }
+
+  durationLabel(months: number): string {
+    return this.translate.instant('subscription.durationMonths', { count: months });
   }
 }

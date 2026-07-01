@@ -53,6 +53,8 @@
     "moderation": "الإشراف",
     "logs": "السجلات",
     "reactionRoles": "أدوار التفاعل",
+    "staff": "الطاقم",
+    "upgradeRequests": "طلبات الترقية",
     "breadcrumbHome": "الرئيسية"
   },
   "titles": {
@@ -80,7 +82,11 @@
     "adminGuilds": "جميع السيرفرات",
     "adminGuildsSubtitle": "إدارة سيرفرات العملاء والاشتراكات",
     "adminUsers": "مستخدمو لوحة التحكم",
-    "adminUsersSubtitle": "الأشخاص الذين سجلوا الدخول عبر Discord"
+    "adminUsersSubtitle": "الأشخاص الذين سجلوا الدخول عبر Discord",
+    "adminUpgradeRequests": "طلبات ترقية الخطة",
+    "adminUpgradeRequestsSubtitle": "مراجعة طلبات ترقية الخطة اليدوية",
+    "staff": "الطاقم",
+    "staffSubtitle": "إضافة مشرفين يمكنهم الوصول إلى صفحات الإشراف"
   },
   "auth": {
     "loginTitle": "لوحة تحكم Discord Bot",
@@ -230,13 +236,40 @@
     "loadError": "تعذر تحميل الاشتراك",
     "currentPlan": "الخطة الحالية",
     "includedModules": "الوحدات المتضمنة:",
-    "devNote": "للتطوير فقط — غيّر الخطط يدوياً للاختبار. لا تتم معالجة أي دفعات.",
+    "devNote": "تتطلب ترقيات الخطة موافقة المسؤول بعد تأكيد الدفع.",
     "availablePlans": "الخطط المتاحة",
     "modules": "الوحدات:",
-    "switchTo": "التبديل إلى {{name}}",
-    "switching": "جاري التبديل…",
-    "planChanged": "تم تغيير الخطة إلى {{name}}.",
-    "planChangeError": "تعذر تغيير الخطة.",
+    "requestUpgrade": "طلب الترقية إلى {{name}}",
+    "requesting": "جاري الطلب…",
+    "upgradeRequested": "تم إرسال طلب الترقية إلى {{name}}.",
+    "upgradeRequestError": "تعذر إرسال طلب الترقية.",
+    "pendingRequestTitle": "طلب ترقية قيد الانتظار",
+    "pendingRequestBody": "طلبت {{plan}} لمدة {{months}} شهر/أشهر ({{status}}).",
+    "pendingApprovalNote": "طلبك بانتظار موافقة المسؤول. سيبدأ اشتراكك بعد تأكيد الدفع.",
+    "requestUpgradeTitle": "طلب ترقية الخطة",
+    "requestUpgradeHint": "اختر خطة مدفوعة ومدة الاشتراك. سيفعّلها المسؤول بعد تأكيد الدفع.",
+    "selectPlan": "الخطة",
+    "selectDuration": "المدة",
+    "durationMonths": "{{count}} شهر",
+    "duration": "المدة",
+    "estimatedExpiry": "في حال الموافقة اليوم، ستنتهي خطة {{plan}} في {{date}}.",
+    "requestUpgradeButton": "طلب الترقية",
+    "startedAt": "تاريخ البدء",
+    "expiresAt": "تاريخ الانتهاء",
+    "expiredNote": "انتهى اشتراكك المدفوع. الوحدات المدفوعة مقفلة حتى تطلب خطة جديدة.",
+    "subscriptionStatus": {
+      "active": "نشط",
+      "expired": "منتهٍ",
+      "cancelled": "ملغى"
+    },
+    "requestHistory": "سجل الطلبات",
+    "requestedPlan": "الخطة المطلوبة",
+    "adminNote": "ملاحظة المسؤول",
+    "requestStatus": {
+      "pending": "قيد الانتظار",
+      "approved": "موافق عليه",
+      "rejected": "مرفوض"
+    },
     "allModules": "جميع الوحدات",
     "moduleNames": {
       "welcome": "الترحيب",
@@ -323,7 +356,43 @@
     "discordUserId": "معرف Discord",
     "lastLogin": "آخر تسجيل دخول",
     "guildPlanChanged": "تم نقل {{guild}} إلى {{plan}}.",
-    "planChangeError": "تعذر تغيير الخطة."
+    "planChangeError": "تعذر تغيير الخطة.",
+    "upgradeRequestsLoading": "جاري تحميل طلبات الترقية…",
+    "upgradeRequestsError": "تعذر تحميل طلبات الترقية",
+    "noUpgradeRequests": "لا توجد طلبات ترقية",
+    "noUpgradeRequestsHint": "يرسل مالكو السيرفر الطلبات من صفحة الاشتراك.",
+    "currentPlan": "الخطة الحالية",
+    "requestedPlan": "الخطة المطلوبة",
+    "requester": "مقدم الطلب",
+    "approve": "موافقة",
+    "reject": "رفض",
+    "adminNotePlaceholder": "ملاحظة اختيارية…",
+    "upgradeApproved": "تم ترقية {{guild}} إلى {{plan}}.",
+    "upgradeRejected": "تم رفض طلب ترقية {{guild}}.",
+    "upgradeReviewError": "تعذر مراجعة طلب الترقية."
+  },
+  "staff": {
+    "loading": "جاري تحميل الطاقم…",
+    "loadError": "تعذر تحميل الطاقم",
+    "addTitle": "إضافة عضو طاقم",
+    "addHint": "أدخل معرف مستخدم Discord. يجب على هذا المستخدم تسجيل الدخول إلى لوحة التحكم بنفس حساب Discord.",
+    "discordUserId": "معرف Discord",
+    "discordUserIdPlaceholder": "مثال: 123456789012345678",
+    "role": "الدور",
+    "addButton": "إضافة",
+    "adding": "جاري الإضافة…",
+    "added": "تمت إضافة عضو الطاقم.",
+    "addError": "تعذر إضافة عضو الطاقم.",
+    "remove": "إزالة",
+    "removed": "تمت إزالة عضو الطاقم.",
+    "removeError": "تعذر إزالة عضو الطاقم.",
+    "listTitle": "الطاقم الحالي",
+    "emptyTitle": "لا يوجد طاقم بعد",
+    "emptyBody": "أضف مشرفين للمساعدة في التذاكر والإشراف والسجلات.",
+    "roles": {
+      "moderator": "مشرف",
+      "manager": "مدير"
+    }
   },
   "toast": {
     "dismiss": "إغلاق الإشعار"

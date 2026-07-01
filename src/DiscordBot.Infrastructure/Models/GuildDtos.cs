@@ -7,6 +7,8 @@ public sealed class GuildSummaryDto
     public string Name { get; init; } = string.Empty;
     public string? IconUrl { get; init; }
     public bool IsActive { get; init; }
+    public bool IsOwner { get; init; } = true;
+    public string? StaffRole { get; init; }
 }
 
 public sealed class GuildSettingsDto

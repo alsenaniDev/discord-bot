@@ -8,8 +8,8 @@ public static class ConfigurationValidationExtensions
     [
         "YOUR_",
         "CHANGE_ME",
-        "your-domain.com",
-        "REPLACE_WITH"
+        "REPLACE_WITH",
+        "your-domain.com"
     ];
 
     public static void ValidateRequiredConfiguration(this WebApplication app)
@@ -47,6 +47,10 @@ public static class ConfigurationValidationExtensions
         {
             errors.Add("ConnectionStrings:DefaultConnection is missing.");
         }
+        else if (strict && IsPlaceholder(configuration.GetConnectionString("DefaultConnection")!))
+        {
+            errors.Add("ConnectionStrings:DefaultConnection is still a placeholder value.");
+        }
 
         var discord = configuration.GetSection(DiscordOptions.SectionName).Get<DiscordOptions>() ?? new DiscordOptions();
         CheckSetting(errors, "Discord:ClientId", discord.ClientId, strict);
@@ -54,6 +58,12 @@ public static class ConfigurationValidationExtensions
         CheckSetting(errors, "Discord:BotToken", discord.BotToken, strict);
         CheckSetting(errors, "Discord:RedirectUri", discord.RedirectUri, strict);
         CheckSetting(errors, "Discord:DashboardUrl", discord.DashboardUrl, strict);
+
+        if (strict)
+        {
+            CheckProductionUrl(errors, "Discord:RedirectUri", discord.RedirectUri);
+            CheckProductionUrl(errors, "Discord:DashboardUrl", discord.DashboardUrl);
+        }
 
         var jwt = configuration.GetSection(JwtOptions.SectionName).Get<JwtOptions>() ?? new JwtOptions();
         if (string.IsNullOrWhiteSpace(jwt.Secret) || jwt.Secret.Length < 32)
@@ -65,21 +75,14 @@ public static class ConfigurationValidationExtensions
             errors.Add("Jwt:Secret is still a placeholder value.");
         }
 
+        CheckSetting(errors, "Jwt:Issuer", jwt.Issuer, strict);
+        CheckSetting(errors, "Jwt:Audience", jwt.Audience, strict);
+
         var bot = configuration.GetSection(BotOptions.SectionName).Get<BotOptions>() ?? new BotOptions();
         CheckSetting(errors, "Bot:ApiKey", bot.ApiKey, strict);
 
-        if (strict)
-        {
-            if (discord.RedirectUri.StartsWith("http://", StringComparison.OrdinalIgnoreCase))
-            {
-                errors.Add("Discord:RedirectUri must use HTTPS in Production.");
-            }
-
-            if (discord.DashboardUrl.StartsWith("http://", StringComparison.OrdinalIgnoreCase))
-            {
-                errors.Add("Discord:DashboardUrl must use HTTPS in Production.");
-            }
-        }
+        var admin = configuration.GetSection(AdminOptions.SectionName).Get<AdminOptions>() ?? new AdminOptions();
+        CheckSetting(errors, "Admin:DiscordUserId", admin.DiscordUserId, strict);
 
         return errors;
     }
@@ -98,9 +101,33 @@ public static class ConfigurationValidationExtensions
         }
     }
 
+    private static void CheckProductionUrl(List<string> errors, string key, string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+        {
+            return;
+        }
+
+        if (value.StartsWith("http://", StringComparison.OrdinalIgnoreCase))
+        {
+            errors.Add($"{key} must use HTTPS in Production.");
+        }
+
+        if (IsLocalhost(value))
+        {
+            errors.Add($"{key} must not use localhost in Production.");
+        }
+    }
+
     private static bool IsPlaceholder(string value)
     {
         return PlaceholderFragments.Any(fragment =>
             value.Contains(fragment, StringComparison.OrdinalIgnoreCase));
+    }
+
+    private static bool IsLocalhost(string value)
+    {
+        return value.Contains("localhost", StringComparison.OrdinalIgnoreCase)
+            || value.Contains("127.0.0.1", StringComparison.OrdinalIgnoreCase);
     }
 }

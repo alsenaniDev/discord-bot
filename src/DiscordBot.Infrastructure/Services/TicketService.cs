@@ -26,11 +26,16 @@ public class TicketService : ITicketService
 {
     private readonly AppDbContext _dbContext;
     private readonly ILogService _logService;
+    private readonly IGuildAccessService _guildAccessService;
 
-    public TicketService(AppDbContext dbContext, ILogService logService)
+    public TicketService(
+        AppDbContext dbContext,
+        ILogService logService,
+        IGuildAccessService guildAccessService)
     {
         _dbContext = dbContext;
         _logService = logService;
+        _guildAccessService = guildAccessService;
     }
 
     public async Task<bool> SetupTicketsAsync(
@@ -166,13 +171,12 @@ public class TicketService : ITicketService
         string ownerDiscordUserId,
         CancellationToken cancellationToken = default)
     {
-        var guild = await _dbContext.Guilds
-            .AsNoTracking()
-            .FirstOrDefaultAsync(
-                g => g.Id == guildId && g.OwnerDiscordUserId == ownerDiscordUserId && g.IsActive,
-                cancellationToken);
+        var hasAccess = await _guildAccessService.CanAccessModerationPagesAsync(
+            guildId,
+            ownerDiscordUserId,
+            cancellationToken);
 
-        if (guild is null)
+        if (!hasAccess)
         {
             return [];
         }

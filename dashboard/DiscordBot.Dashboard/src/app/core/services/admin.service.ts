@@ -9,6 +9,7 @@ import {
   UpdateAdminGuildSubscriptionRequest
 } from '../models/admin.models';
 import { GuildSubscription } from '../models/subscription.models';
+import { AdminPlanUpgradeRequest, ReviewPlanUpgradeRequest } from '../models/upgrade-request.models';
 
 @Injectable({ providedIn: 'root' })
 export class AdminService {
@@ -33,5 +34,46 @@ export class AdminService {
     request: UpdateAdminGuildSubscriptionRequest
   ): Observable<GuildSubscription> {
     return this.http.put<GuildSubscription>(`${this.baseUrl}/guilds/${guildId}/subscription`, request);
+  }
+
+  getUpgradeRequests(): Observable<AdminPlanUpgradeRequest[]> {
+    return this.http.get<AdminPlanUpgradeRequest[]>(`${this.baseUrl}/upgrade-requests`);
+  }
+
+  approveUpgradeRequest(
+    requestId: string,
+    body: ReviewPlanUpgradeRequest
+  ): Observable<AdminPlanUpgradeRequest> {
+    return this.http.post<AdminPlanUpgradeRequest>(
+      `${this.baseUrl}/upgrade-requests/${requestId}/approve`,
+      body
+    );
+  }
+
+  rejectUpgradeRequest(
+    requestId: string,
+    body: ReviewPlanUpgradeRequest
+  ): Observable<AdminPlanUpgradeRequest> {
+    return this.http.post<AdminPlanUpgradeRequest>(
+      `${this.baseUrl}/upgrade-requests/${requestId}/reject`,
+      body
+    );
+  }
+
+  extendGuildSubscription(
+    guildId: string,
+    months: number
+  ): Observable<GuildSubscription> {
+    return this.http.post<GuildSubscription>(
+      `${this.baseUrl}/guilds/${guildId}/subscription/extend`,
+      { months }
+    );
+  }
+
+  cancelGuildSubscription(guildId: string): Observable<GuildSubscription> {
+    return this.http.post<GuildSubscription>(
+      `${this.baseUrl}/guilds/${guildId}/subscription/cancel`,
+      {}
+    );
   }
 }

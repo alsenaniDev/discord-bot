@@ -1,3 +1,24 @@
 .page-content {
   max-width: 960px;
 }
+
+.request-form {
+  display: grid;
+  gap: 1rem;
+  max-width: 28rem;
+}
+
+.expired-note {
+  color: var(--color-warning, #f59e0b);
+  margin-top: 0.75rem;
+}
+
+.subscription-meta {
+  margin-top: 0.35rem;
+}
+
+.estimated-expiry {
+  padding: 0.75rem 1rem;
+  border-radius: var(--radius-md);
+  background: var(--surface-elevated);
+}

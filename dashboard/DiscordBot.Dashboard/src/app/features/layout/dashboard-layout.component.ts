@@ -4,7 +4,9 @@ import { filter, Subscription } from 'rxjs';
 import { AuthService } from '../../core/services/auth.service';
 import { GuildContextService } from '../../core/services/guild-context.service';
 import { GuildService } from '../../core/services/guild.service';
+import { GuildAccessService } from '../../core/services/guild-access.service';
 import { GuildSummary } from '../../core/models/guild.models';
+import { GuildAccess } from '../../core/models/staff.models';
 import { UserProfile } from '../../core/models/auth.models';
 import { BreadcrumbItem } from '../../shared/ui/breadcrumbs/breadcrumbs.component';
 
@@ -24,15 +26,18 @@ export class DashboardLayoutComponent implements OnInit, OnDestroy {
   pageSubtitleParams: Record<string, string> = {};
   breadcrumbs: BreadcrumbItem[] = [];
   notificationsOpen = false;
+  guildAccess: GuildAccess | null = null;
 
   private routerSub?: Subscription;
   private guildSub?: Subscription;
+  private accessSub?: Subscription;
 
   constructor(
     private router: Router,
     private auth: AuthService,
     private guildService: GuildService,
-    private guildContext: GuildContextService
+    private guildContext: GuildContextService,
+    private guildAccessService: GuildAccessService
   ) {}
 
   get discordServerUrl(): string | null {
@@ -43,12 +48,21 @@ export class DashboardLayoutComponent implements OnInit, OnDestroy {
     return !!this.selectedGuild;
   }
 
+  get canManageGuild(): boolean {
+    return !!this.guildAccess?.canManageSettings;
+  }
+
+  get canAccessModeration(): boolean {
+    return !!this.guildAccess?.canAccessModeration;
+  }
+
   ngOnInit(): void {
     this.auth.getCurrentUser().subscribe({ next: user => { this.user = user; this.updateTitles(); } });
     this.guildService.getGuilds().subscribe({ next: guilds => { this.guilds = guilds; } });
 
     this.guildSub = this.guildContext.selectedGuild$.subscribe(guild => {
       this.selectedGuild = guild;
+      this.loadGuildAccess(guild);
       this.updateTitles();
     });
 
@@ -67,6 +81,7 @@ export class DashboardLayoutComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     this.routerSub?.unsubscribe();
     this.guildSub?.unsubscribe();
+    this.accessSub?.unsubscribe();
   }
 
   toggleSidebar(): void { this.sidebarOpen = !this.sidebarOpen; }
@@ -74,8 +89,23 @@ export class DashboardLayoutComponent implements OnInit, OnDestroy {
 
   logout(): void {
     this.guildContext.clearGuild();
+    this.guildAccessService.clearAccess();
     this.auth.logout();
     this.router.navigate(['/login']);
+  }
+
+  private loadGuildAccess(guild: GuildSummary | null): void {
+    this.accessSub?.unsubscribe();
+    this.guildAccess = null;
+
+    if (!guild) {
+      return;
+    }
+
+    this.accessSub = this.guildAccessService.loadAccess(guild.id).subscribe({
+      next: access => { this.guildAccess = access; },
+      error: () => { this.guildAccess = null; }
+    });
   }
 
   private syncGuildFromRoute(): void {
@@ -140,10 +170,24 @@ export class DashboardLayoutComponent implements OnInit, OnDestroy {
       ], true);
       return;
     }
+    if (url.startsWith('/admin/upgrade-requests')) {
+      this.setPage('titles.adminUpgradeRequests', 'titles.adminUpgradeRequestsSubtitle', '', [
+        { label: 'nav.platformAdmin', link: '/admin' },
+        { label: 'nav.upgradeRequests' }
+      ]);
+      return;
+    }
     if (url.includes('/reaction-roles')) {
       this.setPage('titles.reactionRoles', 'titles.reactionRolesSubtitle', guildName, [
         { label: guildName, link: ['/guilds', this.selectedGuild!.id, 'overview'], translate: false },
         { label: 'nav.reactionRoles' }
+      ], true);
+      return;
+    }
+    if (url.includes('/staff')) {
+      this.setPage('titles.staff', 'titles.staffSubtitle', guildName, [
+        { label: guildName, link: ['/guilds', this.selectedGuild!.id, 'overview'], translate: false },
+        { label: 'nav.staff' }
       ], true);
       return;
     }

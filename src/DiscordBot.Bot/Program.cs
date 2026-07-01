@@ -8,6 +8,7 @@ using Discord.WebSocket;
 
 var builder = Host.CreateApplicationBuilder(args);
 
+// Local overrides (gitignored). Loaded after default JSON; env vars still win in Production.
 builder.Configuration.AddJsonFile(
     $"appsettings.{builder.Environment.EnvironmentName}.local.json",
     optional: true,

@@ -10,6 +10,7 @@ obj/
 .env
 .env.*
 !.env.example
+*.local.json
 **/appsettings.Development.local.json
 **/appsettings.Production.json
 **/appsettings.Production.local.json

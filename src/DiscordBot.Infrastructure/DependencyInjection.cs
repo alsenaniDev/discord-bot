@@ -39,6 +39,9 @@ public static class DependencyInjection
         services.AddScoped<ISubscriptionService, SubscriptionService>();
         services.AddScoped<IPlatformAdminService, PlatformAdminService>();
         services.AddScoped<IAdminService, AdminService>();
+        services.AddScoped<IGuildAccessService, GuildAccessService>();
+        services.AddScoped<IPlanUpgradeRequestService, PlanUpgradeRequestService>();
+        services.AddScoped<IGuildStaffService, GuildStaffService>();
         services.AddScoped<IOnboardingService, OnboardingService>();
         services.AddHostedService<ModuleSeeder>();
         services.AddHostedService<SubscriptionPlanSeeder>();

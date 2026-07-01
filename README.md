@@ -13,33 +13,30 @@ A Discord bot SaaS platform: .NET API, PostgreSQL, Discord.Net bot worker, and A
 
 ## Quick start (local)
 
-### 1. Clone and configure secrets
+### 1. Create local config files (gitignored)
 
-**Never commit real tokens.** Use local config files (gitignored):
+**Never commit real tokens.** Copy the example files and fill in your values:
 
 ```bash
-# API — copy example and fill in Discord OAuth + JWT
 cp src/DiscordBot.Api/appsettings.Development.example.json \
    src/DiscordBot.Api/appsettings.Development.local.json
 
-# Bot — copy example and set bot token
 cp src/DiscordBot.Bot/appsettings.Development.example.json \
    src/DiscordBot.Bot/appsettings.Development.local.json
 ```
 
-Edit the `.local.json` files (or set env vars from `.env.example`):
+See **`docs/step-27-configuration.md`** for the full list of required keys.
 
-| Setting | Where | Notes |
-|---------|-------|-------|
-| `Discord:ClientId` / `ClientSecret` | API local config | Developer Portal → OAuth2 |
-| `Discord:BotToken` | API + Bot local config | Developer Portal → Bot |
-| `Discord:Token` | Bot local config | Same bot token |
-| `Jwt:Secret` | API local config | At least 32 characters |
-| `Bot:ApiKey` / `Api:ApiKey` | API + Bot | Must match (dev default in example: `dev-bot-api-key-change-me`) |
-| `Admin:DiscordUserId` | API local config | Your Discord user ID for platform admin |
-| `Discord:RedirectUri` | API | `http://localhost:5217/api/auth/discord/callback` |
-| `Discord:DashboardUrl` | API | `http://localhost:4200` (CORS) |
-| `Platform:DashboardUrl` | Bot | `http://localhost:4200` (shown in `/setup`) |
+| Setting | Local value |
+|---------|-------------|
+| `ConnectionStrings:DefaultConnection` | `Host=localhost;Port=5432;Database=discordbot;Username=postgres;Password=postgres` |
+| `Discord:RedirectUri` | `http://localhost:5217/api/auth/discord/callback` |
+| `Discord:DashboardUrl` | `http://localhost:4200` |
+| `Api:BaseUrl` (Bot) | `http://localhost:5217` |
+| `Platform:DashboardUrl` (Bot) | `http://localhost:4200` |
+| `Bot:ApiKey` / `Api:ApiKey` | Must match (example: `dev-bot-api-key-change-me`) |
+| `Jwt:Secret` | At least 32 characters |
+| `Admin:DiscordUserId` | Your Discord user ID |
 
 Register OAuth redirect URL in Discord:
 
@@ -49,48 +46,69 @@ http://localhost:5217/api/auth/discord/callback
 
 Enable **Server Members Intent** for welcome messages.
 
-> **Security:** If secrets were ever committed to git, rotate Bot Token, Client Secret, JWT secret, and Bot API key in the Developer Portal / your config before deploying.
-
 ### 2. Start PostgreSQL
 
 ```bash
 docker compose up -d
-```
-
-Wait until healthy (~5 seconds), then apply migrations:
-
-```bash
 dotnet ef database update \
   --project src/DiscordBot.Infrastructure \
   --startup-project src/DiscordBot.Api
 ```
 
-Default connection (matches `docker-compose.yml`):
-
-```
-Host=localhost;Port=5432;Database=discordbot;Username=postgres;Password=postgres
-```
-
 ### 3. Run the stack (3 terminals)
 
 ```bash
-# Terminal 1 — API (http://localhost:5217)
 dotnet run --project src/DiscordBot.Api --launch-profile http
-
-# Terminal 2 — Bot
 dotnet run --project src/DiscordBot.Bot
-
-# Terminal 3 — Dashboard (http://localhost:4200)
 cd dashboard/DiscordBot.Dashboard && npm install && npm start
 ```
 
-### 4. First login
+Open http://localhost:4200 → **Login with Discord**.
 
-1. Open http://localhost:4200
-2. **Login with Discord**
-3. Invite bot to your server → run `/setup` in Discord
-4. Select your server → configure modules, welcome, tickets
-5. Test welcome by joining with another account (bot must be running)
+## Configuration: Development vs Production
+
+| | Development | Production |
+|---|-------------|------------|
+| **Secrets** | `appsettings.Development.local.json` | Railway/Vercel env vars |
+| **API URL** | `http://localhost:5217` | `https://api.your-domain.com` |
+| **Dashboard** | `http://localhost:4200` | `https://dashboard.your-domain.com` |
+| **Database** | Docker PostgreSQL | Railway PostgreSQL |
+| **Validation** | Warnings if placeholders missing | Startup fails on invalid config |
+
+### Load order (.NET API & Bot)
+
+```
+appsettings.json
+  → appsettings.{Environment}.json
+  → appsettings.{Environment}.local.json (optional, gitignored)
+  → environment variables (highest priority in Production)
+```
+
+### Production env vars (Railway)
+
+**API:** `ConnectionStrings__DefaultConnection`, `Discord__ClientId`, `Discord__ClientSecret`, `Discord__BotToken`, `Discord__RedirectUri`, `Discord__DashboardUrl`, `Jwt__Secret`, `Jwt__Issuer`, `Jwt__Audience`, `Bot__ApiKey`, `Admin__DiscordUserId`
+
+**Bot:** `Discord__Token`, `Api__BaseUrl`, `Api__ApiKey`, `Platform__DashboardUrl`
+
+**Dashboard (Vercel):** Edit `environment.production.ts` → set `apiUrl` to your API URL before `npm run build`.
+
+Full reference: **`docs/step-27-configuration.md`**, **`deploy/railway/railway.env.example`**, **`.env.example`**
+
+## Configuration files
+
+| File | Committed? | Purpose |
+|------|------------|---------|
+| `appsettings.json` | Yes | Safe placeholders only |
+| `appsettings.example.json` | Yes | Production template reference |
+| `appsettings.Development.json` | Yes | Dev logging/seed flags (no secrets) |
+| `appsettings.Development.example.json` | Yes | Copy → `.local.json` for local dev |
+| `appsettings.Development.local.json` | **No** | Your real local secrets |
+| `appsettings.Production.json` | **No** | Optional; prefer env vars |
+| `*.local.json` | **No** | Any local override file |
+| `.env` | **No** | Optional env var overrides |
+| `environment.development.ts` | Yes | Local API URL (`localhost:5217`) |
+| `environment.production.ts` | Yes | Production API URL (edit before deploy) |
+| `environment.local.ts` | **No** | Optional dashboard override |
 
 ## Project structure
 
@@ -108,21 +126,6 @@ discord bots/
 └── DiscordBot.sln
 ```
 
-## Configuration files
-
-| File | Committed? | Purpose |
-|------|------------|---------|
-| `appsettings.json` | Yes | Placeholders only — copy from example for prod |
-| `appsettings.example.json` | Yes | Production/beta template |
-| `appsettings.Development.json` | Yes | Dev logging, seed flags (no secrets) |
-| `appsettings.Development.example.json` | Yes | Local dev template with safe dev defaults |
-| `appsettings.Development.local.json` | **No** (gitignored) | Your real local secrets |
-| `appsettings.Production.json` | **No** (gitignored) | Beta/production secrets |
-| `.env` | **No** (gitignored) | Optional env var overrides |
-| `environment.ts` | Yes | Production Angular API URL (edit before deploy) |
-| `environment.development.ts` | Yes | Local dev API URL (`localhost:5217`) |
-| `environment.production.example.ts` | Yes | Copy template for beta builds |
-
 ## Build verification
 
 ```bash
@@ -133,49 +136,21 @@ docker compose config
 
 ## Beta deployment
 
-See **`docs/step-22-beta-deployment.md`** for generic beta deployment.
+| Doc | Purpose |
+|-----|---------|
+| `docs/step-22-beta-deployment.md` | Generic beta deployment |
+| `docs/step-23-railway-deployment.md` | Railway setup |
+| `docs/step-24-beta-readiness.md` | Final checklist |
+| `docs/step-27-configuration.md` | Dev vs prod config |
+| `docs/beta-tester-guide.md` | Beta tester walkthrough |
 
-See **`docs/step-23-railway-deployment.md`** for Railway-specific setup (PostgreSQL, API, Bot worker, dashboard on Railway/Vercel).
-
-See **`docs/step-24-beta-readiness.md`** for the final beta deployment checklist (Vercel dashboard + Railway API/Bot/Postgres).
-
-Share **`docs/beta-tester-guide.md`** with beta testers.
-
-**Railway quick links:**
-
-| Resource | Path |
-|----------|------|
-| API Dockerfile | `deploy/railway/Dockerfile.api` |
-| Bot Dockerfile | `deploy/railway/Dockerfile.bot` |
-| Dashboard Dockerfile | `deploy/railway/Dockerfile.dashboard` |
-| Env variable reference | `deploy/railway/railway.env.example` |
-| Migrations script | `deploy/railway/migrate.sh` |
-
-**Before beta build**, set the dashboard API URL:
-
-```bash
-cp dashboard/DiscordBot.Dashboard/src/environments/environment.production.example.ts \
-   dashboard/DiscordBot.Dashboard/src/environments/environment.ts
-# Edit apiUrl → https://api.your-domain.com
-npm run build
-```
-
-## Push to GitHub
-
-```bash
-git init
-git branch -M main
-git add .
-git commit -m "Initial commit — Discord bot platform"
-git remote add origin https://github.com/YOUR_USER/discord-bot-platform.git
-git push -u origin main
-```
-
-Verify no secrets before pushing:
+## Verify no secrets before push
 
 ```bash
 grep -rE "ClientSecret|BotToken|\.Gg" src --include="*.json" | grep -v example | grep -v YOUR_
 ```
+
+If secrets were ever committed, rotate Bot Token, Client Secret, JWT secret, and Bot API key before deploying.
 
 ## EF Core migrations
 
@@ -189,20 +164,11 @@ dotnet ef database update \
   --startup-project src/DiscordBot.Api
 ```
 
-Reset dev database:
-
-```bash
-docker compose down -v && docker compose up -d
-dotnet ef database update \
-  --project src/DiscordBot.Infrastructure \
-  --startup-project src/DiscordBot.Api
-```
-
 ## Troubleshooting
 
-### API fails: "Jwt:Secret must be at least 32 characters"
+### API warns: configuration issues detected
 
-Create `appsettings.Development.local.json` from the example and set `Jwt:Secret`.
+Create `appsettings.Development.local.json` from the example and fill in Discord/JWT values.
 
 ### Dashboard: "Cannot reach the API"
 
@@ -213,20 +179,11 @@ Create `appsettings.Development.local.json` from the example and set `Jwt:Secret
 ### OAuth / invalid redirect
 
 - Redirect URI in Discord Portal must exactly match `Discord:RedirectUri`
-- Production: use HTTPS URLs on both API and Portal
-
-### Empty server list
-
-- Run `/setup` in Discord after inviting the bot
-- Your Discord user must own the guild
+- Production: HTTPS URLs only
 
 ### Bot: "Failed to register guild with API"
 
 - API running; `Api:ApiKey` on bot matches `Bot:ApiKey` on API
-
-## Learning path
-
-See `docs/step-01` through `docs/step-24` for incremental build and deployment notes.
 
 ## Ports (local)
 

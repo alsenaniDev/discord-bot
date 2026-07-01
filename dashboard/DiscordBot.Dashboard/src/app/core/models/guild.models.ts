@@ -6,6 +6,8 @@ export interface GuildSummary {
   name: string;
   iconUrl?: string;
   isActive: boolean;
+  isOwner?: boolean;
+  staffRole?: string | null;
 }
 
 export interface GuildSettings {

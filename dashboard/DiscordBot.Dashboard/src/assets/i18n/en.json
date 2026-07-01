@@ -53,6 +53,8 @@
     "moderation": "Moderation",
     "logs": "Logs",
     "reactionRoles": "Reaction Roles",
+    "staff": "Staff",
+    "upgradeRequests": "Upgrade Requests",
     "breadcrumbHome": "Home"
   },
   "titles": {
@@ -80,7 +82,11 @@
     "adminGuilds": "All guilds",
     "adminGuildsSubtitle": "Manage customer servers and subscriptions",
     "adminUsers": "Dashboard users",
-    "adminUsersSubtitle": "People who logged in via Discord"
+    "adminUsersSubtitle": "People who logged in via Discord",
+    "adminUpgradeRequests": "Upgrade requests",
+    "adminUpgradeRequestsSubtitle": "Review manual plan upgrade requests",
+    "staff": "Staff",
+    "staffSubtitle": "Add moderators who can access moderation pages"
   },
   "auth": {
     "loginTitle": "Discord Bot Dashboard",
@@ -230,13 +236,40 @@
     "loadError": "Could not load subscription",
     "currentPlan": "Current plan",
     "includedModules": "Included modules:",
-    "devNote": "Development only — change plans manually for testing. No payment is processed.",
+    "devNote": "Plan upgrades require admin approval after payment confirmation.",
     "availablePlans": "Available plans",
     "modules": "Modules:",
-    "switchTo": "Switch to {{name}}",
-    "switching": "Switching…",
-    "planChanged": "Plan changed to {{name}}.",
-    "planChangeError": "Could not change plan.",
+    "requestUpgrade": "Request upgrade to {{name}}",
+    "requesting": "Requesting…",
+    "upgradeRequested": "Upgrade request submitted for {{name}}.",
+    "upgradeRequestError": "Could not submit upgrade request.",
+    "pendingRequestTitle": "Pending upgrade request",
+    "pendingRequestBody": "You requested {{plan}} for {{months}} month(s) ({{status}}).",
+    "pendingApprovalNote": "Your request is pending admin approval. Your subscription will start after payment confirmation.",
+    "requestUpgradeTitle": "Request a plan upgrade",
+    "requestUpgradeHint": "Choose a paid plan and duration. An admin will activate it after payment confirmation.",
+    "selectPlan": "Plan",
+    "selectDuration": "Duration",
+    "durationMonths": "{{count}} month(s)",
+    "duration": "Duration",
+    "estimatedExpiry": "If approved today, {{plan}} would expire on {{date}}.",
+    "requestUpgradeButton": "Request upgrade",
+    "startedAt": "Started",
+    "expiresAt": "Expires",
+    "expiredNote": "Your paid subscription has expired. Paid modules are locked until you request a new plan.",
+    "subscriptionStatus": {
+      "active": "Active",
+      "expired": "Expired",
+      "cancelled": "Cancelled"
+    },
+    "requestHistory": "Request history",
+    "requestedPlan": "Requested plan",
+    "adminNote": "Admin note",
+    "requestStatus": {
+      "pending": "Pending",
+      "approved": "Approved",
+      "rejected": "Rejected"
+    },
     "allModules": "All modules",
     "moduleNames": {
       "welcome": "Welcome",
@@ -323,7 +356,43 @@
     "discordUserId": "Discord user ID",
     "lastLogin": "Last login",
     "guildPlanChanged": "{{guild}} moved to {{plan}}.",
-    "planChangeError": "Could not change plan."
+    "planChangeError": "Could not change plan.",
+    "upgradeRequestsLoading": "Loading upgrade requests…",
+    "upgradeRequestsError": "Could not load upgrade requests",
+    "noUpgradeRequests": "No upgrade requests",
+    "noUpgradeRequestsHint": "Guild owners submit requests from the subscription page.",
+    "currentPlan": "Current plan",
+    "requestedPlan": "Requested plan",
+    "requester": "Requester",
+    "approve": "Approve",
+    "reject": "Reject",
+    "adminNotePlaceholder": "Optional note…",
+    "upgradeApproved": "{{guild}} upgraded to {{plan}}.",
+    "upgradeRejected": "Upgrade request for {{guild}} rejected.",
+    "upgradeReviewError": "Could not review upgrade request."
+  },
+  "staff": {
+    "loading": "Loading staff…",
+    "loadError": "Could not load staff",
+    "addTitle": "Add staff member",
+    "addHint": "Enter a Discord user ID. That user must log in to the dashboard with the same Discord account.",
+    "discordUserId": "Discord user ID",
+    "discordUserIdPlaceholder": "e.g. 123456789012345678",
+    "role": "Role",
+    "addButton": "Add staff",
+    "adding": "Adding…",
+    "added": "Staff member added.",
+    "addError": "Could not add staff member.",
+    "remove": "Remove",
+    "removed": "Staff member removed.",
+    "removeError": "Could not remove staff member.",
+    "listTitle": "Current staff",
+    "emptyTitle": "No staff yet",
+    "emptyBody": "Add moderators to help with tickets, moderation, and logs.",
+    "roles": {
+      "moderator": "Moderator",
+      "manager": "Manager"
+    }
   },
   "toast": {
     "dismiss": "Dismiss notification"
