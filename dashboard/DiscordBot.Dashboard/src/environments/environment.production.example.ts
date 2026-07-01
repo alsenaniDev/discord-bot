@@ -2,5 +2,5 @@
 // Or copy to environment.local.ts (gitignored) for local overrides.
 export const environment = {
   production: true,
-  apiUrl: 'https://api.your-domain.com'
+  apiUrl: 'https://discord-bot-production-b872.up.railway.app'
 };
