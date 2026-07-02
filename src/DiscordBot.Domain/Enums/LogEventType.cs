@@ -7,6 +7,7 @@ public enum LogEventType
     AutoRoleAssigned = 3,
     TicketOpened = 4,
     TicketClosed = 5,
+    TicketArchived = 6,
     WarningCreated = 10,
     MessagesCleared = 11,
     MemberKicked = 12,

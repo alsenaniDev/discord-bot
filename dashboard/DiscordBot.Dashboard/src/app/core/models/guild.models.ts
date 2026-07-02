@@ -22,6 +22,7 @@ export interface GuildSettings {
   logChannelId?: string;
   ticketsEnabled: boolean;
   ticketCategoryId?: string;
+  ticketArchiveChannelId?: string;
   ticketWelcomeTitle: string;
   ticketWelcomeMessage: string;
   ticketClosedMessage: string;
@@ -31,6 +32,7 @@ export interface GuildSettings {
   commandPanelChannelId?: string;
   commandPanelTitle: string;
   commandPanelDescription: string;
+  commandPanelImageUrl?: string;
   commandPanelButtons: CommandPanelButton[];
 }
 
@@ -43,6 +45,7 @@ export interface UpdateGuildSettings {
   logsEnabled: boolean;
   logChannelId?: string | null;
   ticketCategoryId?: string | null;
+  ticketArchiveChannelId?: string | null;
   ticketWelcomeTitle: string;
   ticketWelcomeMessage: string;
   ticketClosedMessage: string;
@@ -52,8 +55,83 @@ export interface UpdateGuildSettings {
   commandPanelChannelId?: string | null;
   commandPanelTitle: string;
   commandPanelDescription: string;
+  commandPanelImageUrl?: string | null;
   commandPanelButtons: CommandPanelButton[];
 }
+
+export interface GuildProfile {
+  guildId: string;
+  discordGuildId: string;
+  name: string;
+  iconUrl?: string | null;
+  displayName?: string | null;
+  description?: string | null;
+  communityType?: string | null;
+  supportMessage?: string | null;
+  rulesUrl?: string | null;
+  websiteUrl?: string | null;
+}
+
+export interface UpdateGuildProfile {
+  displayName?: string | null;
+  description?: string | null;
+  communityType?: string | null;
+  supportMessage?: string | null;
+  rulesUrl?: string | null;
+  websiteUrl?: string | null;
+}
+
+export interface ModerationPermissionRole {
+  id: string;
+  guildId: string;
+  roleDiscordId: string;
+  roleName?: string | null;
+  canWarn: boolean;
+  canViewWarnings: boolean;
+  canClearMessages: boolean;
+  canKick: boolean;
+  canViewModerationCases: boolean;
+  canViewLogs: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateModerationPermissionRole {
+  roleDiscordId: string;
+  canWarn: boolean;
+  canViewWarnings: boolean;
+  canClearMessages: boolean;
+  canKick: boolean;
+  canViewModerationCases: boolean;
+  canViewLogs: boolean;
+}
+
+export interface UpdateModerationPermissionRole {
+  roleDiscordId: string;
+  canWarn: boolean;
+  canViewWarnings: boolean;
+  canClearMessages: boolean;
+  canKick: boolean;
+  canViewModerationCases: boolean;
+  canViewLogs: boolean;
+}
+
+export type ModerationPermissionKey =
+  | 'canWarn'
+  | 'canViewWarnings'
+  | 'canClearMessages'
+  | 'canKick'
+  | 'canViewModerationCases'
+  | 'canViewLogs';
+
+export const MODERATION_PERMISSION_OPTIONS: { value: ModerationPermissionKey; labelKey: string }[] = [
+  { value: 'canWarn', labelKey: 'moderationSettings.permissions.canWarn' },
+  { value: 'canViewWarnings', labelKey: 'moderationSettings.permissions.canViewWarnings' },
+  { value: 'canClearMessages', labelKey: 'moderationSettings.permissions.canClearMessages' },
+  { value: 'canKick', labelKey: 'moderationSettings.permissions.canKick' },
+  { value: 'canViewModerationCases', labelKey: 'moderationSettings.permissions.canViewModerationCases' },
+  { value: 'canViewLogs', labelKey: 'moderationSettings.permissions.canViewLogs' }
+];
 
 export interface DiscordChannel {
   discordChannelId: string;

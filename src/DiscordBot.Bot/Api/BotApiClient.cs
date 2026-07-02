@@ -306,6 +306,64 @@ public class BotApiClient
         }
     }
 
+    public async Task<GuildProfileApiResponse?> GetGuildProfileAsync(
+        string discordGuildId,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var response = await _httpClient.GetAsync(
+                $"api/bot/guilds/{discordGuildId}/profile",
+                cancellationToken);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                return null;
+            }
+
+            return await response.Content.ReadFromJsonAsync<GuildProfileApiResponse>(JsonOptions, cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error fetching guild profile for {GuildId}", discordGuildId);
+            return null;
+        }
+    }
+
+    public async Task<EvaluateDashboardAccessApiResponse?> EvaluateDashboardAccessAsync(
+        string discordGuildId,
+        string discordUserId,
+        IReadOnlyList<string> discordRoleIds,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var response = await _httpClient.PostAsJsonAsync(
+                $"api/bot/guilds/{discordGuildId}/dashboard-access/evaluate",
+                new EvaluatePermissionsApiRequest
+                {
+                    DiscordUserId = discordUserId,
+                    DiscordRoleIds = discordRoleIds.ToList()
+                },
+                JsonOptions,
+                cancellationToken);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                return null;
+            }
+
+            return await response.Content.ReadFromJsonAsync<EvaluateDashboardAccessApiResponse>(
+                JsonOptions,
+                cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error evaluating dashboard access for guild {GuildId}", discordGuildId);
+            return null;
+        }
+    }
+
     public async Task<WarningApiResponse?> CreateWarningAsync(
         CreateWarningApiRequest request,
         CancellationToken cancellationToken = default)
@@ -439,7 +497,7 @@ public class BotApiClient
         return status is { IsEnabled: true, AllowedByPlan: true };
     }
 
-    public async Task CreateLogAsync(
+    public async Task<bool> CreateLogAsync(
         CreateLogApiRequest request,
         CancellationToken cancellationToken = default)
     {
@@ -451,17 +509,25 @@ public class BotApiClient
                 JsonOptions,
                 cancellationToken);
 
-            if (!response.IsSuccessStatusCode && response.StatusCode != System.Net.HttpStatusCode.Accepted)
+            if (response.StatusCode == System.Net.HttpStatusCode.OK)
+            {
+                return true;
+            }
+
+            if (response.StatusCode != System.Net.HttpStatusCode.Accepted)
             {
                 _logger.LogWarning(
                     "Failed to create log for guild {GuildId}. Status: {Status}",
                     request.DiscordGuildId,
                     response.StatusCode);
             }
+
+            return false;
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error creating log for guild {GuildId}", request.DiscordGuildId);
+            return false;
         }
     }
 

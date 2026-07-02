@@ -42,6 +42,8 @@ builder.Services.AddSingleton<ModerationCommandHandlers>();
 builder.Services.AddSingleton<ReactionRoleCommandHandlers>();
 builder.Services.AddSingleton<ReactionRoleInteractionHandlers>();
 builder.Services.AddSingleton<ModuleGuard>();
+builder.Services.AddSingleton<DiscordLogDeliveryService>();
+builder.Services.AddSingleton<TicketArchiveService>();
 builder.Services.AddSingleton<BotLogWriter>();
 builder.Services.AddSingleton<WelcomeMessageService>();
 builder.Services.AddSingleton<ResourceSyncService>();

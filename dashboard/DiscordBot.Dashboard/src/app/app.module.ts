@@ -23,10 +23,13 @@ import { LogsComponent } from './features/logs/logs.component';
 import { ReactionRolesComponent } from './features/reaction-roles/reaction-roles.component';
 import { SubscriptionComponent } from './features/subscription/subscription.component';
 import { StaffComponent } from './features/staff/staff.component';
+import { ProfileComponent } from './features/profile/profile.component';
+import { ModerationSettingsComponent } from './features/moderation-settings/moderation-settings.component';
 import { AdminHomeComponent } from './features/admin/admin-home/admin-home.component';
 import { AdminGuildsComponent } from './features/admin/admin-guilds/admin-guilds.component';
 import { AdminUsersComponent } from './features/admin/admin-users/admin-users.component';
 import { AdminUpgradeRequestsComponent } from './features/admin/admin-upgrade-requests/admin-upgrade-requests.component';
+import { AdminPlansComponent } from './features/admin/admin-plans/admin-plans.component';
 import { ToastContainerComponent } from './shared/toast-container/toast-container.component';
 import { OnboardingChecklistComponent } from './shared/onboarding-checklist/onboarding-checklist.component';
 import { UiIconComponent } from './shared/ui/ui-icon/ui-icon.component';
@@ -58,10 +61,13 @@ export function HttpLoaderFactory(http: HttpClient) {
     ReactionRolesComponent,
     SubscriptionComponent,
     StaffComponent,
+    ProfileComponent,
+    ModerationSettingsComponent,
     AdminHomeComponent,
     AdminGuildsComponent,
     AdminUsersComponent,
     AdminUpgradeRequestsComponent,
+    AdminPlansComponent,
     OnboardingChecklistComponent,
     ToastContainerComponent,
     UiIconComponent,

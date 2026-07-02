@@ -188,6 +188,7 @@ public class GuildService : IGuildService
         guild.Settings.LogsEnabled = request.LogsEnabled;
         guild.Settings.LogChannelId = request.LogChannelId;
         guild.Settings.TicketCategoryId = request.TicketCategoryId;
+        guild.Settings.TicketArchiveChannelId = request.TicketArchiveChannelId;
         guild.Settings.TicketWelcomeTitle = request.TicketWelcomeTitle.Trim();
         guild.Settings.TicketWelcomeMessage = request.TicketWelcomeMessage.Trim();
         guild.Settings.TicketClosedMessage = request.TicketClosedMessage.Trim();
@@ -195,12 +196,14 @@ public class GuildService : IGuildService
         guild.Settings.TicketStaffReplyPrefix = request.TicketStaffReplyPrefix.Trim();
 
         var normalizedButtons = CommandPanelSerializer.SerializeButtons(request.CommandPanelButtons);
-        var panelChanged = CommandPanelService.ShouldRequestRefresh(guild.Settings, request);
+        var normalizedImageUrl = NormalizePanelImageUrl(request.CommandPanelImageUrl);
+        var panelChanged = CommandPanelService.ShouldRequestRefresh(guild.Settings, request, normalizedImageUrl);
 
         guild.Settings.CommandPanelEnabled = request.CommandPanelEnabled;
         guild.Settings.CommandPanelChannelId = request.CommandPanelChannelId;
         guild.Settings.CommandPanelTitle = request.CommandPanelTitle.Trim();
         guild.Settings.CommandPanelDescription = request.CommandPanelDescription.Trim();
+        guild.Settings.CommandPanelImageUrl = normalizedImageUrl;
         guild.Settings.CommandPanelButtonsJson = normalizedButtons;
 
         if (request.CommandPanelEnabled
@@ -372,6 +375,7 @@ public class GuildService : IGuildService
             LogChannelId = settings.LogChannelId,
             TicketsEnabled = settings.TicketsEnabled,
             TicketCategoryId = settings.TicketCategoryId,
+            TicketArchiveChannelId = settings.TicketArchiveChannelId,
             TicketWelcomeTitle = settings.TicketWelcomeTitle,
             TicketWelcomeMessage = settings.TicketWelcomeMessage,
             TicketClosedMessage = settings.TicketClosedMessage,
@@ -381,6 +385,24 @@ public class GuildService : IGuildService
             CommandPanelChannelId = settings.CommandPanelChannelId,
             CommandPanelTitle = settings.CommandPanelTitle,
             CommandPanelDescription = settings.CommandPanelDescription,
+            CommandPanelImageUrl = settings.CommandPanelImageUrl,
             CommandPanelButtons = CommandPanelSerializer.ParseButtons(settings.CommandPanelButtonsJson)
         };
+
+    internal static string? NormalizePanelImageUrl(string? url)
+    {
+        if (string.IsNullOrWhiteSpace(url))
+        {
+            return null;
+        }
+
+        var trimmed = url.Trim();
+        if (!Uri.TryCreate(trimmed, UriKind.Absolute, out var uri)
+            || (uri.Scheme != Uri.UriSchemeHttp && uri.Scheme != Uri.UriSchemeHttps))
+        {
+            throw new InvalidOperationException("Panel image URL must start with http:// or https://.");
+        }
+
+        return trimmed.Length > 512 ? trimmed[..512] : trimmed;
+    }
 }

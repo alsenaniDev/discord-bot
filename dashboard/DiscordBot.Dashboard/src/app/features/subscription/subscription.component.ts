@@ -124,6 +124,10 @@ export class SubscriptionComponent implements OnInit {
     return addMonths(new Date(), this.selectedDurationMonths);
   }
 
+  get estimatedTotalPrice(): number {
+    return (this.selectedPlan?.monthlyPrice ?? 0) * this.selectedDurationMonths;
+  }
+
   isCurrentPlan(plan: SubscriptionPlan): boolean {
     return plan.key === this.subscription?.planKey && this.subscription?.status === 'Active';
   }

@@ -10,15 +10,18 @@ public class TicketChannelCleanupService
 {
     private readonly BotApiClient _apiClient;
     private readonly EmbedBuilderService _embeds;
+    private readonly TicketArchiveService _archiveService;
     private readonly ILogger<TicketChannelCleanupService> _logger;
 
     public TicketChannelCleanupService(
         BotApiClient apiClient,
         EmbedBuilderService embeds,
+        TicketArchiveService archiveService,
         ILogger<TicketChannelCleanupService> logger)
     {
         _apiClient = apiClient;
         _embeds = embeds;
+        _archiveService = archiveService;
         _logger = logger;
     }
 
@@ -58,27 +61,31 @@ public class TicketChannelCleanupService
 
         var guild = client.GetGuild(guildId);
         var channel = guild?.GetTextChannel(channelId);
-        if (channel is not null)
+        if (guild is null || channel is null)
         {
-            try
-            {
-                await channel.SendMessageAsync(
-                    embed: _embeds.BuildTicketClosedFromDashboard(
-                        item.TicketNumber,
-                        item.TicketClosedFromDashboardMessage));
-                await Task.Delay(TimeSpan.FromSeconds(3), cancellationToken);
-                await channel.DeleteAsync();
-            }
-            catch (Exception ex)
-            {
-                _logger.LogWarning(
-                    ex,
-                    "Could not delete ticket channel {ChannelId} in guild {GuildId}.",
-                    channelId,
-                    guildId);
-            }
+            await _apiClient.AckTicketCleanupAsync(item.TicketId, cancellationToken);
+            return;
         }
 
-        await _apiClient.AckTicketCleanupAsync(item.TicketId, cancellationToken);
+        try
+        {
+            await _archiveService.TryArchiveFromCleanupAsync(client, guild, channel, item, cancellationToken);
+
+            await channel.SendMessageAsync(
+                embed: _embeds.BuildTicketClosedFromDashboard(
+                    item.TicketNumber,
+                    item.TicketClosedFromDashboardMessage));
+            await Task.Delay(TimeSpan.FromSeconds(3), cancellationToken);
+            await channel.DeleteAsync();
+            await _apiClient.AckTicketCleanupAsync(item.TicketId, cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(
+                ex,
+                "Could not delete ticket channel {ChannelId} in guild {GuildId}.",
+                channelId,
+                guildId);
+        }
     }
 }

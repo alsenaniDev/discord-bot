@@ -135,8 +135,16 @@ export class DashboardLayoutComponent implements OnInit, OnDestroy {
       this.setGuildPage('titles.overview', 'titles.overviewSubtitle', guildName, guildId, 'common.overview');
       return;
     }
-    if (url.includes('/settings')) {
+    if (url.includes('/settings') && !url.includes('/moderation/settings')) {
       this.setGuildPage('titles.settings', 'titles.settingsSubtitle', guildName, guildId, 'common.settings');
+      return;
+    }
+    if (url.includes('/profile')) {
+      this.setGuildPage('titles.profile', 'titles.profileSubtitle', guildName, guildId, 'nav.profile');
+      return;
+    }
+    if (url.includes('/moderation/settings')) {
+      this.setGuildPage('titles.moderationSettings', 'titles.moderationSettingsSubtitle', guildName, guildId, 'nav.moderationSettings');
       return;
     }
     if (url.includes('/tickets')) {
@@ -163,6 +171,13 @@ export class DashboardLayoutComponent implements OnInit, OnDestroy {
       this.setPage('titles.adminUpgradeRequests', 'titles.adminUpgradeRequestsSubtitle', '', [
         { label: 'nav.platformAdmin', link: '/admin' },
         { label: 'nav.upgradeRequests' }
+      ]);
+      return;
+    }
+    if (url.startsWith('/admin/plans')) {
+      this.setPage('titles.adminPlans', 'titles.adminPlansSubtitle', '', [
+        { label: 'nav.platformAdmin', link: '/admin' },
+        { label: 'nav.adminPlans' }
       ]);
       return;
     }

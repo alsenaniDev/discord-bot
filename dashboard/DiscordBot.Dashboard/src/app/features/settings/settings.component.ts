@@ -31,7 +31,7 @@ import {
   CreateAutoReplyRule
 } from '../../core/models/auto-reply.models';
 import { getApiErrorMessage } from '../../core/utils/api-error.util';
-import { requiredWhenEnabled } from '../../core/utils/settings.validators';
+import { requiredWhenEnabled, optionalHttpUrlValidator, optionalSnowflakeValidator } from '../../core/utils/settings.validators';
 
 @Component({
   selector: 'app-settings',
@@ -114,6 +114,7 @@ export class SettingsComponent implements OnInit {
       logsEnabled: [false],
       logChannelId: ['', [requiredWhenEnabled('logsEnabled')]],
       ticketCategoryId: [''],
+      ticketArchiveChannelId: ['', [optionalSnowflakeValidator()]],
       ticketWelcomeTitle: ['Ticket #{ticket}', [Validators.required, Validators.maxLength(256)]],
       ticketWelcomeMessage: [
         '{mention}, thanks for reaching out.\n\nA staff member will assist you shortly. Use the **Close ticket** button when your issue is resolved.',
@@ -131,7 +132,8 @@ export class SettingsComponent implements OnInit {
       commandPanelDescription: [
         'Use the buttons below — no commands needed.',
         [Validators.required, Validators.maxLength(2000)]
-      ]
+      ],
+      commandPanelImageUrl: ['', [Validators.maxLength(2048), optionalHttpUrlValidator()]]
     });
 
     this.form.get('welcomeEnabled')?.valueChanges.subscribe(() => this.form.get('welcomeChannelId')?.updateValueAndValidity());
@@ -191,6 +193,7 @@ export class SettingsComponent implements OnInit {
           logsEnabled: settings.logsEnabled,
           logChannelId: settings.logChannelId ?? '',
           ticketCategoryId: settings.ticketCategoryId ?? '',
+          ticketArchiveChannelId: settings.ticketArchiveChannelId ?? '',
           ticketWelcomeTitle: settings.ticketWelcomeTitle || 'Ticket #{ticket}',
           ticketWelcomeMessage:
             settings.ticketWelcomeMessage ||
@@ -203,7 +206,8 @@ export class SettingsComponent implements OnInit {
           commandPanelEnabled: settings.commandPanelEnabled,
           commandPanelChannelId: settings.commandPanelChannelId ?? '',
           commandPanelTitle: settings.commandPanelTitle,
-          commandPanelDescription: settings.commandPanelDescription
+          commandPanelDescription: settings.commandPanelDescription,
+          commandPanelImageUrl: settings.commandPanelImageUrl ?? ''
         });
 
         this.loading = false;
@@ -283,6 +287,7 @@ export class SettingsComponent implements OnInit {
       logsEnabled: value.logsEnabled,
       logChannelId: value.logChannelId || null,
       ticketCategoryId: value.ticketCategoryId || null,
+      ticketArchiveChannelId: value.ticketArchiveChannelId || null,
       ticketWelcomeTitle: value.ticketWelcomeTitle?.trim(),
       ticketWelcomeMessage: value.ticketWelcomeMessage?.trim(),
       ticketClosedMessage: value.ticketClosedMessage?.trim(),
@@ -292,6 +297,7 @@ export class SettingsComponent implements OnInit {
       commandPanelChannelId: value.commandPanelChannelId || null,
       commandPanelTitle: value.commandPanelTitle?.trim(),
       commandPanelDescription: value.commandPanelDescription?.trim(),
+      commandPanelImageUrl: value.commandPanelImageUrl?.trim() || null,
       commandPanelButtons: this.preparePanelButtonsForSave()
     };
 
@@ -456,8 +462,11 @@ export class SettingsComponent implements OnInit {
     if (control.errors['maxlength']) {
       return this.translate.instant('settings.validation.maxLength');
     }
+    if (control.errors['snowflake'] || control.errors['invalid']) {
+      return this.translate.instant('settings.validation.invalid');
+    }
 
-    return this.translate.instant('settings.validation.invalid');
+    return null;
   }
 
   private normalizePanelButtons(buttons?: CommandPanelButton[]): CommandPanelButton[] {

@@ -79,9 +79,27 @@
               <td>{{ log.createdAt | date: 'medium' }}</td>
               <td>{{ log.typeLabel }}</td>
               <td>{{ log.message }}</td>
-              <td>{{ displayValue(log.actorDisplayName) }}</td>
-              <td>{{ displayValue(log.targetDisplayName) }}</td>
-              <td>{{ displayValue(log.channelName) }}</td>
+              <td>
+                <div class="identity-cell" *ngIf="log.actorDiscordUserId || log.actorDisplayName; else emptyActor">
+                  <span class="identity-name">{{ displayMember(log.actorDisplayName, log.actorDiscordUserId) }}</span>
+                  <span class="muted small mono" *ngIf="log.actorDisplayName">{{ log.actorDiscordUserId }}</span>
+                </div>
+                <ng-template #emptyActor>{{ displayValue(null) }}</ng-template>
+              </td>
+              <td>
+                <div class="identity-cell" *ngIf="log.targetDiscordUserId || log.targetDisplayName; else emptyTarget">
+                  <span class="identity-name">{{ displayMember(log.targetDisplayName, log.targetDiscordUserId) }}</span>
+                  <span class="muted small mono" *ngIf="log.targetDisplayName">{{ log.targetDiscordUserId }}</span>
+                </div>
+                <ng-template #emptyTarget>{{ displayValue(null) }}</ng-template>
+              </td>
+              <td>
+                <div class="identity-cell" *ngIf="log.channelDiscordId || log.channelName; else emptyChannel">
+                  <span class="identity-name">{{ displayChannel(log.channelName, log.channelDiscordId) }}</span>
+                  <span class="muted small mono" *ngIf="log.channelName">{{ log.channelDiscordId }}</span>
+                </div>
+                <ng-template #emptyChannel>{{ displayValue(null) }}</ng-template>
+              </td>
             </tr>
           </tbody>
         </table>

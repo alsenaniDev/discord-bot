@@ -19,6 +19,7 @@ public static class LogEventTypeExtensions
             LogEventType.AutoRoleAssigned => "Auto role assigned",
             LogEventType.TicketOpened => "Ticket opened",
             LogEventType.TicketClosed => "Ticket closed",
+            LogEventType.TicketArchived => "Ticket archived",
             LogEventType.WarningCreated => "Warning created",
             LogEventType.MessagesCleared => "Messages cleared",
             LogEventType.MemberKicked => "Member kicked",

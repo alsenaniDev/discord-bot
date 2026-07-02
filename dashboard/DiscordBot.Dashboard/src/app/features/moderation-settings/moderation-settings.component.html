@@ -1,0 +1,84 @@
+<div class="page-content">
+  <app-loading-state *ngIf="loading" [message]="'moderationSettings.loading' | translate"></app-loading-state>
+
+  <app-empty-state
+    *ngIf="!loading && error"
+    icon="⚠️"
+    [title]="'moderationSettings.loadError' | translate"
+    [description]="error"
+  >
+    <button type="button" class="btn btn-primary btn-sm" (click)="loadData()">{{ 'common.tryAgain' | translate }}</button>
+  </app-empty-state>
+
+  <ng-container *ngIf="!loading && !error">
+    <section class="card add-role-card">
+      <h2>{{ formTitleKey | translate }}</h2>
+      <p class="muted">{{ 'moderationSettings.hint' | translate }}</p>
+      <div class="add-role-form">
+        <label class="form-field">
+          <span>{{ 'moderationSettings.discordRole' | translate }}</span>
+          <select class="input" [(ngModel)]="roleDiscordId">
+            <option value="">{{ 'moderationSettings.discordRolePlaceholder' | translate }}</option>
+            <option *ngFor="let role of discordRoles" [value]="role.discordRoleId">
+              {{ roleLabel(role) }}
+            </option>
+          </select>
+        </label>
+        <div class="permission-grid">
+          <span class="permission-grid-label">{{ 'moderationSettings.permissionsTitle' | translate }}</span>
+          <label class="permission-option" *ngFor="let option of permissionOptions">
+            <input type="checkbox" [(ngModel)]="permissions[option.value]" />
+            <span>{{ option.labelKey | translate }}</span>
+          </label>
+        </div>
+        <div class="inline-actions">
+          <button type="button" class="btn btn-primary" [disabled]="saving" (click)="saveRole()">
+            <span class="spinner inline" *ngIf="saving"></span>
+            {{ (editingRoleId ? 'common.save' : 'moderationSettings.addButton') | translate }}
+          </button>
+          <button type="button" class="btn btn-secondary btn-sm" *ngIf="editingRoleId" (click)="cancelEdit()">
+            {{ 'common.cancel' | translate }}
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <section class="card table-card">
+      <h2>{{ 'moderationSettings.listTitle' | translate }}</h2>
+      <app-empty-state
+        *ngIf="roles.length === 0"
+        icon="🛡️"
+        [title]="'moderationSettings.emptyTitle' | translate"
+        [description]="'moderationSettings.emptyBody' | translate"
+      ></app-empty-state>
+
+      <div class="table-wrap" *ngIf="roles.length > 0">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>{{ 'moderationSettings.discordRole' | translate }}</th>
+              <th>{{ 'moderationSettings.permissionsTitle' | translate }}</th>
+              <th>{{ 'common.actions' | translate }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let role of roles">
+              <td>{{ roleName(role) }}</td>
+              <td>{{ formatPermissions(role) }}</td>
+              <td>
+                <div class="inline-actions">
+                  <button type="button" class="btn btn-secondary btn-sm" (click)="editRole(role)">
+                    {{ 'common.edit' | translate }}
+                  </button>
+                  <button type="button" class="btn btn-danger btn-sm" (click)="deleteRole(role)">
+                    {{ 'common.remove' | translate }}
+                  </button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </ng-container>
+</div>

@@ -15,8 +15,13 @@ public class LogEntryConfiguration : IEntityTypeConfiguration<LogEntry>
         builder.Property(x => x.Type).HasConversion<string>().HasMaxLength(64);
         builder.Property(x => x.Message).HasMaxLength(1000).IsRequired();
         builder.Property(x => x.ActorDiscordUserId).HasMaxLength(32);
+        builder.Property(x => x.ActorUsername).HasMaxLength(256);
         builder.Property(x => x.TargetDiscordUserId).HasMaxLength(32);
+        builder.Property(x => x.TargetUsername).HasMaxLength(256);
+        builder.Property(x => x.RoleDiscordId).HasMaxLength(32);
+        builder.Property(x => x.RoleName).HasMaxLength(256);
         builder.Property(x => x.ChannelDiscordId).HasMaxLength(32);
+        builder.Property(x => x.ChannelName).HasMaxLength(256);
         builder.Property(x => x.MetadataJson).HasMaxLength(4000);
     }
 }

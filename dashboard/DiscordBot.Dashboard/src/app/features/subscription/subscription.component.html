@@ -17,6 +17,13 @@
         status: statusLabel(pendingRequest!.status)
         } }}
       </p>
+      <p class="pending-price">
+        <strong>{{ 'subscription.estimatedTotal' | translate }}:</strong>
+        {{ pendingRequest!.estimatedTotalPrice | currency:'USD':'symbol':'1.2-2' }}
+        <span class="muted small">
+          ({{ pendingRequest!.requestedPlanMonthlyPrice | currency:'USD':'symbol':'1.2-2' }} × {{ pendingRequest!.durationMonths }})
+        </span>
+      </p>
       <p class="muted small">{{ 'subscription.pendingApprovalNote' | translate }}</p>
     </section>
 
@@ -70,6 +77,14 @@
           } }}
         </p>
 
+        <p class="estimated-price" *ngIf="selectedPlan">
+          <strong>{{ 'subscription.estimatedTotal' | translate }}:</strong>
+          {{ estimatedTotalPrice | currency:'USD':'symbol':'1.2-2' }}
+          <span class="muted small">
+            ({{ selectedPlan!.monthlyPrice | currency:'USD':'symbol':'1.2-2' }} × {{ selectedDurationMonths }})
+          </span>
+        </p>
+
         <button type="button" class="btn btn-primary" [disabled]="!selectedPlan || submitting || hasPendingRequest"
           (click)="requestUpgrade()">
           {{ (submitting ? 'subscription.requesting' : 'subscription.requestUpgradeButton') | translate }}
@@ -83,6 +98,7 @@
           <h3>{{ plan.name }}</h3>
           <span class="current-badge" *ngIf="isCurrentPlan(plan)">{{ 'common.current' | translate }}</span>
         </div>
+        <p class="plan-price">{{ plan.monthlyPrice | currency:'USD':'symbol':'1.2-2' }} / {{ 'subscription.perMonth' | translate }}</p>
         <p class="muted">{{ plan.description }}</p>
         <p class="modules-line">
           <strong>{{ 'subscription.modules' | translate }}</strong> {{ formatModules(plan.allowedModules) }}
@@ -97,8 +113,8 @@
           <thead>
             <tr>
               <th>{{ 'subscription.requestedPlan' | translate }}</th>
+              <th>{{ 'subscription.estimatedTotal' | translate }}</th>
               <th>{{ 'subscription.duration' | translate }}</th>
-              <th>{{ 'common.status' | translate }}</th>
               <th>{{ 'common.created' | translate }}</th>
               <th>{{ 'subscription.adminNote' | translate }}</th>
             </tr>
@@ -106,6 +122,7 @@
           <tbody>
             <tr *ngFor="let request of upgradeRequests">
               <td>{{ request.requestedPlanName }}</td>
+              <td>{{ request.estimatedTotalPrice | currency:'USD':'symbol':'1.2-2' }}</td>
               <td>{{ durationLabel(request.durationMonths) }}</td>
               <td>{{ statusLabel(request.status) }}</td>
               <td>{{ request.createdAt | date:'medium' }}</td>

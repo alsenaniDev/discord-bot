@@ -1,0 +1,21 @@
+.page-content {
+  max-width: 720px;
+}
+
+.profile-header {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-4);
+}
+
+.profile-icon {
+  width: 3rem;
+  height: 3rem;
+  border-radius: var(--radius-md);
+  object-fit: cover;
+}
+
+.profile-form {
+  display: grid;
+  gap: var(--space-4);
+}

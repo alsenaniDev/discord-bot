@@ -40,12 +40,14 @@
             <td class="mono">{{ guild.ownerDiscordUserId }}</td>
             <td>
               <select
-                class="plan-select"
+                class="plan-select input"
                 [value]="guild.planKey"
                 [disabled]="isSaving(guild)"
                 (change)="onPlanChange(guild, $any($event.target).value)"
               >
-                <option *ngFor="let plan of plans" [value]="plan.key">{{ plan.name }}</option>
+                <option *ngFor="let plan of plans" [value]="plan.key">
+                  {{ plan.name }} ({{ plan.monthlyPrice | currency:'USD':'symbol':'1.2-2' }}/{{ 'subscription.perMonth' | translate }})
+                </option>
               </select>
             </td>
             <td>{{ guild.enabledModulesCount }}</td>

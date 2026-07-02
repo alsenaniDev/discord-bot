@@ -278,12 +278,19 @@ public class TicketService : ITicketService
 
         if (guild is not null)
         {
+            var actorName = await MemberDisplayNameHelper.ResolveMemberNamesAsync(
+                _dbContext,
+                guildId,
+                [discordUserId],
+                cancellationToken);
+
             await _logService.CreateLogAsync(new CreateLogRequest
             {
                 DiscordGuildId = guild.DiscordGuildId,
                 Type = LogEventType.TicketClosed,
                 Message = $"Ticket #{ticket.TicketNumber} closed from the dashboard.",
                 ActorDiscordUserId = discordUserId,
+                ActorDisplayName = actorName.GetValueOrDefault(discordUserId),
                 ChannelDiscordId = ticket.ChannelDiscordId,
                 MetadataJson = LogService.BuildMetadataJson(new { ticket.TicketNumber, source = "dashboard" })
             }, cancellationToken);
@@ -304,13 +311,74 @@ public class TicketService : ITicketService
                 DiscordGuildId = t.Guild.DiscordGuildId,
                 ChannelDiscordId = t.ChannelDiscordId,
                 TicketNumber = t.TicketNumber,
+                OwnerDiscordUserId = t.OwnerDiscordUserId,
+                ClosedAt = t.ClosedAt,
+                TicketArchiveChannelId = t.Guild.Settings != null
+                    ? t.Guild.Settings.TicketArchiveChannelId
+                    : null,
                 TicketClosedFromDashboardMessage = t.Guild.Settings != null
                     ? t.Guild.Settings.TicketClosedFromDashboardMessage
                     : TicketMessageDefaults.ClosedFromDashboardMessage
             })
             .ToListAsync(cancellationToken);
 
-        return tickets;
+        if (tickets.Count == 0)
+        {
+            return tickets;
+        }
+
+        var guildIds = tickets
+            .Select(t => t.DiscordGuildId)
+            .Distinct()
+            .ToList();
+
+        var guildIdMap = await _dbContext.Guilds
+            .AsNoTracking()
+            .Where(g => guildIds.Contains(g.DiscordGuildId))
+            .ToDictionaryAsync(g => g.DiscordGuildId, g => g.Id, cancellationToken);
+
+        var enriched = new List<TicketChannelCleanupDto>();
+
+        foreach (var ticket in tickets)
+        {
+            if (!guildIdMap.TryGetValue(ticket.DiscordGuildId, out var guildId))
+            {
+                enriched.Add(ticket);
+                continue;
+            }
+
+            var ownerName = await MemberDisplayNameHelper.ResolveMemberNamesAsync(
+                _dbContext,
+                guildId,
+                [ticket.OwnerDiscordUserId],
+                cancellationToken);
+
+            var closedLog = await _dbContext.LogEntries
+                .AsNoTracking()
+                .Where(le => le.GuildId == guildId
+                             && le.Type == LogEventType.TicketClosed
+                             && le.ChannelDiscordId == ticket.ChannelDiscordId)
+                .OrderByDescending(le => le.CreatedAt)
+                .Select(le => new { le.ActorDiscordUserId, le.ActorUsername })
+                .FirstOrDefaultAsync(cancellationToken);
+
+            enriched.Add(new TicketChannelCleanupDto
+            {
+                TicketId = ticket.TicketId,
+                DiscordGuildId = ticket.DiscordGuildId,
+                ChannelDiscordId = ticket.ChannelDiscordId,
+                TicketNumber = ticket.TicketNumber,
+                OwnerDiscordUserId = ticket.OwnerDiscordUserId,
+                OwnerDisplayName = ownerName.GetValueOrDefault(ticket.OwnerDiscordUserId),
+                ClosedByDiscordUserId = closedLog?.ActorDiscordUserId,
+                ClosedByDisplayName = closedLog?.ActorUsername ?? "Dashboard",
+                ClosedAt = ticket.ClosedAt,
+                TicketArchiveChannelId = ticket.TicketArchiveChannelId,
+                TicketClosedFromDashboardMessage = ticket.TicketClosedFromDashboardMessage
+            });
+        }
+
+        return enriched;
     }
 
     public async Task<bool> AcknowledgeChannelCleanupAsync(

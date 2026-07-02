@@ -54,6 +54,7 @@ public class SlashCommandHandlers
         }
 
         var settings = await _apiClient.GetSettingsAsync(guild.Id.ToString());
+        var profile = await _apiClient.GetGuildProfileAsync(guild.Id.ToString());
         if (settings is null)
         {
             await InteractionResponseHelper.RespondErrorAsync(
@@ -65,7 +66,7 @@ public class SlashCommandHandlers
         }
 
         await interaction.RespondAsync(
-            embed: _embeds.BuildServerSettings(guild, settings),
+            embed: _embeds.BuildServerProfile(guild, profile, settings),
             ephemeral: true);
     }
 

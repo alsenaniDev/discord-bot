@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { ActivatedRouteSnapshot, CanActivate, Router, UrlTree } from '@angular/router';
-import { Observable, map, of } from 'rxjs';
+import { Observable, catchError, map, of } from 'rxjs';
 import { GuildAccessService } from '../services/guild-access.service';
 
 export type GuildAccessRequirement = 'owner' | 'moderation';
@@ -36,7 +36,8 @@ export class GuildAccessGuard implements CanActivate {
         }
 
         return this.router.createUrlTree(['/servers']);
-      })
+      }),
+      catchError(() => of(this.router.createUrlTree(['/servers'])))
     );
   }
 }

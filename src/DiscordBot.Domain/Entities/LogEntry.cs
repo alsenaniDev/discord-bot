@@ -13,7 +13,12 @@ public class LogEntry : BaseEntity
     public LogEventType Type { get; set; }
     public string Message { get; set; } = string.Empty;
     public string? ActorDiscordUserId { get; set; }
+    public string? ActorUsername { get; set; }
     public string? TargetDiscordUserId { get; set; }
+    public string? TargetUsername { get; set; }
+    public string? RoleDiscordId { get; set; }
+    public string? RoleName { get; set; }
     public string? ChannelDiscordId { get; set; }
+    public string? ChannelName { get; set; }
     public string? MetadataJson { get; set; }
 }

@@ -12,6 +12,8 @@ public class SubscriptionPlan : BaseEntity
     /// <summary>JSON array of module keys, or ["*"] for all modules.</summary>
     public string AllowedModulesJson { get; set; } = "[]";
 
+    public decimal MonthlyPrice { get; set; }
+
     public bool IsActive { get; set; } = true;
 
     public ICollection<GuildSubscription> GuildSubscriptions { get; set; } = [];

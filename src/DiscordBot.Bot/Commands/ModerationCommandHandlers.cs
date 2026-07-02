@@ -105,7 +105,7 @@ public class ModerationCommandHandlers
             return;
         }
 
-        if (!await EnsurePermissionAsync(interaction, guild, moderator, p => p.CanWarn || p.CanAccessModeration, "view warnings"))
+        if (!await EnsurePermissionAsync(interaction, guild, moderator, p => p.CanViewWarnings, "view warnings"))
         {
             return;
         }
@@ -415,7 +415,7 @@ public class ModerationCommandHandlers
                 interaction,
                 _embeds,
                 "Permission denied",
-                "Your Discord role is not mapped to a moderation permission role. Ask the server owner to configure **Staff → Roles & permissions** in the dashboard.");
+                "Your Discord role is not mapped to a moderation permission role. Ask the server owner to configure **Moderation → Settings** in the dashboard.");
             return null;
         }
 
@@ -464,7 +464,7 @@ public class ModerationCommandHandlers
             interaction,
             _embeds,
             "Permission denied",
-            $"Your role is not allowed to {actionLabel}. Configure permissions under **Staff → Roles & permissions** in the dashboard.");
+            $"Your role is not allowed to {actionLabel}. Configure moderation roles under **Moderation → Settings** in the dashboard.");
         return false;
     }
 }

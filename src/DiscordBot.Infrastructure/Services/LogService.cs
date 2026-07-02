@@ -63,14 +63,24 @@ public class LogService : ILogService
             request.ChannelDisplayName,
             cancellationToken);
 
+        var actorUsername = request.ActorDisplayName?.Trim()
+            ?? await ResolveUserDisplayNameAsync(request.ActorDiscordUserId, cancellationToken);
+        var targetUsername = request.TargetDisplayName?.Trim();
+        var channelName = request.ChannelDisplayName?.Trim();
+
         var entry = new LogEntry
         {
             GuildId = guild.Id,
             Type = request.Type,
             Message = request.Message.Trim(),
             ActorDiscordUserId = request.ActorDiscordUserId,
+            ActorUsername = actorUsername,
             TargetDiscordUserId = request.TargetDiscordUserId,
+            TargetUsername = targetUsername,
+            RoleDiscordId = request.RoleDiscordId,
+            RoleName = request.RoleName?.Trim(),
             ChannelDiscordId = request.ChannelDiscordId,
+            ChannelName = channelName,
             MetadataJson = request.MetadataJson
         };
 
@@ -209,14 +219,17 @@ public class LogService : ILogService
     {
         var metadataNames = ParseMetadataNames(entry.MetadataJson);
 
-        var actorDisplayName = metadataNames.ActorName
+        var actorDisplayName = entry.ActorUsername
+            ?? metadataNames.ActorName
             ?? TryGetUserDisplayName(users, entry.ActorDiscordUserId);
 
-        var targetDisplayName = metadataNames.TargetName
+        var targetDisplayName = entry.TargetUsername
+            ?? metadataNames.TargetName
             ?? TryGetUserDisplayName(users, entry.TargetDiscordUserId)
             ?? TryExtractTargetNameFromMessage(entry.Type, entry.Message);
 
-        var channelName = metadataNames.ChannelName
+        var channelName = entry.ChannelName
+            ?? metadataNames.ChannelName
             ?? TryGetChannelDisplayName(channels, entry.ChannelDiscordId);
 
         return new LogEntryDto
@@ -231,6 +244,8 @@ public class LogService : ILogService
             ActorDisplayName = actorDisplayName,
             TargetDisplayName = targetDisplayName,
             ChannelName = channelName,
+            RoleDiscordId = entry.RoleDiscordId,
+            RoleName = entry.RoleName,
             MetadataJson = entry.MetadataJson,
             CreatedAt = entry.CreatedAt
         };

@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../../environments/environment';
-import { GuildSettings, GuildSummary, DiscordChannel, DiscordRole, GuildOverview, RequestResourceSyncResponse, UpdateGuildSettings } from '../models/guild.models';
+import { GuildSettings, GuildSummary, DiscordChannel, DiscordRole, GuildOverview, RequestResourceSyncResponse, UpdateGuildSettings, GuildProfile, UpdateGuildProfile, ModerationPermissionRole, CreateModerationPermissionRole, UpdateModerationPermissionRole } from '../models/guild.models';
 import { GuildMember } from '../models/guild-member.models';
 import { Ticket } from '../models/ticket.models';
 import { AutoReplyRule, CreateAutoReplyRule, UpdateAutoReplyRule } from '../models/auto-reply.models';
@@ -242,6 +242,47 @@ export class GuildService {
   removeStaff(guildId: string, staffId: string): Observable<{ message: string }> {
     return this.http.delete<{ message: string }>(
       `${this.baseUrl}/api/guilds/${guildId}/permission-roles/${staffId}`
+    );
+  }
+
+  getProfile(guildId: string): Observable<GuildProfile> {
+    return this.http.get<GuildProfile>(`${this.baseUrl}/api/guilds/${guildId}/profile`);
+  }
+
+  updateProfile(guildId: string, profile: UpdateGuildProfile): Observable<GuildProfile> {
+    return this.http.put<GuildProfile>(`${this.baseUrl}/api/guilds/${guildId}/profile`, profile);
+  }
+
+  getModerationPermissionRoles(guildId: string): Observable<ModerationPermissionRole[]> {
+    return this.http.get<ModerationPermissionRole[]>(
+      `${this.baseUrl}/api/guilds/${guildId}/moderation/permission-roles`
+    );
+  }
+
+  createModerationPermissionRole(
+    guildId: string,
+    request: CreateModerationPermissionRole
+  ): Observable<ModerationPermissionRole> {
+    return this.http.post<ModerationPermissionRole>(
+      `${this.baseUrl}/api/guilds/${guildId}/moderation/permission-roles`,
+      request
+    );
+  }
+
+  updateModerationPermissionRole(
+    guildId: string,
+    roleId: string,
+    request: UpdateModerationPermissionRole
+  ): Observable<ModerationPermissionRole> {
+    return this.http.put<ModerationPermissionRole>(
+      `${this.baseUrl}/api/guilds/${guildId}/moderation/permission-roles/${roleId}`,
+      request
+    );
+  }
+
+  deleteModerationPermissionRole(guildId: string, roleId: string): Observable<void> {
+    return this.http.delete<void>(
+      `${this.baseUrl}/api/guilds/${guildId}/moderation/permission-roles/${roleId}`
     );
   }
 }

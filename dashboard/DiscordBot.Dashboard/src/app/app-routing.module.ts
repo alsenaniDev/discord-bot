@@ -15,11 +15,14 @@ import { LogsComponent } from './features/logs/logs.component';
 import { ReactionRolesComponent } from './features/reaction-roles/reaction-roles.component';
 import { SubscriptionComponent } from './features/subscription/subscription.component';
 import { StaffComponent } from './features/staff/staff.component';
+import { ProfileComponent } from './features/profile/profile.component';
+import { ModerationSettingsComponent } from './features/moderation-settings/moderation-settings.component';
 import { AdminGuard } from './core/guards/admin.guard';
 import { AdminHomeComponent } from './features/admin/admin-home/admin-home.component';
 import { AdminGuildsComponent } from './features/admin/admin-guilds/admin-guilds.component';
 import { AdminUsersComponent } from './features/admin/admin-users/admin-users.component';
 import { AdminUpgradeRequestsComponent } from './features/admin/admin-upgrade-requests/admin-upgrade-requests.component';
+import { AdminPlansComponent } from './features/admin/admin-plans/admin-plans.component';
 
 const routes: Routes = [
   { path: 'login', component: LoginComponent },
@@ -49,10 +52,17 @@ const routes: Routes = [
         data: { guildAccess: 'moderation' }
       },
       {
+        path: 'guilds/:id/moderation/settings',
+        component: ModerationSettingsComponent,
+        canActivate: [GuildAccessGuard],
+        data: { guildAccess: 'owner' }
+      },
+      {
         path: 'guilds/:id/moderation',
         component: ModerationComponent,
         canActivate: [GuildAccessGuard],
-        data: { guildAccess: 'moderation' }
+        data: { guildAccess: 'moderation' },
+        pathMatch: 'full'
       },
       {
         path: 'guilds/:id/modules',
@@ -79,6 +89,12 @@ const routes: Routes = [
         data: { guildAccess: 'owner' }
       },
       {
+        path: 'guilds/:id/profile',
+        component: ProfileComponent,
+        canActivate: [GuildAccessGuard],
+        data: { guildAccess: 'owner' }
+      },
+      {
         path: 'guilds/:id/staff',
         component: StaffComponent,
         canActivate: [GuildAccessGuard],
@@ -92,6 +108,7 @@ const routes: Routes = [
         component: AdminUpgradeRequestsComponent,
         canActivate: [AdminGuard]
       },
+      { path: 'admin/plans', component: AdminPlansComponent, canActivate: [AdminGuard] },
       { path: '', redirectTo: 'servers', pathMatch: 'full' }
     ]
   },

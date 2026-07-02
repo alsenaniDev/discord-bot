@@ -9,6 +9,8 @@ export interface PlanUpgradeRequest {
   currentPlanName: string;
   requestedByUsername: string;
   durationMonths: number;
+  requestedPlanMonthlyPrice: number;
+  estimatedTotalPrice: number;
   status: PlanUpgradeRequestStatus;
   adminNote?: string | null;
   createdAt: string;

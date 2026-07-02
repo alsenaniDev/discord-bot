@@ -1,11 +1,8 @@
 export type GuildPermissionKey =
-  | 'Warn'
-  | 'Kick'
-  | 'Timeout'
-  | 'ClearMessages'
   | 'AccessModeration'
   | 'AccessLogs'
-  | 'AccessTickets';
+  | 'AccessTickets'
+  | 'ManagePermissionRoles';
 
 export interface GuildPermissionRole {
   id: string;
@@ -48,11 +45,8 @@ export interface GuildAccess {
 }
 
 export const GUILD_PERMISSION_OPTIONS: { value: GuildPermissionKey; labelKey: string }[] = [
-  { value: 'Warn', labelKey: 'staff.permissions.warn' },
-  { value: 'Kick', labelKey: 'staff.permissions.kick' },
-  { value: 'Timeout', labelKey: 'staff.permissions.timeout' },
-  { value: 'ClearMessages', labelKey: 'staff.permissions.clearMessages' },
   { value: 'AccessModeration', labelKey: 'staff.permissions.accessModeration' },
   { value: 'AccessLogs', labelKey: 'staff.permissions.accessLogs' },
-  { value: 'AccessTickets', labelKey: 'staff.permissions.accessTickets' }
+  { value: 'AccessTickets', labelKey: 'staff.permissions.accessTickets' },
+  { value: 'ManagePermissionRoles', labelKey: 'staff.permissions.managePermissionRoles' }
 ];

@@ -173,4 +173,69 @@ public class AdminController : ControllerBase
 
         return Ok(subscription);
     }
+
+    [HttpGet("plans")]
+    public async Task<ActionResult<IReadOnlyList<AdminSubscriptionPlanDto>>> GetPlans(
+        CancellationToken cancellationToken)
+    {
+        var plans = await _subscriptionService.GetAllPlansForAdminAsync(cancellationToken);
+        return Ok(plans);
+    }
+
+    [HttpPost("plans")]
+    public async Task<ActionResult<AdminSubscriptionPlanDto>> CreatePlan(
+        [FromBody] CreateSubscriptionPlanRequest request,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            var plan = await _subscriptionService.CreatePlanAsync(request, cancellationToken);
+            return Ok(plan);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
+    [HttpPut("plans/{id:guid}")]
+    public async Task<ActionResult<AdminSubscriptionPlanDto>> UpdatePlan(
+        Guid id,
+        [FromBody] UpdateSubscriptionPlanRequest request,
+        CancellationToken cancellationToken)
+    {
+        try
+        {
+            var plan = await _subscriptionService.UpdatePlanAsync(id, request, cancellationToken);
+            if (plan is null)
+            {
+                return NotFound(new { message = "Plan not found." });
+            }
+
+            return Ok(plan);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
+    [HttpDelete("plans/{id:guid}")]
+    public async Task<IActionResult> DeletePlan(Guid id, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var deleted = await _subscriptionService.DeletePlanAsync(id, cancellationToken);
+            if (!deleted)
+            {
+                return NotFound(new { message = "Plan not found." });
+            }
+
+            return Ok(new { message = "Plan deleted." });
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
 }

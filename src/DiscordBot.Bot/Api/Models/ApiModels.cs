@@ -30,6 +30,7 @@ public sealed class GuildSettingsResponse
     public string? LogChannelId { get; set; }
     public bool TicketsEnabled { get; set; }
     public string? TicketCategoryId { get; set; }
+    public string? TicketArchiveChannelId { get; set; }
     public string TicketWelcomeTitle { get; set; } = string.Empty;
     public string TicketWelcomeMessage { get; set; } = string.Empty;
     public string TicketClosedMessage { get; set; } = string.Empty;
@@ -205,6 +206,7 @@ public sealed class CommandPanelConfigApiResponse
     public string? MessageId { get; set; }
     public string Title { get; set; } = string.Empty;
     public string Description { get; set; } = string.Empty;
+    public string? ImageUrl { get; set; }
     public List<CommandPanelButtonApiResponse> Buttons { get; set; } = [];
 }
 
@@ -229,7 +231,27 @@ public sealed class TicketCleanupApiResponse
     public string DiscordGuildId { get; set; } = string.Empty;
     public string ChannelDiscordId { get; set; } = string.Empty;
     public int TicketNumber { get; set; }
+    public string OwnerDiscordUserId { get; set; } = string.Empty;
+    public string? OwnerDisplayName { get; set; }
+    public string? ClosedByDiscordUserId { get; set; }
+    public string? ClosedByDisplayName { get; set; }
+    public DateTimeOffset? ClosedAt { get; set; }
+    public string? TicketArchiveChannelId { get; set; }
     public string TicketClosedFromDashboardMessage { get; set; } = string.Empty;
+}
+
+public sealed class GuildProfileApiResponse
+{
+    public Guid GuildId { get; set; }
+    public string DiscordGuildId { get; set; } = string.Empty;
+    public string Name { get; set; } = string.Empty;
+    public string? IconUrl { get; set; }
+    public string? DisplayName { get; set; }
+    public string? Description { get; set; }
+    public string? CommunityType { get; set; }
+    public string? SupportMessage { get; set; }
+    public string? RulesUrl { get; set; }
+    public string? WebsiteUrl { get; set; }
 }
 
 public sealed class AutoReplyRuleApiResponse
@@ -260,6 +282,13 @@ public sealed class EvaluatePermissionsApiRequest
     public List<string> DiscordRoleIds { get; set; } = [];
 }
 
+public sealed class EvaluateDashboardAccessApiResponse
+{
+    public bool CanAccessTickets { get; set; }
+    public bool CanAccessLogs { get; set; }
+    public bool CanAccessModeration { get; set; }
+}
+
 public sealed class EvaluatePermissionsApiResponse
 {
     public bool CanWarn { get; set; }
@@ -267,4 +296,7 @@ public sealed class EvaluatePermissionsApiResponse
     public bool CanTimeout { get; set; }
     public bool CanClearMessages { get; set; }
     public bool CanAccessModeration { get; set; }
+    public bool CanViewWarnings { get; set; }
+    public bool CanViewModerationCases { get; set; }
+    public bool CanViewLogs { get; set; }
 }

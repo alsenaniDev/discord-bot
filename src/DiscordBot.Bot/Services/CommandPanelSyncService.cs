@@ -87,7 +87,18 @@ public class CommandPanelSyncService
             return;
         }
 
-        var embed = _embeds.BuildCommandPanel(item.Config.Title, item.Config.Description);
+        if (!string.IsNullOrWhiteSpace(item.Config.ImageUrl)
+            && !IsValidPanelImageUrl(item.Config.ImageUrl))
+        {
+            _logger.LogWarning(
+                "Command panel image URL is invalid for guild {GuildId}; embed will be posted without an image.",
+                item.DiscordGuildId);
+        }
+
+        var embed = _embeds.BuildCommandPanel(
+            item.Config.Title,
+            item.Config.Description,
+            item.Config.ImageUrl);
         var components = _components.BuildCommandPanelComponents(item.Config.Buttons);
         if (components.Components.Count == 0)
         {
@@ -128,4 +139,8 @@ public class CommandPanelSyncService
             guildId,
             channelId);
     }
+
+    private static bool IsValidPanelImageUrl(string url) =>
+        Uri.TryCreate(url.Trim(), UriKind.Absolute, out var uri)
+        && (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps);
 }

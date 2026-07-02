@@ -14,6 +14,8 @@ public sealed class LogEntryDto
     public string? ActorDisplayName { get; init; }
     public string? TargetDisplayName { get; init; }
     public string? ChannelName { get; init; }
+    public string? RoleDiscordId { get; init; }
+    public string? RoleName { get; init; }
     public string? MetadataJson { get; init; }
     public DateTimeOffset CreatedAt { get; init; }
 }
@@ -29,6 +31,8 @@ public sealed class CreateLogRequest
     public string? ActorDisplayName { get; set; }
     public string? TargetDisplayName { get; set; }
     public string? ChannelDisplayName { get; set; }
+    public string? RoleDiscordId { get; set; }
+    public string? RoleName { get; set; }
     public string? MetadataJson { get; set; }
 }
 

@@ -14,6 +14,12 @@ public class GuildConfiguration : IEntityTypeConfiguration<Guild>
         builder.Property(x => x.DiscordGuildId).HasMaxLength(32).IsRequired();
         builder.Property(x => x.Name).HasMaxLength(256).IsRequired();
         builder.Property(x => x.IconUrl).HasMaxLength(512);
+        builder.Property(x => x.DisplayName).HasMaxLength(256);
+        builder.Property(x => x.Description).HasMaxLength(2000);
+        builder.Property(x => x.CommunityType).HasMaxLength(100);
+        builder.Property(x => x.SupportMessage).HasMaxLength(2000);
+        builder.Property(x => x.RulesUrl).HasMaxLength(512);
+        builder.Property(x => x.WebsiteUrl).HasMaxLength(512);
         builder.Property(x => x.OwnerDiscordUserId).HasMaxLength(32).IsRequired();
 
         builder.HasOne(x => x.Settings)

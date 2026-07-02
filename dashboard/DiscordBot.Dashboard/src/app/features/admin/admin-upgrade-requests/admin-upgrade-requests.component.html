@@ -24,8 +24,9 @@
           <tr>
             <th>{{ 'admin.guild' | translate }}</th>
             <th>{{ 'admin.currentPlan' | translate }}</th>
-            <th>{{ 'admin.requestedPlan' | translate }}</th>
-            <th>{{ 'subscription.duration' | translate }}</th>
+              <th>{{ 'admin.requestedPlan' | translate }}</th>
+              <th>{{ 'subscription.estimatedTotal' | translate }}</th>
+              <th>{{ 'subscription.duration' | translate }}</th>
             <th>{{ 'subscription.expiresAt' | translate }}</th>
             <th>{{ 'admin.requester' | translate }}</th>
             <th>{{ 'common.created' | translate }}</th>
@@ -42,6 +43,12 @@
             </td>
             <td>{{ request.currentPlanName }}</td>
             <td>{{ request.requestedPlanName }}</td>
+            <td>
+              {{ request.estimatedTotalPrice | currency:'USD':'symbol':'1.2-2' }}
+              <div class="muted small">
+                {{ request.requestedPlanMonthlyPrice | currency:'USD':'symbol':'1.2-2' }} × {{ request.durationMonths }}
+              </div>
+            </td>
             <td>{{ durationLabel(request.durationMonths) }}</td>
             <td>{{ request.estimatedExpiresAtIfApprovedToday | date:'medium' }}</td>
             <td>

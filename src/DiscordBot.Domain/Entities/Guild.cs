@@ -12,6 +12,14 @@ public class Guild : BaseEntity
     public required string Name { get; set; }
     public string? IconUrl { get; set; }
 
+    /// <summary>Bot-managed display name shown in embeds (not Discord server rename).</summary>
+    public string? DisplayName { get; set; }
+    public string? Description { get; set; }
+    public string? CommunityType { get; set; }
+    public string? SupportMessage { get; set; }
+    public string? RulesUrl { get; set; }
+    public string? WebsiteUrl { get; set; }
+
     /// <summary>Discord user id of the server owner.</summary>
     public required string OwnerDiscordUserId { get; set; }
 

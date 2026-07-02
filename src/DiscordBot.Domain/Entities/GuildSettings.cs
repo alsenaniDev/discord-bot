@@ -27,6 +27,7 @@ public class GuildSettings : BaseEntity
     // Support tickets
     public bool TicketsEnabled { get; set; }
     public string? TicketCategoryId { get; set; }
+    public string? TicketArchiveChannelId { get; set; }
     public string TicketWelcomeTitle { get; set; } = TicketMessageDefaults.WelcomeTitle;
     public string TicketWelcomeMessage { get; set; } = TicketMessageDefaults.WelcomeMessage;
     public string TicketClosedMessage { get; set; } = TicketMessageDefaults.ClosedMessage;
@@ -39,6 +40,7 @@ public class GuildSettings : BaseEntity
     public string? CommandPanelMessageId { get; set; }
     public string CommandPanelTitle { get; set; } = "How can we help?";
     public string CommandPanelDescription { get; set; } = "Use the buttons below — no commands needed.";
+    public string? CommandPanelImageUrl { get; set; }
     public string CommandPanelButtonsJson { get; set; } =
         """[{"id":"ticket-open","action":"ticket_open","label":"Create Ticket","style":"Success","enabled":true,"order":0},{"id":"ticket-help","action":"ticket_help","label":"Ticket Help","style":"Secondary","enabled":true,"order":1}]""";
     public bool CommandPanelRefreshRequested { get; set; }

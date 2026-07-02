@@ -18,6 +18,8 @@ public sealed class PlanUpgradeRequestDto
     public string CurrentPlanName { get; init; } = string.Empty;
     public string RequestedByUsername { get; init; } = string.Empty;
     public int DurationMonths { get; init; }
+    public decimal RequestedPlanMonthlyPrice { get; init; }
+    public decimal EstimatedTotalPrice { get; init; }
     public PlanUpgradeRequestStatus Status { get; init; }
     public string? AdminNote { get; init; }
     public DateTimeOffset CreatedAt { get; init; }
@@ -37,6 +39,8 @@ public sealed class AdminPlanUpgradeRequestDto
     public string RequestedByUsername { get; init; } = string.Empty;
     public string RequestedByDiscordUserId { get; init; } = string.Empty;
     public int DurationMonths { get; init; }
+    public decimal RequestedPlanMonthlyPrice { get; init; }
+    public decimal EstimatedTotalPrice { get; init; }
     public PlanUpgradeRequestStatus Status { get; init; }
     public string? AdminNote { get; init; }
     public DateTimeOffset CreatedAt { get; init; }

@@ -10,7 +10,7 @@ import {
   GuildPermissionKey,
   GuildPermissionRole
 } from '../../core/models/staff.models';
-import { DiscordRole } from '../../core/models/guild.models';
+import { DiscordRole, isAssignableRole } from '../../core/models/guild.models';
 import { getApiErrorMessage } from '../../core/utils/api-error.util';
 
 @Component({
@@ -66,7 +66,7 @@ export class StaffComponent implements OnInit {
     });
 
     this.guildService.getRoles(this.guildId).subscribe({
-      next: roles => { this.discordRoles = roles; },
+      next: roles => { this.discordRoles = roles.filter(isAssignableRole); },
       error: () => { this.discordRoles = []; }
     });
   }
@@ -147,13 +147,10 @@ export class StaffComponent implements OnInit {
 
   private emptyPermissions(): Record<GuildPermissionKey, boolean> {
     return {
-      Warn: false,
-      Kick: false,
-      Timeout: false,
-      ClearMessages: false,
       AccessModeration: false,
       AccessLogs: false,
-      AccessTickets: false
+      AccessTickets: false,
+      ManagePermissionRoles: false
     };
   }
 }

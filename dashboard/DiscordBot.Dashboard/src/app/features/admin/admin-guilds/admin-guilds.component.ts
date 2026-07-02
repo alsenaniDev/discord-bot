@@ -2,10 +2,8 @@ import { Component, OnInit } from '@angular/core';
 import { TranslateService } from '@ngx-translate/core';
 import { forkJoin } from 'rxjs';
 import { AdminService } from '../../../core/services/admin.service';
-import { GuildService } from '../../../core/services/guild.service';
 import { ToastService } from '../../../core/services/toast.service';
-import { AdminGuildSummary } from '../../../core/models/admin.models';
-import { SubscriptionPlan } from '../../../core/models/subscription.models';
+import { AdminGuildSummary, AdminSubscriptionPlan } from '../../../core/models/admin.models';
 import { getApiErrorMessage } from '../../../core/utils/api-error.util';
 
 @Component({
@@ -15,14 +13,13 @@ import { getApiErrorMessage } from '../../../core/utils/api-error.util';
 })
 export class AdminGuildsComponent implements OnInit {
   guilds: AdminGuildSummary[] = [];
-  plans: SubscriptionPlan[] = [];
+  plans: AdminSubscriptionPlan[] = [];
   loading = true;
   error = '';
   savingGuildId: string | null = null;
 
   constructor(
     private adminService: AdminService,
-    private guildService: GuildService,
     private toast: ToastService,
     private translate: TranslateService
   ) {}
@@ -37,11 +34,11 @@ export class AdminGuildsComponent implements OnInit {
 
     forkJoin({
       guilds: this.adminService.getGuilds(),
-      plans: this.guildService.getPlans()
+      plans: this.adminService.getPlans()
     }).subscribe({
       next: ({ guilds, plans }) => {
         this.guilds = guilds;
-        this.plans = plans;
+        this.plans = plans.sort((a, b) => a.monthlyPrice - b.monthlyPrice);
         this.loading = false;
       },
       error: err => {
@@ -52,7 +49,8 @@ export class AdminGuildsComponent implements OnInit {
   }
 
   onPlanChange(guild: AdminGuildSummary, planKey: string): void {
-    if (!planKey || planKey === guild.planKey || this.savingGuildId) {
+    const previousPlanKey = guild.planKey;
+    if (!planKey || planKey === previousPlanKey || this.savingGuildId) {
       return;
     }
 
@@ -71,6 +69,7 @@ export class AdminGuildsComponent implements OnInit {
         );
       },
       error: err => {
+        guild.planKey = previousPlanKey;
         this.savingGuildId = null;
         this.toast.error(getApiErrorMessage(err, this.translate.instant('admin.planChangeError')));
       }

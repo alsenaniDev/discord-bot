@@ -1,0 +1,112 @@
+<div class="page-content">
+  <app-loading-state *ngIf="loading" [message]="'adminPlans.loading' | translate"></app-loading-state>
+
+  <app-empty-state
+    *ngIf="!loading && error"
+    icon="⚠️"
+    [title]="'adminPlans.loadError' | translate"
+    [description]="error"
+  >
+    <button type="button" class="btn btn-primary btn-sm" (click)="loadPlans()">{{ 'common.tryAgain' | translate }}</button>
+  </app-empty-state>
+
+  <ng-container *ngIf="!loading && !error">
+    <section class="card add-plan-card">
+      <h2>{{ formTitleKey | translate }}</h2>
+      <p class="muted">{{ 'adminPlans.hint' | translate }}</p>
+      <div class="add-plan-form">
+        <label class="form-field" *ngIf="!editingPlanId">
+          <span>{{ 'adminPlans.key' | translate }}</span>
+          <input type="text" class="input" [(ngModel)]="planKey" [placeholder]="'adminPlans.keyPlaceholder' | translate" />
+        </label>
+        <label class="form-field">
+          <span>{{ 'adminPlans.name' | translate }}</span>
+          <input type="text" class="input" [(ngModel)]="planName" />
+        </label>
+        <label class="form-field">
+          <span>{{ 'adminPlans.description' | translate }}</span>
+          <textarea class="input" rows="3" [(ngModel)]="planDescription"></textarea>
+        </label>
+        <label class="form-field">
+          <span>{{ 'adminPlans.monthlyPrice' | translate }}</span>
+          <input type="number" class="input" min="0" step="0.01" [(ngModel)]="monthlyPrice" />
+          <span class="hint">{{ 'adminPlans.monthlyPriceHint' | translate }}</span>
+        </label>
+        <label class="checkbox">
+          <input type="checkbox" [(ngModel)]="isActive" />
+          {{ 'adminPlans.active' | translate }}
+        </label>
+        <div class="permission-grid">
+          <span class="permission-grid-label">{{ 'adminPlans.modulesTitle' | translate }}</span>
+          <label class="permission-option">
+            <input type="checkbox" [(ngModel)]="allModules" (ngModelChange)="onAllModulesChanged()" />
+            <span>{{ 'subscription.allModules' | translate }}</span>
+          </label>
+          <label class="permission-option" *ngFor="let option of moduleOptions">
+            <input type="checkbox" [(ngModel)]="selectedModules[option.value]" [disabled]="allModules" />
+            <span>{{ option.labelKey | translate }}</span>
+          </label>
+        </div>
+        <div class="inline-actions">
+          <button type="button" class="btn btn-primary" [disabled]="saving" (click)="savePlan()">
+            <span class="spinner inline" *ngIf="saving"></span>
+            {{ (editingPlanId ? 'common.save' : 'adminPlans.addButton') | translate }}
+          </button>
+          <button type="button" class="btn btn-secondary btn-sm" *ngIf="editingPlanId" (click)="cancelEdit()">
+            {{ 'common.cancel' | translate }}
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <section class="card table-card">
+      <h2>{{ 'adminPlans.listTitle' | translate }}</h2>
+      <div class="table-wrap" *ngIf="plans.length > 0">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>{{ 'adminPlans.name' | translate }}</th>
+              <th>{{ 'adminPlans.monthlyPrice' | translate }}</th>
+              <th>{{ 'adminPlans.modulesTitle' | translate }}</th>
+              <th>{{ 'adminPlans.subscribers' | translate }}</th>
+              <th>{{ 'common.status' | translate }}</th>
+              <th>{{ 'common.actions' | translate }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let plan of plans">
+              <td>
+                <strong>{{ plan.name }}</strong>
+                <div class="muted small mono">{{ plan.key }}</div>
+              </td>
+              <td>{{ plan.monthlyPrice | currency:'USD':'symbol':'1.2-2' }}</td>
+              <td>{{ formatModules(plan.allowedModules) }}</td>
+              <td>{{ plan.subscriberCount }}</td>
+              <td>
+                <span class="badge" [class.badge-success]="plan.isActive" [class.badge-muted]="!plan.isActive">
+                  {{ (plan.isActive ? 'adminPlans.statusActive' : 'adminPlans.statusSuspended') | translate }}
+                </span>
+              </td>
+              <td>
+                <div class="inline-actions">
+                  <button type="button" class="btn btn-secondary btn-sm" (click)="editPlan(plan)">
+                    {{ 'common.edit' | translate }}
+                  </button>
+                  <button type="button" class="btn btn-secondary btn-sm" *ngIf="plan.isActive" (click)="suspendPlan(plan)">
+                    {{ 'adminPlans.suspend' | translate }}
+                  </button>
+                  <button type="button" class="btn btn-secondary btn-sm" *ngIf="!plan.isActive" (click)="activatePlan(plan)">
+                    {{ 'adminPlans.activate' | translate }}
+                  </button>
+                  <button type="button" class="btn btn-danger btn-sm" (click)="deletePlan(plan)">
+                    {{ 'common.remove' | translate }}
+                  </button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </ng-container>
+</div>

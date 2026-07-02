@@ -179,10 +179,10 @@ public static class GuildPermissionMapper
                 ? null
                 : string.Join(", ", resolved.MatchedRoleNames),
             Permissions = permissions,
-            CanWarn = canManage || permissions.HasFlag(GuildPermissions.Warn),
-            CanKick = canManage || permissions.HasFlag(GuildPermissions.Kick),
-            CanTimeout = canManage || permissions.HasFlag(GuildPermissions.Timeout),
-            CanClearMessages = canManage || permissions.HasFlag(GuildPermissions.ClearMessages),
+            CanWarn = canManage,
+            CanKick = canManage,
+            CanTimeout = canManage,
+            CanClearMessages = canManage,
             CanManageSettings = canManage,
             CanManageModules = canManage,
             CanManageSubscription = canManage,
@@ -196,8 +196,6 @@ public static class GuildPermissionMapper
 
     public static bool HasModerationPageAccess(GuildPermissions permissions) =>
         permissions.HasFlag(GuildPermissions.AccessModeration)
-        || permissions.HasFlag(GuildPermissions.Warn)
-        || permissions.HasFlag(GuildPermissions.Kick)
-        || permissions.HasFlag(GuildPermissions.Timeout)
-        || permissions.HasFlag(GuildPermissions.ClearMessages);
+        || permissions.HasFlag(GuildPermissions.AccessLogs)
+        || permissions.HasFlag(GuildPermissions.AccessTickets);
 }

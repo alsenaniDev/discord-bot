@@ -50,6 +50,18 @@ public static partial class GuildSettingsValidator
             errors.Add("Log channel ID must be a numeric Discord snowflake.");
         }
 
+        if (!string.IsNullOrWhiteSpace(request.TicketArchiveChannelId)
+            && !IsValidSnowflake(request.TicketArchiveChannelId))
+        {
+            errors.Add("Ticket archive channel ID must be a numeric Discord snowflake.");
+        }
+
+        if (!string.IsNullOrWhiteSpace(request.CommandPanelImageUrl)
+            && !IsValidPanelImageUrl(request.CommandPanelImageUrl))
+        {
+            errors.Add("Panel image URL must start with http:// or https://.");
+        }
+
         if (!string.IsNullOrWhiteSpace(request.TicketCategoryId) && !IsValidSnowflake(request.TicketCategoryId))
         {
             errors.Add("Ticket category ID must be a numeric Discord snowflake.");
@@ -121,6 +133,10 @@ public static partial class GuildSettingsValidator
 
     private static bool IsValidSnowflake(string? value) =>
         !string.IsNullOrWhiteSpace(value) && SnowflakeRegex().IsMatch(value);
+
+    private static bool IsValidPanelImageUrl(string value) =>
+        Uri.TryCreate(value.Trim(), UriKind.Absolute, out var uri)
+        && (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps);
 
     [GeneratedRegex(@"^\d{17,20}$")]
     private static partial Regex SnowflakeRegex();

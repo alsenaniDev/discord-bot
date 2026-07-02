@@ -38,6 +38,10 @@
           <app-ui-icon name="subscription" size="sm"></app-ui-icon>
           {{ 'nav.upgradeRequests' | translate }}
         </a>
+        <a routerLink="/admin/plans" routerLinkActive="active" (click)="closeSidebar()">
+          <app-ui-icon name="subscription" size="sm"></app-ui-icon>
+          {{ 'nav.adminPlans' | translate }}
+        </a>
       </ng-container>
 
       <ng-container *ngIf="showGuildNav">
@@ -50,6 +54,15 @@
         >
           <app-ui-icon name="overview" size="sm"></app-ui-icon>
           {{ 'common.overview' | translate }}
+        </a>
+        <a
+          *ngIf="canManageGuild"
+          [routerLink]="['/guilds', selectedGuild!.id, 'profile']"
+          routerLinkActive="active"
+          (click)="closeSidebar()"
+        >
+          <app-ui-icon name="overview" size="sm"></app-ui-icon>
+          {{ 'nav.profile' | translate }}
         </a>
         <a
           *ngIf="canManageGuild"
@@ -113,6 +126,15 @@
         >
           <app-ui-icon name="roles" size="sm"></app-ui-icon>
           {{ 'nav.reactionRoles' | translate }}
+        </a>
+        <a
+          *ngIf="canManageGuild"
+          [routerLink]="['/guilds', selectedGuild!.id, 'moderation/settings']"
+          routerLinkActive="active"
+          (click)="closeSidebar()"
+        >
+          <app-ui-icon name="shield" size="sm"></app-ui-icon>
+          {{ 'nav.moderationSettings' | translate }}
         </a>
         <a
           *ngIf="canManageGuild"

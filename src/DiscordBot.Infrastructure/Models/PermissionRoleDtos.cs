@@ -34,6 +34,13 @@ public sealed class EvaluatePermissionsRequest
     public List<string> DiscordRoleIds { get; set; } = [];
 }
 
+public sealed class EvaluateDashboardAccessResponse
+{
+    public bool CanAccessTickets { get; init; }
+    public bool CanAccessLogs { get; init; }
+    public bool CanAccessModeration { get; init; }
+}
+
 public sealed class EvaluatePermissionsResponse
 {
     public GuildPermissions Permissions { get; init; }
@@ -42,4 +49,7 @@ public sealed class EvaluatePermissionsResponse
     public bool CanTimeout { get; init; }
     public bool CanClearMessages { get; init; }
     public bool CanAccessModeration { get; init; }
+    public bool CanViewWarnings { get; init; }
+    public bool CanViewModerationCases { get; init; }
+    public bool CanViewLogs { get; init; }
 }

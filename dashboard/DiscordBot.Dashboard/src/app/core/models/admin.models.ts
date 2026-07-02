@@ -45,3 +45,40 @@ export interface AdminUser {
 export interface UpdateAdminGuildSubscriptionRequest {
   planKey: string;
 }
+
+export interface AdminSubscriptionPlan {
+  id: string;
+  key: string;
+  name: string;
+  description: string;
+  allowedModules: string[];
+  isActive: boolean;
+  monthlyPrice: number;
+  subscriberCount: number;
+}
+
+export interface CreateSubscriptionPlanRequest {
+  key: string;
+  name: string;
+  description: string;
+  allowedModules: string[];
+  monthlyPrice: number;
+  isActive: boolean;
+}
+
+export interface UpdateSubscriptionPlanRequest {
+  name: string;
+  description: string;
+  allowedModules: string[];
+  monthlyPrice: number;
+  isActive: boolean;
+}
+
+export const PLAN_MODULE_OPTIONS = [
+  { value: 'welcome', labelKey: 'subscription.moduleNames.welcome' },
+  { value: 'logs', labelKey: 'subscription.moduleNames.logs' },
+  { value: 'reaction-roles', labelKey: 'subscription.moduleNames.reaction-roles' },
+  { value: 'tickets', labelKey: 'subscription.moduleNames.tickets' },
+  { value: 'moderation', labelKey: 'subscription.moduleNames.moderation' },
+  { value: 'auto-role', labelKey: 'subscription.moduleNames.auto-role' }
+];

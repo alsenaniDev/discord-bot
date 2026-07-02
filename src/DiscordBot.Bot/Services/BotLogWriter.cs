@@ -1,3 +1,4 @@
+using Discord.WebSocket;
 using DiscordBot.Domain.Enums;
 using DiscordBot.Bot.Api;
 using DiscordBot.Bot.Api.Models;
@@ -8,15 +9,23 @@ namespace DiscordBot.Bot.Services;
 public class BotLogWriter
 {
     private readonly BotApiClient _apiClient;
+    private readonly DiscordSocketClient _client;
+    private readonly DiscordLogDeliveryService _logDelivery;
     private readonly ILogger<BotLogWriter> _logger;
 
-    public BotLogWriter(BotApiClient apiClient, ILogger<BotLogWriter> logger)
+    public BotLogWriter(
+        BotApiClient apiClient,
+        DiscordSocketClient client,
+        DiscordLogDeliveryService logDelivery,
+        ILogger<BotLogWriter> logger)
     {
         _apiClient = apiClient;
+        _client = client;
+        _logDelivery = logDelivery;
         _logger = logger;
     }
 
-    public Task WriteAsync(
+    public async Task WriteAsync(
         string discordGuildId,
         LogEventType type,
         string message,
@@ -27,8 +36,9 @@ public class BotLogWriter
         string? targetDisplayName = null,
         string? channelDisplayName = null,
         string? metadataJson = null,
-        CancellationToken cancellationToken = default) =>
-        _apiClient.CreateLogAsync(new CreateLogApiRequest
+        CancellationToken cancellationToken = default)
+    {
+        var request = new CreateLogApiRequest
         {
             DiscordGuildId = discordGuildId,
             Type = type.ToString(),
@@ -40,5 +50,19 @@ public class BotLogWriter
             TargetDisplayName = targetDisplayName,
             ChannelDisplayName = channelDisplayName,
             MetadataJson = metadataJson
-        }, cancellationToken);
+        };
+
+        try
+        {
+            var persisted = await _apiClient.CreateLogAsync(request, cancellationToken);
+            if (persisted)
+            {
+                await _logDelivery.TryDeliverAsync(_client, request, cancellationToken);
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to write log for guild {GuildId}.", discordGuildId);
+        }
+    }
 }

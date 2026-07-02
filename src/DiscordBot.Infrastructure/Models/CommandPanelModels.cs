@@ -17,6 +17,7 @@ public sealed class CommandPanelConfigDto
     public string? MessageId { get; init; }
     public string Title { get; init; } = string.Empty;
     public string Description { get; init; } = string.Empty;
+    public string? ImageUrl { get; init; }
     public IReadOnlyList<CommandPanelButtonDefinition> Buttons { get; init; } = [];
 }
 
@@ -37,5 +38,11 @@ public sealed class TicketChannelCleanupDto
     public string DiscordGuildId { get; init; } = string.Empty;
     public string ChannelDiscordId { get; init; } = string.Empty;
     public int TicketNumber { get; init; }
+    public string OwnerDiscordUserId { get; init; } = string.Empty;
+    public string? OwnerDisplayName { get; init; }
+    public string? ClosedByDiscordUserId { get; init; }
+    public string? ClosedByDisplayName { get; init; }
+    public DateTimeOffset? ClosedAt { get; init; }
+    public string? TicketArchiveChannelId { get; init; }
     public string TicketClosedFromDashboardMessage { get; init; } = string.Empty;
 }

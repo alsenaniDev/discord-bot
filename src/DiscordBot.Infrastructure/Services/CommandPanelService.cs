@@ -99,12 +99,14 @@ public class CommandPanelService : ICommandPanelService
             MessageId = settings.CommandPanelMessageId,
             Title = settings.CommandPanelTitle,
             Description = settings.CommandPanelDescription,
+            ImageUrl = settings.CommandPanelImageUrl,
             Buttons = CommandPanelSerializer.ParseButtons(settings.CommandPanelButtonsJson)
         };
 
     internal static bool ShouldRequestRefresh(
         GuildSettings settings,
-        UpdateGuildSettingsRequest request)
+        UpdateGuildSettingsRequest request,
+        string? normalizedImageUrl)
     {
         var normalizedButtons = CommandPanelSerializer.SerializeButtons(request.CommandPanelButtons);
 
@@ -112,6 +114,7 @@ public class CommandPanelService : ICommandPanelService
                || settings.CommandPanelChannelId != request.CommandPanelChannelId
                || settings.CommandPanelTitle != request.CommandPanelTitle.Trim()
                || settings.CommandPanelDescription != request.CommandPanelDescription.Trim()
+               || settings.CommandPanelImageUrl != normalizedImageUrl
                || settings.CommandPanelButtonsJson != normalizedButtons;
     }
 }

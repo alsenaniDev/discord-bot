@@ -139,6 +139,17 @@
       </label>
 
       <label>
+        {{ 'settings.ticketArchiveChannel' | translate }}
+        <select formControlName="ticketArchiveChannelId">
+          <option value="">{{ 'settings.selectChannel' | translate }}</option>
+          <option *ngFor="let channel of textChannels" [value]="channel.discordChannelId">
+            {{ channelLabel(channel) }}
+          </option>
+        </select>
+        <span class="hint">{{ 'settings.ticketArchiveChannelHint' | translate }}</span>
+      </label>
+
+      <label>
         {{ 'settings.ticketWelcomeTitle' | translate }}
         <input type="text" formControlName="ticketWelcomeTitle" maxlength="256" />
         <span class="hint">{{ 'settings.ticketTemplateHint' | translate }}</span>
@@ -286,6 +297,13 @@
         {{ 'settings.panel.description' | translate }}
         <textarea formControlName="commandPanelDescription" rows="3"></textarea>
         <span class="field-error" *ngIf="fieldError('commandPanelDescription')">{{ fieldError('commandPanelDescription') }}</span>
+      </label>
+
+      <label>
+        {{ 'settings.panel.imageUrl' | translate }}
+        <input type="url" formControlName="commandPanelImageUrl" maxlength="2048" />
+        <span class="hint">{{ 'settings.panel.imageUrlHint' | translate }}</span>
+        <span class="field-error" *ngIf="fieldError('commandPanelImageUrl')">{{ fieldError('commandPanelImageUrl') }}</span>
       </label>
 
       <div class="panel-buttons-editor">

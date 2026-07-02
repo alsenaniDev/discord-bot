@@ -25,6 +25,8 @@ public class GuildsController : ControllerBase
     private readonly IPlanUpgradeRequestService _planUpgradeRequestService;
     private readonly IGuildStaffService _guildStaffService;
     private readonly IGuildPermissionRoleService _guildPermissionRoleService;
+    private readonly IGuildProfileService _guildProfileService;
+    private readonly IModerationPermissionRoleService _moderationPermissionRoleService;
     private readonly IAutoReplyService _autoReplyService;
 
     public GuildsController(
@@ -40,6 +42,8 @@ public class GuildsController : ControllerBase
         IPlanUpgradeRequestService planUpgradeRequestService,
         IGuildStaffService guildStaffService,
         IGuildPermissionRoleService guildPermissionRoleService,
+        IGuildProfileService guildProfileService,
+        IModerationPermissionRoleService moderationPermissionRoleService,
         IAutoReplyService autoReplyService)
     {
         _guildService = guildService;
@@ -54,6 +58,8 @@ public class GuildsController : ControllerBase
         _planUpgradeRequestService = planUpgradeRequestService;
         _guildStaffService = guildStaffService;
         _guildPermissionRoleService = guildPermissionRoleService;
+        _guildProfileService = guildProfileService;
+        _moderationPermissionRoleService = moderationPermissionRoleService;
         _autoReplyService = autoReplyService;
     }
 
@@ -141,13 +147,20 @@ public class GuildsController : ControllerBase
             return Unauthorized(new { message = "Missing Discord user identity in token." });
         }
 
-        var settings = await _guildService.UpdateSettingsAsync(id, discordUserId, request, cancellationToken);
-        if (settings is null)
+        try
         {
-            return NotFound(new { message = "Guild not found or access denied." });
-        }
+            var settings = await _guildService.UpdateSettingsAsync(id, discordUserId, request, cancellationToken);
+            if (settings is null)
+            {
+                return NotFound(new { message = "Guild not found or access denied." });
+            }
 
-        return Ok(settings);
+            return Ok(settings);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
     }
 
     /// <summary>
@@ -384,8 +397,8 @@ public class GuildsController : ControllerBase
         var roles = await _resourceService.GetRolesAsync(id, discordUserId, cancellationToken);
         if (roles.Count == 0)
         {
-            var guildExists = await _guildService.GetSettingsAsync(id, discordUserId, cancellationToken);
-            if (guildExists is null)
+            var access = await _guildAccessService.GetAccessAsync(id, discordUserId, cancellationToken);
+            if (access is null || !access.CanManageSettings)
             {
                 return NotFound(new { message = "Guild not found or access denied." });
             }
@@ -988,5 +1001,150 @@ public class GuildsController : ControllerBase
         }
 
         return Ok(new { message = "Permission role removed." });
+    }
+
+    [HttpGet("{id:guid}/profile")]
+    public async Task<ActionResult<GuildProfileDto>> GetProfile(Guid id, CancellationToken cancellationToken)
+    {
+        var discordUserId = User.GetDiscordUserId();
+        if (string.IsNullOrWhiteSpace(discordUserId))
+        {
+            return Unauthorized(new { message = "Missing Discord user identity in token." });
+        }
+
+        var profile = await _guildProfileService.GetProfileAsync(id, discordUserId, cancellationToken);
+        if (profile is null)
+        {
+            return NotFound(new { message = "Guild not found or access denied." });
+        }
+
+        return Ok(profile);
+    }
+
+    [HttpPut("{id:guid}/profile")]
+    public async Task<ActionResult<GuildProfileDto>> UpdateProfile(
+        Guid id,
+        [FromBody] UpdateGuildProfileRequest request,
+        CancellationToken cancellationToken)
+    {
+        var discordUserId = User.GetDiscordUserId();
+        if (string.IsNullOrWhiteSpace(discordUserId))
+        {
+            return Unauthorized(new { message = "Missing Discord user identity in token." });
+        }
+
+        try
+        {
+            var profile = await _guildProfileService.UpdateProfileAsync(id, discordUserId, request, cancellationToken);
+            if (profile is null)
+            {
+                return NotFound(new { message = "Guild not found or access denied." });
+            }
+
+            return Ok(profile);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
+    [HttpGet("{id:guid}/moderation/permission-roles")]
+    public async Task<ActionResult<IReadOnlyList<ModerationPermissionRoleDto>>> GetModerationPermissionRoles(
+        Guid id,
+        CancellationToken cancellationToken)
+    {
+        var discordUserId = User.GetDiscordUserId();
+        if (string.IsNullOrWhiteSpace(discordUserId))
+        {
+            return Unauthorized(new { message = "Missing Discord user identity in token." });
+        }
+
+        var access = await _guildAccessService.GetAccessAsync(id, discordUserId, cancellationToken);
+        if (access is null || !access.CanManageSettings)
+        {
+            return NotFound(new { message = "Guild not found or access denied." });
+        }
+
+        var roles = await _moderationPermissionRoleService.GetRolesAsync(id, discordUserId, cancellationToken);
+        return Ok(roles);
+    }
+
+    [HttpPost("{id:guid}/moderation/permission-roles")]
+    public async Task<ActionResult<ModerationPermissionRoleDto>> CreateModerationPermissionRole(
+        Guid id,
+        [FromBody] CreateModerationPermissionRoleRequest request,
+        CancellationToken cancellationToken)
+    {
+        var discordUserId = User.GetDiscordUserId();
+        if (string.IsNullOrWhiteSpace(discordUserId))
+        {
+            return Unauthorized(new { message = "Missing Discord user identity in token." });
+        }
+
+        try
+        {
+            var role = await _moderationPermissionRoleService.CreateAsync(id, discordUserId, request, cancellationToken);
+            if (role is null)
+            {
+                return NotFound(new { message = "Guild not found or access denied." });
+            }
+
+            return Ok(role);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
+    [HttpPut("{id:guid}/moderation/permission-roles/{roleId:guid}")]
+    public async Task<ActionResult<ModerationPermissionRoleDto>> UpdateModerationPermissionRole(
+        Guid id,
+        Guid roleId,
+        [FromBody] UpdateModerationPermissionRoleRequest request,
+        CancellationToken cancellationToken)
+    {
+        var discordUserId = User.GetDiscordUserId();
+        if (string.IsNullOrWhiteSpace(discordUserId))
+        {
+            return Unauthorized(new { message = "Missing Discord user identity in token." });
+        }
+
+        try
+        {
+            var role = await _moderationPermissionRoleService.UpdateAsync(id, roleId, discordUserId, request, cancellationToken);
+            if (role is null)
+            {
+                return NotFound(new { message = "Moderation permission role not found or access denied." });
+            }
+
+            return Ok(role);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
+    [HttpDelete("{id:guid}/moderation/permission-roles/{roleId:guid}")]
+    public async Task<IActionResult> DeleteModerationPermissionRole(
+        Guid id,
+        Guid roleId,
+        CancellationToken cancellationToken)
+    {
+        var discordUserId = User.GetDiscordUserId();
+        if (string.IsNullOrWhiteSpace(discordUserId))
+        {
+            return Unauthorized(new { message = "Missing Discord user identity in token." });
+        }
+
+        var success = await _moderationPermissionRoleService.DeleteAsync(id, roleId, discordUserId, cancellationToken);
+        if (!success)
+        {
+            return NotFound(new { message = "Moderation permission role not found or access denied." });
+        }
+
+        return Ok(new { message = "Moderation permission role removed." });
     }
 }

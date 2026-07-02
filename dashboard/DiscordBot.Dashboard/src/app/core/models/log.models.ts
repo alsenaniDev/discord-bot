@@ -4,6 +4,7 @@ export type LogEventType =
   | 'AutoRoleAssigned'
   | 'TicketOpened'
   | 'TicketClosed'
+  | 'TicketArchived'
   | 'WarningCreated'
   | 'MessagesCleared'
   | 'MemberKicked'
@@ -45,6 +46,7 @@ export const LOG_EVENT_TYPE_OPTIONS: { value: LogEventType | ''; labelKey: strin
   { value: 'AutoRoleAssigned', labelKey: 'logs.eventTypes.autoRoleAssigned' },
   { value: 'TicketOpened', labelKey: 'logs.eventTypes.ticketOpened' },
   { value: 'TicketClosed', labelKey: 'logs.eventTypes.ticketClosed' },
+  { value: 'TicketArchived', labelKey: 'logs.eventTypes.ticketArchived' },
   { value: 'WarningCreated', labelKey: 'logs.eventTypes.warningCreated' },
   { value: 'MessagesCleared', labelKey: 'logs.eventTypes.messagesCleared' },
   { value: 'MemberKicked', labelKey: 'logs.eventTypes.memberKicked' },

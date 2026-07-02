@@ -5,6 +5,7 @@ import { GuildService } from '../../core/services/guild.service';
 import { GuildContextService } from '../../core/services/guild-context.service';
 import { ToastService } from '../../core/services/toast.service';
 import { LogEntry, LogFilters, LOG_EVENT_TYPE_OPTIONS } from '../../core/models/log.models';
+import { displayChannelLabel, displayMemberLabel } from '../../core/models/ticket.models';
 import { getApiErrorMessage } from '../../core/utils/api-error.util';
 
 @Component({
@@ -75,6 +76,9 @@ export class LogsComponent implements OnInit {
   displayValue(value?: string | null): string {
     return value?.trim() ? value : this.translate.instant('common.emptyValue');
   }
+
+  displayMember = displayMemberLabel;
+  displayChannel = displayChannelLabel;
 
   private buildActiveFilters(): LogFilters {
     return {

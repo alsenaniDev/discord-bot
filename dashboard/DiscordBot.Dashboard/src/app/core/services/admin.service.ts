@@ -6,7 +6,10 @@ import {
   AdminGuildSummary,
   AdminStats,
   AdminUser,
-  UpdateAdminGuildSubscriptionRequest
+  AdminSubscriptionPlan,
+  CreateSubscriptionPlanRequest,
+  UpdateAdminGuildSubscriptionRequest,
+  UpdateSubscriptionPlanRequest
 } from '../models/admin.models';
 import { GuildSubscription } from '../models/subscription.models';
 import { AdminPlanUpgradeRequest, ReviewPlanUpgradeRequest } from '../models/upgrade-request.models';
@@ -75,5 +78,21 @@ export class AdminService {
       `${this.baseUrl}/guilds/${guildId}/subscription/cancel`,
       {}
     );
+  }
+
+  getPlans(): Observable<AdminSubscriptionPlan[]> {
+    return this.http.get<AdminSubscriptionPlan[]>(`${this.baseUrl}/plans`);
+  }
+
+  createPlan(request: CreateSubscriptionPlanRequest): Observable<AdminSubscriptionPlan> {
+    return this.http.post<AdminSubscriptionPlan>(`${this.baseUrl}/plans`, request);
+  }
+
+  updatePlan(planId: string, request: UpdateSubscriptionPlanRequest): Observable<AdminSubscriptionPlan> {
+    return this.http.put<AdminSubscriptionPlan>(`${this.baseUrl}/plans/${planId}`, request);
+  }
+
+  deletePlan(planId: string): Observable<void> {
+    return this.http.delete<void>(`${this.baseUrl}/plans/${planId}`);
   }
 }

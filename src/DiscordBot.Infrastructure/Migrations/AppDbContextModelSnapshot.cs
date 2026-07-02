@@ -203,13 +203,25 @@ namespace DiscordBot.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uuid");
 
+                    b.Property<string>("CommunityType")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
 
                     b.Property<string>("DiscordGuildId")
                         .IsRequired()
                         .HasMaxLength(32)
                         .HasColumnType("character varying(32)");
+
+                    b.Property<string>("DisplayName")
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
 
                     b.Property<string>("IconUrl")
                         .HasMaxLength(512)
@@ -234,8 +246,20 @@ namespace DiscordBot.Infrastructure.Migrations
                     b.Property<DateTimeOffset?>("ResourcesSyncedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<string>("RulesUrl")
+                        .HasMaxLength(512)
+                        .HasColumnType("character varying(512)");
+
+                    b.Property<string>("SupportMessage")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
                     b.Property<DateTimeOffset>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("WebsiteUrl")
+                        .HasMaxLength(512)
+                        .HasColumnType("character varying(512)");
 
                     b.HasKey("Id");
 
@@ -342,6 +366,10 @@ namespace DiscordBot.Infrastructure.Migrations
                     b.Property<bool>("CommandPanelEnabled")
                         .HasColumnType("boolean");
 
+                    b.Property<string>("CommandPanelImageUrl")
+                        .HasMaxLength(512)
+                        .HasColumnType("character varying(512)");
+
                     b.Property<string>("CommandPanelMessageId")
                         .HasMaxLength(32)
                         .HasColumnType("character varying(32)");
@@ -366,6 +394,10 @@ namespace DiscordBot.Infrastructure.Migrations
 
                     b.Property<bool>("LogsEnabled")
                         .HasColumnType("boolean");
+
+                    b.Property<string>("TicketArchiveChannelId")
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
 
                     b.Property<string>("TicketCategoryId")
                         .HasMaxLength(32)
@@ -510,9 +542,17 @@ namespace DiscordBot.Infrastructure.Migrations
                         .HasMaxLength(32)
                         .HasColumnType("character varying(32)");
 
+                    b.Property<string>("ActorUsername")
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
                     b.Property<string>("ChannelDiscordId")
                         .HasMaxLength(32)
                         .HasColumnType("character varying(32)");
+
+                    b.Property<string>("ChannelName")
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
 
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
@@ -529,9 +569,21 @@ namespace DiscordBot.Infrastructure.Migrations
                         .HasMaxLength(4000)
                         .HasColumnType("character varying(4000)");
 
+                    b.Property<string>("RoleDiscordId")
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<string>("RoleName")
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
                     b.Property<string>("TargetDiscordUserId")
                         .HasMaxLength(32)
                         .HasColumnType("character varying(32)");
+
+                    b.Property<string>("TargetUsername")
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
 
                     b.Property<string>("Type")
                         .IsRequired()
@@ -595,6 +647,52 @@ namespace DiscordBot.Infrastructure.Migrations
                     b.HasIndex("GuildId", "Type", "CreatedAt");
 
                     b.ToTable("ModerationCases", (string)null);
+                });
+
+            modelBuilder.Entity("DiscordBot.Domain.Entities.ModerationPermissionRole", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("CanClearMessages")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("CanKick")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("CanViewLogs")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("CanViewModerationCases")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("CanViewWarnings")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("CanWarn")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("GuildId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("RoleDiscordId")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("GuildId", "RoleDiscordId")
+                        .IsUnique();
+
+                    b.ToTable("ModerationPermissionRoles", (string)null);
                 });
 
             modelBuilder.Entity("DiscordBot.Domain.Entities.Module", b =>
@@ -801,6 +899,10 @@ namespace DiscordBot.Infrastructure.Migrations
                         .IsRequired()
                         .HasMaxLength(64)
                         .HasColumnType("character varying(64)");
+
+                    b.Property<decimal>("MonthlyPrice")
+                        .HasPrecision(10, 2)
+                        .HasColumnType("numeric(10,2)");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -1132,6 +1234,17 @@ namespace DiscordBot.Infrastructure.Migrations
                 {
                     b.HasOne("DiscordBot.Domain.Entities.Guild", "Guild")
                         .WithMany("ModerationCases")
+                        .HasForeignKey("GuildId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Guild");
+                });
+
+            modelBuilder.Entity("DiscordBot.Domain.Entities.ModerationPermissionRole", b =>
+                {
+                    b.HasOne("DiscordBot.Domain.Entities.Guild", "Guild")
+                        .WithMany()
                         .HasForeignKey("GuildId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();

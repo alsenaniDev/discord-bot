@@ -16,6 +16,7 @@ public class TicketCommandHandlers
     private readonly ComponentBuilderService _components;
     private readonly ResourceSyncService _resourceSyncService;
     private readonly ModuleGuard _moduleGuard;
+    private readonly TicketArchiveService _archiveService;
 
     public TicketCommandHandlers(
         DiscordSocketClient client,
@@ -23,7 +24,8 @@ public class TicketCommandHandlers
         EmbedBuilderService embeds,
         ComponentBuilderService components,
         ResourceSyncService resourceSyncService,
-        ModuleGuard moduleGuard)
+        ModuleGuard moduleGuard,
+        TicketArchiveService archiveService)
     {
         _client = client;
         _apiClient = apiClient;
@@ -31,6 +33,7 @@ public class TicketCommandHandlers
         _components = components;
         _resourceSyncService = resourceSyncService;
         _moduleGuard = moduleGuard;
+        _archiveService = archiveService;
     }
 
     public async Task HandleSetupAsync(SocketInteraction interaction)
@@ -310,6 +313,27 @@ public class TicketCommandHandlers
         }
 
         var settings = await _apiClient.GetSettingsAsync(guild.Id.ToString());
+        if (settings is not null && channel is SocketTextChannel textChannel)
+        {
+            string? ownerDisplayName = null;
+            if (ulong.TryParse(ticket.OwnerDiscordUserId, out var ownerId))
+            {
+                var owner = guild.GetUser(ownerId);
+                ownerDisplayName = owner?.GlobalName ?? owner?.Username;
+            }
+
+            await _archiveService.TryArchiveTicketAsync(
+                _client,
+                guild,
+                textChannel,
+                ticket.TicketNumber,
+                ticket.OwnerDiscordUserId,
+                ownerDisplayName,
+                user,
+                closed.ClosedAt,
+                settings.TicketArchiveChannelId);
+        }
+
         await channel.SendMessageAsync(
             embed: _embeds.BuildTicketClosed(
                 ticket.TicketNumber,
@@ -350,6 +374,7 @@ public class TicketCommandHandlers
         ITextChannel channel,
         SocketGuildUser user)
     {
+        var guild = user.Guild;
         var ticket = await _apiClient.GetTicketByChannelAsync(channel.Id.ToString());
         if (ticket is null)
         {
@@ -359,16 +384,29 @@ public class TicketCommandHandlers
         }
 
         var isOwner = ticket.OwnerDiscordUserId == user.Id.ToString();
-        var isStaff = user.GuildPermissions.ManageGuild || user.GuildPermissions.Administrator;
-
-        if (!isOwner && !isStaff)
+        if (isOwner)
         {
-            return (
-                "Permission denied",
-                "Only the ticket owner or server staff can close this ticket.");
+            return null;
         }
 
-        return null;
+        if (user.GuildPermissions.Administrator || guild.OwnerId == user.Id)
+        {
+            return null;
+        }
+
+        var dashboardAccess = await _apiClient.EvaluateDashboardAccessAsync(
+            guild.Id.ToString(),
+            user.Id.ToString(),
+            user.Roles.Select(r => r.Id.ToString()).ToList());
+
+        if (dashboardAccess?.CanAccessTickets == true)
+        {
+            return null;
+        }
+
+        return (
+            "Permission denied",
+            "Only the ticket owner or dashboard staff with ticket access can close this ticket.");
     }
 
     private static List<Overwrite> BuildTicketOverwrites(SocketGuild guild, SocketGuildUser owner)

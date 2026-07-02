@@ -11,30 +11,34 @@ namespace DiscordBot.Infrastructure.Data;
 
 public class SubscriptionPlanSeeder : IHostedService
 {
-    private static readonly (string Key, string Name, string Description, string[] Modules)[] DefaultPlans =
+    private static readonly (string Key, string Name, string Description, decimal MonthlyPrice, string[] Modules)[] DefaultPlans =
     [
         (
             PlanKeys.Free,
             "Free",
             "Basic bot features for small servers.",
+            0m,
             [ModuleKeys.Welcome, ModuleKeys.Logs]
         ),
         (
             PlanKeys.Basic,
             "Basic",
             "Adds reaction roles on top of Free.",
+            9.99m,
             [ModuleKeys.Welcome, ModuleKeys.Logs, ModuleKeys.ReactionRoles]
         ),
         (
             PlanKeys.Pro,
             "Pro",
             "Tickets and moderation for growing communities.",
+            19.99m,
             [ModuleKeys.Welcome, ModuleKeys.Logs, ModuleKeys.ReactionRoles, ModuleKeys.Tickets, ModuleKeys.Moderation]
         ),
         (
             PlanKeys.Premium,
             "Premium",
             "All platform modules included.",
+            29.99m,
             [PlanKeys.AllModulesToken]
         )
     ];
@@ -58,10 +62,18 @@ public class SubscriptionPlanSeeder : IHostedService
             .ToListAsync(cancellationToken);
 
         var added = 0;
-        foreach (var (key, name, description, modules) in DefaultPlans)
+        foreach (var (key, name, description, monthlyPrice, modules) in DefaultPlans)
         {
             if (existingKeys.Contains(key))
             {
+                var existing = await dbContext.SubscriptionPlans
+                    .FirstOrDefaultAsync(p => p.Key == key, cancellationToken);
+
+                if (existing is not null && existing.MonthlyPrice == 0 && monthlyPrice > 0)
+                {
+                    existing.MonthlyPrice = monthlyPrice;
+                }
+
                 continue;
             }
 
@@ -71,15 +83,19 @@ public class SubscriptionPlanSeeder : IHostedService
                 Name = name,
                 Description = description,
                 AllowedModulesJson = PlanModulesExtensions.SerializeAllowedModules(modules),
+                MonthlyPrice = monthlyPrice,
                 IsActive = true
             });
             added++;
         }
 
-        if (added > 0)
+        if (added > 0 || dbContext.ChangeTracker.HasChanges())
         {
             await dbContext.SaveChangesAsync(cancellationToken);
-            _logger.LogInformation("Seeded {Count} subscription plan(s).", added);
+            if (added > 0)
+            {
+                _logger.LogInformation("Seeded {Count} subscription plan(s).", added);
+            }
         }
     }
 

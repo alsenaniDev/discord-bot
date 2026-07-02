@@ -30,6 +30,7 @@ public class AppDbContext : DbContext
     public DbSet<GuildPermissionRole> GuildPermissionRoles => Set<GuildPermissionRole>();
     public DbSet<AutoReplyRule> AutoReplyRules => Set<AutoReplyRule>();
     public DbSet<TicketOutboundMessage> TicketOutboundMessages => Set<TicketOutboundMessage>();
+    public DbSet<ModerationPermissionRole> ModerationPermissionRoles => Set<ModerationPermissionRole>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

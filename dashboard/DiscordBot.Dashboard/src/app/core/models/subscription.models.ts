@@ -6,6 +6,7 @@ export interface SubscriptionPlan {
   description: string;
   allowedModules: string[];
   isActive: boolean;
+  monthlyPrice: number;
 }
 
 export interface GuildSubscription {

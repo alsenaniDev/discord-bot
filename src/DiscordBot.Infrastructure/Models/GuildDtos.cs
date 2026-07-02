@@ -25,6 +25,7 @@ public sealed class GuildSettingsDto
     public string? LogChannelId { get; init; }
     public bool TicketsEnabled { get; init; }
     public string? TicketCategoryId { get; init; }
+    public string? TicketArchiveChannelId { get; init; }
     public string TicketWelcomeTitle { get; init; } = string.Empty;
     public string TicketWelcomeMessage { get; init; } = string.Empty;
     public string TicketClosedMessage { get; init; } = string.Empty;
@@ -34,6 +35,7 @@ public sealed class GuildSettingsDto
     public string? CommandPanelChannelId { get; init; }
     public string CommandPanelTitle { get; init; } = string.Empty;
     public string CommandPanelDescription { get; init; } = string.Empty;
+    public string? CommandPanelImageUrl { get; init; }
     public IReadOnlyList<CommandPanelButtonDefinition> CommandPanelButtons { get; init; } = [];
 }
 
@@ -47,6 +49,7 @@ public sealed class UpdateGuildSettingsRequest
     public bool LogsEnabled { get; set; }
     public string? LogChannelId { get; set; }
     public string? TicketCategoryId { get; set; }
+    public string? TicketArchiveChannelId { get; set; }
     public string TicketWelcomeTitle { get; set; } = TicketMessageDefaults.WelcomeTitle;
     public string TicketWelcomeMessage { get; set; } = TicketMessageDefaults.WelcomeMessage;
     public string TicketClosedMessage { get; set; } = TicketMessageDefaults.ClosedMessage;
@@ -56,6 +59,7 @@ public sealed class UpdateGuildSettingsRequest
     public string? CommandPanelChannelId { get; set; }
     public string CommandPanelTitle { get; set; } = "How can we help?";
     public string CommandPanelDescription { get; set; } = "Use the buttons below — no commands needed.";
+    public string? CommandPanelImageUrl { get; set; }
     public List<CommandPanelButtonDefinition> CommandPanelButtons { get; set; } = [];
 }
 

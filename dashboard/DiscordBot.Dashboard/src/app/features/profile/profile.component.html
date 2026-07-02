@@ -1,0 +1,74 @@
+<div class="page-content">
+  <app-loading-state *ngIf="loading" [message]="'profile.loading' | translate"></app-loading-state>
+
+  <app-empty-state
+    *ngIf="!loading && error"
+    icon="⚠️"
+    [title]="'profile.loadError' | translate"
+    [description]="error"
+  >
+    <button type="button" class="btn btn-primary btn-sm" (click)="loadProfile()">{{ 'common.tryAgain' | translate }}</button>
+  </app-empty-state>
+
+  <form class="profile-form" [formGroup]="form" (ngSubmit)="save()" *ngIf="!loading && !error">
+    <section class="card card-section">
+      <div class="card-section-header">
+        <div class="profile-header">
+          <img *ngIf="iconUrl" [src]="iconUrl" alt="" class="profile-icon" />
+          <div>
+            <h2>{{ 'profile.title' | translate }}</h2>
+            <p class="muted small">{{ 'profile.hint' | translate }}</p>
+            <p class="muted small" *ngIf="serverName">{{ 'profile.discordName' | translate }}: {{ serverName }}</p>
+          </div>
+        </div>
+      </div>
+
+      <label>
+        {{ 'profile.displayName' | translate }}
+        <input type="text" formControlName="displayName" maxlength="256" />
+        <span class="hint">{{ 'profile.displayNameHint' | translate }}</span>
+        <span class="field-error" *ngIf="fieldError('displayName')">{{ fieldError('displayName') }}</span>
+      </label>
+
+      <label>
+        {{ 'profile.description' | translate }}
+        <textarea formControlName="description" rows="4" maxlength="1000"></textarea>
+        <span class="hint">{{ 'profile.descriptionHint' | translate }}</span>
+        <span class="field-error" *ngIf="fieldError('description')">{{ fieldError('description') }}</span>
+      </label>
+
+      <label>
+        {{ 'profile.communityType' | translate }}
+        <input type="text" formControlName="communityType" maxlength="100" />
+        <span class="hint">{{ 'profile.communityTypeHint' | translate }}</span>
+        <span class="field-error" *ngIf="fieldError('communityType')">{{ fieldError('communityType') }}</span>
+      </label>
+
+      <label>
+        {{ 'profile.supportMessage' | translate }}
+        <textarea formControlName="supportMessage" rows="3" maxlength="1000"></textarea>
+        <span class="hint">{{ 'profile.supportMessageHint' | translate }}</span>
+        <span class="field-error" *ngIf="fieldError('supportMessage')">{{ fieldError('supportMessage') }}</span>
+      </label>
+
+      <label>
+        {{ 'profile.rulesUrl' | translate }}
+        <input type="url" formControlName="rulesUrl" maxlength="2048" />
+        <span class="field-error" *ngIf="fieldError('rulesUrl')">{{ fieldError('rulesUrl') }}</span>
+      </label>
+
+      <label>
+        {{ 'profile.websiteUrl' | translate }}
+        <input type="url" formControlName="websiteUrl" maxlength="2048" />
+        <span class="field-error" *ngIf="fieldError('websiteUrl')">{{ fieldError('websiteUrl') }}</span>
+      </label>
+    </section>
+
+    <div class="form-actions">
+      <button type="submit" class="btn btn-primary" [disabled]="saving || form.invalid">
+        <span class="spinner inline" *ngIf="saving"></span>
+        {{ 'common.save' | translate }}
+      </button>
+    </div>
+  </form>
+</div>

@@ -233,14 +233,91 @@ public class EmbedBuilderService
             .Build();
     }
 
-    public Embed BuildCommandPanel(string title, string description) =>
-        new Discord.EmbedBuilder()
+    public Embed BuildCommandPanel(string title, string description, string? imageUrl = null)
+    {
+        var builder = new Discord.EmbedBuilder()
             .WithTitle(title)
             .WithDescription(description)
             .WithColor(BotColors.Info)
             .WithFooter(FooterText)
-            .WithTimestamp(DateTimeOffset.UtcNow)
+            .WithTimestamp(DateTimeOffset.UtcNow);
+
+        if (!string.IsNullOrWhiteSpace(imageUrl)
+            && IsValidPanelImageUrl(imageUrl))
+        {
+            builder.WithImageUrl(imageUrl.Trim());
+        }
+
+        return builder.Build();
+    }
+
+    private static bool IsValidPanelImageUrl(string url) =>
+        Uri.TryCreate(url.Trim(), UriKind.Absolute, out var uri)
+        && (uri.Scheme == Uri.UriSchemeHttp || uri.Scheme == Uri.UriSchemeHttps);
+
+    public Embed BuildTicketArchive(
+        int ticketNumber,
+        string openerName,
+        string openerId,
+        string closedByName,
+        string closedById,
+        DateTimeOffset closedAt,
+        string transcriptPreview) =>
+        new Discord.EmbedBuilder()
+            .WithTitle($"Ticket #{ticketNumber} archived")
+            .WithDescription(transcriptPreview)
+            .WithColor(BotColors.Info)
+            .AddField("Opened by", $"{openerName}\n`{openerId}`", inline: true)
+            .AddField("Closed by", $"{closedByName}\n`{closedById}`", inline: true)
+            .AddField("Closed at", $"<t:{closedAt.ToUnixTimeSeconds()}:F>", inline: true)
+            .WithFooter(FooterText)
+            .WithTimestamp(closedAt)
             .Build();
+
+    public Embed BuildServerProfile(SocketGuild guild, GuildProfileApiResponse? profile, GuildSettingsResponse settings)
+    {
+        var displayName = profile?.DisplayName ?? guild.Name;
+        var builder = new Discord.EmbedBuilder()
+            .WithTitle(displayName)
+            .WithColor(BotColors.Info)
+            .WithThumbnailUrl(guild.IconUrl)
+            .AddField("Welcome messages", settings.WelcomeEnabled ? "Enabled" : "Disabled", inline: true)
+            .AddField("Auto role", settings.AutoRoleEnabled ? "Enabled" : "Disabled", inline: true)
+            .AddField("Logs", settings.LogsEnabled ? "Enabled" : "Disabled", inline: true)
+            .AddField("Tickets", settings.TicketsEnabled ? "Enabled" : "Disabled", inline: true)
+            .WithFooter(FooterText)
+            .WithTimestamp(DateTimeOffset.UtcNow);
+
+        if (!string.IsNullOrWhiteSpace(profile?.Description))
+        {
+            builder.WithDescription(profile.Description);
+        }
+
+        if (!string.IsNullOrWhiteSpace(profile?.CommunityType))
+        {
+            builder.AddField("Community type", profile.CommunityType, inline: true);
+        }
+
+        if (!string.IsNullOrWhiteSpace(profile?.SupportMessage))
+        {
+            builder.AddField("Support", profile.SupportMessage, inline: false);
+        }
+
+        if (!string.IsNullOrWhiteSpace(profile?.WebsiteUrl))
+        {
+            builder.AddField("Website", profile.WebsiteUrl, inline: true);
+        }
+
+        if (!string.IsNullOrWhiteSpace(profile?.RulesUrl))
+        {
+            builder.AddField("Rules", profile.RulesUrl, inline: true);
+        }
+
+        return builder.Build();
+    }
+
+    public Embed BuildCommandPanelLegacy(string title, string description) =>
+        BuildCommandPanel(title, description);
 
     public Embed BuildTicketHelp()
     {
