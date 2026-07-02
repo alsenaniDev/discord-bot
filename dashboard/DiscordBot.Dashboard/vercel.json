@@ -1,8 +1,22 @@
 {
-  "buildCommand": "npm run build -- --configuration production",
+  "buildCommand": "npm run build",
   "outputDirectory": "dist/discord-bot.dashboard",
   "installCommand": "npm ci",
   "framework": null,
+  "headers": [
+    {
+      "source": "/index.html",
+      "headers": [
+        { "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate" }
+      ]
+    },
+    {
+      "source": "/assets/i18n/(.*)",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=0, must-revalidate" }
+      ]
+    }
+  ],
   "rewrites": [
     { "source": "/(.*)", "destination": "/index.html" }
   ]
