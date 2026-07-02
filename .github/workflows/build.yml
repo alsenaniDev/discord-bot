@@ -18,12 +18,18 @@ jobs:
         run: dotnet restore DiscordBot.sln
       - name: Build
         run: dotnet build DiscordBot.sln --no-restore --configuration Release
+      - name: Install EF Core tools
+        run: |
+          dotnet tool install --global dotnet-ef --version 9.0.4
+          echo "$HOME/.dotnet/tools" >> "$GITHUB_PATH"
       - name: Verify EF migrations compile
         run: |
           dotnet ef migrations list \
             --project src/DiscordBot.Infrastructure \
             --startup-project src/DiscordBot.Api \
-            --no-build
+            --configuration Release \
+            --no-build \
+            --no-connect
 
   dashboard:
     runs-on: ubuntu-latest
