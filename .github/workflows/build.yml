@@ -23,6 +23,8 @@ jobs:
           dotnet tool install --global dotnet-ef --version 9.0.4
           echo "$HOME/.dotnet/tools" >> "$GITHUB_PATH"
       - name: Verify EF migrations compile
+        env:
+          ASPNETCORE_ENVIRONMENT: Development
         run: |
           dotnet ef migrations list \
             --project src/DiscordBot.Infrastructure \
