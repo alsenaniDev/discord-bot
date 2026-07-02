@@ -54,8 +54,18 @@
 
     <section class="card table-card">
       <div class="section-header">
-        <h2>{{ 'logs.activityLog' | translate }}</h2>
-        <p class="muted small">{{ logs.length }}</p>
+        <div>
+          <h2>{{ 'logs.activityLog' | translate }}</h2>
+          <p class="muted small">{{ logs.length }}</p>
+        </div>
+        <button
+          *ngIf="canManageSettings"
+          type="button"
+          class="btn btn-danger btn-sm"
+          (click)="openClearDialog()"
+        >
+          {{ 'logs.clearAll' | translate }}
+        </button>
       </div>
 
       <div class="empty-inline" *ngIf="logs.length === 0">
@@ -106,4 +116,35 @@
       </div>
     </section>
   </ng-container>
+
+  <div class="confirm-overlay" *ngIf="showClearDialog" (click)="closeClearDialog()">
+    <div class="confirm-dialog card" role="dialog" aria-modal="true" (click)="$event.stopPropagation()">
+      <h3>{{ 'logs.clearTitle' | translate }}</h3>
+      <p class="muted">{{ 'logs.clearWarning' | translate }}</p>
+      <label>
+        {{ 'logs.clearConfirmLabel' | translate }}
+        <input
+          type="text"
+          [(ngModel)]="clearConfirmation"
+          [placeholder]="'logs.clearConfirmPlaceholder' | translate"
+          autocomplete="off"
+          spellcheck="false"
+        />
+      </label>
+      <div class="confirm-actions">
+        <button type="button" class="btn btn-secondary btn-sm" [disabled]="clearing" (click)="closeClearDialog()">
+          {{ 'common.cancel' | translate }}
+        </button>
+        <button
+          type="button"
+          class="btn btn-danger btn-sm"
+          [disabled]="!canConfirmClear || clearing"
+          (click)="clearAllLogs()"
+        >
+          <span class="spinner inline" *ngIf="clearing"></span>
+          {{ 'logs.clearConfirmButton' | translate }}
+        </button>
+      </div>
+    </div>
+  </div>
 </div>

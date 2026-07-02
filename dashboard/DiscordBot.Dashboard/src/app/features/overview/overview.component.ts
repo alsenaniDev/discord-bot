@@ -1,11 +1,13 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { TranslateService } from '@ngx-translate/core';
+import { forkJoin } from 'rxjs';
 import { AuthService } from '../../core/services/auth.service';
 import { GuildContextService } from '../../core/services/guild-context.service';
 import { GuildService } from '../../core/services/guild.service';
 import { ToastService } from '../../core/services/toast.service';
 import { GuildOverview } from '../../core/models/guild.models';
+import { GuildModule } from '../../core/models/module.models';
 import { getApiErrorMessage } from '../../core/utils/api-error.util';
 
 @Component({
@@ -16,6 +18,7 @@ import { getApiErrorMessage } from '../../core/utils/api-error.util';
 export class OverviewComponent implements OnInit {
   guildId = '';
   overview: GuildOverview | null = null;
+  modules: GuildModule[] = [];
   loading = true;
   syncing = false;
   error = '';
@@ -50,9 +53,13 @@ export class OverviewComponent implements OnInit {
     this.loading = true;
     this.error = '';
 
-    this.guildService.getOverview(this.guildId).subscribe({
-      next: overview => {
+    forkJoin({
+      overview: this.guildService.getOverview(this.guildId),
+      modules: this.guildService.getModules(this.guildId)
+    }).subscribe({
+      next: ({ overview, modules }) => {
         this.overview = overview;
+        this.modules = modules;
         this.loading = false;
       },
       error: err => {
@@ -109,6 +116,15 @@ export class OverviewComponent implements OnInit {
       return '';
     }
     return new Date(value).toLocaleString();
+  }
+
+  moduleEnabled(moduleKey: string): boolean {
+    const module = this.modules.find(item => item.key === moduleKey);
+    if (!module) {
+      return false;
+    }
+
+    return module.effectiveEnabled ?? (module.isEnabled && module.allowedByPlan);
   }
 
   featureStatus(enabled: boolean): string {

@@ -55,7 +55,8 @@ const routes: Routes = [
         path: 'guilds/:id/moderation/settings',
         component: ModerationSettingsComponent,
         canActivate: [GuildAccessGuard],
-        data: { guildAccess: 'owner' }
+        data: { guildAccess: 'owner' },
+        pathMatch: 'full'
       },
       {
         path: 'guilds/:id/moderation',

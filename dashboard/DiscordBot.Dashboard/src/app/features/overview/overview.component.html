@@ -40,6 +40,8 @@
       [guildId]="guildId"
     ></app-onboarding-checklist>
 
+    <p class="muted small stats-hint">{{ 'overview.statsHint' | translate }}</p>
+
     <section class="stats-grid">
       <article class="stat-card">
         <span class="stat-label">{{ 'overview.botStatus' | translate }}</span>
@@ -69,26 +71,26 @@
       </article>
       <article class="stat-card">
         <span class="stat-label">{{ 'overview.welcome' | translate }}</span>
-        <strong class="stat-value" [ngClass]="featureClass(overview.welcomeEnabled)">
-          {{ featureStatus(overview.welcomeEnabled) | translate }}
+        <strong class="stat-value" [ngClass]="featureClass(moduleEnabled('welcome'))">
+          {{ featureStatus(moduleEnabled('welcome')) | translate }}
         </strong>
       </article>
       <article class="stat-card">
         <span class="stat-label">{{ 'overview.autoRole' | translate }}</span>
-        <strong class="stat-value" [ngClass]="featureClass(overview.autoRoleEnabled)">
-          {{ featureStatus(overview.autoRoleEnabled) | translate }}
+        <strong class="stat-value" [ngClass]="featureClass(moduleEnabled('auto-role'))">
+          {{ featureStatus(moduleEnabled('auto-role')) | translate }}
         </strong>
       </article>
       <article class="stat-card">
         <span class="stat-label">{{ 'overview.logs' | translate }}</span>
-        <strong class="stat-value" [ngClass]="featureClass(overview.logsEnabled)">
-          {{ featureStatus(overview.logsEnabled) | translate }}
+        <strong class="stat-value" [ngClass]="featureClass(moduleEnabled('logs'))">
+          {{ featureStatus(moduleEnabled('logs')) | translate }}
         </strong>
       </article>
       <article class="stat-card">
         <span class="stat-label">{{ 'overview.ticketsModule' | translate }}</span>
-        <strong class="stat-value" [ngClass]="featureClass(overview.ticketsEnabled)">
-          {{ featureStatus(overview.ticketsEnabled) | translate }}
+        <strong class="stat-value" [ngClass]="featureClass(moduleEnabled('tickets'))">
+          {{ featureStatus(moduleEnabled('tickets')) | translate }}
         </strong>
       </article>
     </section>

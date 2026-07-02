@@ -1,8 +1,10 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { TranslateService } from '@ngx-translate/core';
+import { Subscription } from 'rxjs';
 import { GuildService } from '../../core/services/guild.service';
 import { GuildContextService } from '../../core/services/guild-context.service';
+import { GuildAccessService } from '../../core/services/guild-access.service';
 import { ToastService } from '../../core/services/toast.service';
 import { LogEntry, LogFilters, LOG_EVENT_TYPE_OPTIONS } from '../../core/models/log.models';
 import { displayChannelLabel, displayMemberLabel } from '../../core/models/ticket.models';
@@ -13,12 +15,16 @@ import { getApiErrorMessage } from '../../core/utils/api-error.util';
   templateUrl: './logs.component.html',
   styleUrls: ['./logs.component.css']
 })
-export class LogsComponent implements OnInit {
+export class LogsComponent implements OnInit, OnDestroy {
   guildId = '';
   logs: LogEntry[] = [];
   loading = true;
   error = '';
   typeOptions = LOG_EVENT_TYPE_OPTIONS;
+  canManageSettings = false;
+  showClearDialog = false;
+  clearConfirmation = '';
+  clearing = false;
 
   filters: LogFilters = {
     type: '',
@@ -28,11 +34,14 @@ export class LogsComponent implements OnInit {
     userId: ''
   };
 
+  private accessSub?: Subscription;
+
   constructor(
     private route: ActivatedRoute,
     private router: Router,
     private guildService: GuildService,
     private guildContext: GuildContextService,
+    private guildAccessService: GuildAccessService,
     private toast: ToastService,
     private translate: TranslateService
   ) {}
@@ -45,7 +54,19 @@ export class LogsComponent implements OnInit {
     }
 
     this.guildContext.ensureGuild(this.guildId, this.guildService);
+    this.accessSub = this.guildAccessService.loadAccess(this.guildId).subscribe({
+      next: access => { this.canManageSettings = !!access.canManageSettings; },
+      error: () => { this.canManageSettings = false; }
+    });
     this.loadLogs();
+  }
+
+  ngOnDestroy(): void {
+    this.accessSub?.unsubscribe();
+  }
+
+  get canConfirmClear(): boolean {
+    return this.clearConfirmation.trim() === 'DELETE';
   }
 
   loadLogs(): void {
@@ -71,6 +92,44 @@ export class LogsComponent implements OnInit {
   clearFilters(): void {
     this.filters = { type: '', from: '', to: '', search: '', userId: '' };
     this.loadLogs();
+  }
+
+  openClearDialog(): void {
+    this.clearConfirmation = '';
+    this.showClearDialog = true;
+  }
+
+  closeClearDialog(): void {
+    if (this.clearing) {
+      return;
+    }
+
+    this.showClearDialog = false;
+    this.clearConfirmation = '';
+  }
+
+  clearAllLogs(): void {
+    if (!this.canConfirmClear || this.clearing) {
+      return;
+    }
+
+    this.clearing = true;
+
+    this.guildService.clearLogs(this.guildId, this.clearConfirmation.trim()).subscribe({
+      next: result => {
+        this.clearing = false;
+        this.showClearDialog = false;
+        this.clearConfirmation = '';
+        this.toast.success(
+          this.translate.instant('logs.clearSuccess', { count: result.deletedCount })
+        );
+        this.loadLogs();
+      },
+      error: err => {
+        this.clearing = false;
+        this.toast.error(getApiErrorMessage(err, this.translate.instant('logs.clearError')));
+      }
+    });
   }
 
   displayValue(value?: string | null): string {

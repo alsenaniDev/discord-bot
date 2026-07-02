@@ -44,3 +44,13 @@ public sealed class LogListFilter
     public string? Search { get; set; }
     public string? UserId { get; set; }
 }
+
+public sealed class ClearLogsRequest
+{
+    public string Confirmation { get; set; } = string.Empty;
+}
+
+public sealed class ClearLogsResult
+{
+    public int DeletedCount { get; init; }
+}

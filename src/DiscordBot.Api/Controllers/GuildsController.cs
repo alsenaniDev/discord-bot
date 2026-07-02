@@ -666,6 +666,37 @@ public class GuildsController : ControllerBase
     }
 
     /// <summary>
+    /// Deletes all activity logs for a guild. Requires typing DELETE in the request body.
+    /// </summary>
+    [HttpDelete("{id:guid}/logs")]
+    public async Task<ActionResult<ClearLogsResult>> ClearLogs(
+        Guid id,
+        [FromBody] ClearLogsRequest request,
+        CancellationToken cancellationToken)
+    {
+        var discordUserId = User.GetDiscordUserId();
+        if (string.IsNullOrWhiteSpace(discordUserId))
+        {
+            return Unauthorized(new { message = "Missing Discord user identity in token." });
+        }
+
+        try
+        {
+            var result = await _logService.ClearLogsAsync(id, discordUserId, request, cancellationToken);
+            if (result is null)
+            {
+                return NotFound(new { message = "Guild not found or access denied." });
+            }
+
+            return Ok(result);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
+    /// <summary>
     /// Lists reaction role panels for a guild the user owns.
     /// </summary>
     [HttpGet("{id:guid}/reaction-roles")]

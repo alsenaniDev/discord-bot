@@ -158,6 +158,12 @@ export class GuildService {
     return this.http.get<LogEntry[]>(`${this.baseUrl}/api/guilds/${guildId}/logs`, { params });
   }
 
+  clearLogs(guildId: string, confirmation: string): Observable<{ deletedCount: number }> {
+    return this.http.request<{ deletedCount: number }>('DELETE', `${this.baseUrl}/api/guilds/${guildId}/logs`, {
+      body: { confirmation }
+    });
+  }
+
   private buildLogParams(filters: LogFilters): Record<string, string> {
     const params: Record<string, string> = {};
 

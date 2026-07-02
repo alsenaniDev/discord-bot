@@ -129,7 +129,7 @@
         </a>
         <a
           *ngIf="canManageGuild"
-          [routerLink]="['/guilds', selectedGuild!.id, 'moderation/settings']"
+          [routerLink]="['/guilds', selectedGuild!.id, 'moderation', 'settings']"
           routerLinkActive="active"
           (click)="closeSidebar()"
         >

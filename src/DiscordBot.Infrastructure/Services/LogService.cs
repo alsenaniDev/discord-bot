@@ -21,6 +21,12 @@ public interface ILogService
         string ownerDiscordUserId,
         LogListFilter filter,
         CancellationToken cancellationToken = default);
+
+    Task<ClearLogsResult?> ClearLogsAsync(
+        Guid guildId,
+        string discordUserId,
+        ClearLogsRequest request,
+        CancellationToken cancellationToken = default);
 }
 
 public class LogService : ILogService
@@ -151,6 +157,49 @@ public class LogService : ILogService
             .ToListAsync(cancellationToken);
 
         return await EnrichLogsAsync(guildId, entries, cancellationToken);
+    }
+
+    public async Task<ClearLogsResult?> ClearLogsAsync(
+        Guid guildId,
+        string discordUserId,
+        ClearLogsRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        var access = await _guildAccessService.GetAccessAsync(guildId, discordUserId, cancellationToken);
+        if (access is null || !access.CanManageSettings)
+        {
+            return null;
+        }
+
+        if (!string.Equals(request.Confirmation?.Trim(), "DELETE", StringComparison.Ordinal))
+        {
+            throw new InvalidOperationException("Type DELETE to confirm clearing all activity logs.");
+        }
+
+        var guild = await _dbContext.Guilds
+            .AsNoTracking()
+            .FirstOrDefaultAsync(g => g.Id == guildId && g.IsActive, cancellationToken);
+
+        if (guild is null)
+        {
+            return null;
+        }
+
+        var deletedCount = await _dbContext.LogEntries
+            .Where(l => l.GuildId == guildId)
+            .ExecuteDeleteAsync(cancellationToken);
+
+        await CreateLogAsync(new CreateLogRequest
+        {
+            DiscordGuildId = guild.DiscordGuildId,
+            Type = LogEventType.SettingsUpdated,
+            Message = deletedCount == 0
+                ? "Activity logs were cleared from the dashboard (no entries were stored)."
+                : $"Cleared {deletedCount} activity log entr{(deletedCount == 1 ? "y" : "ies")} from the dashboard.",
+            ActorDiscordUserId = discordUserId
+        }, cancellationToken);
+
+        return new ClearLogsResult { DeletedCount = deletedCount };
     }
 
     private async Task<IReadOnlyList<LogEntryDto>> EnrichLogsAsync(
