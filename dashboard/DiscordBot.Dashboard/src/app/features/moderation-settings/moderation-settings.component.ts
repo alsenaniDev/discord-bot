@@ -161,8 +161,11 @@ export class ModerationSettingsComponent implements OnInit {
   }
 
   private buildPayload(roleDiscordId: string): CreateModerationPermissionRole {
+    const discordRole = this.discordRoles.find(role => role.discordRoleId === roleDiscordId);
+
     return {
       roleDiscordId,
+      name: discordRole?.name ?? roleDiscordId,
       canWarn: this.permissions.canWarn,
       canViewWarnings: this.permissions.canViewWarnings,
       canClearMessages: this.permissions.canClearMessages,

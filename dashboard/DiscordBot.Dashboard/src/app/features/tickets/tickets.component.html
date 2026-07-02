@@ -32,66 +32,117 @@
           </tr>
         </thead>
         <tbody>
-          <tr *ngFor="let ticket of tickets">
-            <td>{{ ticket.ticketNumber }}</td>
-            <td>
-              <span class="badge" [class.badge-open]="isOpen(ticket)">
-                {{ statusLabel(ticket.status) | translate }}
-              </span>
-            </td>
-            <td>
-              <div class="identity-cell">
-                <span class="identity-name">{{ displayMember(ticket.ownerDisplayName, ticket.ownerDiscordUserId) }}</span>
-                <span class="muted small mono" *ngIf="ticket.ownerDisplayName">{{ ticket.ownerDiscordUserId }}</span>
-              </div>
-            </td>
-            <td>
-              <div class="identity-cell">
-                <span class="identity-name">{{ displayChannel(ticket.channelName, ticket.channelDiscordId) }}</span>
-                <span class="muted small mono" *ngIf="ticket.channelName">{{ ticket.channelDiscordId }}</span>
-              </div>
-            </td>
-            <td>{{ ticket.createdAt | date: 'medium' }}</td>
-            <td>{{ ticket.closedAt ? (ticket.closedAt | date: 'medium') : '—' }}</td>
-            <td>
-              <div class="ticket-actions">
-                <button
-                  type="button"
-                  class="btn btn-secondary btn-sm"
-                  *ngIf="isOpen(ticket)"
-                  (click)="toggleReply(ticket)"
-                >
-                  {{ 'tickets.reply' | translate }}
-                </button>
-                <button
-                  type="button"
-                  class="btn btn-danger btn-sm"
-                  *ngIf="isOpen(ticket)"
-                  [disabled]="isClosing(ticket)"
-                  (click)="closeTicket(ticket)"
-                >
-                  <span class="spinner inline" *ngIf="isClosing(ticket)"></span>
-                  {{ 'tickets.close' | translate }}
-                </button>
-              </div>
-              <div class="ticket-reply-box" *ngIf="isReplying(ticket)">
-                <textarea
-                  rows="3"
-                  [(ngModel)]="replyDrafts[ticket.id]"
-                  [placeholder]="'tickets.replyPlaceholder' | translate"
-                ></textarea>
-                <button
-                  type="button"
-                  class="btn btn-primary btn-sm"
-                  [disabled]="isSendingReply(ticket)"
-                  (click)="sendReply(ticket)"
-                >
-                  <span class="spinner inline" *ngIf="isSendingReply(ticket)"></span>
-                  {{ 'tickets.replySend' | translate }}
-                </button>
-              </div>
-            </td>
-          </tr>
+          <ng-container *ngFor="let ticket of tickets">
+            <tr>
+              <td>{{ ticket.ticketNumber }}</td>
+              <td>
+                <span class="badge" [class.badge-open]="isOpen(ticket)">
+                  {{ statusLabel(ticket.status) | translate }}
+                </span>
+              </td>
+              <td>
+                <div class="identity-cell">
+                  <span class="identity-name">{{ displayMember(ticket.ownerDisplayName, ticket.ownerDiscordUserId) }}</span>
+                  <span class="muted small mono" *ngIf="ticket.ownerDisplayName">{{ ticket.ownerDiscordUserId }}</span>
+                </div>
+              </td>
+              <td>
+                <div class="identity-cell">
+                  <span class="identity-name">{{ displayChannel(ticket.channelName, ticket.channelDiscordId) }}</span>
+                  <span class="muted small mono" *ngIf="ticket.channelName">{{ ticket.channelDiscordId }}</span>
+                </div>
+              </td>
+              <td>{{ ticket.createdAt | date: 'medium' }}</td>
+              <td>{{ ticket.closedAt ? (ticket.closedAt | date: 'medium') : '—' }}</td>
+              <td>
+                <div class="ticket-actions">
+                  <button
+                    type="button"
+                    class="btn btn-secondary btn-sm"
+                    (click)="toggleTimeline(ticket)"
+                  >
+                    {{ (isTimelineExpanded(ticket) ? 'tickets.timeline.hide' : 'tickets.timeline.view') | translate }}
+                  </button>
+                  <button
+                    type="button"
+                    class="btn btn-secondary btn-sm"
+                    *ngIf="isOpen(ticket)"
+                    (click)="toggleReply(ticket)"
+                  >
+                    {{ 'tickets.reply' | translate }}
+                  </button>
+                  <button
+                    type="button"
+                    class="btn btn-danger btn-sm"
+                    *ngIf="isOpen(ticket)"
+                    [disabled]="isClosing(ticket)"
+                    (click)="closeTicket(ticket)"
+                  >
+                    <span class="spinner inline" *ngIf="isClosing(ticket)"></span>
+                    {{ 'tickets.close' | translate }}
+                  </button>
+                </div>
+                <div class="ticket-reply-box" *ngIf="isReplying(ticket)">
+                  <textarea
+                    rows="3"
+                    [(ngModel)]="replyDrafts[ticket.id]"
+                    [placeholder]="'tickets.replyPlaceholder' | translate"
+                  ></textarea>
+                  <button
+                    type="button"
+                    class="btn btn-primary btn-sm"
+                    [disabled]="isSendingReply(ticket)"
+                    (click)="sendReply(ticket)"
+                  >
+                    <span class="spinner inline" *ngIf="isSendingReply(ticket)"></span>
+                    {{ 'tickets.replySend' | translate }}
+                  </button>
+                </div>
+              </td>
+            </tr>
+            <tr class="timeline-row" *ngIf="isTimelineExpanded(ticket)">
+              <td colspan="7">
+                <div class="ticket-timeline-panel">
+                  <div class="ticket-timeline-header">
+                    <h3>{{ 'tickets.timeline.title' | translate:{ number: ticket.ticketNumber } }}</h3>
+                    <button
+                      type="button"
+                      class="btn btn-secondary btn-sm"
+                      [disabled]="isTimelineLoading(ticket)"
+                      (click)="loadTimeline(ticket, true)"
+                    >
+                      <span class="spinner inline" *ngIf="isTimelineLoading(ticket)"></span>
+                      {{ 'tickets.timeline.refresh' | translate }}
+                    </button>
+                  </div>
+
+                  <app-loading-state
+                    *ngIf="isTimelineLoading(ticket) && !timelineFor(ticket).length"
+                    [message]="'tickets.timeline.loading' | translate"
+                  ></app-loading-state>
+
+                  <p class="muted" *ngIf="timelineError(ticket)">{{ timelineError(ticket) }}</p>
+
+                  <p class="muted" *ngIf="!isTimelineLoading(ticket) && !timelineError(ticket) && timelineFor(ticket).length === 0">
+                    {{ 'tickets.timeline.empty' | translate }}
+                  </p>
+
+                  <ol class="timeline-list" *ngIf="timelineFor(ticket).length > 0">
+                    <li class="timeline-item" *ngFor="let event of timelineFor(ticket)">
+                      <div class="timeline-item-head">
+                        <span class="timeline-event-type">{{ eventLabel(event) | translate }}</span>
+                        <span class="muted small">{{ event.occurredAt | date: 'medium' }}</span>
+                      </div>
+                      <div class="timeline-item-actor muted small" *ngIf="event.actorDisplayName || event.actorDiscordUserId">
+                        {{ displayMember(event.actorDisplayName, event.actorDiscordUserId) }}
+                      </div>
+                      <div class="timeline-item-content" *ngIf="event.content">{{ event.content }}</div>
+                    </li>
+                  </ol>
+                </div>
+              </td>
+            </tr>
+          </ng-container>
         </tbody>
       </table>
     </div>

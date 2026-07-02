@@ -13,4 +13,6 @@ public class Ticket : BaseEntity
     public TicketStatus Status { get; set; } = TicketStatus.Open;
     public DateTimeOffset? ClosedAt { get; set; }
     public bool ChannelCleanupRequested { get; set; }
+
+    public ICollection<TicketTimelineEvent> TimelineEvents { get; set; } = [];
 }

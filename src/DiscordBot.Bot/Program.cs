@@ -52,6 +52,7 @@ builder.Services.AddSingleton<CommandPanelSyncService>();
 builder.Services.AddSingleton<TicketChannelCleanupService>();
 builder.Services.AddSingleton<TicketOutboundMessageService>();
 builder.Services.AddSingleton<AutoReplyMessageService>();
+builder.Services.AddSingleton<TicketTimelineMessageService>();
 builder.Services.AddHostedService<GuildMaintenanceWorker>();
 builder.Services.AddHostedService<GuildResourceSyncWorker>();
 

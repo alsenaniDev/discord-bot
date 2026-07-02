@@ -29,3 +29,59 @@
 .ticket-reply-box textarea {
   width: 100%;
 }
+
+.timeline-row td {
+  background: var(--surface-muted, rgba(0, 0, 0, 0.02));
+  border-top: none;
+}
+
+.ticket-timeline-panel {
+  padding: var(--space-3) 0;
+}
+
+.ticket-timeline-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-bottom: var(--space-3);
+}
+
+.ticket-timeline-header h3 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.timeline-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.timeline-item {
+  padding: var(--space-3);
+  border: 1px solid var(--border-color, rgba(0, 0, 0, 0.08));
+  border-radius: var(--radius-md, 8px);
+  background: var(--surface, #fff);
+}
+
+.timeline-item-head {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+  margin-bottom: var(--space-1);
+}
+
+.timeline-event-type {
+  font-weight: 600;
+}
+
+.timeline-item-content {
+  margin-top: var(--space-2);
+  white-space: pre-wrap;
+  word-break: break-word;
+}

@@ -224,8 +224,7 @@ public class GuildPermissionRoleService : IGuildPermissionRoleService
 
         foreach (var key in permissionKeys)
         {
-            if (Enum.TryParse<GuildPermissions>(key, ignoreCase: true, out var flag)
-                && flag != GuildPermissions.None)
+            if (TryParsePermissionKey(key, out var flag))
             {
                 permissions |= flag;
             }
@@ -233,4 +232,34 @@ public class GuildPermissionRoleService : IGuildPermissionRoleService
 
         return permissions;
     }
+
+    internal static bool TryParsePermissionKey(string key, out GuildPermissions flag)
+    {
+        flag = GuildPermissions.None;
+
+        if (string.IsNullOrWhiteSpace(key))
+        {
+            return false;
+        }
+
+        if (LegacyPermissionKeys.TryGetValue(key.Trim(), out flag))
+        {
+            return flag != GuildPermissions.None;
+        }
+
+        return Enum.TryParse<GuildPermissions>(key.Trim(), ignoreCase: true, out flag)
+            && flag != GuildPermissions.None;
+    }
+
+    private static readonly Dictionary<string, GuildPermissions> LegacyPermissionKeys =
+        new(StringComparer.OrdinalIgnoreCase)
+        {
+            ["Warn"] = GuildPermissions.UseWarn,
+            ["Kick"] = GuildPermissions.UseKick,
+            ["Timeout"] = GuildPermissions.UseTimeout,
+            ["ClearMessages"] = GuildPermissions.UseClearMessages,
+            ["AccessModeration"] = GuildPermissions.ManageModeration,
+            ["AccessLogs"] = GuildPermissions.ViewLogs,
+            ["AccessTickets"] = GuildPermissions.ViewTickets
+        };
 }

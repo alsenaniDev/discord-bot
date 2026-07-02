@@ -50,6 +50,27 @@ public interface ITicketService
 
     Task<bool> AcknowledgeOutboundMessageAsync(
         Guid messageId,
+        AcknowledgeTicketMessageDeliveryRequest? request = null,
+        CancellationToken cancellationToken = default);
+
+    Task<IReadOnlyList<TicketTimelineEventDto>?> GetTicketTimelineAsync(
+        Guid guildId,
+        Guid ticketId,
+        string discordUserId,
+        CancellationToken cancellationToken = default);
+
+    Task<IReadOnlyList<TicketTimelineEventDto>> GetTicketTimelineForBotAsync(
+        Guid ticketId,
+        int? limit = null,
+        CancellationToken cancellationToken = default);
+
+    Task<TicketTimelineEventDto?> RecordDiscordMessageSentAsync(
+        RecordTicketMessageSentRequest request,
+        CancellationToken cancellationToken = default);
+
+    Task<TicketTimelineEventDto?> RecordArchivePostedAsync(
+        Guid ticketId,
+        RecordTicketArchivePostedRequest request,
         CancellationToken cancellationToken = default);
 }
 
@@ -58,15 +79,18 @@ public class TicketService : ITicketService
     private readonly AppDbContext _dbContext;
     private readonly ILogService _logService;
     private readonly IGuildAccessService _guildAccessService;
+    private readonly ITicketTimelineService _ticketTimelineService;
 
     public TicketService(
         AppDbContext dbContext,
         ILogService logService,
-        IGuildAccessService guildAccessService)
+        IGuildAccessService guildAccessService,
+        ITicketTimelineService ticketTimelineService)
     {
         _dbContext = dbContext;
         _logService = logService;
         _guildAccessService = guildAccessService;
+        _ticketTimelineService = ticketTimelineService;
     }
 
     public async Task<bool> SetupTicketsAsync(
@@ -149,6 +173,20 @@ public class TicketService : ITicketService
             request.ChannelDisplayName,
             cancellationToken);
 
+        // D-001 §8, BR-C06: Ticket creation must produce TicketCreated Timeline Event.
+        var occurredAt = DateTimeOffset.UtcNow;
+        await _ticketTimelineService.AppendEventAsync(
+            ticket,
+            TicketTimelineEventType.TicketCreated,
+            occurredAt,
+            request.OwnerDiscordUserId,
+            request.OwnerDisplayName,
+            metadataJson: TicketTimelineMetadataBuilder.BuildTicketCreated(
+                ticket.TicketNumber,
+                request.ChannelDiscordId,
+                request.OwnerDiscordUserId),
+            cancellationToken: cancellationToken);
+
         await _dbContext.SaveChangesAsync(cancellationToken);
 
         await _logService.CreateLogAsync(new CreateLogRequest
@@ -190,9 +228,24 @@ public class TicketService : ITicketService
             return null;
         }
 
+        var previousStatus = ticket.Status;
         ticket.Status = TicketStatus.Closed;
         ticket.ClosedAt = DateTimeOffset.UtcNow;
         ticket.ChannelCleanupRequested = false;
+
+        // D-001 §8, BR-S03: Close must record actor and timestamp on Timeline.
+        await _ticketTimelineService.AppendEventAsync(
+            ticket,
+            TicketTimelineEventType.StatusChanged,
+            ticket.ClosedAt.Value,
+            request?.ClosedByDiscordUserId ?? ticket.OwnerDiscordUserId,
+            request?.ClosedByDisplayName,
+            metadataJson: TicketTimelineMetadataBuilder.BuildStatusChanged(
+                previousStatus,
+                TicketStatus.Closed,
+                "discord",
+                ticket.TicketNumber),
+            cancellationToken: cancellationToken);
 
         await _dbContext.SaveChangesAsync(cancellationToken);
 
@@ -266,9 +319,30 @@ public class TicketService : ITicketService
             return null;
         }
 
+        var previousStatus = ticket.Status;
         ticket.Status = TicketStatus.Closed;
         ticket.ClosedAt = DateTimeOffset.UtcNow;
         ticket.ChannelCleanupRequested = true;
+
+        var actorName = await MemberDisplayNameHelper.ResolveMemberNamesAsync(
+            _dbContext,
+            guildId,
+            [discordUserId],
+            cancellationToken);
+
+        // D-001 §8, BR-S03: Close from dashboard recorded on Timeline.
+        await _ticketTimelineService.AppendEventAsync(
+            ticket,
+            TicketTimelineEventType.StatusChanged,
+            ticket.ClosedAt.Value,
+            discordUserId,
+            actorName.GetValueOrDefault(discordUserId),
+            metadataJson: TicketTimelineMetadataBuilder.BuildStatusChanged(
+                previousStatus,
+                TicketStatus.Closed,
+                "dashboard",
+                ticket.TicketNumber),
+            cancellationToken: cancellationToken);
 
         await _dbContext.SaveChangesAsync(cancellationToken);
 
@@ -278,12 +352,6 @@ public class TicketService : ITicketService
 
         if (guild is not null)
         {
-            var actorName = await MemberDisplayNameHelper.ResolveMemberNamesAsync(
-                _dbContext,
-                guildId,
-                [discordUserId],
-                cancellationToken);
-
             await _logService.CreateLogAsync(new CreateLogRequest
             {
                 DiscordGuildId = guild.DiscordGuildId,
@@ -442,13 +510,27 @@ public class TicketService : ITicketService
             [discordUserId],
             cancellationToken);
 
+        var displayName = senderName.GetValueOrDefault(discordUserId);
+        var occurredAt = DateTimeOffset.UtcNow;
+
+        // D-001 §8, BR-T02: Dashboard staff reply → StaffReplyQueued before delivery queue.
+        var queuedEvent = await _ticketTimelineService.AppendEventAsync(
+            ticket,
+            TicketTimelineEventType.StaffReplyQueued,
+            occurredAt,
+            discordUserId,
+            displayName,
+            content,
+            cancellationToken: cancellationToken);
+
         var outbound = new TicketOutboundMessage
         {
             TicketId = ticket.Id,
             GuildId = guildId,
             Content = content,
             SenderDiscordUserId = discordUserId,
-            SenderDisplayName = senderName.GetValueOrDefault(discordUserId)
+            SenderDisplayName = displayName,
+            StaffReplyQueuedTimelineEventId = queuedEvent.Id
         };
 
         _dbContext.TicketOutboundMessages.Add(outbound);
@@ -462,6 +544,8 @@ public class TicketService : ITicketService
             SenderDiscordUserId = outbound.SenderDiscordUserId,
             SenderDisplayName = outbound.SenderDisplayName,
             IsDelivered = outbound.IsDelivered,
+            DeliveryFailed = outbound.DeliveryFailed,
+            StaffReplyQueuedTimelineEventId = outbound.StaffReplyQueuedTimelineEventId,
             CreatedAt = outbound.CreatedAt,
             DeliveredAt = outbound.DeliveredAt
         };
@@ -472,7 +556,7 @@ public class TicketService : ITicketService
     {
         var pending = await _dbContext.TicketOutboundMessages
             .AsNoTracking()
-            .Where(m => !m.IsDelivered)
+            .Where(m => !m.IsDelivered && !m.DeliveryFailed)
             .OrderBy(m => m.CreatedAt)
             .Select(m => new PendingTicketMessageDto
             {
@@ -493,21 +577,101 @@ public class TicketService : ITicketService
 
     public async Task<bool> AcknowledgeOutboundMessageAsync(
         Guid messageId,
+        AcknowledgeTicketMessageDeliveryRequest? request = null,
         CancellationToken cancellationToken = default)
     {
         var message = await _dbContext.TicketOutboundMessages
+            .Include(m => m.Ticket)
             .FirstOrDefaultAsync(m => m.Id == messageId, cancellationToken);
 
-        if (message is null)
+        if (message is null || message.IsDelivered || message.DeliveryFailed)
         {
             return false;
         }
 
-        message.IsDelivered = true;
-        message.DeliveredAt = DateTimeOffset.UtcNow;
+        var delivered = request?.Delivered ?? true;
+        var now = DateTimeOffset.UtcNow;
+
+        if (delivered)
+        {
+            message.IsDelivered = true;
+            message.DeliveredAt = now;
+
+            // D-001 §8: StaffReplyDelivered updates delivery state on Timeline.
+            await _ticketTimelineService.AppendEventAsync(
+                message.Ticket,
+                TicketTimelineEventType.StaffReplyDelivered,
+                now,
+                message.SenderDiscordUserId,
+                message.SenderDisplayName,
+                relatedTimelineEventId: message.StaffReplyQueuedTimelineEventId,
+                cancellationToken: cancellationToken);
+        }
+        else
+        {
+            message.DeliveryFailed = true;
+            message.DeliveryFailureReason = string.IsNullOrWhiteSpace(request?.FailureReason)
+                ? "Delivery failed."
+                : request!.FailureReason.Trim();
+
+            await _ticketTimelineService.AppendEventAsync(
+                message.Ticket,
+                TicketTimelineEventType.StaffReplyFailed,
+                now,
+                message.SenderDiscordUserId,
+                message.SenderDisplayName,
+                content: message.DeliveryFailureReason,
+                relatedTimelineEventId: message.StaffReplyQueuedTimelineEventId,
+                cancellationToken: cancellationToken);
+        }
+
         await _dbContext.SaveChangesAsync(cancellationToken);
         return true;
     }
+
+    public async Task<IReadOnlyList<TicketTimelineEventDto>?> GetTicketTimelineAsync(
+        Guid guildId,
+        Guid ticketId,
+        string discordUserId,
+        CancellationToken cancellationToken = default)
+    {
+        var hasAccess = await _guildAccessService.CanAccessModerationPagesAsync(
+            guildId,
+            discordUserId,
+            cancellationToken);
+
+        if (!hasAccess)
+        {
+            return null;
+        }
+
+        var ticketExists = await _dbContext.Tickets
+            .AnyAsync(t => t.Id == ticketId && t.GuildId == guildId, cancellationToken);
+
+        if (!ticketExists)
+        {
+            return null;
+        }
+
+        return await _ticketTimelineService.GetTimelineAsync(guildId, ticketId, cancellationToken);
+    }
+
+    public Task<IReadOnlyList<TicketTimelineEventDto>> GetTicketTimelineForBotAsync(
+        Guid ticketId,
+        int? limit = null,
+        CancellationToken cancellationToken = default) =>
+        _ticketTimelineService.GetTimelineForBotAsync(ticketId, limit, cancellationToken);
+
+    public Task<TicketTimelineEventDto?> RecordDiscordMessageSentAsync(
+        RecordTicketMessageSentRequest request,
+        CancellationToken cancellationToken = default) =>
+        _ticketTimelineService.RecordMessageSentAsync(request, cancellationToken);
+
+    public Task<TicketTimelineEventDto?> RecordArchivePostedAsync(
+        Guid ticketId,
+        RecordTicketArchivePostedRequest request,
+        CancellationToken cancellationToken = default) =>
+        _ticketTimelineService.RecordArchivePostedAsync(ticketId, request, cancellationToken);
 
     private static TicketDto Map(Ticket ticket) =>
         new()

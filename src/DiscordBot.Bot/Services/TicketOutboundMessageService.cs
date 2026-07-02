@@ -49,7 +49,11 @@ public class TicketOutboundMessageService
         if (!ulong.TryParse(item.DiscordGuildId, out var guildId)
             || !ulong.TryParse(item.ChannelDiscordId, out var channelId))
         {
-            await _apiClient.AckTicketMessageAsync(item.Id, cancellationToken);
+            await _apiClient.AckTicketMessageAsync(
+                item.Id,
+                delivered: false,
+                failureReason: "Invalid guild or channel identifier.",
+                cancellationToken);
             return;
         }
 
@@ -57,7 +61,11 @@ public class TicketOutboundMessageService
         var channel = guild?.GetTextChannel(channelId);
         if (channel is null)
         {
-            await _apiClient.AckTicketMessageAsync(item.Id, cancellationToken);
+            await _apiClient.AckTicketMessageAsync(
+                item.Id,
+                delivered: false,
+                failureReason: "Ticket channel not found in Discord.",
+                cancellationToken);
             return;
         }
 
@@ -78,7 +86,24 @@ public class TicketOutboundMessageService
             ? item.Content
             : $"{prefix}\n{item.Content}";
 
-        await channel.SendMessageAsync(content);
-        await _apiClient.AckTicketMessageAsync(item.Id, cancellationToken);
+        try
+        {
+            await channel.SendMessageAsync(content);
+            await _apiClient.AckTicketMessageAsync(item.Id, delivered: true, cancellationToken: cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(
+                ex,
+                "Failed to send outbound ticket message {MessageId} to channel {ChannelId}.",
+                item.Id,
+                channelId);
+
+            await _apiClient.AckTicketMessageAsync(
+                item.Id,
+                delivered: false,
+                failureReason: "Failed to send message to Discord.",
+                cancellationToken);
+        }
     }
 }

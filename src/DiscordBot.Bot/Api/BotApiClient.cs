@@ -741,13 +741,20 @@ public class BotApiClient
 
     public async Task AckTicketMessageAsync(
         Guid messageId,
+        bool delivered = true,
+        string? failureReason = null,
         CancellationToken cancellationToken = default)
     {
         try
         {
-            var response = await _httpClient.PostAsync(
+            var response = await _httpClient.PostAsJsonAsync(
                 $"api/bot/tickets/messages/{messageId}/ack",
-                null,
+                new AcknowledgeTicketMessageDeliveryApiRequest
+                {
+                    Delivered = delivered,
+                    FailureReason = failureReason
+                },
+                JsonOptions,
                 cancellationToken);
 
             if (!response.IsSuccessStatusCode)
@@ -761,6 +768,85 @@ public class BotApiClient
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error acknowledging ticket message {MessageId}", messageId);
+        }
+    }
+
+    public async Task RecordTicketMessageSentAsync(
+        RecordTicketMessageSentApiRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var response = await _httpClient.PostAsJsonAsync(
+                "api/bot/tickets/timeline/message-sent",
+                request,
+                JsonOptions,
+                cancellationToken);
+
+            if (!response.IsSuccessStatusCode && response.StatusCode != System.Net.HttpStatusCode.NotFound)
+            {
+                _logger.LogWarning(
+                    "Failed to record ticket message for channel {ChannelId}. Status: {Status}",
+                    request.ChannelDiscordId,
+                    response.StatusCode);
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error recording ticket timeline message for channel {ChannelId}", request.ChannelDiscordId);
+        }
+    }
+
+    public async Task<IReadOnlyList<TicketTimelineEventApiResponse>> GetTicketTimelineAsync(
+        Guid ticketId,
+        int? limit = null,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var url = limit is > 0
+                ? $"api/bot/tickets/{ticketId}/timeline?limit={limit.Value}"
+                : $"api/bot/tickets/{ticketId}/timeline";
+
+            var response = await _httpClient.GetAsync(url, cancellationToken);
+            if (!response.IsSuccessStatusCode)
+            {
+                return [];
+            }
+
+            return await response.Content.ReadFromJsonAsync<List<TicketTimelineEventApiResponse>>(JsonOptions, cancellationToken) ?? [];
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error fetching ticket timeline for ticket {TicketId}", ticketId);
+            return [];
+        }
+    }
+
+    public async Task RecordTicketArchivePostedAsync(
+        Guid ticketId,
+        RecordTicketArchivePostedApiRequest request,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var response = await _httpClient.PostAsJsonAsync(
+                $"api/bot/tickets/{ticketId}/timeline/archive-posted",
+                request,
+                JsonOptions,
+                cancellationToken);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                _logger.LogWarning(
+                    "Failed to record archive timeline event for ticket {TicketId}. Status: {Status}",
+                    ticketId,
+                    response.StatusCode);
+            }
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error recording archive timeline event for ticket {TicketId}", ticketId);
         }
     }
 }

@@ -8,7 +8,8 @@ import {
   CreateGuildPermissionRoleRequest,
   GUILD_PERMISSION_OPTIONS,
   GuildPermissionKey,
-  GuildPermissionRole
+  GuildPermissionRole,
+  normalizePermissionKeys
 } from '../../core/models/staff.models';
 import { DiscordRole, isAssignableRole } from '../../core/models/guild.models';
 import { getApiErrorMessage } from '../../core/utils/api-error.util';
@@ -119,7 +120,7 @@ export class StaffComponent implements OnInit {
       return '—';
     }
 
-    return role.permissionKeys
+    return normalizePermissionKeys(role.permissionKeys)
       .map(key => {
         const option = this.permissionOptions.find(item => item.value === key);
         return option ? this.translate.instant(option.labelKey) : key;
@@ -146,11 +147,12 @@ export class StaffComponent implements OnInit {
   }
 
   private emptyPermissions(): Record<GuildPermissionKey, boolean> {
-    return {
-      AccessModeration: false,
-      AccessLogs: false,
-      AccessTickets: false,
-      ManagePermissionRoles: false
-    };
+    return GUILD_PERMISSION_OPTIONS.reduce(
+      (acc, option) => {
+        acc[option.value] = false;
+        return acc;
+      },
+      {} as Record<GuildPermissionKey, boolean>
+    );
   }
 }

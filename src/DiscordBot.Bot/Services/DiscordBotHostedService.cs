@@ -34,6 +34,7 @@ public class DiscordBotHostedService : IHostedService
     private readonly ModuleGuard _moduleGuard;
     private readonly BotLogWriter _logWriter;
     private readonly AutoReplyMessageService _autoReplyMessageService;
+    private readonly TicketTimelineMessageService _ticketTimelineMessageService;
     private readonly BotOptions _botOptions;
     private readonly ILogger<DiscordBotHostedService> _logger;
 
@@ -53,6 +54,7 @@ public class DiscordBotHostedService : IHostedService
         ModuleGuard moduleGuard,
         BotLogWriter logWriter,
         AutoReplyMessageService autoReplyMessageService,
+        TicketTimelineMessageService ticketTimelineMessageService,
         IOptions<BotOptions> botOptions,
         ILogger<DiscordBotHostedService> logger)
     {
@@ -71,6 +73,7 @@ public class DiscordBotHostedService : IHostedService
         _moduleGuard = moduleGuard;
         _logWriter = logWriter;
         _autoReplyMessageService = autoReplyMessageService;
+        _ticketTimelineMessageService = ticketTimelineMessageService;
         _botOptions = botOptions.Value;
         _logger = logger;
     }
@@ -430,6 +433,15 @@ public class DiscordBotHostedService : IHostedService
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error handling message for auto-reply.");
+        }
+
+        try
+        {
+            await _ticketTimelineMessageService.HandleMessageAsync(message);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error recording ticket timeline message.");
         }
     }
 }

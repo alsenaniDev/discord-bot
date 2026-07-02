@@ -48,6 +48,8 @@ public sealed class TicketOutboundMessageDto
     public string SenderDiscordUserId { get; init; } = string.Empty;
     public string? SenderDisplayName { get; init; }
     public bool IsDelivered { get; init; }
+    public bool DeliveryFailed { get; init; }
+    public Guid StaffReplyQueuedTimelineEventId { get; init; }
     public DateTimeOffset CreatedAt { get; init; }
     public DateTimeOffset? DeliveredAt { get; init; }
 }

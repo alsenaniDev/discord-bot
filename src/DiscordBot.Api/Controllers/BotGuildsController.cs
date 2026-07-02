@@ -20,7 +20,6 @@ public class BotGuildsController : ControllerBase
     private readonly IGuildResourceService _resourceService;
     private readonly IModuleService _moduleService;
     private readonly IGuildPermissionResolver _permissionResolver;
-    private readonly IModerationPermissionResolver _moderationPermissionResolver;
     private readonly IGuildProfileService _guildProfileService;
     private readonly IAutoReplyService _autoReplyService;
 
@@ -29,7 +28,6 @@ public class BotGuildsController : ControllerBase
         IGuildResourceService resourceService,
         IModuleService moduleService,
         IGuildPermissionResolver permissionResolver,
-        IModerationPermissionResolver moderationPermissionResolver,
         IGuildProfileService guildProfileService,
         IAutoReplyService autoReplyService)
     {
@@ -37,7 +35,6 @@ public class BotGuildsController : ControllerBase
         _resourceService = resourceService;
         _moduleService = moduleService;
         _permissionResolver = permissionResolver;
-        _moderationPermissionResolver = moderationPermissionResolver;
         _guildProfileService = guildProfileService;
         _autoReplyService = autoReplyService;
     }
@@ -151,7 +148,7 @@ public class BotGuildsController : ControllerBase
             return BadRequest(new { message = "DiscordUserId is required." });
         }
 
-        var resolved = await _moderationPermissionResolver.ResolveByDiscordGuildIdAsync(
+        var resolved = await _permissionResolver.ResolveByDiscordGuildIdAsync(
             discordGuildId,
             request.DiscordUserId,
             request.DiscordRoleIds,
@@ -162,17 +159,7 @@ public class BotGuildsController : ControllerBase
             return Ok(new EvaluatePermissionsResponse());
         }
 
-        return Ok(new EvaluatePermissionsResponse
-        {
-            CanWarn = resolved.CanWarn,
-            CanKick = resolved.CanKick,
-            CanTimeout = false,
-            CanClearMessages = resolved.CanClearMessages,
-            CanAccessModeration = resolved.CanAccessModeration,
-            CanViewWarnings = resolved.CanViewWarnings,
-            CanViewModerationCases = resolved.CanViewModerationCases,
-            CanViewLogs = resolved.CanViewLogs
-        });
+        return Ok(GuildPermissionMapper.ToEvaluatePermissionsResponse(resolved));
     }
 
     [HttpGet("{discordGuildId}/profile")]

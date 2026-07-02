@@ -294,7 +294,25 @@
     "replySend": "Send reply",
     "replySuccess": "Reply queued. The bot will post it in Discord shortly.",
     "replyError": "Could not send the reply.",
-    "replyEmpty": "Enter a message before sending."
+    "replyEmpty": "Enter a message before sending.",
+    "timeline": {
+      "view": "Timeline",
+      "hide": "Hide timeline",
+      "title": "Ticket #{{number}} timeline",
+      "loading": "Loading timeline…",
+      "loadError": "Could not load the ticket timeline.",
+      "empty": "No timeline events recorded yet.",
+      "refresh": "Refresh",
+      "eventTypes": {
+        "ticketCreated": "Ticket created",
+        "messageSent": "Message sent",
+        "staffReplyQueued": "Staff reply queued",
+        "staffReplyDelivered": "Staff reply delivered",
+        "staffReplyFailed": "Staff reply failed",
+        "statusChanged": "Status changed",
+        "archivePosted": "Archive posted"
+      }
+    }
   },
   "moderation": {
     "loading": "Loading moderation data…",
@@ -571,7 +589,7 @@
     "loadError": "Could not load permission roles",
     "addTitle": "Add permission role",
     "addHint": "Map a Discord server role to dashboard page access. Anyone with that Discord role gets the selected permissions after you run /sync.",
-    "dashboardHelp": "Dashboard staff controls who can open moderation, logs, and tickets pages here. Bot commands like /warn and /kick are configured separately under Moderation permissions.",
+    "dashboardHelp": "All dashboard and bot permissions are managed here by Discord role. Bot commands like /warn and /kick use the same role mappings as dashboard access.",
     "roleName": "Role name",
     "roleNamePlaceholder": "e.g. Admin, Moderator",
     "discordRole": "Discord role",
@@ -591,10 +609,26 @@
       "required": "Enter a name, choose a Discord role, and select at least one permission."
     },
     "permissions": {
-      "accessModeration": "Access moderation pages",
-      "accessLogs": "Access logs",
-      "accessTickets": "Access tickets",
-      "managePermissionRoles": "Manage staff roles"
+      "accessDashboard": "Access dashboard",
+      "viewServer": "View server overview",
+      "manageSettings": "Manage settings",
+      "manageModules": "Manage modules",
+      "viewTickets": "View tickets",
+      "replyToTickets": "Reply to tickets",
+      "closeTickets": "Close tickets",
+      "manageTickets": "Manage tickets",
+      "manageModeration": "Access moderation pages",
+      "useWarn": "Use /warn",
+      "useKick": "Use /kick",
+      "useBan": "Use /ban",
+      "useTimeout": "Use /timeout",
+      "useClearMessages": "Use /clear",
+      "viewWarnings": "View warnings",
+      "viewModerationCases": "View moderation cases",
+      "viewLogs": "Access logs",
+      "clearLogs": "Clear logs",
+      "manageReactionRoles": "Manage reaction roles",
+      "managePermissionRoles": "Manage permission roles"
     }
   },
   "toast": {

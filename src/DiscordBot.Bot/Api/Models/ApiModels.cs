@@ -276,6 +276,42 @@ public sealed class PendingTicketMessageApiResponse
     public string StaffReplyPrefix { get; set; } = string.Empty;
 }
 
+public sealed class TicketTimelineEventApiResponse
+{
+    public Guid Id { get; set; }
+    public Guid TicketId { get; set; }
+    public string EventType { get; set; } = string.Empty;
+    public DateTimeOffset OccurredAt { get; set; }
+    public string? ActorDiscordUserId { get; set; }
+    public string? ActorDisplayName { get; set; }
+    public string? Content { get; set; }
+    public Guid? RelatedTimelineEventId { get; set; }
+    public string? MetadataJson { get; set; }
+}
+
+public sealed class RecordTicketMessageSentApiRequest
+{
+    public required string ChannelDiscordId { get; set; }
+    public required string DiscordMessageId { get; set; }
+    public required string AuthorDiscordUserId { get; set; }
+    public string? AuthorDisplayName { get; set; }
+    public required string Content { get; set; }
+    public DateTimeOffset? OccurredAt { get; set; }
+}
+
+public sealed class RecordTicketArchivePostedApiRequest
+{
+    public required string ArchiveChannelDiscordId { get; set; }
+    public string? ActorDiscordUserId { get; set; }
+    public string? ActorDisplayName { get; set; }
+}
+
+public sealed class AcknowledgeTicketMessageDeliveryApiRequest
+{
+    public bool Delivered { get; set; } = true;
+    public string? FailureReason { get; set; }
+}
+
 public sealed class EvaluatePermissionsApiRequest
 {
     public required string DiscordUserId { get; set; }

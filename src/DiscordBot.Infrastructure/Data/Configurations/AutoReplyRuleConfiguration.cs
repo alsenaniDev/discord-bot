@@ -26,5 +26,7 @@ public class TicketOutboundMessageConfiguration : IEntityTypeConfiguration<Ticke
         builder.Property(x => x.Content).HasMaxLength(2000).IsRequired();
         builder.Property(x => x.SenderDiscordUserId).HasMaxLength(32).IsRequired();
         builder.Property(x => x.SenderDisplayName).HasMaxLength(128);
+        builder.Property(x => x.DeliveryFailureReason).HasMaxLength(500);
+        builder.HasIndex(x => new { x.GuildId, x.IsDelivered, x.DeliveryFailed, x.CreatedAt });
     }
 }

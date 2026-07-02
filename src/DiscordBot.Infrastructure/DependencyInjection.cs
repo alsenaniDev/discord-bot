@@ -33,6 +33,7 @@ public static class DependencyInjection
         services.AddScoped<IGuildResourceService, GuildResourceService>();
         services.AddScoped<ICommandPanelService, CommandPanelService>();
         services.AddScoped<ITicketService, TicketService>();
+        services.AddScoped<ITicketTimelineService, TicketTimelineService>();
         services.AddScoped<IAutoReplyService, AutoReplyService>();
         services.AddScoped<IModerationService, ModerationService>();
         services.AddScoped<IModuleService, ModuleService>();
@@ -45,10 +46,7 @@ public static class DependencyInjection
         services.AddScoped<IGuildPermissionResolver, GuildPermissionResolver>();
         services.AddScoped<IGuildPermissionRoleService, GuildPermissionRoleService>();
         services.AddScoped<IGuildProfileService, GuildProfileService>();
-        services.AddScoped<IModerationPermissionRoleService, ModerationPermissionRoleService>();
-        services.AddScoped<IModerationPermissionResolver, ModerationPermissionResolver>();
         services.AddScoped<IPlanUpgradeRequestService, PlanUpgradeRequestService>();
-        services.AddScoped<IGuildStaffService, GuildStaffService>();
         services.AddScoped<IOnboardingService, OnboardingService>();
         services.AddHostedService<ModuleSeeder>();
         services.AddHostedService<SubscriptionPlanSeeder>();

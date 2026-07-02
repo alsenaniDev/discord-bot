@@ -4,7 +4,15 @@ import { TranslateService } from '@ngx-translate/core';
 import { GuildService } from '../../core/services/guild.service';
 import { GuildContextService } from '../../core/services/guild-context.service';
 import { ToastService } from '../../core/services/toast.service';
-import { Ticket, displayChannelLabel, displayMemberLabel, isTicketOpen, ticketStatusLabel } from '../../core/models/ticket.models';
+import {
+  Ticket,
+  TicketTimelineEvent,
+  displayChannelLabel,
+  displayMemberLabel,
+  isTicketOpen,
+  ticketStatusLabel,
+  ticketTimelineEventLabel
+} from '../../core/models/ticket.models';
 import { getApiErrorMessage } from '../../core/utils/api-error.util';
 
 @Component({
@@ -21,6 +29,10 @@ export class TicketsComponent implements OnInit {
   replyingTicketId = '';
   replyDrafts: Record<string, string> = {};
   sendingReplyId = '';
+  expandedTimelineTicketId = '';
+  timelineLoadingId = '';
+  timelineErrors: Record<string, string> = {};
+  timelines: Record<string, TicketTimelineEvent[]> = {};
 
   constructor(
     private route: ActivatedRoute,
@@ -124,6 +136,9 @@ export class TicketsComponent implements OnInit {
         this.replyDrafts[ticket.id] = '';
         this.replyingTicketId = '';
         this.toast.success(this.translate.instant('tickets.replySuccess'));
+        if (this.expandedTimelineTicketId === ticket.id) {
+          this.loadTimeline(ticket, true);
+        }
       },
       error: err => {
         this.sendingReplyId = '';
@@ -134,6 +149,61 @@ export class TicketsComponent implements OnInit {
 
   isSendingReply(ticket: Ticket): boolean {
     return this.sendingReplyId === ticket.id;
+  }
+
+  toggleTimeline(ticket: Ticket): void {
+    if (this.expandedTimelineTicketId === ticket.id) {
+      this.expandedTimelineTicketId = '';
+      return;
+    }
+
+    this.expandedTimelineTicketId = ticket.id;
+    if (!this.timelines[ticket.id]) {
+      this.loadTimeline(ticket);
+    }
+  }
+
+  isTimelineExpanded(ticket: Ticket): boolean {
+    return this.expandedTimelineTicketId === ticket.id;
+  }
+
+  isTimelineLoading(ticket: Ticket): boolean {
+    return this.timelineLoadingId === ticket.id;
+  }
+
+  loadTimeline(ticket: Ticket, force = false): void {
+    if (!force && this.timelines[ticket.id]) {
+      return;
+    }
+
+    this.timelineLoadingId = ticket.id;
+    delete this.timelineErrors[ticket.id];
+
+    this.guildService.getTicketTimeline(this.guildId, ticket.id).subscribe({
+      next: events => {
+        this.timelines[ticket.id] = events;
+        this.timelineLoadingId = '';
+      },
+      error: err => {
+        this.timelineLoadingId = '';
+        this.timelineErrors[ticket.id] = getApiErrorMessage(
+          err,
+          this.translate.instant('tickets.timeline.loadError')
+        );
+      }
+    });
+  }
+
+  timelineFor(ticket: Ticket): TicketTimelineEvent[] {
+    return this.timelines[ticket.id] ?? [];
+  }
+
+  timelineError(ticket: Ticket): string {
+    return this.timelineErrors[ticket.id] ?? '';
+  }
+
+  eventLabel(event: TicketTimelineEvent): string {
+    return ticketTimelineEventLabel(event.eventType);
   }
 
   statusLabel(status: number | string): string {

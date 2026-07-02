@@ -26,11 +26,10 @@ public class AppDbContext : DbContext
     public DbSet<GuildSubscription> GuildSubscriptions => Set<GuildSubscription>();
     public DbSet<PlatformAdmin> PlatformAdmins => Set<PlatformAdmin>();
     public DbSet<PlanUpgradeRequest> PlanUpgradeRequests => Set<PlanUpgradeRequest>();
-    public DbSet<GuildStaff> GuildStaff => Set<GuildStaff>();
     public DbSet<GuildPermissionRole> GuildPermissionRoles => Set<GuildPermissionRole>();
     public DbSet<AutoReplyRule> AutoReplyRules => Set<AutoReplyRule>();
     public DbSet<TicketOutboundMessage> TicketOutboundMessages => Set<TicketOutboundMessage>();
-    public DbSet<ModerationPermissionRole> ModerationPermissionRoles => Set<ModerationPermissionRole>();
+    public DbSet<TicketTimelineEvent> TicketTimelineEvents => Set<TicketTimelineEvent>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
