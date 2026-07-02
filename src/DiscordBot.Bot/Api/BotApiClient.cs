@@ -797,6 +797,34 @@ public class BotApiClient
         }
     }
 
+    public async Task<PaginatedTicketConversationApiResponse?> GetTicketConversationAsync(
+        Guid ticketId,
+        int? limit = null,
+        CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var url = limit is > 0
+                ? $"api/bot/tickets/{ticketId}/conversation?limit={limit.Value}"
+                : $"api/bot/tickets/{ticketId}/conversation";
+
+            var response = await _httpClient.GetAsync(url, cancellationToken);
+            if (!response.IsSuccessStatusCode)
+            {
+                return null;
+            }
+
+            return await response.Content.ReadFromJsonAsync<PaginatedTicketConversationApiResponse>(
+                JsonOptions,
+                cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error fetching ticket conversation for ticket {TicketId}", ticketId);
+            return null;
+        }
+    }
+
     public async Task<IReadOnlyList<TicketTimelineEventApiResponse>> GetTicketTimelineAsync(
         Guid ticketId,
         int? limit = null,

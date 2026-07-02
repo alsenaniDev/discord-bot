@@ -35,6 +35,7 @@ public sealed class AckCommandPanelRequest
 public sealed class TicketChannelCleanupDto
 {
     public Guid TicketId { get; init; }
+    public Guid GuildId { get; init; }
     public string DiscordGuildId { get; init; } = string.Empty;
     public string ChannelDiscordId { get; init; } = string.Empty;
     public int TicketNumber { get; init; }

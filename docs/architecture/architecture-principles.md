@@ -91,6 +91,7 @@ Secrets never committed — use `*.local.json` (gitignored) or environment varia
 - No MediatR, no CQRS, no generic repository abstractions (unless ADR approved)
 - Prefer readable service methods over deep inheritance
 - DTOs for API boundaries (`Infrastructure/Models/`)
+- **Read Models** for query surfaces — see `read-model-architecture.md` (AR-001). Dashboard and analytics consume Read Models, not aggregate graphs.
 
 ## 11. Documentation follows code
 

@@ -17,9 +17,9 @@ Ticket System v1 is complete when a support team can **run daily operations enti
 #### Message & transcript
 - [ ] All Discord text messages in ticket channels persisted
 - [ ] Dashboard replies appear in unified timeline
-- [ ] Ticket detail page shows full conversation
-- [ ] Archive embed accurate (no false "full history in dashboard" unless true)
-- [ ] Closed tickets viewable after channel deletion
+- [x] Ticket detail / transcript page shows full conversation (CM-004 Dashboard transcript route)
+- [x] Archive embed accurate — digest only; Dashboard link when configured (CM-004, BR-X02)
+- [x] Closed tickets viewable after channel deletion (CM-004 transcript API)
 
 #### Permissions
 - [ ] `ViewTickets` gates list/detail
@@ -74,7 +74,7 @@ Ticket System v1 is complete when a support team can **run daily operations enti
 | **CM-011** | Internal notes (DB + API + dashboard) | P2 | M | CM-004 |
 | **CM-012** | Reopen ticket workflow | P2 | M | CM-006 |
 | **CM-013** | Outbound reply delivery status + retry | P2 | M | CM-004 |
-| **CM-014** | Remove/fix misleading archive preview copy | P1 | S | CM-004 |
+| **CM-014** | Remove/fix misleading archive preview copy | P1 | S | CM-004 | **Done (CM-004)** |
 | **CM-015** | `TicketCategory` multi-category + panel routing | P2 | L | CM-006 |
 | **CM-016** | Open ticket modal forms (custom fields) | P2 | L | CM-015 |
 | **CM-017** | Auto-close on inactivity worker | P2 | M | CM-002 |
@@ -100,7 +100,7 @@ Ticket System v1 is complete when a support team can **run daily operations enti
 | Global outbound poll at scale | Medium | Medium | CM-021 partial indexes + batch |
 | Permission cross-grants | High | Current | CM-005 explicit ticket checks |
 | Staff cannot see tickets in Discord | High | Current | CM-008 role overwrites |
-| Misleading archive copy | Medium | Current | CM-014 |
+| Misleading archive copy | Medium | Mitigated | CM-004 shipped honest digest wording + transcript separation |
 | Orphan channels if API create succeeds after channel delete | Low | Low | Idempotent create + reconciliation job (future) |
 | EF enum flags scalability | Low | Long-term | ADR for permission storage (platform-wide) |
 

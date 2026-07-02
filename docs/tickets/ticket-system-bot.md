@@ -136,6 +136,8 @@ sequenceDiagram
 
 **File:** `TicketArchiveService.cs`
 
+**CM-004 — Archive ≠ Transcript (BR-X01, BR-X02):** The archive channel receives a **digest embed** (summary notification). The **full transcript** lives in the Dashboard (`GET .../transcript`), reconstructed from Timeline. Archive embed copy must not imply full history is saved in Discord.
+
 | Constant | Value |
 |----------|-------|
 | `MaxPreviewMessages` | 8 |
@@ -143,18 +145,22 @@ sequenceDiagram
 
 **Behavior:**
 1. Skip if no `TicketArchiveChannelId`
-2. Fetch timeline via `GET /api/bot/tickets/{ticketId}/timeline` (BR-X03 — not Discord channel scrape)
-3. Build preview from `MessageSent` and delivered `StaffReplyQueued` events
-4. Post embed to archive channel
+2. Fetch conversation via `GET /api/bot/tickets/{ticketId}/conversation` (BR-X03 — not Discord channel scrape)
+3. Build digest preview from `MessageSent` and delivered `StaffReplyQueued` events (last 8 messages, capped length)
+4. Post embed titled **"Ticket #N closed"** with digest disclaimer + optional Dashboard transcript link (`Platform:DashboardUrl/guilds/{guildId}/tickets/{ticketId}/transcript`)
 5. `POST /api/bot/tickets/{ticketId}/timeline/archive-posted` → `ArchivePosted` event (BR-T05)
-6. Write `LogEventType.TicketArchived` via `BotLogWriter` (logging consumes domain events; separate from Timeline)
+6. Write `LogEventType.TicketArchived` — message: **"archive digest posted"** (not "transcript archived")
+
+**Embed fields (`BuildTicketArchive`):**
+- Description states archive is a digest, not full transcript
+- **Full transcript** field: Dashboard link when `Platform:DashboardUrl` + platform `GuildId` are available; otherwise fallback text for authorized staff
 
 **Limitations:**
 - Attachments, embeds, stickers not in Timeline v1
-- Preview capped at 8 messages / 1500 chars
+- Digest capped at 8 messages / 1500 chars
 - Messages sent before CM-002 deployment are not on the timeline
 
-**Traceability:** D-001 §8 · BR-X03, BR-T05
+**Traceability:** D-001 §8 · BR-X01, BR-X02, BR-X03, BR-T05
 
 ---
 
@@ -225,7 +231,7 @@ When Discord connected, each 30s:
 | `BuildTicketWelcome` | First message in channel |
 | `BuildTicketClosed` | Discord close |
 | `BuildTicketClosedFromDashboard` | Dashboard close |
-| `BuildTicketArchive` | Archive channel transcript preview |
+| `BuildTicketArchive` | Archive channel **digest** (not full transcript); links to Dashboard transcript when configured |
 | `BuildTicketHelp` | Help text |
 
 **Components:**

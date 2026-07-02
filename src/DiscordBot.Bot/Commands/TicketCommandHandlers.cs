@@ -325,6 +325,7 @@ public class TicketCommandHandlers
             await _archiveService.TryArchiveTicketAsync(
                 _client,
                 guild,
+                ticket.GuildId,
                 ticket.Id,
                 ticket.TicketNumber,
                 ticket.OwnerDiscordUserId,

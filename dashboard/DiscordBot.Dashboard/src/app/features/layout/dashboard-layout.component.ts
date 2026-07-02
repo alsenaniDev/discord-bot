@@ -147,6 +147,10 @@ export class DashboardLayoutComponent implements OnInit, OnDestroy {
       this.setGuildPage('titles.moderationSettings', 'titles.moderationSettingsSubtitle', guildName, guildId, 'nav.moderationSettings');
       return;
     }
+    if (url.includes('/tickets/') && url.includes('/transcript')) {
+      this.setGuildPage('titles.ticketTranscript', 'titles.ticketTranscriptSubtitle', guildName, guildId, 'common.tickets');
+      return;
+    }
     if (url.includes('/tickets')) {
       this.setGuildPage('titles.tickets', 'titles.ticketsSubtitle', guildName, guildId, 'common.tickets');
       return;

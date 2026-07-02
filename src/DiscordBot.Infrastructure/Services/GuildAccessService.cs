@@ -27,6 +27,21 @@ public interface IGuildAccessService
         Guid guildId,
         string discordUserId,
         CancellationToken cancellationToken = default);
+
+    Task<bool> CanViewTicketsAsync(
+        Guid guildId,
+        string discordUserId,
+        CancellationToken cancellationToken = default);
+
+    Task<bool> CanReplyToTicketsAsync(
+        Guid guildId,
+        string discordUserId,
+        CancellationToken cancellationToken = default);
+
+    Task<bool> CanCloseTicketsAsync(
+        Guid guildId,
+        string discordUserId,
+        CancellationToken cancellationToken = default);
 }
 
 public class GuildAccessService : IGuildAccessService
@@ -85,5 +100,32 @@ public class GuildAccessService : IGuildAccessService
             .AnyAsync(
                 g => g.Id == guildId && g.OwnerDiscordUserId == discordUserId && g.IsActive,
                 cancellationToken);
+    }
+
+    public async Task<bool> CanViewTicketsAsync(
+        Guid guildId,
+        string discordUserId,
+        CancellationToken cancellationToken = default)
+    {
+        var resolved = await _permissionResolver.ResolveAsync(guildId, discordUserId, cancellationToken: cancellationToken);
+        return resolved is not null && GuildPermissionMapper.CanViewTickets(resolved);
+    }
+
+    public async Task<bool> CanReplyToTicketsAsync(
+        Guid guildId,
+        string discordUserId,
+        CancellationToken cancellationToken = default)
+    {
+        var resolved = await _permissionResolver.ResolveAsync(guildId, discordUserId, cancellationToken: cancellationToken);
+        return resolved is not null && GuildPermissionMapper.CanReplyToTickets(resolved);
+    }
+
+    public async Task<bool> CanCloseTicketsAsync(
+        Guid guildId,
+        string discordUserId,
+        CancellationToken cancellationToken = default)
+    {
+        var resolved = await _permissionResolver.ResolveAsync(guildId, discordUserId, cancellationToken: cancellationToken);
+        return resolved is not null && GuildPermissionMapper.CanCloseTickets(resolved);
     }
 }

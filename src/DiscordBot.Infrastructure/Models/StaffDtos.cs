@@ -19,6 +19,9 @@ public sealed class GuildAccessDto
     public bool CanAccessModeration { get; init; }
     public bool CanAccessLogs { get; init; }
     public bool CanAccessTickets { get; init; }
+    public bool CanViewTickets { get; init; }
+    public bool CanReplyToTickets { get; init; }
+    public bool CanCloseTickets { get; init; }
     public bool CanAccessOverview { get; init; }
     public bool CanClearLogs { get; init; }
 }

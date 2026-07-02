@@ -60,7 +60,7 @@ Enums serialized as **strings** in JSON.
 |-------|--------|
 | Guild | GET `/`, GET `/{id}/overview` |
 | Settings | GET/PUT `/{id}/settings` |
-| Tickets | GET `/{id}/tickets`, PATCH `/{id}/tickets/{ticketId}/close`, POST `/{id}/tickets/{ticketId}/messages` |
+| Tickets | GET `/{id}/tickets` (paginated summaries), GET `/{id}/tickets/{ticketId}/conversation`, PATCH `/{id}/tickets/{ticketId}/close`, POST `/{id}/tickets/{ticketId}/messages`, GET `/{id}/tickets/{ticketId}/timeline` (legacy/bot) |
 | Auto-replies | GET/POST `/{id}/auto-replies`, PUT/DELETE `/{id}/auto-replies/{ruleId}` |
 | Resources | GET `/{id}/channels`, `/roles`, `/members`, `/categories`, POST `/{id}/sync-resources` |
 | Moderation data | GET `/{id}/warnings`, GET `/{id}/moderation-cases` |

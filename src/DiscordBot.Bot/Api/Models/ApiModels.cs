@@ -228,6 +228,7 @@ public sealed class AckCommandPanelApiRequest
 public sealed class TicketCleanupApiResponse
 {
     public Guid TicketId { get; set; }
+    public Guid GuildId { get; set; }
     public string DiscordGuildId { get; set; } = string.Empty;
     public string ChannelDiscordId { get; set; } = string.Empty;
     public int TicketNumber { get; set; }
@@ -287,6 +288,29 @@ public sealed class TicketTimelineEventApiResponse
     public string? Content { get; set; }
     public Guid? RelatedTimelineEventId { get; set; }
     public string? MetadataJson { get; set; }
+}
+
+public sealed class TicketConversationEntryApiResponse
+{
+    public Guid EventId { get; set; }
+    public Guid TicketId { get; set; }
+    public string EventType { get; set; } = string.Empty;
+    public string ActorType { get; set; } = string.Empty;
+    public string? ActorDiscordId { get; set; }
+    public string? ActorUsername { get; set; }
+    public string? Content { get; set; }
+    public bool IsInternal { get; set; }
+    public string DeliveryStatus { get; set; } = "None";
+    public DateTimeOffset OccurredAt { get; set; }
+    public DateTimeOffset CreatedAt { get; set; }
+}
+
+public sealed class PaginatedTicketConversationApiResponse
+{
+    public List<TicketConversationEntryApiResponse> Items { get; set; } = [];
+    public bool HasMore { get; set; }
+    public DateTimeOffset? NextCursorOccurredAt { get; set; }
+    public Guid? NextCursorEventId { get; set; }
 }
 
 public sealed class RecordTicketMessageSentApiRequest

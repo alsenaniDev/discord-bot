@@ -57,6 +57,9 @@ export interface GuildAccess {
   canAccessModeration: boolean;
   canAccessLogs: boolean;
   canAccessTickets: boolean;
+  canViewTickets: boolean;
+  canReplyToTickets: boolean;
+  canCloseTickets: boolean;
   canAccessOverview: boolean;
   canClearLogs?: boolean;
 }

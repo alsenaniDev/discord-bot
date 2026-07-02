@@ -20,11 +20,6 @@ public interface ITicketService
         CloseTicketRequest? request = null,
         CancellationToken cancellationToken = default);
 
-    Task<IReadOnlyList<TicketDto>> GetGuildTicketsAsync(
-        Guid guildId,
-        string ownerDiscordUserId,
-        CancellationToken cancellationToken = default);
-
     Task<TicketDto?> CloseTicketForGuildAsync(
         Guid guildId,
         Guid ticketId,
@@ -271,37 +266,13 @@ public class TicketService : ITicketService
         return Map(ticket);
     }
 
-    public async Task<IReadOnlyList<TicketDto>> GetGuildTicketsAsync(
-        Guid guildId,
-        string ownerDiscordUserId,
-        CancellationToken cancellationToken = default)
-    {
-        var hasAccess = await _guildAccessService.CanAccessModerationPagesAsync(
-            guildId,
-            ownerDiscordUserId,
-            cancellationToken);
-
-        if (!hasAccess)
-        {
-            return [];
-        }
-
-        var tickets = await _dbContext.Tickets
-            .AsNoTracking()
-            .Where(t => t.GuildId == guildId)
-            .OrderByDescending(t => t.CreatedAt)
-            .ToListAsync(cancellationToken);
-
-        return await EnrichTicketsAsync(guildId, tickets, cancellationToken);
-    }
-
     public async Task<TicketDto?> CloseTicketForGuildAsync(
         Guid guildId,
         Guid ticketId,
         string discordUserId,
         CancellationToken cancellationToken = default)
     {
-        var hasAccess = await _guildAccessService.CanAccessModerationPagesAsync(
+        var hasAccess = await _guildAccessService.CanCloseTicketsAsync(
             guildId,
             discordUserId,
             cancellationToken);
@@ -376,6 +347,7 @@ public class TicketService : ITicketService
             .Select(t => new TicketChannelCleanupDto
             {
                 TicketId = t.Id,
+                GuildId = t.GuildId,
                 DiscordGuildId = t.Guild.DiscordGuildId,
                 ChannelDiscordId = t.ChannelDiscordId,
                 TicketNumber = t.TicketNumber,
@@ -433,6 +405,7 @@ public class TicketService : ITicketService
             enriched.Add(new TicketChannelCleanupDto
             {
                 TicketId = ticket.TicketId,
+                GuildId = guildId,
                 DiscordGuildId = ticket.DiscordGuildId,
                 ChannelDiscordId = ticket.ChannelDiscordId,
                 TicketNumber = ticket.TicketNumber,
@@ -473,7 +446,7 @@ public class TicketService : ITicketService
         SendTicketMessageRequest request,
         CancellationToken cancellationToken = default)
     {
-        var hasAccess = await _guildAccessService.CanAccessModerationPagesAsync(
+        var hasAccess = await _guildAccessService.CanReplyToTicketsAsync(
             guildId,
             discordUserId,
             cancellationToken);
@@ -635,12 +608,7 @@ public class TicketService : ITicketService
         string discordUserId,
         CancellationToken cancellationToken = default)
     {
-        var hasAccess = await _guildAccessService.CanAccessModerationPagesAsync(
-            guildId,
-            discordUserId,
-            cancellationToken);
-
-        if (!hasAccess)
+        if (!await _guildAccessService.CanViewTicketsAsync(guildId, discordUserId, cancellationToken))
         {
             return null;
         }

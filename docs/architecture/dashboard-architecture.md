@@ -80,7 +80,7 @@ If user fails owner check but has moderation access, redirect to `/guilds/{id}/m
 | Overview | `features/overview/` | `getOverview()`, `getModules()` |
 | Settings | `features/settings/` | `getSettings()`, `updateSettings()` |
 | Modules | `features/modules/` | `getModules()`, `updateModule()` |
-| Tickets | `features/tickets/` | `getTickets()`, `closeTicket()`, `sendTicketMessage()` |
+| Tickets | `features/tickets/` | `getTicketSummaries()`, `getTicketConversation()`, `getTicketTranscript()`, `closeTicket()`, `sendTicketMessage()` |
 | Moderation | `features/moderation/` | `getWarnings()`, `getModerationCases()` |
 | Moderation Settings | `features/moderation-settings/` | Adapts to `permission-roles` API |
 | Logs | `features/logs/` | `getLogs()`, `clearLogs()` |

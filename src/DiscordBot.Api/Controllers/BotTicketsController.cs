@@ -13,10 +13,12 @@ namespace DiscordBot.Api.Controllers;
 public class BotTicketsController : ControllerBase
 {
     private readonly ITicketService _ticketService;
+    private readonly ITicketReadService _ticketReadService;
 
-    public BotTicketsController(ITicketService ticketService)
+    public BotTicketsController(ITicketService ticketService, ITicketReadService ticketReadService)
     {
         _ticketService = ticketService;
+        _ticketReadService = ticketReadService;
     }
 
     [HttpPost]
@@ -161,6 +163,32 @@ public class BotTicketsController : ControllerBase
         }
 
         return Ok(timelineEvent);
+    }
+
+    [HttpGet("{ticketId:guid}/conversation")]
+    public async Task<ActionResult<PaginatedTicketConversationReadModel>> GetConversationForBot(
+        Guid ticketId,
+        [FromQuery] DateTimeOffset? cursorOccurredAt,
+        [FromQuery] Guid? cursorEventId,
+        [FromQuery] int limit = 100,
+        CancellationToken cancellationToken = default)
+    {
+        var conversation = await _ticketReadService.GetTicketConversationForBotAsync(
+            ticketId,
+            new TicketConversationQuery
+            {
+                CursorOccurredAt = cursorOccurredAt,
+                CursorEventId = cursorEventId,
+                Limit = limit
+            },
+            cancellationToken);
+
+        if (conversation is null)
+        {
+            return NotFound(new { message = "Ticket not found." });
+        }
+
+        return Ok(conversation);
     }
 
     [HttpGet("{ticketId:guid}/timeline")]

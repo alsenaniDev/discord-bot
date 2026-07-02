@@ -10,6 +10,20 @@
     <button type="button" class="btn btn-primary btn-sm" (click)="loadTickets()">{{ 'common.tryAgain' | translate }}</button>
   </app-empty-state>
 
+  <div class="tickets-toolbar" *ngIf="!loading && !error">
+    <label class="filter-label">
+      {{ 'tickets.filters.status' | translate }}
+      <select [value]="statusFilter" (change)="onStatusFilterChange($any($event.target).value)">
+        <option value="all">{{ 'tickets.filters.all' | translate }}</option>
+        <option value="Open">{{ 'common.open' | translate }}</option>
+        <option value="Closed">{{ 'common.closed' | translate }}</option>
+      </select>
+    </label>
+    <span class="muted small" *ngIf="totalCount > 0">
+      {{ 'tickets.pagination.total' | translate:{ count: totalCount } }}
+    </span>
+  </div>
+
   <app-empty-state
     *ngIf="!loading && !error && tickets.length === 0"
     icon="🎫"
@@ -25,9 +39,9 @@
             <th>{{ 'tickets.number' | translate }}</th>
             <th>{{ 'common.status' | translate }}</th>
             <th>{{ 'tickets.owner' | translate }}</th>
-            <th>{{ 'tickets.channel' | translate }}</th>
-            <th>{{ 'common.created' | translate }}</th>
-            <th>{{ 'common.closed' | translate }}</th>
+            <th>{{ 'tickets.lastActivity' | translate }}</th>
+            <th>{{ 'tickets.preview' | translate }}</th>
+            <th>{{ 'tickets.stats' | translate }}</th>
             <th>{{ 'common.actions' | translate }}</th>
           </tr>
         </thead>
@@ -42,31 +56,40 @@
               </td>
               <td>
                 <div class="identity-cell">
-                  <span class="identity-name">{{ displayMember(ticket.ownerDisplayName, ticket.ownerDiscordUserId) }}</span>
-                  <span class="muted small mono" *ngIf="ticket.ownerDisplayName">{{ ticket.ownerDiscordUserId }}</span>
+                  <span class="identity-name">{{ displayMember(ticket.ownerUsername, ticket.ownerDiscordId) }}</span>
+                  <span class="muted small mono">{{ ticket.ownerDiscordId }}</span>
                 </div>
+              </td>
+              <td>{{ ticket.lastActivityAt | date: 'medium' }}</td>
+              <td>
+                <span class="preview-cell">{{ ticket.lastMessagePreview || '—' }}</span>
               </td>
               <td>
-                <div class="identity-cell">
-                  <span class="identity-name">{{ displayChannel(ticket.channelName, ticket.channelDiscordId) }}</span>
-                  <span class="muted small mono" *ngIf="ticket.channelName">{{ ticket.channelDiscordId }}</span>
+                <div class="stats-cell muted small">
+                  <span>{{ 'tickets.statsMessages' | translate:{ count: ticket.messageCount } }}</span>
+                  <span>{{ 'tickets.statsReplies' | translate:{ count: ticket.staffReplyCount } }}</span>
+                  <span *ngIf="ticket.failedDeliveryCount > 0" class="stat-failed">
+                    {{ 'tickets.statsFailed' | translate:{ count: ticket.failedDeliveryCount } }}
+                  </span>
                 </div>
               </td>
-              <td>{{ ticket.createdAt | date: 'medium' }}</td>
-              <td>{{ ticket.closedAt ? (ticket.closedAt | date: 'medium') : '—' }}</td>
               <td>
                 <div class="ticket-actions">
                   <button
                     type="button"
                     class="btn btn-secondary btn-sm"
-                    (click)="toggleTimeline(ticket)"
+                    *ngIf="!isOpen(ticket)"
+                    [routerLink]="['/guilds', guildId, 'tickets', ticket.ticketId, 'transcript']"
                   >
-                    {{ (isTimelineExpanded(ticket) ? 'tickets.timeline.hide' : 'tickets.timeline.view') | translate }}
+                    {{ 'tickets.transcript.view' | translate }}
+                  </button>
+                  <button type="button" class="btn btn-secondary btn-sm" (click)="toggleConversation(ticket)">
+                    {{ (isConversationExpanded(ticket) ? 'tickets.conversation.hide' : 'tickets.conversation.view') | translate }}
                   </button>
                   <button
                     type="button"
                     class="btn btn-secondary btn-sm"
-                    *ngIf="isOpen(ticket)"
+                    *ngIf="canReply && isOpen(ticket)"
                     (click)="toggleReply(ticket)"
                   >
                     {{ 'tickets.reply' | translate }}
@@ -74,7 +97,7 @@
                   <button
                     type="button"
                     class="btn btn-danger btn-sm"
-                    *ngIf="isOpen(ticket)"
+                    *ngIf="canClose && isOpen(ticket)"
                     [disabled]="isClosing(ticket)"
                     (click)="closeTicket(ticket)"
                   >
@@ -85,7 +108,7 @@
                 <div class="ticket-reply-box" *ngIf="isReplying(ticket)">
                   <textarea
                     rows="3"
-                    [(ngModel)]="replyDrafts[ticket.id]"
+                    [(ngModel)]="replyDrafts[ticket.ticketId]"
                     [placeholder]="'tickets.replyPlaceholder' | translate"
                   ></textarea>
                   <button
@@ -100,51 +123,100 @@
                 </div>
               </td>
             </tr>
-            <tr class="timeline-row" *ngIf="isTimelineExpanded(ticket)">
+            <tr class="conversation-row" *ngIf="isConversationExpanded(ticket)">
               <td colspan="7">
-                <div class="ticket-timeline-panel">
-                  <div class="ticket-timeline-header">
-                    <h3>{{ 'tickets.timeline.title' | translate:{ number: ticket.ticketNumber } }}</h3>
+                <div class="ticket-conversation-panel">
+                  <div class="ticket-conversation-header">
+                    <div>
+                      <h3>{{ 'tickets.conversation.title' | translate:{ number: ticket.ticketNumber } }}</h3>
+                      <p class="muted small">
+                        {{ 'tickets.conversation.channel' | translate }}: {{ displayChannel(ticket.discordChannelId) }}
+                        · {{ 'common.created' | translate }}: {{ ticket.createdAt | date: 'medium' }}
+                        <span *ngIf="ticket.closedAt">
+                          · {{ 'common.closed' | translate }}: {{ ticket.closedAt | date: 'medium' }}
+                        </span>
+                      </p>
+                    </div>
                     <button
                       type="button"
                       class="btn btn-secondary btn-sm"
-                      [disabled]="isTimelineLoading(ticket)"
-                      (click)="loadTimeline(ticket, true)"
+                      [disabled]="isConversationLoading(ticket)"
+                      (click)="loadConversation(ticket, true)"
                     >
-                      <span class="spinner inline" *ngIf="isTimelineLoading(ticket)"></span>
-                      {{ 'tickets.timeline.refresh' | translate }}
+                      <span class="spinner inline" *ngIf="isConversationLoading(ticket)"></span>
+                      {{ 'tickets.conversation.refresh' | translate }}
                     </button>
                   </div>
 
                   <app-loading-state
-                    *ngIf="isTimelineLoading(ticket) && !timelineFor(ticket).length"
-                    [message]="'tickets.timeline.loading' | translate"
+                    *ngIf="isConversationLoading(ticket) && !conversationFor(ticket).length"
+                    [message]="'tickets.conversation.loading' | translate"
                   ></app-loading-state>
 
-                  <p class="muted" *ngIf="timelineError(ticket)">{{ timelineError(ticket) }}</p>
+                  <p class="muted" *ngIf="conversationError(ticket)">{{ conversationError(ticket) }}</p>
 
-                  <p class="muted" *ngIf="!isTimelineLoading(ticket) && !timelineError(ticket) && timelineFor(ticket).length === 0">
-                    {{ 'tickets.timeline.empty' | translate }}
+                  <p class="muted" *ngIf="!isConversationLoading(ticket) && !conversationError(ticket) && conversationFor(ticket).length === 0">
+                    {{ 'tickets.conversation.empty' | translate }}
                   </p>
 
-                  <ol class="timeline-list" *ngIf="timelineFor(ticket).length > 0">
-                    <li class="timeline-item" *ngFor="let event of timelineFor(ticket)">
-                      <div class="timeline-item-head">
-                        <span class="timeline-event-type">{{ eventLabel(event) | translate }}</span>
+                  <ol class="conversation-list" *ngIf="conversationFor(ticket).length > 0">
+                    <li
+                      class="conversation-item"
+                      *ngFor="let event of conversationFor(ticket)"
+                      [class.delivery-failed]="event.deliveryStatus === 'Failed'"
+                      [class.delivery-queued]="event.deliveryStatus === 'Queued'"
+                      [class.delivery-delivered]="event.deliveryStatus === 'Delivered'"
+                    >
+                      <div class="conversation-item-head">
+                        <span class="conversation-event-type">{{ eventLabel(event) | translate }}</span>
                         <span class="muted small">{{ event.occurredAt | date: 'medium' }}</span>
                       </div>
-                      <div class="timeline-item-actor muted small" *ngIf="event.actorDisplayName || event.actorDiscordUserId">
-                        {{ displayMember(event.actorDisplayName, event.actorDiscordUserId) }}
+                      <div class="conversation-item-meta muted small">
+                        <span>{{ event.actorType }}</span>
+                        <span *ngIf="event.actorUsername || event.actorDiscordId">
+                          · {{ displayMember(event.actorUsername, event.actorDiscordId) }}
+                        </span>
+                        <span class="delivery-badge" *ngIf="showDeliveryBadge(event)">
+                          {{ deliveryLabel(event) | translate }}
+                        </span>
                       </div>
-                      <div class="timeline-item-content" *ngIf="event.content">{{ event.content }}</div>
+                      <div class="conversation-item-content" *ngIf="event.content">{{ event.content }}</div>
                     </li>
                   </ol>
+
+                  <button
+                    type="button"
+                    class="btn btn-secondary btn-sm load-more-btn"
+                    *ngIf="hasMoreConversation(ticket)"
+                    [disabled]="isConversationLoadingMore(ticket)"
+                    (click)="loadConversation(ticket, false, true)"
+                  >
+                    <span class="spinner inline" *ngIf="isConversationLoadingMore(ticket)"></span>
+                    {{ 'tickets.conversation.loadMore' | translate }}
+                  </button>
                 </div>
               </td>
             </tr>
           </ng-container>
         </tbody>
       </table>
+    </div>
+
+    <div class="pagination-bar" *ngIf="totalPages > 1">
+      <button type="button" class="btn btn-secondary btn-sm" [disabled]="page <= 1" (click)="goToPage(page - 1)">
+        {{ 'tickets.pagination.prev' | translate }}
+      </button>
+      <span class="muted small">
+        {{ 'tickets.pagination.page' | translate:{ page: page, total: totalPages } }}
+      </span>
+      <button
+        type="button"
+        class="btn btn-secondary btn-sm"
+        [disabled]="page >= totalPages"
+        (click)="goToPage(page + 1)"
+      >
+        {{ 'tickets.pagination.next' | translate }}
+      </button>
     </div>
   </div>
 </div>

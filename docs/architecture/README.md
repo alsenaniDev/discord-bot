@@ -15,7 +15,7 @@ Every future feature task, refactor, and AI agent session should align with thes
 | Runtime components | `backend-architecture.md`, `bot-architecture.md`, `dashboard-architecture.md` |
 | Domain systems | `module-system.md`, `permission-system.md`, `subscription-system.md` |
 | Security | `authentication.md`, `authorization.md`, `security.md` |
-| Data & API | `database.md`, `api-design.md` |
+| Data & API | `database.md`, `api-design.md`, **`read-model-architecture.md`** |
 | Operations | `deployment.md`, `environments.md`, `logging.md`, `monitoring.md` |
 | Engineering rules | `coding-standards.md`, `naming-conventions.md`, `folder-structure.md` |
 | Planning | `roadmap.md`, `glossary.md` |
@@ -40,7 +40,7 @@ Related folders:
 6. **`dashboard-architecture.md`** — Angular SPA
 7. **`authentication.md`** + **`authorization.md`** — who can do what
 8. **`module-system.md`** + **`permission-system.md`** + **`subscription-system.md`**
-9. **`database.md`** + **`api-design.md`**
+9. **`database.md`** + **`api-design.md`** + **`read-model-architecture.md`**
 10. **`coding-standards.md`** + **`naming-conventions.md`**
 11. **`deployment.md`** + **`environments.md`**
 12. **`glossary.md`** — project vocabulary
@@ -54,13 +54,14 @@ Optional deep dives: `/docs/step-30-architecture-audit.md`, `/docs/architecture/
 Before implementing any task:
 
 1. Read **`architecture-principles.md`** — non-negotiable boundaries
-2. Read the component doc for the area you will touch (backend / bot / dashboard)
-3. Read **`permission-system.md`** if touching access control
-4. Read **`module-system.md`** if touching feature toggles
-5. Read **`subscription-system.md`** if touching plan limits
-6. Read **`coding-standards.md`** before writing code
-7. Check **`/docs/project-management/technical-debt.md`** for known pitfalls
-8. Check **`/docs/project-management/backlog.md`** for priority context
+2. Read **`read-model-architecture.md`** if exposing data via API, dashboard lists, analytics, search, or reports
+3. Read the component doc for the area you will touch (backend / bot / dashboard)
+4. Read **`permission-system.md`** if touching access control
+5. Read **`module-system.md`** if touching feature toggles
+6. Read **`subscription-system.md`** if touching plan limits
+7. Read **`coding-standards.md`** before writing code
+8. Check **`/docs/project-management/technical-debt.md`** for known pitfalls
+9. Check **`/docs/project-management/backlog.md`** for priority context
 
 After completing a task: add a report under `/docs/progress/`.
 
@@ -89,4 +90,4 @@ For architectural decisions that change direction: create an ADR in `/docs/adr/`
 | Production | Railway (API, Bot, DB), Vercel (dashboard) |
 | Architecture style | Layered monolith (Domain → Infrastructure → Api/Bot) |
 
-**Latest structural change:** Unified permission system (`GuildPermissionRoles` + `GuildPermissions` flags enum). Migration: `20260702151245_UnifyGuildPermissions`.
+**Latest structural docs:** Unified permission system (`GuildPermissionRoles`). Ticket Timeline write model (CM-002). **Read Model Architecture (AR-001)** — official query-side pattern for all domains.

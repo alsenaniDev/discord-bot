@@ -4,7 +4,13 @@ import { Observable, map, switchMap } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { GuildSettings, GuildSummary, DiscordChannel, DiscordRole, GuildOverview, RequestResourceSyncResponse, UpdateGuildSettings, GuildProfile, UpdateGuildProfile, ModerationPermissionRole, CreateModerationPermissionRole, UpdateModerationPermissionRole } from '../models/guild.models';
 import { GuildMember } from '../models/guild-member.models';
-import { Ticket, TicketTimelineEvent } from '../models/ticket.models';
+import {
+  PaginatedTicketConversationReadModel,
+  PaginatedTicketSummaryReadModel,
+  Ticket,
+  TicketSummaryReadModel,
+  TicketTranscriptReadModel
+} from '../models/ticket.models';
 import { AutoReplyRule, CreateAutoReplyRule, UpdateAutoReplyRule } from '../models/auto-reply.models';
 import { ModerationCase, ModerationFilters, Warning } from '../models/moderation.models';
 import { GuildModule, UpdateGuildModuleRequest } from '../models/module.models';
@@ -48,8 +54,83 @@ export class GuildService {
     );
   }
 
+  getTicketSummaries(
+    guildId: string,
+    options?: { status?: 'Open' | 'Closed'; page?: number; pageSize?: number; sort?: string }
+  ): Observable<PaginatedTicketSummaryReadModel> {
+    const params = new URLSearchParams();
+    if (options?.status) {
+      params.set('status', options.status);
+    }
+    if (options?.page) {
+      params.set('page', String(options.page));
+    }
+    if (options?.pageSize) {
+      params.set('pageSize', String(options.pageSize));
+    }
+    if (options?.sort) {
+      params.set('sort', options.sort);
+    }
+
+    const query = params.toString();
+    const url = query
+      ? `${this.baseUrl}/api/guilds/${guildId}/tickets?${query}`
+      : `${this.baseUrl}/api/guilds/${guildId}/tickets`;
+
+    return this.http.get<PaginatedTicketSummaryReadModel>(url);
+  }
+
+  getTicketConversation(
+    guildId: string,
+    ticketId: string,
+    options?: { cursorOccurredAt?: string; cursorEventId?: string; limit?: number }
+  ): Observable<PaginatedTicketConversationReadModel> {
+    const params = new URLSearchParams();
+    if (options?.cursorOccurredAt) {
+      params.set('cursorOccurredAt', options.cursorOccurredAt);
+    }
+    if (options?.cursorEventId) {
+      params.set('cursorEventId', options.cursorEventId);
+    }
+    if (options?.limit) {
+      params.set('limit', String(options.limit));
+    }
+
+    const query = params.toString();
+    const url = query
+      ? `${this.baseUrl}/api/guilds/${guildId}/tickets/${ticketId}/conversation?${query}`
+      : `${this.baseUrl}/api/guilds/${guildId}/tickets/${ticketId}/conversation`;
+
+    return this.http.get<PaginatedTicketConversationReadModel>(url);
+  }
+
+  getTicketTranscript(
+    guildId: string,
+    ticketId: string,
+    options?: { cursorOccurredAt?: string; cursorEventId?: string; limit?: number }
+  ): Observable<TicketTranscriptReadModel> {
+    const params = new URLSearchParams();
+    if (options?.cursorOccurredAt) {
+      params.set('cursorOccurredAt', options.cursorOccurredAt);
+    }
+    if (options?.cursorEventId) {
+      params.set('cursorEventId', options.cursorEventId);
+    }
+    if (options?.limit) {
+      params.set('limit', String(options.limit));
+    }
+
+    const query = params.toString();
+    const url = query
+      ? `${this.baseUrl}/api/guilds/${guildId}/tickets/${ticketId}/transcript?${query}`
+      : `${this.baseUrl}/api/guilds/${guildId}/tickets/${ticketId}/transcript`;
+
+    return this.http.get<TicketTranscriptReadModel>(url);
+  }
+
+  /** @deprecated Use getTicketSummaries */
   getTickets(guildId: string): Observable<Ticket[]> {
-    return this.http.get<Ticket[]>(`${this.baseUrl}/api/guilds/${guildId}/tickets`);
+    return this.getTicketSummaries(guildId).pipe(map(page => page.items.map(summaryToLegacyTicket)));
   }
 
   closeTicket(guildId: string, ticketId: string): Observable<Ticket> {
@@ -63,12 +144,6 @@ export class GuildService {
     return this.http.post<{ id: string }>(
       `${this.baseUrl}/api/guilds/${guildId}/tickets/${ticketId}/messages`,
       { content }
-    );
-  }
-
-  getTicketTimeline(guildId: string, ticketId: string): Observable<TicketTimelineEvent[]> {
-    return this.http.get<TicketTimelineEvent[]>(
-      `${this.baseUrl}/api/guilds/${guildId}/tickets/${ticketId}/timeline`
     );
   }
 
@@ -354,4 +429,18 @@ export class GuildService {
       updatedAt: role.createdAt
     };
   }
+}
+
+function summaryToLegacyTicket(summary: TicketSummaryReadModel): Ticket {
+  return {
+    id: summary.ticketId,
+    guildId: summary.guildId,
+    ticketNumber: summary.ticketNumber,
+    ownerDiscordUserId: summary.ownerDiscordId,
+    ownerDisplayName: summary.ownerUsername,
+    channelDiscordId: summary.discordChannelId,
+    status: summary.status,
+    createdAt: summary.createdAt,
+    closedAt: summary.closedAt
+  };
 }

@@ -1,6 +1,6 @@
 # Known Issues
 
-Active issues as of 2026-07-02. Verify against latest code before treating as current.
+Active issues as of 2026-07-02 (updated R-002). Verify against latest code before treating as current.
 
 ---
 
@@ -9,8 +9,9 @@ Active issues as of 2026-07-02. Verify against latest code before treating as cu
 | Issue | Workaround | Status |
 |-------|------------|--------|
 | Wrong Vercel domain shows stale/different app | Use correct project URL (`discord-bot-eight-gamma.vercel.app` per audit) | Documented |
-| API must restart after rebuild for new routes (e.g. DELETE logs) | Restart local API on :5217 | Operational |
-| `UnifyGuildPermissions` migration not applied on prod until deploy | Run migrate before code deploy | Pending deploy |
+| API must restart after rebuild for new routes | Restart API service after deploy | Operational |
+| Production code may lag repo (CM-003/004 routes) | Deploy API + run migrations per `release-0.1-checklist.md` | **Action required** (R-002) |
+| `TicketTimelineEvents` missing if migrations skipped | Run `./deploy/railway/migrate.sh` | Documented in migration report |
 
 ---
 

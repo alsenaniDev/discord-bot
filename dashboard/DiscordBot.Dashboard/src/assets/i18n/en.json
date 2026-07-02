@@ -72,6 +72,8 @@
     "settingsSubtitle": "Configure bot features for this server",
     "tickets": "Tickets",
     "ticketsSubtitle": "Support tickets opened in Discord",
+    "ticketTranscript": "Ticket transcript",
+    "ticketTranscriptSubtitle": "Full durable record from Timeline — not the Discord archive digest",
     "moderation": "Moderation",
     "moderationSubtitle": "Warnings and moderation cases",
     "modules": "Modules",
@@ -201,7 +203,7 @@
     "ticketCategory": "Ticket category",
     "selectCategory": "Select a category…",
     "ticketArchiveChannel": "Ticket archive channel",
-    "ticketArchiveChannelHint": "Closed ticket transcripts are posted here before the channel is deleted.",
+    "ticketArchiveChannelHint": "Closed ticket archive digests (summaries) are posted here before the channel is deleted. The full transcript is in the Dashboard.",
     "ticketWelcomeTitle": "Ticket welcome title",
     "ticketWelcomeMessage": "Ticket welcome message",
     "ticketClosedMessage": "Ticket closed message (Discord)",
@@ -295,6 +297,39 @@
     "replySuccess": "Reply queued. The bot will post it in Discord shortly.",
     "replyError": "Could not send the reply.",
     "replyEmpty": "Enter a message before sending.",
+    "lastActivity": "Last activity",
+    "preview": "Preview",
+    "stats": "Stats",
+    "statsMessages": "{{count}} messages",
+    "statsReplies": "{{count}} staff replies",
+    "statsFailed": "{{count}} failed deliveries",
+    "filters": {
+      "status": "Status",
+      "all": "All tickets"
+    },
+    "pagination": {
+      "total": "{{count}} tickets",
+      "prev": "Previous",
+      "next": "Next",
+      "page": "Page {{page}} of {{total}}"
+    },
+    "conversation": {
+      "view": "Conversation",
+      "hide": "Hide conversation",
+      "title": "Ticket #{{number}} conversation",
+      "channel": "Channel ID",
+      "loading": "Loading conversation…",
+      "loadError": "Could not load the ticket conversation.",
+      "empty": "No conversation events recorded yet.",
+      "refresh": "Refresh",
+      "loadMore": "Load more",
+      "delivery": {
+        "none": "No delivery state",
+        "queued": "Queued for delivery",
+        "delivered": "Delivered to Discord",
+        "failed": "Delivery failed"
+      }
+    },
     "timeline": {
       "view": "Timeline",
       "hide": "Hide timeline",
@@ -312,6 +347,22 @@
         "statusChanged": "Status changed",
         "archivePosted": "Archive posted"
       }
+    },
+    "transcript": {
+      "view": "View transcript",
+      "title": "Ticket #{{number}} transcript",
+      "subtitle": "Full durable record reconstructed from Timeline events.",
+      "loading": "Loading transcript…",
+      "loadError": "Could not load the ticket transcript.",
+      "empty": "No transcript entries recorded yet.",
+      "refresh": "Refresh",
+      "loadMore": "Load more",
+      "backToList": "Back to tickets",
+      "source": "Source",
+      "entriesTitle": "Timeline entries",
+      "internalNote": "Internal note",
+      "archiveNoticeTitle": "Archive is not the transcript",
+      "archiveNoticeBody": "Discord archive channels receive a short digest only. This page is the authoritative transcript and remains available after the ticket channel is deleted."
     }
   },
   "moderation": {

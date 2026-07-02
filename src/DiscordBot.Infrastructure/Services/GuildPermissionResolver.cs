@@ -194,6 +194,9 @@ public static class GuildPermissionMapper
                 || permissions.HasFlag(GuildPermissions.ClearLogs)
                 || canModeratePages,
             CanAccessTickets = canManage || HasTicketAccess(permissions) || canModeratePages,
+            CanViewTickets = CanViewTickets(resolved),
+            CanReplyToTickets = CanReplyToTickets(resolved),
+            CanCloseTickets = CanCloseTickets(resolved),
             CanAccessOverview = canManage,
             CanClearLogs = canManage || permissions.HasFlag(GuildPermissions.ClearLogs)
         };
@@ -246,4 +249,22 @@ public static class GuildPermissionMapper
         || permissions.HasFlag(GuildPermissions.ReplyToTickets)
         || permissions.HasFlag(GuildPermissions.CloseTickets)
         || permissions.HasFlag(GuildPermissions.ManageTickets);
+
+    public static bool CanViewTickets(ResolvedGuildPermissions resolved) =>
+        resolved.IsOwner
+        || resolved.IsPlatformAdmin
+        || resolved.Permissions.HasFlag(GuildPermissions.ViewTickets)
+        || resolved.Permissions.HasFlag(GuildPermissions.ManageTickets);
+
+    public static bool CanReplyToTickets(ResolvedGuildPermissions resolved) =>
+        resolved.IsOwner
+        || resolved.IsPlatformAdmin
+        || resolved.Permissions.HasFlag(GuildPermissions.ReplyToTickets)
+        || resolved.Permissions.HasFlag(GuildPermissions.ManageTickets);
+
+    public static bool CanCloseTickets(ResolvedGuildPermissions resolved) =>
+        resolved.IsOwner
+        || resolved.IsPlatformAdmin
+        || resolved.Permissions.HasFlag(GuildPermissions.CloseTickets)
+        || resolved.Permissions.HasFlag(GuildPermissions.ManageTickets);
 }

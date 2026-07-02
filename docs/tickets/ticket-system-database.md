@@ -90,6 +90,8 @@
 
 **Traceability:** D-001 §3, §8 · BR-C06, BR-T01–T03, BR-T05, BR-S03, BR-X03
 
+**Read models (CM-003):** Ticket Summary and Ticket Conversation are **query projections** over `Tickets` + `TicketTimelineEvents` — no separate projection tables in v1. Service: `TicketReadService`.
+
 ---
 
 ### Table: `GuildSettings` (ticket columns)

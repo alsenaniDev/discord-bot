@@ -1,7 +1,7 @@
 # Ticket System — Dashboard UX & Implementation
 
-**Route:** `/guilds/:id/tickets`  
-**Component:** `TicketsComponent`  
+**Route:** `/guilds/:id/tickets` · `/guilds/:id/tickets/:ticketId/transcript`  
+**Components:** `TicketsComponent`, `TicketTranscriptComponent`  
 **Guard:** `GuildAccessGuard` with `guildAccess: 'moderation'`
 
 ---
@@ -11,7 +11,8 @@
 | Location | Ticket-related UX |
 |----------|-------------------|
 | **Sidebar** | "Tickets" link when `canAccessModeration` |
-| **`/guilds/:id/tickets`** | List table + inline reply/close |
+| **`/guilds/:id/tickets`** | List table + inline reply/close + conversation panel |
+| **`/guilds/:id/tickets/:ticketId/transcript`** | Full transcript (CM-004) — Timeline-derived durable record |
 | **`/guilds/:id/settings` → Tickets tab** | Category, archive channel, message templates |
 | **`/guilds/:id/settings` → Button panel tab** | Ticket open/help buttons |
 | **`/guilds/:id/overview`** | Stats: total/open/closed ticket counts |
@@ -23,40 +24,59 @@
 
 ## Tickets List Page
 
-### Implemented UI
-
 **File:** `tickets.component.html` / `tickets.component.ts`
+
+**API calls:** `GuildService.getTicketSummaries`, `getTicketConversation`, `getTicketTranscript`, `closeTicket`, `sendTicketMessage`
+
+**Read models (CM-003):**
+- List uses **Ticket Summary** (`lastActivityAt`, preview, counts, pagination, status filter)
+- Conversation panel uses **Ticket Conversation** (delivery badges, cursor load-more)
+- Permissions from `GuildAccess`: `canViewTickets`, `canReplyToTickets`, `canCloseTickets` (server enforced)
+
+### Implemented UI
 
 | Element | Behavior |
 |---------|----------|
-| Loading state | Spinner with i18n message |
-| Error state | Empty state + retry |
-| Empty state | Icon + hint when no tickets |
-| Data table | Number, status badge, owner, channel, created, closed |
-| Actions (open tickets) | Reply toggle, Close button |
-| Timeline | Expandable per-ticket timeline panel (load + refresh) |
-| Reply box | Textarea + send (inline in row) |
-| Close | `window.confirm` → PATCH close API |
-
-**API calls:** `GuildService.getTickets`, `closeTicket`, `sendTicketMessage`, `getTicketTimeline`
-
-**Timeline panel:** Shows event type, timestamp, actor, and content for all Timeline v1 event types. Refreshes after a successful dashboard reply when expanded.
+| Loading / error / empty states | Spinner, retry, hints |
+| Status filter | All / Open / Closed |
+| Pagination | Page prev/next when `totalPages > 1` |
+| Summary columns | Number, status, owner, last activity, preview, message/reply/failed stats |
+| Conversation panel | Expandable; event type, actor, delivery state, content |
+| Delivery indicators | Queued / Delivered / Failed border + badge |
+| Closed tickets | Readable via conversation panel and dedicated **transcript** route without Discord channel |
+| Transcript page | Metadata (number, owner, status, created/closed, source=Timeline) + paginated Timeline entries + Archive vs Transcript notice |
+| View transcript | Button on closed tickets → `/guilds/:id/tickets/:ticketId/transcript` |
+| Reply / Close | Hidden unless `canReplyToTickets` / `canCloseTickets` |
+| Close confirm | `window.confirm` → PATCH close API |
 
 ### Missing UI
 
 | Feature | Priority |
 |---------|----------|
-| Ticket detail / conversation page | P1 |
-| Status filter (open/closed/all) | P0 |
-| Pagination | P1 |
+| Dedicated ticket detail route | P2 — partial via transcript route (CM-004) |
 | Search by number/owner | P1 |
 | Assignee column | P2 |
-| Last activity timestamp | P1 |
-| Reply delivery status | P1 |
-| Permission-aware actions (reply vs close) | P0 |
-| Link to Discord channel | P2 |
-| Transcript download | P2 |
-| Mobile-responsive table | P2 |
+| Transcript download | P2 — HTML/PDF export out of scope; Dashboard transcript view shipped (CM-004) |
+| Mobile-responsive table polish | P2 |
+
+---
+
+## Transcript Page (CM-004)
+
+**Route:** `/guilds/:id/tickets/:ticketId/transcript`  
+**File:** `ticket-transcript.component.{ts,html,css}`
+
+**API:** `GET /api/guilds/{id}/tickets/{ticketId}/transcript` via `GuildService.getTicketTranscript`
+
+**UI:**
+- Prominent notice: Archive (Discord digest) ≠ Transcript (Timeline truth)
+- Metadata grid: status, owner, created, closed, source
+- Paginated Timeline entries with delivery badges
+- Internal note badge when `isInternal` (staff-only entries filtered server-side)
+- Load more cursor pagination
+- Back to tickets list
+
+**Access:** Same guard as tickets list (`guildAccess: 'moderation'`); API enforces `ViewTickets`.
 
 ---
 
@@ -83,7 +103,7 @@
 - No UI for **staff role channel access** (which Discord roles see tickets).
 - No **multi-category** management.
 - No **auto-close** settings.
-- Archive channel help text implies full transcripts — must update after Phase 1.
+- Archive channel help text updated (CM-004) — digest vs transcript distinction
 - `/ticket setup` still required for initial enable — settings tab does not enable tickets alone (category must exist).
 
 ---

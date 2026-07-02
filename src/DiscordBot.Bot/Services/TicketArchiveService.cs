@@ -2,8 +2,10 @@ using Discord;
 using Discord.WebSocket;
 using DiscordBot.Bot.Api;
 using DiscordBot.Bot.Api.Models;
+using DiscordBot.Bot.Configuration;
 using DiscordBot.Domain.Enums;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 namespace DiscordBot.Bot.Services;
 
@@ -15,23 +17,27 @@ public class TicketArchiveService
     private readonly BotApiClient _apiClient;
     private readonly EmbedBuilderService _embeds;
     private readonly BotLogWriter _logWriter;
+    private readonly PlatformOptions _platformOptions;
     private readonly ILogger<TicketArchiveService> _logger;
 
     public TicketArchiveService(
         BotApiClient apiClient,
         EmbedBuilderService embeds,
         BotLogWriter logWriter,
+        IOptions<PlatformOptions> platformOptions,
         ILogger<TicketArchiveService> logger)
     {
         _apiClient = apiClient;
         _embeds = embeds;
         _logWriter = logWriter;
+        _platformOptions = platformOptions.Value;
         _logger = logger;
     }
 
     public async Task TryArchiveTicketAsync(
         DiscordSocketClient client,
         SocketGuild guild,
+        Guid platformGuildId,
         Guid ticketId,
         int ticketNumber,
         string ownerDiscordUserId,
@@ -61,13 +67,14 @@ public class TicketArchiveService
 
         try
         {
-            // BR-X03: Archive preview is built from Timeline, not Discord channel history.
-            var preview = await BuildTranscriptPreviewFromTimelineAsync(ticketId, cancellationToken);
+            // BR-X03: Archive digest is built from Timeline, not Discord channel history.
+            var digestPreview = await BuildArchiveDigestPreviewFromTimelineAsync(ticketId, cancellationToken);
             var resolvedClosedByName = closedByName
                 ?? closedBy?.GlobalName
                 ?? closedBy?.Username
                 ?? "Unknown";
             var resolvedClosedById = closedById ?? closedBy?.Id.ToString() ?? "—";
+            var transcriptUrl = BuildTranscriptUrl(platformGuildId, ticketId);
             var embed = _embeds.BuildTicketArchive(
                 ticketNumber,
                 ownerDisplayName ?? ownerDiscordUserId,
@@ -75,7 +82,8 @@ public class TicketArchiveService
                 resolvedClosedByName,
                 resolvedClosedById,
                 closedAt ?? DateTimeOffset.UtcNow,
-                preview);
+                digestPreview,
+                transcriptUrl);
 
             await archiveChannel.SendMessageAsync(embed: embed);
 
@@ -92,7 +100,7 @@ public class TicketArchiveService
             await _logWriter.WriteAsync(
                 guild.Id.ToString(),
                 LogEventType.TicketArchived,
-                $"Ticket #{ticketNumber} transcript archived.",
+                $"Ticket #{ticketNumber} archive digest posted.",
                 resolvedClosedById == "—" ? null : resolvedClosedById,
                 ownerDiscordUserId,
                 archiveChannelId,
@@ -119,6 +127,7 @@ public class TicketArchiveService
         TryArchiveTicketAsync(
             client,
             guild,
+            item.GuildId,
             item.TicketId,
             item.TicketNumber,
             item.OwnerDiscordUserId,
@@ -130,35 +139,43 @@ public class TicketArchiveService
             item.ClosedByDiscordUserId,
             cancellationToken);
 
-    private async Task<string> BuildTranscriptPreviewFromTimelineAsync(
+    private string? BuildTranscriptUrl(Guid platformGuildId, Guid ticketId)
+    {
+        if (platformGuildId == Guid.Empty)
+        {
+            return null;
+        }
+
+        var baseUrl = _platformOptions.DashboardUrl?.TrimEnd('/');
+        if (string.IsNullOrWhiteSpace(baseUrl))
+        {
+            return null;
+        }
+
+        return $"{baseUrl}/guilds/{platformGuildId}/tickets/{ticketId}/transcript";
+    }
+
+    private async Task<string> BuildArchiveDigestPreviewFromTimelineAsync(
         Guid ticketId,
         CancellationToken cancellationToken)
     {
-        var events = await _apiClient.GetTicketTimelineAsync(ticketId, limit: 100, cancellationToken);
-        if (events.Count == 0)
+        var conversation = await _apiClient.GetTicketConversationAsync(ticketId, limit: 100, cancellationToken);
+        if (conversation is null || conversation.Items.Count == 0)
         {
-            return "_No messages recorded on the ticket timeline yet._\n_Open the dashboard to view the full timeline._";
+            return "_No messages recorded on the ticket timeline yet._";
         }
 
-        var failedQueuedIds = events
-            .Where(e => string.Equals(e.EventType, nameof(TicketTimelineEventType.StaffReplyFailed), StringComparison.Ordinal)
-                && e.RelatedTimelineEventId.HasValue)
-            .Select(e => e.RelatedTimelineEventId!.Value)
-            .ToHashSet();
-
-        var lines = events
+        var lines = conversation.Items
             .Where(e => !string.IsNullOrWhiteSpace(e.Content))
             .Where(e =>
-                string.Equals(e.EventType, nameof(TicketTimelineEventType.MessageSent), StringComparison.Ordinal)
-                || (string.Equals(e.EventType, nameof(TicketTimelineEventType.StaffReplyQueued), StringComparison.Ordinal)
-                    && !failedQueuedIds.Contains(e.Id)))
+                string.Equals(e.EventType, "MessageSent", StringComparison.Ordinal)
+                || (string.Equals(e.EventType, "StaffReplyQueued", StringComparison.Ordinal)
+                    && !string.Equals(e.DeliveryStatus, "Failed", StringComparison.Ordinal)))
             .Select(e =>
             {
-                var name = string.IsNullOrWhiteSpace(e.ActorDisplayName) ? "Unknown" : e.ActorDisplayName;
-                var staffSuffix = string.Equals(
-                    e.EventType,
-                    nameof(TicketTimelineEventType.StaffReplyQueued),
-                    StringComparison.Ordinal)
+                var name = string.IsNullOrWhiteSpace(e.ActorUsername) ? "Unknown" : e.ActorUsername;
+                var staffSuffix = string.Equals(e.ActorType, "Staff", StringComparison.Ordinal)
+                    && string.Equals(e.EventType, "StaffReplyQueued", StringComparison.Ordinal)
                     ? " (Staff)"
                     : string.Empty;
 
@@ -169,20 +186,16 @@ public class TicketArchiveService
 
         if (lines.Count == 0)
         {
-            return "_No messages recorded on the ticket timeline yet._\n_Open the dashboard to view the full timeline._";
+            return "_No messages recorded on the ticket timeline yet._";
         }
 
         var preview = string.Join('\n', lines);
         if (preview.Length > MaxPreviewLength)
         {
-            preview = preview[..MaxPreviewLength] + "\n…\n_Open the dashboard to view the full timeline._";
-        }
-        else
-        {
-            preview += "\n_Open the dashboard to view the full timeline._";
+            preview = preview[..MaxPreviewLength] + "\n…";
         }
 
-        return preview;
+        return preview + "\n_Summary generated from Timeline — not a complete transcript._";
     }
 
     private static string Truncate(string value, int maxLength) =>

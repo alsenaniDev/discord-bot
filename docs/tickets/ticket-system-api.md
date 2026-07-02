@@ -9,39 +9,128 @@
 
 ### `GET /api/guilds/{id}/tickets`
 
-**Auth:** JWT — Discord user id from token  
-**Permission today:** `CanAccessModerationPagesAsync` (coarse)  
-**Permission v1:** `ViewTickets` or guild owner/platform admin
+**Auth:** JWT  
+**Permission:** `ViewTickets` (or owner/platform admin) — enforced server-side via `ITicketReadService`
 
-**Response:** `200 TicketDto[]`
+**Query:** `status` (`Open`|`Closed`), `page` (default 1), `pageSize` (default 20, max 100), `sort` (`lastActivity`|`created`|`number`)
+
+**Response:** `200 PaginatedTicketSummaryReadModel`
 
 ```json
 {
-  "id": "uuid",
-  "guildId": "uuid",
-  "ticketNumber": 1,
-  "ownerDiscordUserId": "123",
-  "ownerDisplayName": "User",
-  "channelDiscordId": "456",
-  "channelName": "ticket-1",
-  "status": "Open",
-  "createdAt": "2026-07-02T12:00:00Z",
-  "closedAt": null
+  "items": [
+    {
+      "ticketId": "uuid",
+      "guildId": "uuid",
+      "ticketNumber": 1,
+      "ownerDiscordId": "123",
+      "ownerUsername": "User",
+      "status": "Open",
+      "discordChannelId": "456",
+      "createdAt": "2026-07-02T12:00:00Z",
+      "closedAt": null,
+      "lastActivityAt": "2026-07-02T13:00:00Z",
+      "lastMessagePreview": "Hello, I need help…",
+      "messageCount": 3,
+      "staffReplyCount": 1,
+      "failedDeliveryCount": 0
+    }
+  ],
+  "page": 1,
+  "pageSize": 20,
+  "totalCount": 1,
+  "totalPages": 1
 }
 ```
 
-**Edge case (bug):** If result is empty **and** user lacks moderation access → `404`. Authorized users with zero tickets should get `200 []`.
+**Read model:** Ticket Summary (AR-001, CM-003) — query projection over `Tickets` + aggregated `TicketTimelineEvents`
 
-**Controller:** `GuildsController.GetTickets`  
-**Service:** `TicketService.GetGuildTicketsAsync`
+**Replaces:** legacy `GetGuildTicketsAsync` / non-paginated `TicketDto[]` list (removed R-002). Dashboard uses `GuildService.getTicketSummaries()`.
+
+**Controller:** `GuildsController.GetTicketSummaries`  
+**Service:** `TicketReadService.GetTicketSummariesAsync`
+
+---
+
+## Legacy & Transitional Endpoints (R-002)
+
+| Endpoint | Status | Use instead |
+|----------|--------|-------------|
+| `GET /api/guilds/{id}/tickets` (paginated summaries) | ✅ **Current** | — |
+| `ITicketService.GetGuildTicketsAsync` | ❌ **Removed** (R-002) | `ITicketReadService.GetTicketSummariesAsync` |
+| Dashboard `getTickets()` | ⚠️ **Deprecated wrapper** | `getTicketSummaries()` — maps summaries to legacy `Ticket` shape; no callers in app |
+| `GET .../tickets/{ticketId}/timeline` (dashboard JWT) | ⚠️ **Transitional** | `/conversation` or `/transcript` |
+| `GET /api/bot/tickets/{ticketId}/timeline` | ⚠️ **Transitional** | `/api/bot/tickets/{ticketId}/conversation` |
+| `PATCH .../close`, `POST .../messages` | ✅ **Current** write paths | — |
+
+No conflict between Ticket Summary Read Model and removed legacy list method — single list path via `ITicketReadService`.
+
+---
+
+### `GET /api/guilds/{id}/tickets/{ticketId}/conversation`
+
+**Auth:** JWT  
+**Permission:** `ViewTickets`
+
+**Query:** `limit` (default 50, max 200), cursor pagination via `cursorOccurredAt` + `cursorEventId`
+
+**Response:** `200 PaginatedTicketConversationReadModel`
+
+Entry fields: `eventId`, `ticketId`, `eventType`, `actorType`, `actorDiscordId`, `actorUsername`, `content`, `isInternal`, `deliveryStatus`, `occurredAt`, `createdAt`
+
+**Read model:** Ticket Conversation (AR-001, CM-003) — presentation projection over Timeline Events (not raw aggregate exposure)
+
+**Works for closed tickets** without Discord channel.
+
+---
+
+### `GET /api/guilds/{id}/tickets/{ticketId}/transcript`
+
+**Auth:** JWT  
+**Permission:** `ViewTickets`
+
+**Query:** Same cursor pagination as `/conversation` — `limit` (default 50, max 200), `cursorOccurredAt` + `cursorEventId`
+
+**Response:** `200 TicketTranscriptReadModel`
+
+```json
+{
+  "metadata": {
+    "ticketId": "uuid",
+    "guildId": "uuid",
+    "ticketNumber": 1,
+    "ownerDiscordId": "123",
+    "ownerUsername": "User",
+    "status": "Closed",
+    "createdAt": "2026-07-02T12:00:00Z",
+    "closedAt": "2026-07-02T14:00:00Z",
+    "source": "Timeline",
+    "discordArchiveIsDigestOnly": true
+  },
+  "entries": [ /* TicketConversationEntryReadModel[] */ ],
+  "hasMore": false,
+  "nextCursorOccurredAt": null,
+  "nextCursorEventId": null
+}
+```
+
+**Read model:** Ticket Transcript (AR-001, CM-004) — metadata + Conversation projection over Timeline. **Archive is not Transcript:** Discord archive channel posts a digest only; this endpoint is the durable full record.
+
+**Internal notes:** Entries with `isInternal = true` are omitted unless the caller also has `ReplyToTickets` (staff visibility proxy until Internal Notes ship).
+
+**Controller:** `GuildsController.GetTicketTranscript`  
+**Service:** `TicketReadService.GetTicketTranscriptAsync`
+
+**Works for closed tickets** after Discord channel deletion (no channel dependency).
+
+**Distinction from `/conversation`:** Transcript wraps ticket metadata and documents that Discord archive is digest-only. Entry pagination uses the same Timeline projection.
 
 ---
 
 ### `PATCH /api/guilds/{id}/tickets/{ticketId}/close`
 
 **Auth:** JWT  
-**Permission today:** `CanAccessModerationPagesAsync`  
-**Permission v1:** `CloseTickets`
+**Permission:** `CloseTickets` (CM-003)
 
 **Behavior:**
 - Sets `Status = Closed`, `ClosedAt = now`, `ChannelCleanupRequested = true`
@@ -55,8 +144,7 @@
 ### `POST /api/guilds/{id}/tickets/{ticketId}/messages`
 
 **Auth:** JWT  
-**Permission today:** `CanAccessModerationPagesAsync`  
-**Permission v1:** `ReplyToTickets`
+**Permission:** `ReplyToTickets` (CM-003)
 
 **Body:** `SendTicketMessageRequest`
 
@@ -77,13 +165,9 @@
 ### `GET /api/guilds/{id}/tickets/{ticketId}/timeline`
 
 **Auth:** JWT  
-**Permission today:** `CanAccessModerationPagesAsync`
+**Permission:** `ViewTickets`
 
-**Response:** `200 TicketTimelineEventDto[]` ordered by `OccurredAt` ascending
-
-**DTO fields:** `id`, `ticketId`, `eventType`, `occurredAt`, `actorDiscordUserId`, `actorDisplayName`, `content`, `relatedTimelineEventId`, `metadataJson`
-
-**Traceability:** D-001 §8
+**Note:** Legacy/raw Timeline DTO. Dashboard should use **`/conversation`** (CM-003). Bot may still use bot timeline route.
 
 ## Bot Endpoints (Implemented)
 
@@ -134,7 +218,7 @@ Mark closed from Discord (does **not** set `ChannelCleanupRequested`).
 
 Returns tickets where `Status = Closed AND ChannelCleanupRequested = true`.
 
-**DTO:** `TicketChannelCleanupDto` — includes archive channel id, closed message template, owner/closed-by display names
+**DTO:** `TicketChannelCleanupDto` — includes platform `guildId`, archive channel id, closed message template, owner/closed-by display names
 
 ---
 
@@ -186,9 +270,17 @@ Records `ArchivePosted` after archive embed is sent (BR-T05).
 
 ---
 
+### `GET /api/bot/tickets/{ticketId}/conversation`
+
+Returns **Ticket Conversation Read Model** for bot consumers (archive preview). Cursor pagination supported. Optional `?limit=` (default 100).
+
+**Used by:** `TicketArchiveService` (CM-003)
+
+---
+
 ### `GET /api/bot/tickets/{ticketId}/timeline`
 
-Returns timeline events for bot consumers (e.g. archive preview). Optional `?limit=` (most recent N, returned ascending).
+Returns raw timeline events (legacy). Prefer **`/conversation`** for presentation-layer reads.
 
 ---
 

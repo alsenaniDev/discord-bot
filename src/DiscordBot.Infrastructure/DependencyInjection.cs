@@ -34,6 +34,7 @@ public static class DependencyInjection
         services.AddScoped<ICommandPanelService, CommandPanelService>();
         services.AddScoped<ITicketService, TicketService>();
         services.AddScoped<ITicketTimelineService, TicketTimelineService>();
+        services.AddScoped<ITicketReadService, TicketReadService>();
         services.AddScoped<IAutoReplyService, AutoReplyService>();
         services.AddScoped<IModerationService, ModerationService>();
         services.AddScoped<IModuleService, ModuleService>();

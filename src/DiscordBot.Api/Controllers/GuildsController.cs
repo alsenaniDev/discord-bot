@@ -16,6 +16,7 @@ public class GuildsController : ControllerBase
     private readonly IGuildService _guildService;
     private readonly IGuildResourceService _resourceService;
     private readonly ITicketService _ticketService;
+    private readonly ITicketReadService _ticketReadService;
     private readonly IModerationService _moderationService;
     private readonly IModuleService _moduleService;
     private readonly ILogService _logService;
@@ -31,6 +32,7 @@ public class GuildsController : ControllerBase
         IGuildService guildService,
         IGuildResourceService resourceService,
         ITicketService ticketService,
+        ITicketReadService ticketReadService,
         IModerationService moderationService,
         IModuleService moduleService,
         ILogService logService,
@@ -45,6 +47,7 @@ public class GuildsController : ControllerBase
         _guildService = guildService;
         _resourceService = resourceService;
         _ticketService = ticketService;
+        _ticketReadService = ticketReadService;
         _moderationService = moderationService;
         _moduleService = moduleService;
         _logService = logService;
@@ -158,12 +161,16 @@ public class GuildsController : ControllerBase
     }
 
     /// <summary>
-    /// Lists tickets for a guild the user owns.
+    /// Returns paginated Ticket Summary Read Models (AR-001, CM-003).
     /// </summary>
     [HttpGet("{id:guid}/tickets")]
-    public async Task<ActionResult<IReadOnlyList<TicketDto>>> GetTickets(
+    public async Task<ActionResult<PaginatedTicketSummaryReadModel>> GetTicketSummaries(
         Guid id,
-        CancellationToken cancellationToken)
+        [FromQuery] TicketStatus? status,
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 20,
+        [FromQuery] string sort = "lastActivity",
+        CancellationToken cancellationToken = default)
     {
         var discordUserId = User.GetDiscordUserId();
         if (string.IsNullOrWhiteSpace(discordUserId))
@@ -171,17 +178,100 @@ public class GuildsController : ControllerBase
             return Unauthorized(new { message = "Missing Discord user identity in token." });
         }
 
-        var tickets = await _ticketService.GetGuildTicketsAsync(id, discordUserId, cancellationToken);
-        if (tickets.Count == 0)
-        {
-            var hasAccess = await _guildAccessService.CanAccessModerationPagesAsync(id, discordUserId, cancellationToken);
-            if (!hasAccess)
+        var summaries = await _ticketReadService.GetTicketSummariesAsync(
+            id,
+            discordUserId,
+            new TicketSummaryQuery
             {
-                return NotFound(new { message = "Guild not found or access denied." });
-            }
+                Status = status,
+                Page = page,
+                PageSize = pageSize,
+                Sort = sort
+            },
+            cancellationToken);
+
+        if (summaries is null)
+        {
+            return NotFound(new { message = "Guild not found or access denied." });
         }
 
-        return Ok(tickets);
+        return Ok(summaries);
+    }
+
+    /// <summary>
+    /// Returns paginated Ticket Conversation Read Model (AR-001, CM-003).
+    /// </summary>
+    [HttpGet("{id:guid}/tickets/{ticketId:guid}/conversation")]
+    public async Task<ActionResult<PaginatedTicketConversationReadModel>> GetTicketConversation(
+        Guid id,
+        Guid ticketId,
+        [FromQuery] DateTimeOffset? cursorOccurredAt,
+        [FromQuery] Guid? cursorEventId,
+        [FromQuery] int limit = 50,
+        CancellationToken cancellationToken = default)
+    {
+        var discordUserId = User.GetDiscordUserId();
+        if (string.IsNullOrWhiteSpace(discordUserId))
+        {
+            return Unauthorized(new { message = "Missing Discord user identity in token." });
+        }
+
+        var conversation = await _ticketReadService.GetTicketConversationAsync(
+            id,
+            ticketId,
+            discordUserId,
+            new TicketConversationQuery
+            {
+                CursorOccurredAt = cursorOccurredAt,
+                CursorEventId = cursorEventId,
+                Limit = limit
+            },
+            cancellationToken);
+
+        if (conversation is null)
+        {
+            return NotFound(new { message = "Ticket not found or access denied." });
+        }
+
+        return Ok(conversation);
+    }
+
+    /// <summary>
+    /// Returns paginated Ticket Transcript Read Model (AR-001, CM-004) — full durable record from Timeline.
+    /// </summary>
+    [HttpGet("{id:guid}/tickets/{ticketId:guid}/transcript")]
+    public async Task<ActionResult<TicketTranscriptReadModel>> GetTicketTranscript(
+        Guid id,
+        Guid ticketId,
+        [FromQuery] DateTimeOffset? cursorOccurredAt,
+        [FromQuery] Guid? cursorEventId,
+        [FromQuery] int limit = 50,
+        CancellationToken cancellationToken = default)
+    {
+        var discordUserId = User.GetDiscordUserId();
+        if (string.IsNullOrWhiteSpace(discordUserId))
+        {
+            return Unauthorized(new { message = "Missing Discord user identity in token." });
+        }
+
+        var transcript = await _ticketReadService.GetTicketTranscriptAsync(
+            id,
+            ticketId,
+            discordUserId,
+            new TicketTranscriptQuery
+            {
+                CursorOccurredAt = cursorOccurredAt,
+                CursorEventId = cursorEventId,
+                Limit = limit
+            },
+            cancellationToken);
+
+        if (transcript is null)
+        {
+            return NotFound(new { message = "Ticket not found or access denied." });
+        }
+
+        return Ok(transcript);
     }
 
     /// <summary>
@@ -214,7 +304,7 @@ public class GuildsController : ControllerBase
     }
 
     /// <summary>
-    /// Returns the Ticket Timeline for a guild ticket (D-001 §8).
+    /// Returns raw Ticket Timeline DTOs (legacy). Prefer GET .../conversation or .../transcript (CM-003/004).
     /// </summary>
     [HttpGet("{id:guid}/tickets/{ticketId:guid}/timeline")]
     public async Task<ActionResult<IReadOnlyList<TicketTimelineEventDto>>> GetTicketTimeline(
