@@ -23,9 +23,10 @@
 .archive-notice {
   padding: var(--space-3);
   margin-bottom: var(--space-4);
-  border-radius: var(--radius-md, 8px);
-  border: 1px solid var(--border-color, rgba(0, 0, 0, 0.08));
-  background: var(--surface-muted, rgba(0, 0, 0, 0.02));
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-panel);
+  color: var(--color-text);
 }
 
 .archive-notice p {
@@ -43,13 +44,14 @@
   font-size: 0.75rem;
   text-transform: uppercase;
   letter-spacing: 0.04em;
-  color: var(--text-muted, #666);
+  color: var(--color-text-muted);
   margin-bottom: var(--space-1);
 }
 
 .transcript-meta dd {
   margin: 0;
   font-weight: 500;
+  color: var(--color-text);
 }
 
 .transcript-entries h3 {
@@ -68,25 +70,26 @@
 
 .conversation-item {
   padding: var(--space-3);
-  border: 1px solid var(--border-color, rgba(0, 0, 0, 0.08));
-  border-radius: var(--radius-md, 8px);
-  background: var(--surface, #fff);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-bg-elevated);
+  color: var(--color-text);
 }
 
 .conversation-item.internal-note {
-  border-left: 3px solid var(--warning, #f0ad4e);
+  border-left: 3px solid var(--color-warning);
 }
 
 .conversation-item.delivery-queued {
-  border-left: 3px solid var(--warning, #f0ad4e);
+  border-left: 3px solid var(--color-warning);
 }
 
 .conversation-item.delivery-delivered {
-  border-left: 3px solid var(--success, #28a745);
+  border-left: 3px solid var(--color-success);
 }
 
 .conversation-item.delivery-failed {
-  border-left: 3px solid var(--danger, #c0392b);
+  border-left: 3px solid var(--color-error);
 }
 
 .conversation-item-head {
@@ -99,10 +102,12 @@
 
 .conversation-event-type {
   font-weight: 600;
+  color: var(--color-text);
 }
 
 .conversation-item-meta {
   margin-bottom: var(--space-1);
+  color: var(--color-text-secondary);
 }
 
 .delivery-badge,
@@ -110,14 +115,17 @@
   display: inline-block;
   margin-left: var(--space-2);
   padding: 0.1rem 0.4rem;
-  border-radius: 999px;
-  background: rgba(0, 0, 0, 0.06);
+  border-radius: var(--radius-full);
+  background: var(--color-bg-panel);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-secondary);
 }
 
 .conversation-item-content {
   margin-top: var(--space-2);
   white-space: pre-wrap;
   word-break: break-word;
+  color: var(--color-text);
 }
 
 .load-more-btn {
