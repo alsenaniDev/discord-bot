@@ -13,4 +13,9 @@ public class TicketOutboundMessage : BaseEntity
     public string? SenderDisplayName { get; set; }
     public bool IsDelivered { get; set; }
     public DateTimeOffset? DeliveredAt { get; set; }
+    public bool DeliveryFailed { get; set; }
+    public string? DeliveryFailureReason { get; set; }
+
+    /// <summary>StaffReplyQueued Timeline Event (D-001 §8, BR-T02).</summary>
+    public Guid StaffReplyQueuedTimelineEventId { get; set; }
 }

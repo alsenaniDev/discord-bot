@@ -1,10 +1,16 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, map, switchMap } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { GuildSettings, GuildSummary, DiscordChannel, DiscordRole, GuildOverview, RequestResourceSyncResponse, UpdateGuildSettings, GuildProfile, UpdateGuildProfile, ModerationPermissionRole, CreateModerationPermissionRole, UpdateModerationPermissionRole } from '../models/guild.models';
 import { GuildMember } from '../models/guild-member.models';
-import { Ticket } from '../models/ticket.models';
+import {
+  PaginatedTicketConversationReadModel,
+  PaginatedTicketSummaryReadModel,
+  Ticket,
+  TicketSummaryReadModel,
+  TicketTranscriptReadModel
+} from '../models/ticket.models';
 import { AutoReplyRule, CreateAutoReplyRule, UpdateAutoReplyRule } from '../models/auto-reply.models';
 import { ModerationCase, ModerationFilters, Warning } from '../models/moderation.models';
 import { GuildModule, UpdateGuildModuleRequest } from '../models/module.models';
@@ -15,8 +21,12 @@ import { PlanUpgradeRequest, CreatePlanUpgradeRequest } from '../models/upgrade-
 import {
   CreateGuildPermissionRoleRequest,
   GuildAccess,
+  GuildPermissionKey,
   GuildPermissionRole,
-  UpdateGuildPermissionRoleRequest
+  MODERATION_BOT_PERMISSION_KEYS,
+  UpdateGuildPermissionRoleRequest,
+  hasModerationBotPermissions,
+  normalizePermissionKeys
 } from '../models/staff.models';
 
 @Injectable({ providedIn: 'root' })
@@ -44,8 +54,83 @@ export class GuildService {
     );
   }
 
+  getTicketSummaries(
+    guildId: string,
+    options?: { status?: 'Open' | 'Closed'; page?: number; pageSize?: number; sort?: string }
+  ): Observable<PaginatedTicketSummaryReadModel> {
+    const params = new URLSearchParams();
+    if (options?.status) {
+      params.set('status', options.status);
+    }
+    if (options?.page) {
+      params.set('page', String(options.page));
+    }
+    if (options?.pageSize) {
+      params.set('pageSize', String(options.pageSize));
+    }
+    if (options?.sort) {
+      params.set('sort', options.sort);
+    }
+
+    const query = params.toString();
+    const url = query
+      ? `${this.baseUrl}/api/guilds/${guildId}/tickets?${query}`
+      : `${this.baseUrl}/api/guilds/${guildId}/tickets`;
+
+    return this.http.get<PaginatedTicketSummaryReadModel>(url);
+  }
+
+  getTicketConversation(
+    guildId: string,
+    ticketId: string,
+    options?: { cursorOccurredAt?: string; cursorEventId?: string; limit?: number }
+  ): Observable<PaginatedTicketConversationReadModel> {
+    const params = new URLSearchParams();
+    if (options?.cursorOccurredAt) {
+      params.set('cursorOccurredAt', options.cursorOccurredAt);
+    }
+    if (options?.cursorEventId) {
+      params.set('cursorEventId', options.cursorEventId);
+    }
+    if (options?.limit) {
+      params.set('limit', String(options.limit));
+    }
+
+    const query = params.toString();
+    const url = query
+      ? `${this.baseUrl}/api/guilds/${guildId}/tickets/${ticketId}/conversation?${query}`
+      : `${this.baseUrl}/api/guilds/${guildId}/tickets/${ticketId}/conversation`;
+
+    return this.http.get<PaginatedTicketConversationReadModel>(url);
+  }
+
+  getTicketTranscript(
+    guildId: string,
+    ticketId: string,
+    options?: { cursorOccurredAt?: string; cursorEventId?: string; limit?: number }
+  ): Observable<TicketTranscriptReadModel> {
+    const params = new URLSearchParams();
+    if (options?.cursorOccurredAt) {
+      params.set('cursorOccurredAt', options.cursorOccurredAt);
+    }
+    if (options?.cursorEventId) {
+      params.set('cursorEventId', options.cursorEventId);
+    }
+    if (options?.limit) {
+      params.set('limit', String(options.limit));
+    }
+
+    const query = params.toString();
+    const url = query
+      ? `${this.baseUrl}/api/guilds/${guildId}/tickets/${ticketId}/transcript?${query}`
+      : `${this.baseUrl}/api/guilds/${guildId}/tickets/${ticketId}/transcript`;
+
+    return this.http.get<TicketTranscriptReadModel>(url);
+  }
+
+  /** @deprecated Use getTicketSummaries */
   getTickets(guildId: string): Observable<Ticket[]> {
-    return this.http.get<Ticket[]>(`${this.baseUrl}/api/guilds/${guildId}/tickets`);
+    return this.getTicketSummaries(guildId).pipe(map(page => page.items.map(summaryToLegacyTicket)));
   }
 
   closeTicket(guildId: string, ticketId: string): Observable<Ticket> {
@@ -260,8 +345,8 @@ export class GuildService {
   }
 
   getModerationPermissionRoles(guildId: string): Observable<ModerationPermissionRole[]> {
-    return this.http.get<ModerationPermissionRole[]>(
-      `${this.baseUrl}/api/guilds/${guildId}/moderation/permission-roles`
+    return this.getStaff(guildId).pipe(
+      map(roles => roles.filter(role => hasModerationBotPermissions(role.permissionKeys)).map(role => this.toModerationPermissionRole(role)))
     );
   }
 
@@ -269,10 +354,14 @@ export class GuildService {
     guildId: string,
     request: CreateModerationPermissionRole
   ): Observable<ModerationPermissionRole> {
-    return this.http.post<ModerationPermissionRole>(
-      `${this.baseUrl}/api/guilds/${guildId}/moderation/permission-roles`,
-      request
-    );
+    const requestWithName: CreateModerationPermissionRole = request;
+    const payload: CreateGuildPermissionRoleRequest = {
+      name: requestWithName.name?.trim() || request.roleDiscordId,
+      discordRoleId: request.roleDiscordId,
+      permissionKeys: this.moderationRequestToPermissionKeys(request)
+    };
+
+    return this.addStaff(guildId, payload).pipe(map(role => this.toModerationPermissionRole(role)));
   }
 
   updateModerationPermissionRole(
@@ -280,15 +369,78 @@ export class GuildService {
     roleId: string,
     request: UpdateModerationPermissionRole
   ): Observable<ModerationPermissionRole> {
-    return this.http.put<ModerationPermissionRole>(
-      `${this.baseUrl}/api/guilds/${guildId}/moderation/permission-roles/${roleId}`,
-      request
+    return this.getStaff(guildId).pipe(
+      switchMap(roles => {
+        const existing = roles.find(role => role.id === roleId);
+        if (!existing) {
+          throw new Error('Permission role not found.');
+        }
+
+        const preservedKeys = normalizePermissionKeys(existing.permissionKeys)
+          .filter(key => !MODERATION_BOT_PERMISSION_KEYS.includes(key));
+        const mergedKeys = [...preservedKeys, ...this.moderationRequestToPermissionKeys(request)];
+
+        const payload: UpdateGuildPermissionRoleRequest = {
+          name: existing.name,
+          discordRoleId: request.roleDiscordId,
+          permissionKeys: mergedKeys
+        };
+
+        return this.updatePermissionRole(guildId, roleId, payload);
+      }),
+      map(role => this.toModerationPermissionRole(role))
     );
   }
 
   deleteModerationPermissionRole(guildId: string, roleId: string): Observable<void> {
-    return this.http.delete<void>(
-      `${this.baseUrl}/api/guilds/${guildId}/moderation/permission-roles/${roleId}`
-    );
+    return this.removeStaff(guildId, roleId).pipe(map(() => undefined));
   }
+
+  private moderationRequestToPermissionKeys(
+    request: CreateModerationPermissionRole | UpdateModerationPermissionRole
+  ): GuildPermissionKey[] {
+    const keys: GuildPermissionKey[] = [];
+
+    if (request.canWarn) keys.push('UseWarn');
+    if (request.canViewWarnings) keys.push('ViewWarnings');
+    if (request.canClearMessages) keys.push('UseClearMessages');
+    if (request.canKick) keys.push('UseKick');
+    if (request.canViewModerationCases) keys.push('ViewModerationCases');
+    if (request.canViewLogs) keys.push('ViewLogs');
+
+    return keys;
+  }
+
+  private toModerationPermissionRole(role: GuildPermissionRole): ModerationPermissionRole {
+    const keys = new Set(normalizePermissionKeys(role.permissionKeys));
+
+    return {
+      id: role.id,
+      guildId: role.guildId,
+      roleDiscordId: role.discordRoleId,
+      roleName: role.discordRoleName,
+      canWarn: keys.has('UseWarn'),
+      canViewWarnings: keys.has('ViewWarnings'),
+      canClearMessages: keys.has('UseClearMessages'),
+      canKick: keys.has('UseKick'),
+      canViewModerationCases: keys.has('ViewModerationCases'),
+      canViewLogs: keys.has('ViewLogs'),
+      createdAt: role.createdAt,
+      updatedAt: role.createdAt
+    };
+  }
+}
+
+function summaryToLegacyTicket(summary: TicketSummaryReadModel): Ticket {
+  return {
+    id: summary.ticketId,
+    guildId: summary.guildId,
+    ticketNumber: summary.ticketNumber,
+    ownerDiscordUserId: summary.ownerDiscordId,
+    ownerDisplayName: summary.ownerUsername,
+    channelDiscordId: summary.discordChannelId,
+    status: summary.status,
+    createdAt: summary.createdAt,
+    closedAt: summary.closedAt
+  };
 }

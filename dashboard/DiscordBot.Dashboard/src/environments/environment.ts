@@ -1,5 +1,5 @@
-// Default environment file. Production builds replace this with environment.production.ts.
+// Default environment file. Production builds replace this via angular.json fileReplacements.
 export const environment = {
-  production: true,
-  apiUrl: 'https://discord-bot-production-b872.up.railway.app'
+  production: false,
+  apiUrl: 'http://localhost:5217'
 };

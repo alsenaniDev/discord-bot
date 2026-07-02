@@ -262,17 +262,37 @@ public class EmbedBuilderService
         string closedByName,
         string closedById,
         DateTimeOffset closedAt,
-        string transcriptPreview) =>
-        new Discord.EmbedBuilder()
-            .WithTitle($"Ticket #{ticketNumber} archived")
-            .WithDescription(transcriptPreview)
+        string digestPreview,
+        string? transcriptUrl = null)
+    {
+        var builder = new Discord.EmbedBuilder()
+            .WithTitle($"Ticket #{ticketNumber} closed")
+            .WithDescription(
+                "_This is an **archive digest** — a short summary for Discord notification. "
+                + "It is not the full ticket transcript._\n\n"
+                + digestPreview)
             .WithColor(BotColors.Info)
             .AddField("Opened by", $"{openerName}\n`{openerId}`", inline: true)
             .AddField("Closed by", $"{closedByName}\n`{closedById}`", inline: true)
-            .AddField("Closed at", $"<t:{closedAt.ToUnixTimeSeconds()}:F>", inline: true)
+            .AddField("Closed at", $"<t:{closedAt.ToUnixTimeSeconds()}:F>", inline: true);
+
+        if (!string.IsNullOrWhiteSpace(transcriptUrl))
+        {
+            builder.AddField("Full transcript", $"[Open in Dashboard]({transcriptUrl})", inline: false);
+        }
+        else
+        {
+            builder.AddField(
+                "Full transcript",
+                "Available in the Dashboard for authorized staff.",
+                inline: false);
+        }
+
+        return builder
             .WithFooter(FooterText)
             .WithTimestamp(closedAt)
             .Build();
+    }
 
     public Embed BuildServerProfile(SocketGuild guild, GuildProfileApiResponse? profile, GuildSettingsResponse settings)
     {

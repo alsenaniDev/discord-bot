@@ -13,10 +13,12 @@ namespace DiscordBot.Api.Controllers;
 public class BotTicketsController : ControllerBase
 {
     private readonly ITicketService _ticketService;
+    private readonly ITicketReadService _ticketReadService;
 
-    public BotTicketsController(ITicketService ticketService)
+    public BotTicketsController(ITicketService ticketService, ITicketReadService ticketReadService)
     {
         _ticketService = ticketService;
+        _ticketReadService = ticketReadService;
     }
 
     [HttpPost]
@@ -109,15 +111,94 @@ public class BotTicketsController : ControllerBase
     [HttpPost("messages/{messageId:guid}/ack")]
     public async Task<IActionResult> AcknowledgeMessage(
         Guid messageId,
+        [FromBody] AcknowledgeTicketMessageDeliveryRequest? request,
         CancellationToken cancellationToken)
     {
-        var success = await _ticketService.AcknowledgeOutboundMessageAsync(messageId, cancellationToken);
+        var success = await _ticketService.AcknowledgeOutboundMessageAsync(messageId, request, cancellationToken);
         if (!success)
         {
-            return NotFound(new { message = "Outbound message not found." });
+            return NotFound(new { message = "Outbound message not found or already processed." });
         }
 
         return Ok(new { message = "Outbound ticket message acknowledged." });
+    }
+
+    [HttpPost("timeline/message-sent")]
+    public async Task<ActionResult<TicketTimelineEventDto>> RecordMessageSent(
+        [FromBody] RecordTicketMessageSentRequest request,
+        CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrWhiteSpace(request.ChannelDiscordId)
+            || string.IsNullOrWhiteSpace(request.DiscordMessageId)
+            || string.IsNullOrWhiteSpace(request.AuthorDiscordUserId)
+            || string.IsNullOrWhiteSpace(request.Content))
+        {
+            return BadRequest(new { message = "ChannelDiscordId, DiscordMessageId, AuthorDiscordUserId, and Content are required." });
+        }
+
+        var timelineEvent = await _ticketService.RecordDiscordMessageSentAsync(request, cancellationToken);
+        if (timelineEvent is null)
+        {
+            return NotFound(new { message = "Open ticket not found for channel, or message already recorded." });
+        }
+
+        return Ok(timelineEvent);
+    }
+
+    [HttpPost("{ticketId:guid}/timeline/archive-posted")]
+    public async Task<ActionResult<TicketTimelineEventDto>> RecordArchivePosted(
+        Guid ticketId,
+        [FromBody] RecordTicketArchivePostedRequest request,
+        CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrWhiteSpace(request.ArchiveChannelDiscordId))
+        {
+            return BadRequest(new { message = "ArchiveChannelDiscordId is required." });
+        }
+
+        var timelineEvent = await _ticketService.RecordArchivePostedAsync(ticketId, request, cancellationToken);
+        if (timelineEvent is null)
+        {
+            return NotFound(new { message = "Ticket not found." });
+        }
+
+        return Ok(timelineEvent);
+    }
+
+    [HttpGet("{ticketId:guid}/conversation")]
+    public async Task<ActionResult<PaginatedTicketConversationReadModel>> GetConversationForBot(
+        Guid ticketId,
+        [FromQuery] DateTimeOffset? cursorOccurredAt,
+        [FromQuery] Guid? cursorEventId,
+        [FromQuery] int limit = 100,
+        CancellationToken cancellationToken = default)
+    {
+        var conversation = await _ticketReadService.GetTicketConversationForBotAsync(
+            ticketId,
+            new TicketConversationQuery
+            {
+                CursorOccurredAt = cursorOccurredAt,
+                CursorEventId = cursorEventId,
+                Limit = limit
+            },
+            cancellationToken);
+
+        if (conversation is null)
+        {
+            return NotFound(new { message = "Ticket not found." });
+        }
+
+        return Ok(conversation);
+    }
+
+    [HttpGet("{ticketId:guid}/timeline")]
+    public async Task<ActionResult<IReadOnlyList<TicketTimelineEventDto>>> GetTimelineForBot(
+        Guid ticketId,
+        [FromQuery] int? limit,
+        CancellationToken cancellationToken)
+    {
+        var timeline = await _ticketService.GetTicketTimelineForBotAsync(ticketId, limit, cancellationToken);
+        return Ok(timeline);
     }
 }
 

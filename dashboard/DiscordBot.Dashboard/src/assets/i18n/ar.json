@@ -72,6 +72,8 @@
     "settingsSubtitle": "تهيئة ميزات البوت لهذا السيرفر",
     "tickets": "التذاكر",
     "ticketsSubtitle": "تذاكر الدعم المفتوحة في Discord",
+    "ticketTranscript": "نسخة التذكرة",
+    "ticketTranscriptSubtitle": "السجل الكامل من الخط الزمني — وليس ملخص الأرشيف في Discord",
     "moderation": "الإشراف",
     "moderationSubtitle": "التحذيرات وحالات الإشراف",
     "modules": "الوحدات",
@@ -201,7 +203,7 @@
     "ticketCategory": "فئة التذاكر",
     "selectCategory": "اختر فئة…",
     "ticketArchiveChannel": "قناة أرشيف التذاكر",
-    "ticketArchiveChannelHint": "تُنشر نسخ التذاكر المغلقة هنا قبل حذف القناة.",
+    "ticketArchiveChannelHint": "تُنشر ملخصات الأرشيف (وليس النسخة الكاملة) للتذاكر المغلقة هنا قبل حذف القناة. النسخة الكاملة متاحة في لوحة التحكم.",
     "ticketWelcomeTitle": "عنوان رسالة الترحيب بالتذكرة",
     "ticketWelcomeMessage": "رسالة الترحيب بالتذكرة",
     "ticketClosedMessage": "رسالة إغلاق التذكرة (Discord)",
@@ -294,7 +296,74 @@
     "replySend": "إرسال الرد",
     "replySuccess": "تمت جدولة الرد. سينشره البوت في Discord قريباً.",
     "replyError": "تعذر إرسال الرد.",
-    "replyEmpty": "أدخل رسالة قبل الإرسال."
+    "replyEmpty": "أدخل رسالة قبل الإرسال.",
+    "lastActivity": "آخر نشاط",
+    "preview": "معاينة",
+    "stats": "إحصائيات",
+    "statsMessages": "{{count}} رسائل",
+    "statsReplies": "{{count}} ردود طاقم",
+    "statsFailed": "{{count}} عمليات تسليم فاشلة",
+    "filters": {
+      "status": "الحالة",
+      "all": "كل التذاكر"
+    },
+    "pagination": {
+      "total": "{{count}} تذكرة",
+      "prev": "السابق",
+      "next": "التالي",
+      "page": "صفحة {{page}} من {{total}}"
+    },
+    "conversation": {
+      "view": "المحادثة",
+      "hide": "إخفاء المحادثة",
+      "title": "محادثة التذكرة #{{number}}",
+      "channel": "معرف القناة",
+      "loading": "جاري تحميل المحادثة…",
+      "loadError": "تعذر تحميل محادثة التذكرة.",
+      "empty": "لا توجد أحداث محادثة مسجلة بعد.",
+      "refresh": "تحديث",
+      "loadMore": "تحميل المزيد",
+      "delivery": {
+        "none": "بدون حالة تسليم",
+        "queued": "في قائمة التسليم",
+        "delivered": "تم التسليم إلى Discord",
+        "failed": "فشل التسليم"
+      }
+    },
+    "timeline": {
+      "view": "الخط الزمني",
+      "hide": "إخفاء الخط الزمني",
+      "title": "الخط الزمني للتذكرة #{{number}}",
+      "loading": "جاري تحميل الخط الزمني…",
+      "loadError": "تعذر تحميل خط زمني التذكرة.",
+      "empty": "لا توجد أحداث مسجلة في الخط الزمني بعد.",
+      "refresh": "تحديث",
+      "eventTypes": {
+        "ticketCreated": "تم إنشاء التذكرة",
+        "messageSent": "رسالة مرسلة",
+        "staffReplyQueued": "رد الطاقم في قائمة الانتظار",
+        "staffReplyDelivered": "تم تسليم رد الطاقم",
+        "staffReplyFailed": "فشل تسليم رد الطاقم",
+        "statusChanged": "تغيرت الحالة",
+        "archivePosted": "تم نشر الأرشيف"
+      }
+    },
+    "transcript": {
+      "view": "عرض النسخة",
+      "title": "نسخة التذكرة #{{number}}",
+      "subtitle": "السجل الكامل المعاد بناؤه من أحداث الخط الزمني.",
+      "loading": "جاري تحميل النسخة…",
+      "loadError": "تعذر تحميل نسخة التذكرة.",
+      "empty": "لا توجد إدخالات في النسخة بعد.",
+      "refresh": "تحديث",
+      "loadMore": "تحميل المزيد",
+      "backToList": "العودة إلى التذاكر",
+      "source": "المصدر",
+      "entriesTitle": "إدخالات الخط الزمني",
+      "internalNote": "ملاحظة داخلية",
+      "archiveNoticeTitle": "الأرشيف ليس النسخة الكاملة",
+      "archiveNoticeBody": "قنوات الأرشيف في Discord تستقبل ملخصاً قصيراً فقط. هذه الصفحة هي النسخة الموثوقة وتظل متاحة بعد حذف قناة التذكرة."
+    }
   },
   "moderation": {
     "loading": "جاري تحميل بيانات الإشراف…",
@@ -571,7 +640,7 @@
     "loadError": "تعذر تحميل أدوار الصلاحيات",
     "addTitle": "إضافة دور صلاحيات",
     "addHint": "اربط دور Discord في السيرفر بصلاحيات صفحات لوحة التحكم. أي عضو يملك هذا الدور يحصل على الصلاحيات بعد تنفيذ /sync.",
-    "dashboardHelp": "طاقم لوحة التحكم يحدد من يمكنه فتح صفحات الإشراف والسجلات والتذاكر هنا. أوامر البوت مثل /warn و /kick تُهيّأ بشكل منفصل في صلاحيات الإشراف.",
+    "dashboardHelp": "تُدار جميع صلاحيات لوحة التحكم والبوت هنا حسب أدوار Discord. أوامر البوت مثل /warn و /kick تستخدم نفس ربط الأدوار.",
     "roleName": "اسم الدور",
     "roleNamePlaceholder": "مثال: Admin، Moderator",
     "discordRole": "دور Discord",
@@ -591,10 +660,26 @@
       "required": "أدخل اسماً واختر دور Discord وحدد صلاحية واحدة على الأقل."
     },
     "permissions": {
-      "accessModeration": "الوصول لصفحات الإشراف",
-      "accessLogs": "الوصول للسجلات",
-      "accessTickets": "الوصول للتذاكر",
-      "managePermissionRoles": "إدارة أدوار الطاقم"
+      "accessDashboard": "الوصول للوحة التحكم",
+      "viewServer": "عرض نظرة عامة على السيرفر",
+      "manageSettings": "إدارة الإعدادات",
+      "manageModules": "إدارة الوحدات",
+      "viewTickets": "عرض التذاكر",
+      "replyToTickets": "الرد على التذاكر",
+      "closeTickets": "إغلاق التذاكر",
+      "manageTickets": "إدارة التذاكر",
+      "manageModeration": "الوصول لصفحات الإشراف",
+      "useWarn": "استخدام /warn",
+      "useKick": "استخدام /kick",
+      "useBan": "استخدام /ban",
+      "useTimeout": "استخدام /timeout",
+      "useClearMessages": "استخدام /clear",
+      "viewWarnings": "عرض التحذيرات",
+      "viewModerationCases": "عرض حالات الإشراف",
+      "viewLogs": "الوصول للسجلات",
+      "clearLogs": "مسح السجلات",
+      "manageReactionRoles": "إدارة أدوار التفاعل",
+      "managePermissionRoles": "إدارة أدوار الصلاحيات"
     }
   },
   "toast": {

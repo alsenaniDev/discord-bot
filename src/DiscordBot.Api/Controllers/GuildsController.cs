@@ -16,6 +16,7 @@ public class GuildsController : ControllerBase
     private readonly IGuildService _guildService;
     private readonly IGuildResourceService _resourceService;
     private readonly ITicketService _ticketService;
+    private readonly ITicketReadService _ticketReadService;
     private readonly IModerationService _moderationService;
     private readonly IModuleService _moduleService;
     private readonly ILogService _logService;
@@ -23,16 +24,15 @@ public class GuildsController : ControllerBase
     private readonly ISubscriptionService _subscriptionService;
     private readonly IGuildAccessService _guildAccessService;
     private readonly IPlanUpgradeRequestService _planUpgradeRequestService;
-    private readonly IGuildStaffService _guildStaffService;
     private readonly IGuildPermissionRoleService _guildPermissionRoleService;
     private readonly IGuildProfileService _guildProfileService;
-    private readonly IModerationPermissionRoleService _moderationPermissionRoleService;
     private readonly IAutoReplyService _autoReplyService;
 
     public GuildsController(
         IGuildService guildService,
         IGuildResourceService resourceService,
         ITicketService ticketService,
+        ITicketReadService ticketReadService,
         IModerationService moderationService,
         IModuleService moduleService,
         ILogService logService,
@@ -40,15 +40,14 @@ public class GuildsController : ControllerBase
         ISubscriptionService subscriptionService,
         IGuildAccessService guildAccessService,
         IPlanUpgradeRequestService planUpgradeRequestService,
-        IGuildStaffService guildStaffService,
         IGuildPermissionRoleService guildPermissionRoleService,
         IGuildProfileService guildProfileService,
-        IModerationPermissionRoleService moderationPermissionRoleService,
         IAutoReplyService autoReplyService)
     {
         _guildService = guildService;
         _resourceService = resourceService;
         _ticketService = ticketService;
+        _ticketReadService = ticketReadService;
         _moderationService = moderationService;
         _moduleService = moduleService;
         _logService = logService;
@@ -56,10 +55,8 @@ public class GuildsController : ControllerBase
         _subscriptionService = subscriptionService;
         _guildAccessService = guildAccessService;
         _planUpgradeRequestService = planUpgradeRequestService;
-        _guildStaffService = guildStaffService;
         _guildPermissionRoleService = guildPermissionRoleService;
         _guildProfileService = guildProfileService;
-        _moderationPermissionRoleService = moderationPermissionRoleService;
         _autoReplyService = autoReplyService;
     }
 
@@ -164,12 +161,16 @@ public class GuildsController : ControllerBase
     }
 
     /// <summary>
-    /// Lists tickets for a guild the user owns.
+    /// Returns paginated Ticket Summary Read Models (AR-001, CM-003).
     /// </summary>
     [HttpGet("{id:guid}/tickets")]
-    public async Task<ActionResult<IReadOnlyList<TicketDto>>> GetTickets(
+    public async Task<ActionResult<PaginatedTicketSummaryReadModel>> GetTicketSummaries(
         Guid id,
-        CancellationToken cancellationToken)
+        [FromQuery] TicketStatus? status,
+        [FromQuery] int page = 1,
+        [FromQuery] int pageSize = 20,
+        [FromQuery] string sort = "lastActivity",
+        CancellationToken cancellationToken = default)
     {
         var discordUserId = User.GetDiscordUserId();
         if (string.IsNullOrWhiteSpace(discordUserId))
@@ -177,17 +178,100 @@ public class GuildsController : ControllerBase
             return Unauthorized(new { message = "Missing Discord user identity in token." });
         }
 
-        var tickets = await _ticketService.GetGuildTicketsAsync(id, discordUserId, cancellationToken);
-        if (tickets.Count == 0)
-        {
-            var hasAccess = await _guildAccessService.CanAccessModerationPagesAsync(id, discordUserId, cancellationToken);
-            if (!hasAccess)
+        var summaries = await _ticketReadService.GetTicketSummariesAsync(
+            id,
+            discordUserId,
+            new TicketSummaryQuery
             {
-                return NotFound(new { message = "Guild not found or access denied." });
-            }
+                Status = status,
+                Page = page,
+                PageSize = pageSize,
+                Sort = sort
+            },
+            cancellationToken);
+
+        if (summaries is null)
+        {
+            return NotFound(new { message = "Guild not found or access denied." });
         }
 
-        return Ok(tickets);
+        return Ok(summaries);
+    }
+
+    /// <summary>
+    /// Returns paginated Ticket Conversation Read Model (AR-001, CM-003).
+    /// </summary>
+    [HttpGet("{id:guid}/tickets/{ticketId:guid}/conversation")]
+    public async Task<ActionResult<PaginatedTicketConversationReadModel>> GetTicketConversation(
+        Guid id,
+        Guid ticketId,
+        [FromQuery] DateTimeOffset? cursorOccurredAt,
+        [FromQuery] Guid? cursorEventId,
+        [FromQuery] int limit = 50,
+        CancellationToken cancellationToken = default)
+    {
+        var discordUserId = User.GetDiscordUserId();
+        if (string.IsNullOrWhiteSpace(discordUserId))
+        {
+            return Unauthorized(new { message = "Missing Discord user identity in token." });
+        }
+
+        var conversation = await _ticketReadService.GetTicketConversationAsync(
+            id,
+            ticketId,
+            discordUserId,
+            new TicketConversationQuery
+            {
+                CursorOccurredAt = cursorOccurredAt,
+                CursorEventId = cursorEventId,
+                Limit = limit
+            },
+            cancellationToken);
+
+        if (conversation is null)
+        {
+            return NotFound(new { message = "Ticket not found or access denied." });
+        }
+
+        return Ok(conversation);
+    }
+
+    /// <summary>
+    /// Returns paginated Ticket Transcript Read Model (AR-001, CM-004) — full durable record from Timeline.
+    /// </summary>
+    [HttpGet("{id:guid}/tickets/{ticketId:guid}/transcript")]
+    public async Task<ActionResult<TicketTranscriptReadModel>> GetTicketTranscript(
+        Guid id,
+        Guid ticketId,
+        [FromQuery] DateTimeOffset? cursorOccurredAt,
+        [FromQuery] Guid? cursorEventId,
+        [FromQuery] int limit = 50,
+        CancellationToken cancellationToken = default)
+    {
+        var discordUserId = User.GetDiscordUserId();
+        if (string.IsNullOrWhiteSpace(discordUserId))
+        {
+            return Unauthorized(new { message = "Missing Discord user identity in token." });
+        }
+
+        var transcript = await _ticketReadService.GetTicketTranscriptAsync(
+            id,
+            ticketId,
+            discordUserId,
+            new TicketTranscriptQuery
+            {
+                CursorOccurredAt = cursorOccurredAt,
+                CursorEventId = cursorEventId,
+                Limit = limit
+            },
+            cancellationToken);
+
+        if (transcript is null)
+        {
+            return NotFound(new { message = "Ticket not found or access denied." });
+        }
+
+        return Ok(transcript);
     }
 
     /// <summary>
@@ -217,6 +301,30 @@ public class GuildsController : ControllerBase
         }
 
         return Ok(ticket);
+    }
+
+    /// <summary>
+    /// Returns raw Ticket Timeline DTOs (legacy). Prefer GET .../conversation or .../transcript (CM-003/004).
+    /// </summary>
+    [HttpGet("{id:guid}/tickets/{ticketId:guid}/timeline")]
+    public async Task<ActionResult<IReadOnlyList<TicketTimelineEventDto>>> GetTicketTimeline(
+        Guid id,
+        Guid ticketId,
+        CancellationToken cancellationToken)
+    {
+        var discordUserId = User.GetDiscordUserId();
+        if (string.IsNullOrWhiteSpace(discordUserId))
+        {
+            return Unauthorized(new { message = "Missing Discord user identity in token." });
+        }
+
+        var timeline = await _ticketService.GetTicketTimelineAsync(id, ticketId, discordUserId, cancellationToken);
+        if (timeline is null)
+        {
+            return NotFound(new { message = "Ticket not found or access denied." });
+        }
+
+        return Ok(timeline);
     }
 
     /// <summary>
@@ -862,80 +970,6 @@ public class GuildsController : ControllerBase
         }
     }
 
-    [HttpGet("{id:guid}/staff")]
-    public async Task<ActionResult<IReadOnlyList<GuildStaffDto>>> GetStaff(
-        Guid id,
-        CancellationToken cancellationToken)
-    {
-        var discordUserId = User.GetDiscordUserId();
-        if (string.IsNullOrWhiteSpace(discordUserId))
-        {
-            return Unauthorized(new { message = "Missing Discord user identity in token." });
-        }
-
-        var staff = await _guildStaffService.GetStaffAsync(id, discordUserId, cancellationToken);
-        if (staff.Count == 0 && !await _guildAccessService.CanManageStaffAsync(id, discordUserId, cancellationToken))
-        {
-            return NotFound(new { message = "Guild not found or access denied." });
-        }
-
-        return Ok(staff);
-    }
-
-    [HttpPost("{id:guid}/staff")]
-    public async Task<ActionResult<GuildStaffDto>> AddStaff(
-        Guid id,
-        [FromBody] AddGuildStaffRequest request,
-        CancellationToken cancellationToken)
-    {
-        var discordUserId = User.GetDiscordUserId();
-        if (string.IsNullOrWhiteSpace(discordUserId))
-        {
-            return Unauthorized(new { message = "Missing Discord user identity in token." });
-        }
-
-        if (string.IsNullOrWhiteSpace(request.DiscordUserId))
-        {
-            return BadRequest(new { message = "DiscordUserId is required." });
-        }
-
-        try
-        {
-            var staff = await _guildStaffService.AddStaffAsync(id, discordUserId, request, cancellationToken);
-            if (staff is null)
-            {
-                return NotFound(new { message = "Guild not found, user invalid, or access denied." });
-            }
-
-            return Ok(staff);
-        }
-        catch (InvalidOperationException ex)
-        {
-            return BadRequest(new { message = ex.Message });
-        }
-    }
-
-    [HttpDelete("{id:guid}/staff/{staffId:guid}")]
-    public async Task<IActionResult> RemoveStaff(
-        Guid id,
-        Guid staffId,
-        CancellationToken cancellationToken)
-    {
-        var discordUserId = User.GetDiscordUserId();
-        if (string.IsNullOrWhiteSpace(discordUserId))
-        {
-            return Unauthorized(new { message = "Missing Discord user identity in token." });
-        }
-
-        var success = await _guildStaffService.RemoveStaffAsync(id, staffId, discordUserId, cancellationToken);
-        if (!success)
-        {
-            return NotFound(new { message = "Staff member not found or access denied." });
-        }
-
-        return Ok(new { message = "Staff member removed." });
-    }
-
     [HttpGet("{id:guid}/permission-roles")]
     public async Task<ActionResult<IReadOnlyList<GuildPermissionRoleDto>>> GetPermissionRoles(
         Guid id,
@@ -1078,104 +1112,5 @@ public class GuildsController : ControllerBase
         {
             return BadRequest(new { message = ex.Message });
         }
-    }
-
-    [HttpGet("{id:guid}/moderation/permission-roles")]
-    public async Task<ActionResult<IReadOnlyList<ModerationPermissionRoleDto>>> GetModerationPermissionRoles(
-        Guid id,
-        CancellationToken cancellationToken)
-    {
-        var discordUserId = User.GetDiscordUserId();
-        if (string.IsNullOrWhiteSpace(discordUserId))
-        {
-            return Unauthorized(new { message = "Missing Discord user identity in token." });
-        }
-
-        var access = await _guildAccessService.GetAccessAsync(id, discordUserId, cancellationToken);
-        if (access is null || !access.CanManageSettings)
-        {
-            return NotFound(new { message = "Guild not found or access denied." });
-        }
-
-        var roles = await _moderationPermissionRoleService.GetRolesAsync(id, discordUserId, cancellationToken);
-        return Ok(roles);
-    }
-
-    [HttpPost("{id:guid}/moderation/permission-roles")]
-    public async Task<ActionResult<ModerationPermissionRoleDto>> CreateModerationPermissionRole(
-        Guid id,
-        [FromBody] CreateModerationPermissionRoleRequest request,
-        CancellationToken cancellationToken)
-    {
-        var discordUserId = User.GetDiscordUserId();
-        if (string.IsNullOrWhiteSpace(discordUserId))
-        {
-            return Unauthorized(new { message = "Missing Discord user identity in token." });
-        }
-
-        try
-        {
-            var role = await _moderationPermissionRoleService.CreateAsync(id, discordUserId, request, cancellationToken);
-            if (role is null)
-            {
-                return NotFound(new { message = "Guild not found or access denied." });
-            }
-
-            return Ok(role);
-        }
-        catch (InvalidOperationException ex)
-        {
-            return BadRequest(new { message = ex.Message });
-        }
-    }
-
-    [HttpPut("{id:guid}/moderation/permission-roles/{roleId:guid}")]
-    public async Task<ActionResult<ModerationPermissionRoleDto>> UpdateModerationPermissionRole(
-        Guid id,
-        Guid roleId,
-        [FromBody] UpdateModerationPermissionRoleRequest request,
-        CancellationToken cancellationToken)
-    {
-        var discordUserId = User.GetDiscordUserId();
-        if (string.IsNullOrWhiteSpace(discordUserId))
-        {
-            return Unauthorized(new { message = "Missing Discord user identity in token." });
-        }
-
-        try
-        {
-            var role = await _moderationPermissionRoleService.UpdateAsync(id, roleId, discordUserId, request, cancellationToken);
-            if (role is null)
-            {
-                return NotFound(new { message = "Moderation permission role not found or access denied." });
-            }
-
-            return Ok(role);
-        }
-        catch (InvalidOperationException ex)
-        {
-            return BadRequest(new { message = ex.Message });
-        }
-    }
-
-    [HttpDelete("{id:guid}/moderation/permission-roles/{roleId:guid}")]
-    public async Task<IActionResult> DeleteModerationPermissionRole(
-        Guid id,
-        Guid roleId,
-        CancellationToken cancellationToken)
-    {
-        var discordUserId = User.GetDiscordUserId();
-        if (string.IsNullOrWhiteSpace(discordUserId))
-        {
-            return Unauthorized(new { message = "Missing Discord user identity in token." });
-        }
-
-        var success = await _moderationPermissionRoleService.DeleteAsync(id, roleId, discordUserId, cancellationToken);
-        if (!success)
-        {
-            return NotFound(new { message = "Moderation permission role not found or access denied." });
-        }
-
-        return Ok(new { message = "Moderation permission role removed." });
     }
 }

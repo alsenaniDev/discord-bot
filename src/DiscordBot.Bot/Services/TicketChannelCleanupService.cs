@@ -69,7 +69,7 @@ public class TicketChannelCleanupService
 
         try
         {
-            await _archiveService.TryArchiveFromCleanupAsync(client, guild, channel, item, cancellationToken);
+            await _archiveService.TryArchiveFromCleanupAsync(client, guild, item, cancellationToken);
 
             await channel.SendMessageAsync(
                 embed: _embeds.BuildTicketClosedFromDashboard(

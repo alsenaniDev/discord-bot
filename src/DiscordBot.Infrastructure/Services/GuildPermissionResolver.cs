@@ -170,6 +170,7 @@ public static class GuildPermissionMapper
         var permissions = resolved.Permissions;
         var canManage = resolved.IsOwner || resolved.IsPlatformAdmin;
         var canModeratePages = canManage || HasModerationPageAccess(permissions);
+        var canUseBotModeration = canManage || HasModerationCommandAccess(permissions);
 
         return new GuildAccessDto
         {
@@ -187,15 +188,83 @@ public static class GuildPermissionMapper
             CanManageModules = canManage,
             CanManageSubscription = canManage,
             CanManageStaff = canManage,
-            CanAccessModeration = canModeratePages,
-            CanAccessLogs = canManage || permissions.HasFlag(GuildPermissions.AccessLogs) || canModeratePages,
-            CanAccessTickets = canManage || permissions.HasFlag(GuildPermissions.AccessTickets) || canModeratePages,
-            CanAccessOverview = canManage
+            CanAccessModeration = canModeratePages || canUseBotModeration,
+            CanAccessLogs = canManage
+                || permissions.HasFlag(GuildPermissions.ViewLogs)
+                || permissions.HasFlag(GuildPermissions.ClearLogs)
+                || canModeratePages,
+            CanAccessTickets = canManage || HasTicketAccess(permissions) || canModeratePages,
+            CanViewTickets = CanViewTickets(resolved),
+            CanReplyToTickets = CanReplyToTickets(resolved),
+            CanCloseTickets = CanCloseTickets(resolved),
+            CanAccessOverview = canManage,
+            CanClearLogs = canManage || permissions.HasFlag(GuildPermissions.ClearLogs)
+        };
+    }
+
+    public static EvaluatePermissionsResponse ToEvaluatePermissionsResponse(ResolvedGuildPermissions resolved)
+    {
+        var permissions = resolved.Permissions;
+        var canManage = resolved.IsOwner || resolved.IsPlatformAdmin;
+        var canUseBotModeration = canManage || HasModerationCommandAccess(permissions);
+
+        return new EvaluatePermissionsResponse
+        {
+            Permissions = permissions,
+            CanWarn = canManage || permissions.HasFlag(GuildPermissions.UseWarn),
+            CanKick = canManage || permissions.HasFlag(GuildPermissions.UseKick),
+            CanTimeout = canManage || permissions.HasFlag(GuildPermissions.UseTimeout),
+            CanClearMessages = canManage || permissions.HasFlag(GuildPermissions.UseClearMessages),
+            CanViewWarnings = canManage
+                || permissions.HasFlag(GuildPermissions.ViewWarnings)
+                || permissions.HasFlag(GuildPermissions.ManageModeration),
+            CanViewModerationCases = canManage
+                || permissions.HasFlag(GuildPermissions.ViewModerationCases)
+                || permissions.HasFlag(GuildPermissions.ManageModeration),
+            CanViewLogs = canManage || permissions.HasFlag(GuildPermissions.ViewLogs),
+            CanAccessModeration = canUseBotModeration
         };
     }
 
     public static bool HasModerationPageAccess(GuildPermissions permissions) =>
-        permissions.HasFlag(GuildPermissions.AccessModeration)
-        || permissions.HasFlag(GuildPermissions.AccessLogs)
-        || permissions.HasFlag(GuildPermissions.AccessTickets);
+        permissions.HasFlag(GuildPermissions.ManageModeration)
+        || permissions.HasFlag(GuildPermissions.ViewLogs)
+        || permissions.HasFlag(GuildPermissions.ViewTickets)
+        || permissions.HasFlag(GuildPermissions.ReplyToTickets)
+        || permissions.HasFlag(GuildPermissions.CloseTickets)
+        || permissions.HasFlag(GuildPermissions.ManageTickets);
+
+    public static bool HasModerationCommandAccess(GuildPermissions permissions) =>
+        permissions.HasFlag(GuildPermissions.UseWarn)
+        || permissions.HasFlag(GuildPermissions.UseKick)
+        || permissions.HasFlag(GuildPermissions.UseTimeout)
+        || permissions.HasFlag(GuildPermissions.UseBan)
+        || permissions.HasFlag(GuildPermissions.UseClearMessages)
+        || permissions.HasFlag(GuildPermissions.ViewWarnings)
+        || permissions.HasFlag(GuildPermissions.ViewModerationCases)
+        || permissions.HasFlag(GuildPermissions.ViewLogs);
+
+    public static bool HasTicketAccess(GuildPermissions permissions) =>
+        permissions.HasFlag(GuildPermissions.ViewTickets)
+        || permissions.HasFlag(GuildPermissions.ReplyToTickets)
+        || permissions.HasFlag(GuildPermissions.CloseTickets)
+        || permissions.HasFlag(GuildPermissions.ManageTickets);
+
+    public static bool CanViewTickets(ResolvedGuildPermissions resolved) =>
+        resolved.IsOwner
+        || resolved.IsPlatformAdmin
+        || resolved.Permissions.HasFlag(GuildPermissions.ViewTickets)
+        || resolved.Permissions.HasFlag(GuildPermissions.ManageTickets);
+
+    public static bool CanReplyToTickets(ResolvedGuildPermissions resolved) =>
+        resolved.IsOwner
+        || resolved.IsPlatformAdmin
+        || resolved.Permissions.HasFlag(GuildPermissions.ReplyToTickets)
+        || resolved.Permissions.HasFlag(GuildPermissions.ManageTickets);
+
+    public static bool CanCloseTickets(ResolvedGuildPermissions resolved) =>
+        resolved.IsOwner
+        || resolved.IsPlatformAdmin
+        || resolved.Permissions.HasFlag(GuildPermissions.CloseTickets)
+        || resolved.Permissions.HasFlag(GuildPermissions.ManageTickets);
 }

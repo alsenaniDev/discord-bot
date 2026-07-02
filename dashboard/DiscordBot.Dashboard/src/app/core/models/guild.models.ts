@@ -97,6 +97,7 @@ export interface ModerationPermissionRole {
 }
 
 export interface CreateModerationPermissionRole {
+  name?: string;
   roleDiscordId: string;
   canWarn: boolean;
   canViewWarnings: boolean;
@@ -107,6 +108,7 @@ export interface CreateModerationPermissionRole {
 }
 
 export interface UpdateModerationPermissionRole {
+  name?: string;
   roleDiscordId: string;
   canWarn: boolean;
   canViewWarnings: boolean;

@@ -1,0 +1,113 @@
+<div class="page-content">
+  <app-loading-state *ngIf="loading" [message]="'tickets.transcript.loading' | translate"></app-loading-state>
+
+  <app-empty-state
+    *ngIf="!loading && error"
+    icon="⚠️"
+    [title]="'tickets.transcript.loadError' | translate"
+    [description]="error"
+  >
+    <button type="button" class="btn btn-secondary btn-sm" (click)="backToTickets()">
+      {{ 'tickets.transcript.backToList' | translate }}
+    </button>
+    <button type="button" class="btn btn-primary btn-sm" (click)="loadTranscript()">{{ 'common.tryAgain' | translate }}</button>
+  </app-empty-state>
+
+  <div *ngIf="!loading && !error && metadata" class="transcript-page">
+    <div class="transcript-toolbar">
+      <button type="button" class="btn btn-secondary btn-sm" (click)="backToTickets()">
+        {{ 'tickets.transcript.backToList' | translate }}
+      </button>
+      <button type="button" class="btn btn-secondary btn-sm" (click)="loadTranscript()">
+        {{ 'tickets.transcript.refresh' | translate }}
+      </button>
+    </div>
+
+    <div class="card transcript-card">
+      <header class="transcript-header">
+        <h2>{{ 'tickets.transcript.title' | translate:{ number: metadata.ticketNumber } }}</h2>
+        <p class="muted">{{ 'tickets.transcript.subtitle' | translate }}</p>
+      </header>
+
+      <div class="archive-notice" role="note">
+        <strong>{{ 'tickets.transcript.archiveNoticeTitle' | translate }}</strong>
+        <p class="muted small">{{ 'tickets.transcript.archiveNoticeBody' | translate }}</p>
+      </div>
+
+      <dl class="transcript-meta">
+        <div>
+          <dt>{{ 'common.status' | translate }}</dt>
+          <dd>
+            <span class="badge" [class.badge-open]="isOpen">
+              {{ statusLabel(metadata.status) | translate }}
+            </span>
+          </dd>
+        </div>
+        <div>
+          <dt>{{ 'tickets.owner' | translate }}</dt>
+          <dd>{{ displayMember(metadata.ownerUsername, metadata.ownerDiscordId) }}</dd>
+        </div>
+        <div>
+          <dt>{{ 'common.created' | translate }}</dt>
+          <dd>{{ metadata.createdAt | date: 'medium' }}</dd>
+        </div>
+        <div *ngIf="metadata.closedAt">
+          <dt>{{ 'common.closed' | translate }}</dt>
+          <dd>{{ metadata.closedAt | date: 'medium' }}</dd>
+        </div>
+        <div>
+          <dt>{{ 'tickets.transcript.source' | translate }}</dt>
+          <dd>{{ metadata.source }}</dd>
+        </div>
+      </dl>
+
+      <section class="transcript-entries">
+        <h3>{{ 'tickets.transcript.entriesTitle' | translate }}</h3>
+
+        <p class="muted" *ngIf="entries.length === 0">
+          {{ 'tickets.transcript.empty' | translate }}
+        </p>
+
+        <ol class="conversation-list" *ngIf="entries.length > 0">
+          <li
+            class="conversation-item"
+            *ngFor="let event of entries"
+            [class.delivery-failed]="event.deliveryStatus === 'Failed'"
+            [class.delivery-queued]="event.deliveryStatus === 'Queued'"
+            [class.delivery-delivered]="event.deliveryStatus === 'Delivered'"
+            [class.internal-note]="event.isInternal"
+          >
+            <div class="conversation-item-head">
+              <span class="conversation-event-type">{{ eventLabel(event) | translate }}</span>
+              <span class="muted small">{{ event.occurredAt | date: 'medium' }}</span>
+            </div>
+            <div class="conversation-item-meta muted small">
+              <span>{{ event.actorType }}</span>
+              <span *ngIf="event.actorUsername || event.actorDiscordId">
+                · {{ displayMember(event.actorUsername, event.actorDiscordId) }}
+              </span>
+              <span class="internal-badge" *ngIf="event.isInternal">
+                {{ 'tickets.transcript.internalNote' | translate }}
+              </span>
+              <span class="delivery-badge" *ngIf="showDeliveryBadge(event)">
+                {{ deliveryLabel(event) | translate }}
+              </span>
+            </div>
+            <div class="conversation-item-content" *ngIf="event.content">{{ event.content }}</div>
+          </li>
+        </ol>
+
+        <button
+          type="button"
+          class="btn btn-secondary btn-sm load-more-btn"
+          *ngIf="hasMore"
+          [disabled]="loadingMore"
+          (click)="loadTranscript(true)"
+        >
+          <span class="spinner inline" *ngIf="loadingMore"></span>
+          {{ 'tickets.transcript.loadMore' | translate }}
+        </button>
+      </section>
+    </div>
+  </div>
+</div>

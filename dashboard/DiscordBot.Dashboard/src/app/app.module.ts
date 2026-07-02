@@ -18,6 +18,7 @@ import { OverviewComponent } from './features/overview/overview.component';
 import { ModerationComponent } from './features/moderation/moderation.component';
 import { SettingsComponent } from './features/settings/settings.component';
 import { TicketsComponent } from './features/tickets/tickets.component';
+import { TicketTranscriptComponent } from './features/tickets/ticket-transcript.component';
 import { ModulesComponent } from './features/modules/modules.component';
 import { LogsComponent } from './features/logs/logs.component';
 import { ReactionRolesComponent } from './features/reaction-roles/reaction-roles.component';
@@ -55,6 +56,7 @@ export function HttpLoaderFactory(http: HttpClient) {
     OverviewComponent,
     SettingsComponent,
     TicketsComponent,
+    TicketTranscriptComponent,
     ModerationComponent,
     ModulesComponent,
     LogsComponent,

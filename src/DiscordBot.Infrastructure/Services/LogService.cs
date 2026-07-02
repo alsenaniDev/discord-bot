@@ -166,7 +166,7 @@ public class LogService : ILogService
         CancellationToken cancellationToken = default)
     {
         var access = await _guildAccessService.GetAccessAsync(guildId, discordUserId, cancellationToken);
-        if (access is null || !access.CanManageSettings)
+        if (access is null || (!access.CanManageSettings && !access.CanClearLogs))
         {
             return null;
         }

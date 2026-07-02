@@ -1,0 +1,125 @@
+.page-content {
+  max-width: 900px;
+}
+
+.transcript-toolbar {
+  display: flex;
+  gap: var(--space-2);
+  margin-bottom: var(--space-3);
+}
+
+.transcript-card {
+  padding: var(--space-4);
+}
+
+.transcript-header h2 {
+  margin: 0 0 var(--space-1);
+}
+
+.transcript-header p {
+  margin: 0 0 var(--space-3);
+}
+
+.archive-notice {
+  padding: var(--space-3);
+  margin-bottom: var(--space-4);
+  border-radius: var(--radius-md, 8px);
+  border: 1px solid var(--border-color, rgba(0, 0, 0, 0.08));
+  background: var(--surface-muted, rgba(0, 0, 0, 0.02));
+}
+
+.archive-notice p {
+  margin: var(--space-1) 0 0;
+}
+
+.transcript-meta {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+  gap: var(--space-3);
+  margin: 0 0 var(--space-4);
+}
+
+.transcript-meta dt {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted, #666);
+  margin-bottom: var(--space-1);
+}
+
+.transcript-meta dd {
+  margin: 0;
+  font-weight: 500;
+}
+
+.transcript-entries h3 {
+  margin: 0 0 var(--space-3);
+  font-size: 1rem;
+}
+
+.conversation-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.conversation-item {
+  padding: var(--space-3);
+  border: 1px solid var(--border-color, rgba(0, 0, 0, 0.08));
+  border-radius: var(--radius-md, 8px);
+  background: var(--surface, #fff);
+}
+
+.conversation-item.internal-note {
+  border-left: 3px solid var(--warning, #f0ad4e);
+}
+
+.conversation-item.delivery-queued {
+  border-left: 3px solid var(--warning, #f0ad4e);
+}
+
+.conversation-item.delivery-delivered {
+  border-left: 3px solid var(--success, #28a745);
+}
+
+.conversation-item.delivery-failed {
+  border-left: 3px solid var(--danger, #c0392b);
+}
+
+.conversation-item-head {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+  margin-bottom: var(--space-1);
+}
+
+.conversation-event-type {
+  font-weight: 600;
+}
+
+.conversation-item-meta {
+  margin-bottom: var(--space-1);
+}
+
+.delivery-badge,
+.internal-badge {
+  display: inline-block;
+  margin-left: var(--space-2);
+  padding: 0.1rem 0.4rem;
+  border-radius: 999px;
+  background: rgba(0, 0, 0, 0.06);
+}
+
+.conversation-item-content {
+  margin-top: var(--space-2);
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.load-more-btn {
+  margin-top: var(--space-3);
+}
