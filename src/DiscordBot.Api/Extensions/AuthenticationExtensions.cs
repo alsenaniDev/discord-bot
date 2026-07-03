@@ -87,7 +87,8 @@ public static class AuthenticationExtensions
                         && uri.Host.EndsWith(".vercel.app", StringComparison.OrdinalIgnoreCase);
                 })
                     .AllowAnyHeader()
-                    .AllowAnyMethod();
+                    .AllowAnyMethod()
+                    .SetPreflightMaxAge(TimeSpan.FromHours(1));
             });
         });
 
