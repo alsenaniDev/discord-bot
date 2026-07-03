@@ -1,3 +1,5 @@
+using System.Diagnostics;
+
 namespace DiscordBot.Api.Middleware;
 
 public class RequestLoggingMiddleware
@@ -15,14 +17,29 @@ public class RequestLoggingMiddleware
     {
         var method = context.Request.Method;
         var path = context.Request.Path;
+        var sw = Stopwatch.StartNew();
 
-        await _next(context);
+        try
+        {
+            await _next(context);
+        }
+        finally
+        {
+            sw.Stop();
 
-        var statusCode = context.Response.StatusCode;
-        var level = statusCode >= 500 ? LogLevel.Error
-            : statusCode >= 400 ? LogLevel.Warning
-            : LogLevel.Information;
+            var statusCode = context.Response.StatusCode;
+            var level = statusCode >= 500 ? LogLevel.Error
+                : statusCode >= 400 ? LogLevel.Warning
+                : sw.ElapsedMilliseconds >= 1000 ? LogLevel.Warning
+                : LogLevel.Information;
 
-        _logger.Log(level, "{Method} {Path} responded {StatusCode}", method, path, statusCode);
+            _logger.Log(
+                level,
+                "{Method} {Path} responded {StatusCode} in {Elapsed}ms",
+                method,
+                path,
+                statusCode,
+                sw.ElapsedMilliseconds);
+        }
     }
 }
