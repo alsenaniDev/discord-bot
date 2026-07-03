@@ -1,0 +1,39 @@
+<div
+  class="status-strip"
+  role="status"
+  [attr.aria-busy]="loading"
+  [attr.aria-label]="'overview.v2.status.ariaLabel' | translate"
+>
+  <ng-container *ngIf="loading">
+    <span class="status-strip-skeleton" aria-hidden="true"></span>
+    <span class="status-strip-separator" aria-hidden="true">·</span>
+    <span class="status-strip-skeleton" aria-hidden="true"></span>
+    <span class="status-strip-separator" aria-hidden="true">·</span>
+    <span class="status-strip-skeleton" aria-hidden="true"></span>
+  </ng-container>
+
+  <ng-container *ngIf="!loading && model">
+    <span class="badge badge-plan" *ngIf="model.showPlan">{{ model.planName }}</span>
+    <span class="type-caption status-strip-staff" *ngIf="model.showStaffAccess">
+      {{ 'overview.v2.status.staffAccess' | translate }}
+    </span>
+
+    <span class="status-strip-separator" *ngIf="model.showPlan || model.showStaffAccess" aria-hidden="true">·</span>
+
+    <span class="status-strip-bot type-caption">
+      <span
+        class="status-strip-dot"
+        [class.is-online]="model.botOnline"
+        [class.is-offline]="!model.botOnline"
+        aria-hidden="true"
+      ></span>
+      {{ (model.botOnline ? 'overview.v2.status.botOnline' : 'overview.v2.status.botOffline') | translate }}
+    </span>
+
+    <span class="status-strip-separator" aria-hidden="true">·</span>
+
+    <time class="type-caption status-strip-sync" [attr.datetime]="syncDateTime" [attr.title]="syncDateTime ?? undefined">
+      {{ syncLabel }}
+    </time>
+  </ng-container>
+</div>

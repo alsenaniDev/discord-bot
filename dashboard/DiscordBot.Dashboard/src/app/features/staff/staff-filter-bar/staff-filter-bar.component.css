@@ -1,0 +1,44 @@
+.staff-filter-bar-grid {
+  display: grid;
+  gap: var(--space-3);
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  width: 100%;
+}
+
+.staff-filter-field {
+  margin: 0;
+  min-width: 0;
+}
+
+.staff-filter-field--search {
+  grid-column: span 1;
+}
+
+.staff-filter-bar-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  width: 100%;
+}
+
+.staff-filter-results {
+  margin: 0;
+}
+
+@media (max-width: 960px) {
+  .staff-filter-bar-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .staff-filter-field--search {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 640px) {
+  .staff-filter-bar-grid {
+    grid-template-columns: 1fr;
+  }
+}

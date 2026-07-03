@@ -1,0 +1,55 @@
+<section class="subscription-history" role="region" [attr.aria-label]="'subscription.requestHistory' | translate">
+  <header class="subscription-history-header">
+    <h2 class="type-section-title">{{ 'subscription.requestHistory' | translate }}</h2>
+  </header>
+
+  <app-empty-state
+    *ngIf="requests.length === 0"
+    [nested]="true"
+    icon="📋"
+    [title]="'subscription.empty.noHistoryTitle' | translate"
+    [description]="'subscription.empty.noHistoryDescription' | translate"
+  ></app-empty-state>
+
+  <div class="subscription-history-table-wrap hide-mobile" *ngIf="requests.length > 0">
+    <table class="data-table subscription-history-table">
+      <thead>
+        <tr>
+          <th>{{ 'subscription.changeTypeLabel' | translate }}</th>
+          <th>{{ 'common.status' | translate }}</th>
+          <th>{{ 'subscription.requestedPlan' | translate }}</th>
+          <th>{{ 'subscription.duration' | translate }}</th>
+          <th>{{ 'common.created' | translate }}</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let request of requests">
+          <td>{{ changeTypeLabel(request.changeType) }}</td>
+          <td>
+            <span class="badge" [attr.data-status]="statusTone(request.status)">{{ statusLabel(request.status) }}</span>
+          </td>
+          <td>{{ request.requestedPlanName }}</td>
+          <td>{{ 'subscription.durationMonths' | translate:{ count: request.durationMonths } }}</td>
+          <td>{{ request.createdAt | date:'medium' }}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <ul class="subscription-history-cards show-mobile-only" *ngIf="requests.length > 0" role="list">
+    <li *ngFor="let request of requests" class="subscription-history-card" role="listitem">
+      <div class="subscription-history-card-head">
+        <strong>{{ request.requestedPlanName }}</strong>
+        <span class="badge" [attr.data-status]="statusTone(request.status)">{{ statusLabel(request.status) }}</span>
+      </div>
+      <p class="muted small">
+        {{ changeTypeLabel(request.changeType) }} ·
+        {{ 'subscription.durationMonths' | translate:{ count: request.durationMonths } }}
+      </p>
+      <p class="muted small">{{ request.createdAt | date:'medium' }}</p>
+      <p class="subscription-history-note muted small" *ngIf="request.adminNote && request.status === 'Rejected'">
+        {{ 'subscription.adminNote' | translate }}: {{ request.adminNote }}
+      </p>
+    </li>
+  </ul>
+</section>

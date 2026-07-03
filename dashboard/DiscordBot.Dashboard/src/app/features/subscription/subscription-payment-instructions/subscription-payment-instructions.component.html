@@ -1,0 +1,66 @@
+<section
+  class="subscription-payment-panel"
+  role="region"
+  [attr.aria-label]="'subscription.paymentPanel.ariaLabel' | translate"
+>
+  <header class="subscription-payment-panel-header">
+    <h2 class="type-section-title">{{ 'subscription.paymentPanel.title' | translate }}</h2>
+    <p class="muted type-body">{{ 'subscription.paymentPanel.intro' | translate }}</p>
+  </header>
+
+  <ol class="subscription-payment-steps">
+    <li>{{ 'subscription.paymentPanel.step1' | translate:{ amount: formattedAmount() } }}</li>
+    <li>{{ 'subscription.paymentPanel.step2' | translate }}</li>
+    <li>{{ 'subscription.paymentPanel.step3' | translate }}</li>
+  </ol>
+
+  <dl class="subscription-payment-details">
+    <div class="subscription-payment-detail-row">
+      <dt class="muted">{{ 'subscription.paymentPanel.bankName' | translate }}</dt>
+      <dd>
+        <span>{{ config.bankName }}</span>
+        <button type="button" class="btn btn-ghost btn-sm" (click)="copyValue(config.bankName, 'subscription.paymentPanel.bankName')">
+          {{ 'subscription.paymentPanel.copy' | translate }}
+        </button>
+      </dd>
+    </div>
+    <div class="subscription-payment-detail-row">
+      <dt class="muted">{{ 'subscription.paymentPanel.accountName' | translate }}</dt>
+      <dd>
+        <span>{{ config.accountName }}</span>
+        <button type="button" class="btn btn-ghost btn-sm" (click)="copyValue(config.accountName, 'subscription.paymentPanel.accountName')">
+          {{ 'subscription.paymentPanel.copy' | translate }}
+        </button>
+      </dd>
+    </div>
+    <div class="subscription-payment-detail-row">
+      <dt class="muted">{{ 'subscription.paymentPanel.iban' | translate }}</dt>
+      <dd>
+        <code class="subscription-payment-mono">{{ config.iban }}</code>
+        <button type="button" class="btn btn-ghost btn-sm" (click)="copyValue(config.iban, 'subscription.paymentPanel.iban')">
+          {{ 'subscription.paymentPanel.copy' | translate }}
+        </button>
+      </dd>
+    </div>
+    <div class="subscription-payment-detail-row" *ngIf="paymentReferenceHint">
+      <dt class="muted">{{ 'subscription.paymentPanel.reference' | translate }}</dt>
+      <dd>
+        <code class="subscription-payment-mono">{{ paymentReferenceHint }}</code>
+        <button type="button" class="btn btn-ghost btn-sm" (click)="copyValue(paymentReferenceHint, 'subscription.paymentPanel.reference')">
+          {{ 'subscription.paymentPanel.copy' | translate }}
+        </button>
+      </dd>
+    </div>
+    <div class="subscription-payment-detail-row">
+      <dt class="muted">{{ 'subscription.paymentPanel.amount' | translate }}</dt>
+      <dd>
+        <strong>{{ formattedAmount() }}</strong>
+        <button type="button" class="btn btn-ghost btn-sm" (click)="copyAmount()">
+          {{ 'subscription.paymentPanel.copy' | translate }}
+        </button>
+      </dd>
+    </div>
+  </dl>
+
+  <p class="subscription-payment-verify muted small">{{ 'subscription.paymentPanel.verifyMessage' | translate }}</p>
+</section>

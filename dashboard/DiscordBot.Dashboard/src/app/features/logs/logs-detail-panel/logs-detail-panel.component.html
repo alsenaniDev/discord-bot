@@ -1,0 +1,102 @@
+<div
+  class="logs-detail-panel"
+  *ngIf="log && open"
+  [class.is-open]="open"
+  [class.is-inline]="inline"
+>
+  <div
+    class="logs-detail-panel-backdrop"
+    (click)="onBackdropClick($event)"
+    aria-hidden="true"
+  ></div>
+
+  <aside
+    class="logs-detail-panel-shell"
+    [attr.role]="inline ? 'region' : 'dialog'"
+    [attr.aria-modal]="inline ? null : 'true'"
+    [attr.aria-label]="'logs.workspace.detailAria' | translate"
+  >
+    <header class="logs-detail-panel-head">
+      <div class="logs-detail-panel-headcopy">
+        <div class="logs-detail-panel-title-row">
+          <h2 #detailTitle class="logs-detail-panel-title" tabindex="-1">
+            {{ log.typeLabel }}
+          </h2>
+          <app-status-badge [label]="severityLabel" [tone]="severity"></app-status-badge>
+        </div>
+        <time class="logs-detail-panel-time muted small" [dateTime]="log.createdAt">
+          {{ log.createdAt | date: 'medium' }}
+        </time>
+      </div>
+
+      <button
+        type="button"
+        class="icon-btn btn-ghost logs-detail-panel-close"
+        (click)="closePanel.emit()"
+        [attr.aria-label]="'logs.workspace.closeDetail' | translate"
+      >
+        <app-ui-icon name="x" size="sm"></app-ui-icon>
+      </button>
+    </header>
+
+    <div class="logs-detail-panel-actions" *ngIf="canClear">
+      <button type="button" class="btn btn-danger btn-sm" (click)="clearAll.emit()">
+        {{ 'logs.clearAll' | translate }}
+      </button>
+    </div>
+
+    <section class="logs-detail-panel-body">
+      <div class="logs-detail-panel-message">
+        <h3 class="type-label">{{ 'logs.message' | translate }}</h3>
+        <p class="type-body">{{ log.message }}</p>
+      </div>
+
+      <dl class="logs-detail-panel-meta">
+        <div class="logs-detail-panel-meta-row">
+          <dt class="type-label muted">{{ 'logs.actor' | translate }}</dt>
+          <dd>{{ actorLabel }}</dd>
+        </div>
+        <div class="logs-detail-panel-meta-row">
+          <dt class="type-label muted">{{ 'logs.target' | translate }}</dt>
+          <dd>{{ targetLabel }}</dd>
+        </div>
+        <div class="logs-detail-panel-meta-row">
+          <dt class="type-label muted">{{ 'logs.channel' | translate }}</dt>
+          <dd>{{ channelLabel }}</dd>
+        </div>
+        <div class="logs-detail-panel-meta-row">
+          <dt class="type-label muted">{{ 'logs.workspace.eventType' | translate }}</dt>
+          <dd>{{ log.typeLabel }}</dd>
+        </div>
+      </dl>
+
+      <details class="logs-detail-panel-advanced" [open]="advancedExpanded" (toggle)="onAdvancedToggle($event)">
+        <summary class="logs-detail-panel-advanced-summary">
+          {{ 'logs.workspace.advancedDetails' | translate }}
+        </summary>
+        <div class="logs-detail-panel-advanced-body">
+          <dl class="logs-detail-panel-meta">
+            <div class="logs-detail-panel-meta-row">
+              <dt class="type-label muted">{{ 'logs.workspace.entryId' | translate }}</dt>
+              <dd class="mono small">{{ log.id }}</dd>
+            </div>
+            <div class="logs-detail-panel-meta-row" *ngIf="log.actorDiscordUserId">
+              <dt class="type-label muted">{{ 'logs.workspace.actorId' | translate }}</dt>
+              <dd class="mono small">{{ log.actorDiscordUserId }}</dd>
+            </div>
+            <div class="logs-detail-panel-meta-row" *ngIf="log.targetDiscordUserId">
+              <dt class="type-label muted">{{ 'logs.workspace.targetId' | translate }}</dt>
+              <dd class="mono small">{{ log.targetDiscordUserId }}</dd>
+            </div>
+            <div class="logs-detail-panel-meta-row" *ngIf="log.channelDiscordId">
+              <dt class="type-label muted">{{ 'logs.workspace.channelId' | translate }}</dt>
+              <dd class="mono small">{{ log.channelDiscordId }}</dd>
+            </div>
+          </dl>
+          <pre class="logs-detail-panel-json mono small" *ngIf="metadataPreview">{{ metadataPreview }}</pre>
+          <p class="muted small" *ngIf="!metadataPreview">{{ 'logs.workspace.noMetadata' | translate }}</p>
+        </div>
+      </details>
+    </section>
+  </aside>
+</div>

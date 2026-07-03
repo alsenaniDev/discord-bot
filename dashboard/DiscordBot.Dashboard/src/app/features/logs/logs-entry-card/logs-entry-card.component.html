@@ -1,0 +1,31 @@
+<button
+  type="button"
+  class="logs-entry-card"
+  [class.is-selected]="selected"
+  [attr.aria-current]="selected ? 'true' : null"
+  [attr.aria-label]="'logs.workspace.selectEntry' | translate:{ type: log.typeLabel }"
+  (click)="select.emit()"
+>
+  <span class="logs-entry-card-icon ws-icon-well" [attr.data-tone]="severity === 'danger' ? 'danger' : severity === 'warning' ? 'warning' : severity === 'success' ? 'success' : 'info'" aria-hidden="true">
+    <app-ui-icon [name]="$any(iconName)" size="sm"></app-ui-icon>
+  </span>
+
+  <span class="logs-entry-card-body">
+    <span class="logs-entry-card-head">
+      <span class="logs-entry-card-type">{{ log.typeLabel }}</span>
+      <app-status-badge [label]="severityLabel" [tone]="severity"></app-status-badge>
+    </span>
+
+    <span class="logs-entry-card-message muted">{{ log.message }}</span>
+
+    <span class="logs-entry-card-meta muted small">
+      <span *ngIf="actorLabel">{{ 'logs.actor' | translate }}: {{ actorLabel }}</span>
+      <span class="logs-entry-card-meta-sep" *ngIf="actorLabel && targetLabel" aria-hidden="true">·</span>
+      <span *ngIf="targetLabel">{{ 'logs.target' | translate }}: {{ targetLabel }}</span>
+    </span>
+  </span>
+
+  <time class="logs-entry-card-time muted small" [dateTime]="log.createdAt">
+    {{ log.createdAt | date: 'medium' }}
+  </time>
+</button>

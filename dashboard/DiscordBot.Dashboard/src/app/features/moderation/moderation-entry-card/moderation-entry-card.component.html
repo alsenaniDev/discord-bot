@@ -1,0 +1,31 @@
+<button
+  type="button"
+  class="ws-feed-card"
+  [class.is-selected]="selected"
+  [attr.aria-current]="selected ? 'true' : null"
+  [attr.aria-label]="'moderation.workspace.selectEntry' | translate:{ action: actionLabel, member: targetLabel }"
+  (click)="select.emit()"
+>
+  <span class="ws-feed-card-icon ws-icon-well" [attr.data-tone]="iconTone" aria-hidden="true">
+    <app-ui-icon name="shield" size="sm"></app-ui-icon>
+  </span>
+
+  <span class="ws-feed-card-body">
+    <span class="ws-feed-card-head">
+      <span class="ws-feed-card-title">{{ actionLabel }}</span>
+      <app-status-badge [label]="actionLabel" [tone]="badgeTone"></app-status-badge>
+    </span>
+
+    <span class="ws-feed-card-subtitle">{{ targetLabel }}</span>
+
+    <span class="ws-feed-card-preview muted" *ngIf="reason">{{ reason }}</span>
+
+    <span class="ws-feed-card-meta muted small">
+      <span>{{ 'moderation.moderator' | translate }}: {{ moderatorLabel }}</span>
+    </span>
+  </span>
+
+  <time class="ws-feed-card-time muted small" [dateTime]="createdAt">
+    {{ createdAt | date: 'medium' }}
+  </time>
+</button>

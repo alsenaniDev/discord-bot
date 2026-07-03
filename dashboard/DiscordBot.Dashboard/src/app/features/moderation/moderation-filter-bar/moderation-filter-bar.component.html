@@ -1,0 +1,69 @@
+<section
+  class="moderation-filter-bar ws-toolbar"
+  role="search"
+  [attr.aria-label]="'moderation.workspace.filterAria' | translate"
+>
+  <div class="moderation-filter-bar-grid">
+    <label class="form-field moderation-filter-field">
+      <span class="type-label">{{ 'moderation.type' | translate }}</span>
+      <select class="input" [(ngModel)]="filters.type" [disabled]="disabled">
+        <option value="">{{ 'moderation.allTypes' | translate }}</option>
+        <option value="Warn">{{ 'moderation.warn' | translate }}</option>
+        <option value="Kick">{{ 'moderation.kick' | translate }}</option>
+        <option value="Clear">{{ 'moderation.clear' | translate }}</option>
+      </select>
+    </label>
+
+    <app-member-select
+      class="moderation-filter-field"
+      [guildId]="guildId"
+      [label]="'moderation.workspace.moderator' | translate"
+      [placeholder]="'memberSelect.placeholder' | translate"
+      [(ngModel)]="moderatorUserId"
+    ></app-member-select>
+
+    <app-member-select
+      class="moderation-filter-field"
+      [guildId]="guildId"
+      [label]="'moderation.targetUser' | translate"
+      [placeholder]="'memberSelect.placeholder' | translate"
+      [(ngModel)]="filters.targetUserId"
+    ></app-member-select>
+
+    <label class="form-field moderation-filter-field">
+      <span class="type-label">{{ 'moderation.from' | translate }}</span>
+      <input class="input" type="date" [(ngModel)]="filters.from" [disabled]="disabled" />
+    </label>
+
+    <label class="form-field moderation-filter-field">
+      <span class="type-label">{{ 'moderation.to' | translate }}</span>
+      <input class="input" type="date" [(ngModel)]="filters.to" [disabled]="disabled" />
+    </label>
+
+    <label class="form-field moderation-filter-field moderation-filter-field--search">
+      <span class="type-label">{{ 'moderation.workspace.search' | translate }}</span>
+      <input
+        class="input"
+        type="search"
+        [(ngModel)]="search"
+        [placeholder]="'moderation.workspace.searchPlaceholder' | translate"
+        [disabled]="disabled"
+        (keyup.enter)="onApply()"
+      />
+    </label>
+  </div>
+
+  <div class="moderation-filter-bar-actions">
+    <p class="moderation-filter-results muted small" *ngIf="resultCount >= 0">
+      {{ 'moderation.workspace.results' | translate:{ count: resultCount } }}
+    </p>
+    <div class="moderation-filter-bar-buttons">
+      <button type="button" class="btn btn-primary btn-sm" [disabled]="disabled" (click)="onApply()">
+        {{ 'common.apply' | translate }}
+      </button>
+      <button type="button" class="btn btn-secondary btn-sm" [disabled]="disabled" (click)="onClear()">
+        {{ 'moderation.workspace.clearFilters' | translate }}
+      </button>
+    </div>
+  </div>
+</section>

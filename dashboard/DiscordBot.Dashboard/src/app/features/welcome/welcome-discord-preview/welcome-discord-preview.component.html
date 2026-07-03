@@ -1,0 +1,84 @@
+<aside
+  class="welcome-preview ws-discord-preview"
+  role="complementary"
+  [attr.aria-label]="'welcome.workspace.preview.ariaLabel' | translate"
+>
+  <header class="ws-discord-preview-head">
+    <h2 class="ws-discord-preview-title">{{ 'welcome.workspace.preview.title' | translate }}</h2>
+    <p class="ws-discord-preview-lead muted small">{{ 'welcome.workspace.preview.lead' | translate }}</p>
+  </header>
+
+  <div class="ws-discord-preview-body" aria-live="polite" aria-atomic="true">
+    <div class="ws-discord-channel-bar" *ngIf="channelLabel">
+      <span class="ws-discord-channel-hash" aria-hidden="true">#</span>
+      <span class="ws-discord-channel-name">{{ channelLabel }}</span>
+    </div>
+
+    <app-empty-state
+      *ngIf="!enabled"
+      [nested]="true"
+      icon="🔕"
+      [title]="'welcome.workspace.empty.disabledTitle' | translate"
+      [description]="'welcome.workspace.empty.disabledBody' | translate"
+    ></app-empty-state>
+
+    <app-empty-state
+      *ngIf="enabled && !channelLabel"
+      [nested]="true"
+      icon="📣"
+      [title]="'welcome.workspace.empty.noChannelTitle' | translate"
+      [description]="'welcome.workspace.empty.noChannelBody' | translate"
+    ></app-empty-state>
+
+    <app-empty-state
+      *ngIf="enabled && channelLabel && !previewMessage.trim()"
+      [nested]="true"
+      icon="✍️"
+      [title]="'welcome.workspace.empty.noMessageTitle' | translate"
+      [description]="'welcome.workspace.empty.noMessageBody' | translate"
+    ></app-empty-state>
+
+    <article class="ws-discord-message" *ngIf="enabled && channelLabel && previewMessage.trim()">
+      <div class="ws-discord-message-avatar" aria-hidden="true">
+        <app-ui-icon name="bot" size="sm"></app-ui-icon>
+      </div>
+
+      <div class="ws-discord-message-body">
+        <header class="ws-discord-message-head">
+          <span class="ws-discord-message-author">{{ botName }}</span>
+          <span class="ws-discord-message-bot badge" data-status="info">{{ 'welcome.workspace.preview.botBadge' | translate }}</span>
+          <time class="ws-discord-message-time muted small">{{ 'welcome.workspace.preview.timestamp' | translate }}</time>
+        </header>
+
+        <div class="ws-discord-embed ws-discord-embed--success">
+          <div class="ws-discord-embed-accent" aria-hidden="true"></div>
+          <div class="ws-discord-embed-body">
+            <div class="ws-discord-embed-author">
+              <span class="ws-discord-embed-author-avatar" aria-hidden="true">
+                <img *ngIf="authorAvatarUrl; else memberAvatar" [src]="authorAvatarUrl" alt="" />
+                <ng-template #memberAvatar>
+                  <span class="ws-discord-embed-author-avatar-fallback">NM</span>
+                </ng-template>
+              </span>
+              <span class="ws-discord-embed-author-name">{{ authorName }}</span>
+            </div>
+
+            <h3 class="ws-discord-embed-title" *ngIf="embedTitle">{{ embedTitle }}</h3>
+            <p class="ws-discord-embed-description">{{ previewMessage }}</p>
+
+            <footer class="ws-discord-embed-footer muted small">
+              <span>{{ footerText }}</span>
+              <span class="ws-discord-embed-footer-sep" aria-hidden="true">•</span>
+              <span>{{ 'welcome.workspace.preview.timestamp' | translate }}</span>
+            </footer>
+          </div>
+        </div>
+      </div>
+    </article>
+
+    <p class="welcome-preview-ready muted small" *ngIf="previewReady">
+      <app-ui-icon name="check-circle" size="sm"></app-ui-icon>
+      {{ 'welcome.workspace.preview.ready' | translate }}
+    </p>
+  </div>
+</aside>

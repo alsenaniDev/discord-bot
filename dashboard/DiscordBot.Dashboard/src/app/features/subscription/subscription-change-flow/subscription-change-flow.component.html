@@ -1,0 +1,74 @@
+<section
+  class="subscription-change-flow"
+  role="region"
+  [attr.aria-label]="'subscription.changeProgressTitle' | translate"
+  id="subscription-change-flow"
+>
+  <nav class="subscription-change-stepper" [attr.aria-label]="'subscription.changeProgressTitle' | translate">
+    <ol class="subscription-change-stepper-list">
+      <li
+        *ngFor="let step of stepperSteps; let i = index"
+        [class.is-complete]="isStepComplete(i + 1)"
+        [class.is-current]="isStepCurrent(i + 1)"
+      >
+        <span class="subscription-change-step-marker" aria-hidden="true">{{ i + 1 }}</span>
+        <span class="subscription-change-step-label">{{ ('subscription.stepper.' + step) | translate }}</span>
+      </li>
+    </ol>
+  </nav>
+
+  <article class="subscription-change-state" [attr.data-tone]="stateTone()">
+    <div class="subscription-change-state-icon" aria-hidden="true">
+      <app-ui-icon [name]="$any(stateIcon())" size="lg"></app-ui-icon>
+    </div>
+    <div class="subscription-change-state-copy">
+      <h2 class="subscription-change-state-title">{{ stateTitleKey | translate: stateParams }}</h2>
+      <p class="muted">{{ stateBodyKey | translate: stateParams }}</p>
+      <p class="muted small subscription-change-summary">
+        {{ changeSummaryKey | translate: stateParams }}
+      </p>
+      <p class="muted small" *ngIf="currentChange.requestExpiresAt && currentChange.status === 'PendingPayment'">
+        {{ 'subscription.requestExpiresHint' | translate:{ date: (currentChange.requestExpiresAt | date:'medium') } }}
+      </p>
+      <p class="muted small" *ngIf="currentChange.paymentSubmittedAt && (currentChange.status === 'PaymentSubmitted' || currentChange.status === 'UnderReview')">
+        {{ 'subscription.paymentSubmittedAt' | translate:{ date: (currentChange.paymentSubmittedAt | date:'medium') } }}
+      </p>
+    </div>
+  </article>
+
+  <div class="subscription-change-payment-form" *ngIf="currentChange.status === 'PendingPayment'" id="subscription-payment-form">
+    <label class="form-field">
+      <span>{{ 'subscription.paymentReferenceLabel' | translate }}</span>
+      <input
+        class="input"
+        type="text"
+        [ngModel]="paymentReference"
+        (ngModelChange)="onPaymentReferenceInput($event)"
+        maxlength="500"
+        [placeholder]="'subscription.paymentReferencePlaceholder' | translate"
+        [disabled]="submittingPayment"
+        [attr.aria-label]="'subscription.paymentReferenceLabel' | translate"
+      />
+      <span class="muted small">{{ 'subscription.paymentReferenceHint' | translate }}</span>
+    </label>
+    <div class="subscription-change-actions">
+      <button
+        type="button"
+        class="btn btn-primary"
+        [disabled]="!paymentReference.trim() || submittingPayment"
+        (click)="submitPayment.emit()"
+      >
+        {{ (submittingPayment ? 'subscription.submittingPayment' : 'subscription.submitPaymentReference') | translate }}
+      </button>
+      <button type="button" class="btn btn-ghost btn-sm" (click)="cancelRequest.emit()" [disabled]="submittingPayment || cancelling">
+        {{ 'subscription.cancelChangeButton' | translate }}
+      </button>
+    </div>
+  </div>
+
+  <div class="subscription-change-actions" *ngIf="currentChange.status === 'PaymentSubmitted' || currentChange.status === 'UnderReview'">
+    <button type="button" class="btn btn-ghost btn-sm" (click)="cancelRequest.emit()" [disabled]="cancelling">
+      {{ 'subscription.cancelChangeButton' | translate }}
+    </button>
+  </div>
+</section>

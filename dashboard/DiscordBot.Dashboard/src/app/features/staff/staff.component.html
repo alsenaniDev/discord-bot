@@ -1,4 +1,8 @@
-<div class="page-content">
+<div
+  class="page-content page-workspace staff-page ws-page"
+  [class.ws-workspace-page]="!editorMode"
+  [class.staff-page--editor-mode]="editorMode"
+>
   <app-loading-state *ngIf="loading" [message]="'staff.loading' | translate"></app-loading-state>
 
   <app-empty-state
@@ -10,71 +14,176 @@
     <button type="button" class="btn btn-primary btn-sm" (click)="loadData()">{{ 'common.tryAgain' | translate }}</button>
   </app-empty-state>
 
-  <ng-container *ngIf="!loading && !error">
-    <section class="card add-staff-card">
-      <h2>{{ 'staff.addTitle' | translate }}</h2>
-      <p class="muted">{{ 'staff.addHint' | translate }}</p>
-      <p class="muted small">{{ 'staff.dashboardHelp' | translate }}</p>
-      <div class="add-staff-form">
-        <label class="form-field">
-          <span>{{ 'staff.roleName' | translate }}</span>
-          <input type="text" class="input" [(ngModel)]="roleName" [placeholder]="'staff.roleNamePlaceholder' | translate" />
-        </label>
-        <label class="form-field">
-          <span>{{ 'staff.discordRole' | translate }}</span>
-          <select class="input" [(ngModel)]="discordRoleId">
-            <option value="">{{ 'staff.discordRolePlaceholder' | translate }}</option>
-            <option *ngFor="let role of discordRoles" [value]="role.discordRoleId">
-              {{ role.name }}
-            </option>
-          </select>
-        </label>
-        <div class="permission-grid">
-          <span class="permission-grid-label">{{ 'staff.permissionsTitle' | translate }}</span>
-          <label class="permission-option" *ngFor="let option of permissionOptions">
-            <input type="checkbox" [(ngModel)]="selectedPermissions[option.value]" />
-            <span>{{ option.labelKey | translate }}</span>
-          </label>
+  <div class="staff-layout ws-layout" *ngIf="!loading && !error">
+    <header class="staff-atf ws-atf" *ngIf="!editorMode">
+      <app-page-workspace-hero
+        class="staff-workspace-hero"
+        [ariaLabel]="'staff.workspace.hero.ariaLabel' | translate"
+        icon="roles"
+        [title]="'staff.workspace.title' | translate"
+        [description]="'staff.workspace.subtitle' | translate"
+        [stats]="workspaceHeroStats"
+        [footerMessage]="workspaceHeroFooter"
+        [primaryAction]="workspaceHeroPrimaryAction"
+        (primaryActionClick)="onHeroPrimaryAction()"
+      ></app-page-workspace-hero>
+    </header>
+
+    <main class="staff-workspace ws-workspace" *ngIf="!editorMode">
+      <app-staff-filter-bar
+        class="staff-workspace-filters"
+        [search]="uiSearch"
+        [roleFilter]="uiRoleFilter"
+        [statusFilter]="uiStatusFilter"
+        [permissionFilter]="uiPermissionFilter"
+        [resultCount]="filteredRoles.length"
+        (searchChange)="uiSearch = $event"
+        (roleFilterChange)="uiRoleFilter = $event"
+        (statusFilterChange)="uiStatusFilter = $event"
+        (permissionFilterChange)="uiPermissionFilter = $event"
+        (clear)="clearFilters()"
+      ></app-staff-filter-bar>
+
+      <div class="staff-role-workspace">
+        <div class="staff-master-detail ws-master-detail ws-master-detail--split">
+          <section class="ws-feed-column" [attr.aria-label]="'staff.workspace.listAria' | translate">
+            <app-section-header
+              [title]="'staff.workspace.listTitle' | translate"
+              [lead]="'staff.workspace.listLead' | translate"
+              [compact]="true"
+            ></app-section-header>
+
+            <app-empty-state
+              *ngIf="roles.length === 0"
+              icon="🛡️"
+              [title]="'staff.workspace.emptyTitle' | translate"
+              [description]="'staff.workspace.emptyBody' | translate"
+            >
+              <button type="button" class="btn btn-primary btn-sm" (click)="onCreateFirstRole()">
+                {{ 'staff.workspace.cta.createFirst' | translate }}
+              </button>
+            </app-empty-state>
+
+            <app-empty-state
+              *ngIf="roles.length > 0 && filteredRoles.length === 0"
+              icon="🔍"
+              [title]="'staff.workspace.emptyFilteredTitle' | translate"
+              [description]="'staff.workspace.emptyFilteredBody' | translate"
+            >
+              <button type="button" class="btn btn-secondary btn-sm" (click)="clearFilters()">
+                {{ 'staff.workspace.clearFilters' | translate }}
+              </button>
+            </app-empty-state>
+
+            <div class="ws-feed-scroll" *ngIf="filteredRoles.length > 0">
+              <div class="ws-feed-list staff-feed-list" role="list">
+                <div *ngFor="let role of filteredRoles" role="listitem" [attr.id]="'staff-role-' + role.id">
+                  <app-staff-role-card
+                    [roleName]="role.name"
+                    [discordLabel]="discordRoleLabel(role)"
+                    [discordColor]="discordRoleColor(role)"
+                    [permissionSummary]="permissionGroupSummary(role)"
+                    [permissionCount]="permissionCount(role)"
+                    [statusLabel]="roleStatusLabel(role)"
+                    [statusTone]="roleStatusTone(role)"
+                    [updatedLabel]="roleUpdatedLabel(role)"
+                    [editing]="isRoleEditing(role)"
+                    [selected]="selectedRoleId === role.id"
+                    (select)="selectRole(role)"
+                  ></app-staff-role-card>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <aside class="ws-detail-column staff-detail-column" *ngIf="detailInline" [attr.aria-label]="'staff.workspace.detailAria' | translate">
+            <div class="ws-placeholder-panel" *ngIf="!selectedRole">
+              <div class="ws-placeholder-panel-icon" aria-hidden="true">
+                <app-ui-icon name="roles" size="lg"></app-ui-icon>
+              </div>
+              <h2 class="ws-placeholder-panel-title">{{ 'staff.workspace.selectPromptTitle' | translate }}</h2>
+              <p class="ws-placeholder-panel-body muted">{{ 'staff.workspace.selectPromptBody' | translate }}</p>
+            </div>
+
+            <app-staff-detail-panel
+              *ngIf="selectedRole"
+              #staffDetailPanel
+              class="ws-detail-panel-host"
+              [open]="true"
+              [inline]="true"
+              [roleName]="selectedRole.name"
+              [discordLabel]="discordRoleLabel(selectedRole)"
+              [discordColor]="discordRoleColor(selectedRole)"
+              [permissionCount]="permissionCount(selectedRole)"
+              [statusLabel]="roleStatusLabel(selectedRole)"
+              [statusTone]="roleStatusTone(selectedRole)"
+              [updatedLabel]="roleUpdatedLabel(selectedRole)"
+              [permissionGroups]="selectedPermissionGroups"
+              [roleId]="selectedRole.id"
+              [discordRoleId]="selectedRole.discordRoleId"
+              [createdAt]="selectedRole.createdAt"
+              [editing]="isRoleEditing(selectedRole)"
+              (closePanel)="closeDetail()"
+              (editPermissions)="onEditPermissions()"
+              (deleteMapping)="removeRole(selectedRole)"
+              (scrollToEditor)="onScrollToEditor()"
+            ></app-staff-detail-panel>
+          </aside>
         </div>
-        <button type="button" class="btn btn-primary" [disabled]="saving" (click)="addRole()">
-          {{ (saving ? 'staff.adding' : 'staff.addButton') | translate }}
+      </div>
+
+      <div class="staff-management-actions" *ngIf="roles.length > 0">
+        <button type="button" class="btn btn-secondary" (click)="openEditor(false)">
+          <span aria-hidden="true">+</span>
+          {{ 'staff.editor.addTrigger' | translate }}
         </button>
       </div>
-    </section>
+    </main>
 
-    <section class="card table-card">
-      <h2>{{ 'staff.listTitle' | translate }}</h2>
-      <app-empty-state
-        *ngIf="roles.length === 0"
-        icon="🛡️"
-        [title]="'staff.emptyTitle' | translate"
-        [description]="'staff.emptyBody' | translate"
-      ></app-empty-state>
-
-      <div class="table-wrap" *ngIf="roles.length > 0">
-        <table class="data-table">
-          <thead>
-            <tr>
-              <th>{{ 'staff.roleName' | translate }}</th>
-              <th>{{ 'staff.discordRole' | translate }}</th>
-              <th>{{ 'staff.permissionsTitle' | translate }}</th>
-              <th>{{ 'common.actions' | translate }}</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let role of roles">
-              <td>{{ role.name }}</td>
-              <td>{{ discordRoleLabel(role) }}</td>
-              <td>{{ formatPermissions(role) }}</td>
-              <td>
-                <button type="button" class="btn btn-secondary btn-sm" (click)="removeRole(role)">
-                  {{ 'staff.remove' | translate }}
-                </button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+    <section
+      class="staff-editor-mode"
+      *ngIf="editorMode"
+      id="staff-editor-mode"
+      [attr.aria-label]="'staff.editor.modeAria' | translate"
+    >
+      <app-staff-role-editor
+        #staffRoleEditor
+        [editing]="editingRole"
+        [roleName]="roleName"
+        [discordRoleId]="discordRoleId"
+        [selectedPermissions]="selectedPermissions"
+        [discordRoles]="discordRoles"
+        [saving]="saving"
+        [roleId]="editingRoleId"
+        [createdAt]="editingRoleCreatedAt"
+        (save)="saveRole()"
+        (cancel)="cancelEdit()"
+        (roleNameChange)="roleName = $event"
+        (discordRoleIdChange)="discordRoleId = $event"
+        (permissionToggle)="onPermissionToggle($event)"
+      ></app-staff-role-editor>
     </section>
-  </ng-container>
+  </div>
+
+  <app-staff-detail-panel
+    *ngIf="!editorMode && !detailInline && selectedRole && mobileDetailOpen"
+    [open]="mobileDetailOpen"
+    [inline]="false"
+    [roleName]="selectedRole.name"
+    [discordLabel]="discordRoleLabel(selectedRole)"
+    [discordColor]="discordRoleColor(selectedRole)"
+    [permissionCount]="permissionCount(selectedRole)"
+    [statusLabel]="roleStatusLabel(selectedRole)"
+    [statusTone]="roleStatusTone(selectedRole)"
+    [updatedLabel]="roleUpdatedLabel(selectedRole)"
+    [permissionGroups]="selectedPermissionGroups"
+    [roleId]="selectedRole.id"
+    [discordRoleId]="selectedRole.discordRoleId"
+    [createdAt]="selectedRole.createdAt"
+    [editing]="isRoleEditing(selectedRole)"
+    (closePanel)="closeDetail()"
+    (editPermissions)="onEditPermissions()"
+    (deleteMapping)="removeRole(selectedRole)"
+    (scrollToEditor)="onScrollToEditor()"
+  ></app-staff-detail-panel>
 </div>

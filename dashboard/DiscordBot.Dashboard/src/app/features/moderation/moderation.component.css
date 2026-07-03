@@ -1,13 +1,28 @@
-.page-content {
-  max-width: 960px;
+.moderation-page {
+  --ws-detail-width: min(26rem, 42%);
+  --ws-viewport-offset: calc(
+    var(--topbar-height) + clamp(var(--space-4), 3vw, var(--space-6)) * 2
+  );
 }
 
-.identity-cell {
+:host ::ng-deep .moderation-atf app-page-workspace-hero .page-workspace-hero {
+  margin: 0;
+}
+
+.moderation-atf {
   display: flex;
   flex-direction: column;
-  gap: var(--space-1);
+  gap: var(--space-4);
 }
 
-.identity-name {
-  font-weight: 500;
+.moderation-workspace-hero {
+  display: block;
+}
+
+.moderation-workspace-filters {
+  flex-shrink: 0;
+}
+
+.moderation-master-detail {
+  min-height: 0;
 }

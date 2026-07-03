@@ -1,0 +1,116 @@
+<div
+  class="ws-detail-panel"
+  *ngIf="open"
+  [class.is-open]="open"
+  [class.is-inline]="inline"
+>
+  <div
+    class="ws-detail-panel-backdrop"
+    (click)="onBackdropClick($event)"
+    aria-hidden="true"
+  ></div>
+
+  <aside
+    class="ws-detail-panel-shell"
+    [attr.role]="inline ? 'region' : 'dialog'"
+    [attr.aria-modal]="inline ? null : 'true'"
+    [attr.aria-label]="'reactionRoles.workspace.detailAria' | translate"
+  >
+    <header class="ws-detail-panel-head">
+      <div class="ws-detail-panel-headcopy">
+        <div class="ws-feed-card-head">
+          <h2 #detailTitle class="ws-detail-panel-title" tabindex="-1">{{ title }}</h2>
+          <app-status-badge
+            [label]="(active ? 'common.active' : 'common.inactive') | translate"
+            [tone]="active ? 'success' : 'neutral'"
+          ></app-status-badge>
+        </div>
+        <p class="muted small">{{ messageStatusLabel }}</p>
+      </div>
+
+      <button
+        type="button"
+        class="icon-btn btn-ghost ws-detail-panel-close"
+        (click)="closePanel.emit()"
+        [attr.aria-label]="'reactionRoles.workspace.closeDetail' | translate"
+      >
+        <app-ui-icon name="x" size="sm"></app-ui-icon>
+      </button>
+    </header>
+
+    <div class="rr-detail-actions">
+      <button type="button" class="btn btn-secondary btn-sm" (click)="edit.emit()">
+        {{ 'reactionRoles.workspace.edit' | translate }}
+      </button>
+      <button type="button" class="btn btn-ghost btn-sm" *ngIf="canOpen" (click)="openDiscord.emit()">
+        {{ 'reactionRoles.workspace.openDiscord' | translate }}
+      </button>
+      <button type="button" class="btn btn-ghost btn-sm" *ngIf="canCopy" (click)="copyLink.emit()">
+        {{ 'reactionRoles.workspace.copyLink' | translate }}
+      </button>
+      <button
+        type="button"
+        class="btn btn-danger btn-sm"
+        [disabled]="!active || deactivating"
+        (click)="disable.emit()"
+      >
+        <span class="spinner inline" *ngIf="deactivating" aria-hidden="true"></span>
+        {{ (deactivating ? 'reactionRoles.deactivating' : 'reactionRoles.deactivate') | translate }}
+      </button>
+    </div>
+
+    <section class="ws-detail-panel-body">
+      <app-empty-state
+        *ngIf="!messageLinked"
+        [nested]="true"
+        icon="🔗"
+        [title]="'reactionRoles.workspace.noLinkedMessageTitle' | translate"
+        [description]="'reactionRoles.workspace.noLinkedMessageBody' | translate"
+      ></app-empty-state>
+
+      <div class="rr-message-preview" *ngIf="messageLinked">
+        <h3 class="type-label">{{ 'reactionRoles.workspace.messagePreview' | translate }}</h3>
+        <div class="rr-message-preview-card">
+          <strong class="rr-message-preview-title">{{ title }}</strong>
+          <p class="muted" *ngIf="description">{{ description }}</p>
+          <span class="btn btn-secondary btn-sm rr-message-preview-button">{{ buttonLabel }}</span>
+        </div>
+      </div>
+
+      <dl class="ws-detail-meta">
+        <div class="ws-detail-meta-row">
+          <dt class="type-label muted">{{ 'reactionRoles.workspace.rolesIncluded' | translate }}</dt>
+          <dd>{{ roleLabel }}</dd>
+        </div>
+        <div class="ws-detail-meta-row">
+          <dt class="type-label muted">{{ 'reactionRoles.workspace.targetChannel' | translate }}</dt>
+          <dd>{{ channelLabel }}</dd>
+        </div>
+        <div class="ws-detail-meta-row">
+          <dt class="type-label muted">{{ 'common.created' | translate }}</dt>
+          <dd>{{ createdAt | date: 'medium' }}</dd>
+        </div>
+      </dl>
+
+      <details class="ws-detail-advanced" [open]="advancedExpanded" (toggle)="onAdvancedToggle($event)">
+        <summary>{{ 'reactionRoles.workspace.advancedDetails' | translate }}</summary>
+        <div class="ws-detail-advanced-body">
+          <dl class="ws-detail-meta">
+            <div class="ws-detail-meta-row" *ngIf="messageId">
+              <dt class="type-label muted">{{ 'reactionRoles.workspace.messageId' | translate }}</dt>
+              <dd class="mono small">{{ messageId }}</dd>
+            </div>
+            <div class="ws-detail-meta-row" *ngIf="channelId">
+              <dt class="type-label muted">{{ 'reactionRoles.workspace.channelId' | translate }}</dt>
+              <dd class="mono small">{{ channelId }}</dd>
+            </div>
+            <div class="ws-detail-meta-row" *ngIf="buttonCustomId">
+              <dt class="type-label muted">{{ 'reactionRoles.workspace.buttonId' | translate }}</dt>
+              <dd class="mono small">{{ buttonCustomId }}</dd>
+            </div>
+          </dl>
+        </div>
+      </details>
+    </section>
+  </aside>
+</div>

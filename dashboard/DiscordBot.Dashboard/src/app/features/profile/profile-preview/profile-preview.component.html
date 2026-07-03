@@ -1,0 +1,84 @@
+<aside
+  class="profile-preview"
+  role="complementary"
+  [attr.aria-label]="'profile.preview.ariaLabel' | translate"
+>
+  <header class="profile-preview-head">
+    <h2 class="profile-preview-title">{{ 'profile.preview.title' | translate }}</h2>
+    <p class="profile-preview-lead muted small">{{ 'profile.preview.lead' | translate }}</p>
+  </header>
+
+  <article class="profile-preview-embed" aria-live="polite" aria-atomic="true">
+    <div class="profile-preview-embed-accent" aria-hidden="true"></div>
+
+    <div class="profile-preview-embed-body">
+      <div class="profile-preview-embed-header">
+        <div class="profile-preview-embed-heading">
+          <h3 class="profile-preview-embed-title">{{ displayName }}</h3>
+          <p class="profile-preview-embed-description muted" *ngIf="description; else emptyDescription">
+            {{ description }}
+          </p>
+          <ng-template #emptyDescription>
+            <p class="profile-preview-embed-description profile-preview-embed-description--empty muted">
+              {{ 'profile.preview.emptyDescription' | translate }}
+            </p>
+          </ng-template>
+        </div>
+
+        <div class="profile-preview-embed-thumb" aria-hidden="true">
+          <img *ngIf="iconUrl" [src]="iconUrl" alt="" />
+          <div *ngIf="!iconUrl" class="profile-preview-embed-thumb-empty">
+            <app-ui-icon name="servers" size="sm"></app-ui-icon>
+          </div>
+        </div>
+      </div>
+
+      <dl class="profile-preview-embed-fields">
+        <div class="profile-preview-embed-field">
+          <dt>{{ 'profile.communityType' | translate }}</dt>
+          <dd *ngIf="communityType; else emptyCommunityType">{{ communityType }}</dd>
+          <ng-template #emptyCommunityType>
+            <dd class="profile-preview-empty-value">{{ 'profile.preview.emptyCommunityType' | translate }}</dd>
+          </ng-template>
+        </div>
+
+        <div class="profile-preview-embed-field profile-preview-embed-field--wide" *ngIf="supportMessage; else emptySupport">
+          <dt>{{ 'profile.supportMessage' | translate }}</dt>
+          <dd>{{ supportMessage }}</dd>
+        </div>
+        <ng-template #emptySupport>
+          <div class="profile-preview-embed-field profile-preview-embed-field--wide profile-preview-embed-field--empty">
+            <dt>{{ 'profile.supportMessage' | translate }}</dt>
+            <dd class="profile-preview-empty-value">{{ 'profile.preview.emptySupport' | translate }}</dd>
+          </div>
+        </ng-template>
+
+        <div class="profile-preview-embed-field" *ngIf="websiteUrl; else emptyWebsite">
+          <dt>{{ 'profile.websiteUrl' | translate }}</dt>
+          <dd class="profile-preview-link">{{ websiteUrl }}</dd>
+        </div>
+        <ng-template #emptyWebsite>
+          <div class="profile-preview-embed-field profile-preview-embed-field--empty">
+            <dt>{{ 'profile.websiteUrl' | translate }}</dt>
+            <dd class="profile-preview-empty-value">{{ 'profile.preview.emptyLink' | translate }}</dd>
+          </div>
+        </ng-template>
+
+        <div class="profile-preview-embed-field" *ngIf="rulesUrl; else emptyRules">
+          <dt>{{ 'profile.rulesUrl' | translate }}</dt>
+          <dd class="profile-preview-link">{{ rulesUrl }}</dd>
+        </div>
+        <ng-template #emptyRules>
+          <div class="profile-preview-embed-field profile-preview-embed-field--empty">
+            <dt>{{ 'profile.rulesUrl' | translate }}</dt>
+            <dd class="profile-preview-empty-value">{{ 'profile.preview.emptyLink' | translate }}</dd>
+          </div>
+        </ng-template>
+      </dl>
+
+      <footer class="profile-preview-embed-footer muted small">
+        {{ 'profile.preview.footer' | translate }}
+      </footer>
+    </div>
+  </article>
+</aside>

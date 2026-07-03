@@ -9,13 +9,3 @@
     max-width: none;
   }
 }
-
-.badge-success {
-  background: var(--color-success-soft);
-  color: var(--color-text-success);
-}
-
-.badge-muted {
-  background: var(--color-bg-panel);
-  color: var(--color-text-muted);
-}

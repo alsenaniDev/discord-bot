@@ -58,7 +58,7 @@
     "staff": "الطاقم",
     "profile": "ملف السيرفر",
     "moderationSettings": "صلاحيات الإشراف",
-    "upgradeRequests": "طلبات الترقية",
+    "upgradeRequests": "تغييرات الاشتراك",
     "adminPlans": "خطط الاشتراك",
     "breadcrumbHome": "الرئيسية"
   },
@@ -67,7 +67,7 @@
     "serversSubtitle": "اختر سيرفراً للإدارة",
     "serversSignedIn": "مسجل الدخول كـ {{name}}",
     "overview": "نظرة عامة على السيرفر",
-    "overviewSubtitle": "ملخص حالة البوت ونشاط السيرفر",
+    "overviewSubtitle": "صحة المجتمع والخطوات التالية والنشاط الأخير",
     "settings": "إعدادات السيرفر",
     "settingsSubtitle": "تهيئة ميزات البوت لهذا السيرفر",
     "tickets": "التذاكر",
@@ -90,8 +90,8 @@
     "adminGuildsSubtitle": "إدارة سيرفرات العملاء والاشتراكات",
     "adminUsers": "مستخدمو لوحة التحكم",
     "adminUsersSubtitle": "الأشخاص الذين سجلوا الدخول عبر Discord",
-    "adminUpgradeRequests": "طلبات ترقية الخطة",
-    "adminUpgradeRequestsSubtitle": "مراجعة طلبات ترقية الخطة اليدوية",
+    "adminUpgradeRequests": "تغييرات الاشتراك",
+    "adminUpgradeRequestsSubtitle": "مراجعة طلبات تغيير الاشتراك اليدوية",
     "adminPlans": "خطط الاشتراك",
     "adminPlansSubtitle": "إدارة الأسعار والوحدات وتوفر الخطط",
     "staff": "الطاقم",
@@ -100,6 +100,139 @@
     "profileSubtitle": "معلومات السيرفر العامة المعروضة في أوامر البوت",
     "moderationSettings": "صلاحيات الإشراف",
     "moderationSettingsSubtitle": "ربط أدوار Discord بأوامر الإشراف في البوت"
+  },
+  "workspaceHero": {
+    "overview": {
+      "ariaLabel": "نظرة عامة على السيرفر",
+      "description": "صحة المجتمع، وتقدم التفعيل، وما يحتاج إلى انتباهك.",
+      "footer": {
+        "operational": "كل شيء يعمل بشكل طبيعي.",
+        "staffCalm": "لا توجد إجراءات عاجلة لدورك حالياً."
+      }
+    },
+    "subscription": {
+      "footer": "الخطة المميزة تتضمن جميع وحدات المنصة.",
+      "stats": {
+        "plan": "الخطة الحالية",
+        "expires": "تنتهي",
+        "requests": "الطلبات",
+        "payments": "المدفوعات"
+      }
+    },
+    "profile": {
+      "footer": "تظهر التغييرات فور الحفظ.",
+      "stats": {
+        "links": "الروابط",
+        "fields": "الحقول",
+        "completion": "الاكتمال",
+        "visibility": "الظهور"
+      },
+      "visibilityConfigured": "مُعد",
+      "visibilityIncomplete": "غير مكتمل",
+      "cta": {
+        "save": "حفظ التغييرات"
+      }
+    },
+    "logs": {
+      "ariaLabel": "نظرة عامة على السجلات",
+      "footer": "النتائج المفلترة تعكس بحثك الحالي.",
+      "storageValue": "لوحة التحكم",
+      "retentionValue": "افتراضي السيرفر",
+      "exportAvailable": "متاح",
+      "exportLocked": "للمسؤول فقط",
+      "stats": {
+        "entries": "الإدخالات",
+        "storage": "التخزين",
+        "retention": "الاحتفاظ",
+        "export": "التصدير"
+      },
+      "cta": {
+        "clear": "مسح السجلات",
+        "configure": "إعداد السجلات"
+      }
+    },
+    "tickets": {
+      "ariaLabel": "نظرة عامة على التذاكر",
+      "footer": "طلبات الدعم المفتوحة في Discord تظهر هنا.",
+      "stats": {
+        "open": "مفتوحة",
+        "closed": "مغلقة",
+        "total": "الإجمالي",
+        "page": "الصفحة"
+      },
+      "cta": {
+        "review": "مراجعة التذاكر"
+      }
+    },
+    "moderation": {
+      "ariaLabel": "نظرة عامة على الإشراف",
+      "footer": "التحذيرات والحالات تعكس عوامل التصفية الحالية.",
+      "stats": {
+        "warnings": "التحذيرات",
+        "cases": "الحالات",
+        "types": "الأنواع",
+        "results": "النتائج"
+      },
+      "cta": {
+        "apply": "تطبيق عوامل التصفية",
+        "settings": "إعدادات الإشراف"
+      }
+    },
+    "settings": {
+      "ariaLabel": "نظرة عامة على الإعدادات",
+      "footer": "احفظ التغييرات لتطبيقها في Discord.",
+      "stats": {
+        "features": "الميزات",
+        "sections": "الأقسام",
+        "channels": "القنوات",
+        "autoReplies": "الردود التلقائية"
+      },
+      "cta": {
+        "save": "حفظ الإعدادات"
+      }
+    },
+    "staff": {
+      "ariaLabel": "نظرة عامة على الأدوار والصلاحيات",
+      "footer": "صلاحيات لوحة التحكم تُورَّث من أدوار Discord المربوطة.",
+      "stats": {
+        "roles": "الأدوار",
+        "discordRoles": "أدوار Discord",
+        "permissions": "الصلاحيات",
+        "grants": "المنح"
+      },
+      "cta": {
+        "add": "إضافة أدوار الطاقم"
+      }
+    },
+    "moderationSettings": {
+      "ariaLabel": "نظرة عامة على صلاحيات الإشراف",
+      "footer": "أوامر الإشراف في البوت تستخدم هذه الربطات.",
+      "stats": {
+        "roles": "الأدوار",
+        "discordRoles": "أدوار Discord",
+        "permissions": "الصلاحيات",
+        "grants": "المنح"
+      },
+      "cta": {
+        "add": "إضافة دور إشراف"
+      }
+    },
+    "reactionRoles": {
+      "ariaLabel": "نظرة عامة على أدوار التفاعل",
+      "footer": "أنشئ لوحات في Discord ليتمكن الأعضاء من تعيين الأدوار بأنفسهم.",
+      "stats": {
+        "panels": "إجمالي اللوحات",
+        "active": "اللوحات النشطة",
+        "rolesAssigned": "الأدوار المعيّنة",
+        "messagesLinked": "الرسائل المرتبطة",
+        "channels": "القنوات",
+        "roles": "الأدوار"
+      },
+      "cta": {
+        "manage": "عرض اللوحات",
+        "create": "إنشاء لوحة"
+      }
+    }
   },
   "auth": {
     "loginTitle": "لوحة تحكم Discord Bot",
@@ -146,21 +279,410 @@
   "overview": {
     "loading": "جاري تحميل نظرة عامة على السيرفر…",
     "loadError": "تعذر تحميل النظرة العامة",
-    "subtitle": "نظرة عامة على لوحة السيرفر",
+    "subtitle": "مركز قيادة مجتمعك",
     "syncDiscord": "مزامنة بيانات Discord",
     "syncing": "جاري المزامنة…",
+    "botOnline": "البوت متصل",
+    "botOffline": "البوت غير متصل",
     "botStatus": "حالة البوت",
     "channels": "القنوات",
     "roles": "الأدوار",
-    "totalTickets": "التذاكر",
+    "totalTickets": "إجمالي التذاكر",
     "openTickets": "التذاكر المفتوحة",
     "lastSync": "آخر مزامنة",
     "neverSynced": "لم تتم المزامنة",
-    "statsHint": "حالة الوحدات تُحمّل من نفس بيانات صفحة الوحدات. اضبط القنوات والأدوار في الإعدادات حتى تعمل الميزات في Discord.",
+    "statsHint": "حالة الوحدات تُحمّل من نفس بيانات صفحة الوحدات.",
     "welcome": "وحدة الترحيب",
     "autoRole": "وحدة الدور التلقائي",
     "logs": "وحدة السجلات",
-    "ticketsModule": "وحدة التذاكر"
+    "ticketsModule": "وحدة التذاكر",
+    "activation": {
+      "title": "تقدم التفعيل",
+      "progressShort": "{{percent}}% مفعّل",
+      "activatedBadge": "مفعّل",
+      "messages": {
+        "start": "لنربط مجتمع Discord ونحقق أول نجاح.",
+        "inProgress": "تقدم جيد — أكمل تفعيل أول وحدة.",
+        "almostThere": "خطوة واحدة قبل أول نتيجة ناجحة.",
+        "activated": "مجتمعك مفعّل. استكشف التوصيات أدناه."
+      },
+      "steps": {
+        "addBot": "إضافة البوت إلى Discord",
+        "linkGuild": "ربط السيرفر (/setup)",
+        "enableModule": "تفعيل وحدة",
+        "configureModule": "إعداد أول وحدة",
+        "firstValue": "تحقيق أول قيمة",
+        "inviteStaff": "دعوة أدوار الطاقم",
+        "enableLogs": "تفعيل سجلات النشاط",
+        "reviewSubscription": "مراجعة الاشتراك"
+      },
+      "cta": {
+        "addBot": "دعوة البوت",
+        "linkGuild": "إكمال الإعداد",
+        "enableModule": "تفعيل الوحدات",
+        "configureModule": "فتح الإعدادات",
+        "firstValue": "فتح التذاكر",
+        "inviteStaff": "إضافة أدوار",
+        "enableLogs": "إعداد السجلات",
+        "reviewSubscription": "عرض الاشتراك",
+        "exploreModules": "استكشاف الوحدات"
+      }
+    },
+    "health": {
+      "title": "صحة المجتمع",
+      "emptyTitle": "درجة الصحة غير متاحة",
+      "emptyDescription": "أكمل خطوات التفعيل لحساب صحة مجتمعك.",
+      "level": {
+        "excellent": "ممتاز",
+        "good": "جيد",
+        "needsAttention": "يحتاج انتباه",
+        "critical": "حرج"
+      },
+      "factor": {
+        "guildLinked": "السيرفر مربوط",
+        "botOnline": "البوت متصل",
+        "modulesEnabled": "وحدات مفعّلة",
+        "activationComplete": "اكتمل التفعيل",
+        "ticketsConfigured": "التذاكر مُعدّة",
+        "logsConfigured": "السجلات مُعدّة",
+        "permissionsConfigured": "صلاحيات الطاقم مُعدّة",
+        "subscriptionActive": "اشتراك مدفوع نشط",
+        "recentActivity": "نشاط حديث"
+      }
+    },
+    "recommendations": {
+      "title": "الخطوات التالية الموصى بها",
+      "emptyTitle": "أنت على اطلاع",
+      "emptyDescription": "لا توجد توصيات عاجلة الآن.",
+      "emptyCta": "تصفح الوحدات",
+      "syncResources": {
+        "title": "مزامنة موارد Discord",
+        "description": "شغّل /setup أو المزامنة لتظهر القنوات والأدوار.",
+        "cta": "الذهاب للسيرفرات"
+      },
+      "enableModules": {
+        "title": "فعّل أول وحدة",
+        "description": "فعّل الترحيب أو السجلات أو وحدة أخرى.",
+        "cta": "فتح الوحدات"
+      },
+      "configureWelcome": {
+        "title": "إعداد الترحيب",
+        "description": "حدّد قناة ورسالة ترحيب للأعضاء الجدد.",
+        "cta": "فتح الإعدادات"
+      },
+      "createTicketPanel": {
+        "title": "إنشاء لوحة تذاكر",
+        "description": "اضبط فئة التذاكر أو شغّل /ticket setup.",
+        "cta": "إعداد التذاكر"
+      },
+      "openFirstTicket": {
+        "title": "افتح أول تذكرة",
+        "description": "جرّب الدعم بفتح تذكرة من Discord.",
+        "cta": "عرض التذاكر"
+      },
+      "enableLogs": {
+        "title": "تفعيل سجلات النشاط",
+        "description": "اختر قناة سجلات لبدء سجل التدقيق.",
+        "cta": "إعداد السجلات"
+      },
+      "inviteStaff": {
+        "title": "دعوة الطاقم",
+        "description": "اربط أدوار Discord لمساعدة فريقك.",
+        "cta": "إضافة أدوار"
+      },
+      "createReactionPanel": {
+        "title": "إنشاء لوحة أدوار",
+        "description": "اسمح للأعضاء بتعيين الأدوار بأزرار.",
+        "cta": "أدوار التفاعل"
+      },
+      "renewSubscription": {
+        "title": "تجديد الاشتراك",
+        "description": "خطتك المدفوعة تنتهي قريباً — أرسل طلب تجديد.",
+        "cta": "عرض الفوترة"
+      },
+      "upgradeSubscription": {
+        "title": "ترقية الخطة",
+        "description": "افتح التذاكر والإشراف والمزيد.",
+        "cta": "عرض الخطط"
+      }
+    },
+    "priority": {
+      "high": "أولوية عالية",
+      "medium": "متوسط",
+      "low": "منخفض"
+    },
+    "quickActions": {
+      "title": "إجراءات سريعة",
+      "emptyTitle": "لا إجراءات متاحة",
+      "emptyDescription": "قد لا تملك صلاحية إدارة الإعدادات بعد.",
+      "welcome": "إعداد الترحيب",
+      "ticketPanel": "إعدادات التذاكر",
+      "moderation": "صلاحيات الإشراف",
+      "reactionRoles": "أدوار التفاعل",
+      "billing": "الفوترة",
+      "logs": "سجلات النشاط",
+      "modules": "الوحدات",
+      "tickets": "التذاكر"
+    },
+    "activity": {
+      "title": "النشاط الأخير",
+      "emptyTitle": "لا نشاط حديث",
+      "emptyDescription": "تظهر الأحداث هنا عند فتح التذاكر أو تفعيل الوحدات.",
+      "emptyCta": "عرض السجلات"
+    },
+    "stats": {
+      "title": "لمحة سريعة"
+    },
+    "v2": {
+      "status": {
+        "ariaLabel": "حالة السيرفر",
+        "staffAccess": "وصول الطاقم",
+        "botOnline": "متصل",
+        "botOffline": "غير متصل",
+        "syncing": "جاري المزامنة…",
+        "notSynced": "لم تتم المزامنة",
+        "syncedAgo": "تمت المزامنة {{time}}",
+        "justNow": "الآن",
+        "minutesAgo": "منذ {{count}} د",
+        "hoursAgo": "منذ {{count}} س",
+        "daysAgo": "منذ {{count}} ي"
+      },
+      "mission": {
+        "ariaLabel": "مركز المهام",
+        "loading": {
+          "title": "جاري تحميل المهمة",
+          "body": "جاري تحديد ما يحتاج انتباهك."
+        },
+        "error": {
+          "title": "تعذر تحميل المهمة",
+          "body": "قد تكون بيانات النظرة العامة الأخرى متاحة أدناه.",
+          "retry": "إعادة المحاولة"
+        },
+        "botOffline": {
+          "title": "البوت غير متصل",
+          "body": "لن يتلقى الأعضاء ميزات البوت حتى يعود الاتصال.",
+          "cta": "فتح Discord"
+        },
+        "subscriptionExpired": {
+          "title": "انتهى الاشتراك",
+          "body": "الوحدات المدفوعة مقفلة حتى تجدد.",
+          "cta": "تجديد الخطة"
+        },
+        "paymentRejected": {
+          "title": "تم رفض تغيير الاشتراك",
+          "body": "راجع السبب وحدّث مرجع الدفع.",
+          "cta": "عرض الفوترة"
+        },
+        "syncStale": {
+          "title": "بيانات السيرفر قديمة",
+          "body": "زامِن لتحديث القنوات والأدوار في لوحة التحكم.",
+          "cta": "مزامنة الآن"
+        },
+        "syncNever": {
+          "title": "لم تتم مزامنة السيرفر بعد",
+          "body": "زامِن مرة واحدة لتحميل القنوات والأدوار للإعداد.",
+          "cta": "الذهاب إلى السيرفرات"
+        },
+        "ticketBacklogCritical": {
+          "title": "{{count}} تذاكر مفتوحة تحتاج انتباه",
+          "body": "تذكرة واحدة على الأقل انتظرت طويلاً.",
+          "cta": "مراجعة التذاكر"
+        },
+        "ticketBacklog": {
+          "title": "{{count}} تذاكر مفتوحة في الانتظار",
+          "body": "راجع طلبات الدعم قبل تراكمها.",
+          "cta": "مراجعة التذاكر"
+        },
+        "subscriptionExpiring": {
+          "title": "ينتهي الاشتراك خلال {{days}} أيام",
+          "body": "جدد للحفاظ على الوحدات المدفوعة.",
+          "cta": "تجديد الخطة"
+        },
+        "setupConnect": {
+          "title": "أكمل ربط سيرفرك",
+          "body": "ادعُ البوت واربط هذا السيرفر بحسابك.",
+          "cta": "بدء الإعداد"
+        },
+        "setupConfigure": {
+          "title": "إعداد أول وحدة",
+          "body": "فعّل الترحيب أو التذاكر أو السجلات لتحقيق قيمة.",
+          "cta": "فتح الإعدادات"
+        },
+        "setupFirstWin": {
+          "title": "حقق أول نجاح",
+          "body": "أكمل نتيجة واحدة في Discord — افتح تذكرة أو أرسل ترحيباً.",
+          "cta": "متابعة الإعداد"
+        },
+        "inviteStaff": {
+          "title": "أضف طاقماً للمساعدة",
+          "body": "اربط أدوار الصلاحيات ليعمل المشرفون دون وصول المالك.",
+          "cta": "إضافة أدوار الطاقم"
+        },
+        "enableModule": {
+          "title": "فعّل أول وحدة",
+          "body": "شغّل التذاكر أو الترحيب أو السجلات لخدمة الأعضاء.",
+          "cta": "استعراض الوحدات"
+        },
+        "createWelcome": {
+          "title": "إعداد رسائل الترحيب",
+          "body": "لن يحصل الأعضاء الجدد على ترحيب حتى تُعدّ الوحدة.",
+          "cta": "إعداد الترحيب"
+        },
+        "createTicketPanel": {
+          "title": "إنشاء لوحة تذاكر",
+          "body": "التذاكر مفعّلة لكن الأعضاء لا يستطيعون فتح تذكرة بعد.",
+          "cta": "إعداد التذاكر"
+        },
+        "createReactionPanel": {
+          "title": "إنشاء لوحة أدوار تفاعلية",
+          "body": "دع الأعضاء يختارون أدوارهم من لوحة في Discord.",
+          "cta": "إعداد أدوار التفاعل"
+        },
+        "paymentRequired": {
+          "title": "ترقية لفتح الوحدات",
+          "body": "هذه الوحدة تتطلب خطة مدفوعة.",
+          "cta": "عرض الخطط"
+        },
+        "reviewLogs": {
+          "title": "السجلات هادئة",
+          "body": "لا أحداث سجل خلال 7 أيام — تأكد من إعداد التسجيل.",
+          "cta": "فحص السجلات"
+        },
+        "allClear": {
+          "title": "كل شيء يبدو جيداً",
+          "body": "لا إجراء مطلوب. صحة المجتمع: {{score}}."
+        },
+        "staffCalm": {
+          "title": "لا إجراءات عاجلة لدورك",
+          "body": "راجع النشاط الأخير أدناه لتحديثات التذاكر."
+        }
+      },
+      "progress": {
+        "ariaLabel": "تقدم الإعداد",
+        "connect": "ربط",
+        "configure": "إعداد",
+        "firstWin": "أول نجاح"
+      },
+      "dismiss": {
+        "label": "تأجيل 7 أيام",
+        "snoozed": "تم تأجيل التذكير 7 أيام"
+      },
+      "pulse": {
+        "ariaLabel": "نبض المجتمع",
+        "loading": "جاري التحميل",
+        "health": "الصحة",
+        "healthValue": "{{score}} · {{level}}",
+        "channels": "القنوات",
+        "openTickets": "التذاكر المفتوحة",
+        "logsToday": "سجلات اليوم",
+        "bot": "البوت",
+        "modules": "الوحدات",
+        "modulesActive": "{{enabled}} من {{total}} مفعّلة",
+        "countValue": "{{count}}",
+        "recentActivity": "النشاط الأخير",
+        "roles": "الأدوار",
+        "setup": "الإعداد",
+        "setupPhase": {
+          "connect": "ربط",
+          "configure": "إعداد",
+          "firstWin": "أول نجاح"
+        }
+      },
+      "activity": {
+        "ariaLabel": "النشاط الأخير",
+        "title": "النشاط الأخير",
+        "viewAll": "عرض كل النشاط",
+        "today": "اليوم",
+        "yesterday": "أمس",
+        "earlier": "أقدم",
+        "empty": "كل شيء هادئ حالياً. سيظهر النشاط هنا مع استخدام مجتمعك.",
+        "emptyCta": "عرض كل النشاط",
+        "error": "تعذّر تحميل النشاط الأخير حالياً.",
+        "retry": "حاول مرة أخرى",
+        "rowAriaLink": "{{message}}، {{time}}",
+        "rowAriaStatic": "{{message}}، {{time}}",
+        "time": {
+          "justNow": "الآن",
+          "minuteAgo": "قبل دقيقة",
+          "minutesAgoDual": "قبل دقيقتين",
+          "minutesAgo": "قبل {{count}} دقائق",
+          "hourAgo": "قبل ساعة",
+          "hoursAgo": "قبل {{count}} ساعات",
+          "yesterday": "أمس",
+          "dayAgo": "منذ يوم",
+          "daysAgo": "منذ {{count}} أيام"
+        },
+        "ticketCreated": "تم فتح التذكرة #{{number}}",
+        "ticketClosed": "تم إغلاق التذكرة #{{number}}",
+        "ticketReply": "رد جديد على التذكرة #{{number}}",
+        "moduleEnabled": "تم تفعيل {{moduleName}}",
+        "moduleDisabled": "تم تعطيل {{moduleName}}",
+        "logEntryGeneric": "تم تسجيل حدث جديد",
+        "memberWarned": "تم تحذير عضو",
+        "staffAdded": "تمت إضافة عضو طاقم",
+        "subscriptionChange": "تم تحديث الاشتراك",
+        "unknown": "تم تسجيل نشاط",
+        "moduleNames": {
+          "welcome": "الترحيب",
+          "logs": "السجلات",
+          "reaction-roles": "أدوار التفاعل",
+          "tickets": "التذاكر",
+          "moderation": "الإشراف",
+          "auto-role": "الدور التلقائي"
+        }
+      },
+      "drawer": {
+        "ariaLabel": "تفاصيل السياق",
+        "toggle": "عرض التفاصيل",
+        "toggleHide": "إخفاء التفاصيل",
+        "sections": {
+          "modules": "الوحدات",
+          "subscription": "الاشتراك",
+          "setup": "الإعداد",
+          "help": "المساعدة",
+          "suggestions": "اقتراحات"
+        },
+        "modules": {
+          "heading": "الوحدات",
+          "status": {
+            "enabled": "نشط",
+            "warning": "يحتاج انتباهاً",
+            "disabled": "متوقف"
+          }
+        },
+        "subscription": {
+          "heading": "الاشتراك",
+          "plan": "الخطة الحالية",
+          "expires": "ينتهي",
+          "renew": "تجديد",
+          "manage": "إدارة الاشتراك"
+        },
+        "setup": {
+          "heading": "الإعداد",
+          "remaining": "{{count}} خطوات متبقية",
+          "resume": "متابعة الإعداد"
+        },
+        "help": {
+          "heading": "المساعدة",
+          "docs": "التوثيق",
+          "support": "دعم Discord",
+          "status": "صفحة الحالة",
+          "releaseNotes": "ملاحظات الإصدار"
+        },
+        "suggestions": {
+          "heading": "اقتراحات"
+        },
+        "moduleNames": {
+          "welcome": "الترحيب",
+          "logs": "السجلات",
+          "reactionRoles": "أدوار التفاعل",
+          "tickets": "التذاكر",
+          "moderation": "الإشراف",
+          "autoRole": "الدور التلقائي",
+          "unknown": "وحدة"
+        }
+      }
+    }
   },
   "settings": {
     "loading": "جاري تحميل الإعدادات…",
@@ -307,6 +829,22 @@
       "status": "الحالة",
       "all": "كل التذاكر"
     },
+    "workspace": {
+      "filterAria": "تصفية قائمة التذاكر",
+      "filterAll": "الكل",
+      "filterOpen": "مفتوحة",
+      "filterClosed": "مغلقة",
+      "results": "{{count}} تذكرة",
+      "queueAria": "قائمة التذاكر",
+      "selectTicket": "فتح التذكرة #{{number}}",
+      "drawerAria": "تفاصيل التذكرة",
+      "closeDrawer": "إغلاق لوحة التذكرة",
+      "emptyFilteredTitle": "لا توجد تذاكر مطابقة لهذا الفلتر",
+      "emptyFilteredBody": "جرّب حالة أخرى أو اعرض كل التذاكر.",
+      "clearFilter": "عرض كل التذاكر",
+      "selectPromptTitle": "اختر تذكرة",
+      "selectPromptBody": "اختر تذكرة من القائمة لعرض محادثتها هنا."
+    },
     "pagination": {
       "total": "{{count}} تذكرة",
       "prev": "السابق",
@@ -386,13 +924,67 @@
     "moderator": "المشرف",
     "reason": "السبب",
     "date": "التاريخ",
-    "details": "التفاصيل"
+    "details": "التفاصيل",
+    "workspace": {
+      "notice": "راجع التحذيرات وإجراءات الإشراف في موجز واحد. اضبط الصلاحيات والقنوات من إعدادات الإشراف.",
+      "footer": "الأعداد تعكس النتائج المحمّلة لفلاتر السيرفر الحالية.",
+      "filterAria": "فلاتر الإشراف",
+      "feedAria": "موجز نشاط الإشراف",
+      "feedTitle": "موجز الإشراف",
+      "feedLead": "اختر إجراءً لعرض تفاصيل الحالة كاملة.",
+      "detailAria": "تفاصيل إجراء الإشراف",
+      "closeDetail": "إغلاق تفاصيل الإجراء",
+      "selectEntry": "عرض {{action}} لـ {{member}}",
+      "results": "{{count}} إجراء",
+      "clearFilters": "مسح الفلاتر",
+      "search": "بحث",
+      "searchPlaceholder": "البحث في السبب أو العضو…",
+      "moderator": "المشرف",
+      "emptyTitle": "لا توجد إجراءات إشراف بعد",
+      "emptyBody": "ستظهر التحذيرات وإجراءات الإشراف هنا عندما يتخذ الطاقم إجراءً.",
+      "emptyFilteredTitle": "لا توجد إجراءات مطابقة لهذه الفلاتر",
+      "emptyFilteredBody": "جرّب نوع إجراء أو عضو أو مشرف أو نطاق تاريخ مختلف.",
+      "selectPromptTitle": "اختر إجراءً",
+      "selectPromptBody": "اختر إدخالاً من الموجز لعرض التفاصيل الكاملة هنا.",
+      "permissionTitle": "مطلوب الوصول إلى الإشراف",
+      "permissionBody": "ليس لديك صلاحية عرض نشاط الإشراف لهذا السيرفر.",
+      "advancedDetails": "تفاصيل متقدمة",
+      "entryId": "معرّف الإدخال",
+      "targetId": "معرّف Discord للمستهدف",
+      "moderatorId": "معرّف Discord للمشرف",
+      "channelId": "معرّف القناة",
+      "messageCount": "الرسائل المحذوفة",
+      "messageCountValue": "{{count}} رسالة",
+      "cta": {
+        "settings": "إعدادات الإشراف"
+      },
+      "stats": {
+        "active": "الإجراءات النشطة",
+        "warningsToday": "تحذيرات اليوم",
+        "timeoutsToday": "إيقافات اليوم",
+        "bansToday": "حظر اليوم"
+      },
+      "actions": {
+        "warning": "تحذير",
+        "timeout": "إيقاف مؤقت",
+        "kick": "طرد",
+        "ban": "حظر",
+        "unban": "إلغاء حظر",
+        "mute": "كتم"
+      },
+      "detail": {
+        "user": "المستخدم",
+        "action": "الإجراء",
+        "evidence": "الدليل",
+        "duration": "المدة"
+      }
+    }
   },
   "modules": {
     "loading": "جاري تحميل الوحدات…",
     "loadError": "تعذر تحميل الوحدات",
     "title": "وحدات البوت",
-    "subtitle": "تفعيل أو تعطيل الميزات لهذا السيرفر. حدود الخطة ما زالت تنطبق. بعد تفعيل وحدة، اضبطها في الإعدادات (قنوات، أدوار، فئات).",
+    "subtitle": "فعّل أو عطّل القدرات لهذا السيرفر. حدود الخطة ما زالت تنطبق. بعد تفعيل وحدة، اضبط القنوات والأدوار في الإعدادات.",
     "notInPlan": "غير متضمن في خطتك الحالية",
     "lockedByPlan": "مقفل حسب الخطة",
     "upgradePlan": "قم بترقية خطتك لتفعيل هذه الوحدة.",
@@ -400,19 +992,159 @@
     "disabledLabel": "معطّل",
     "moduleEnabled": "تم تفعيل {{name}}.",
     "moduleDisabled": "تم تعطيل {{name}}.",
-    "updateError": "تعذر تحديث الوحدة."
+    "updateError": "تعذر تحديث الوحدة.",
+    "hero": {
+      "ariaLabel": "نظرة عامة على الوحدات",
+      "eyebrow": "القدرات",
+      "description": "اطلع على ما هو مفعّل، وما تتضمنه خطتك، وما يجب إعداده بعد ذلك.",
+      "currentPlan": "الخطة الحالية",
+      "planUnknown": "خطتك",
+      "manageAria": "إدارة الاشتراك",
+      "stats": {
+        "active": "مفعّل",
+        "locked": "مقفل",
+        "available": "ضمن خطتك",
+        "total": "الإجمالي"
+      },
+      "planAccess": "تتضمن {{plan}} {{available}} من {{total}} وحدة.",
+      "planAccessUnknown": "تتضمن خطتك {{available}} من {{total}} وحدة.",
+      "footer": {
+        "allAvailable": "تتضمن {{plan}} الوصول إلى جميع الوحدات في هذا السيرفر.",
+        "upgradeRequired": "{{count}} وحدة/وحدات تتطلب ترقية الخطة لفتحها."
+      },
+      "cta": {
+        "upgrade": "ترقية الخطة",
+        "review": "مراجعة الوحدات",
+        "upgradeHint": "{{count}} وحدة/وحدات تتطلب ترقية الخطة."
+      }
+    },
+    "categories": {
+      "community": {
+        "title": "المجتمع",
+        "lead": "الترحيب والانطباع الأول للأعضاء الجدد."
+      },
+      "support": {
+        "title": "الدعم",
+        "lead": "ساعد الأعضاء على الوصول إلى فريقك عند الحاجة."
+      },
+      "moderation": {
+        "title": "الإشراف",
+        "lead": "حافظ على أمان سيرفرك بأدوات الإشراف."
+      },
+      "automation": {
+        "title": "الأتمتة",
+        "lead": "قلّل العمل اليدوي عند انضمام الأعضاء أو تفاعلهم."
+      },
+      "engagement": {
+        "title": "التفاعل",
+        "lead": "دع الأعضاء يختارون الأدوار ويشاركون في مجتمعك."
+      },
+      "logs": {
+        "title": "السجلات",
+        "lead": "تتبّع نشاط السيرفر المهم في قناة مخصصة."
+      }
+    },
+    "moduleNames": {
+      "welcome": {
+        "name": "الترحيب",
+        "description": "إرسال رسائل ترحيب عند انضمام الأعضاء."
+      },
+      "tickets": {
+        "name": "التذاكر",
+        "description": "أوامر تذاكر الدعم وتتبعها."
+      },
+      "moderation": {
+        "name": "الإشراف",
+        "description": "التحذير، الطرد، المسح، وحالات الإشراف."
+      },
+      "logs": {
+        "name": "السجلات",
+        "description": "إرسال سجلات أحداث السيرفر إلى قناة."
+      },
+      "auto-role": {
+        "name": "الدور التلقائي",
+        "description": "تعيين دور تلقائياً عند انضمام الأعضاء."
+      },
+      "reaction-roles": {
+        "name": "أدوار التفاعل",
+        "description": "لوحات تعيين الأدوار عبر الأزرار."
+      }
+    },
+    "status": {
+      "enabled": "مفعّل",
+      "disabled": "غير مفعّل",
+      "locked": "مقفل",
+      "needsSetup": "يحتاج إعداداً"
+    },
+    "actions": {
+      "configure": "تخصيص",
+      "enable": "تفعيل",
+      "upgrade": "ترقية الخطة"
+    },
+    "card": {
+      "planLocked": "يتطلب خطة",
+      "lockedBody": "هذه الوحدة غير متضمنة في خطتك الحالية.",
+      "configureHint": "الوحدة مفعّلة. أكمل الإعداد في الإعدادات قبل أن يستخدمها الأعضاء.",
+      "needsSetupBody": "الوحدة مفعّلة. أكمل الإعداد في الإعدادات قبل أن يستخدمها الأعضاء.",
+      "toggleAria": "تبديل {{name}}",
+      "enabledMeta": "جاهز للإعداد في الإعدادات.",
+      "disabledMeta": "فعّل هذه الوحدة لبدء استخدامها.",
+      "lockedMeta": "متاح في خطة أعلى."
+    }
   },
   "subscription": {
     "loading": "جاري تحميل الاشتراك…",
     "loadError": "تعذر تحميل الاشتراك",
+    "betaBillingNotice": "الفوترة اليدوية مفعّلة خلال النسخة التجريبية المغلقة. بعد إرسال طلب تغيير الاشتراك، ادفع خارج المنصة وفق التعليمات، ثم أدخل مرجع الدفع ليتمكن فريقنا من التحقق وتفعيل خطتك.",
     "currentPlan": "الخطة الحالية",
     "includedModules": "الوحدات المتضمنة:",
+    "renewButton": "تجديد الخطة",
+    "activatedTitle": "الاشتراك مفعّل",
+    "activatedBody": "{{plan}} مفعّلة حتى {{expiry}}. تم التفعيل في {{activated}}.",
+    "changeProgressTitle": "تقدم تغيير الاشتراك",
+    "requestExpiresHint": "أكمل الدفع قبل {{date}} وإلا سينتهي هذا الطلب.",
+    "paymentTitle": "إرسال مرجع الدفع",
+    "paymentInstructions": "حوّل الإجمالي التقديري عبر البنك أو وسيلة الدفع المتفق عليها. ثم أدخل رقم المرجع أو معرّف المعاملة أدناه لمطابقة دفعتك.",
+    "paymentReferenceLabel": "مرجع الدفع",
+    "paymentReferencePlaceholder": "مثال: مرجع التحويل البنكي أو معرّف المعاملة",
+    "paymentReferenceHint": "لا يلزم رفع ملف في الفوترة اليدوية التجريبية.",
+    "submitPaymentReference": "إرسال مرجع الدفع",
+    "submittingPayment": "جاري الإرسال…",
+    "paymentSubmittedSuccess": "تم إرسال مرجع الدفع. سيراجعه فريقنا قريباً.",
+    "paymentSubmittedError": "تعذر إرسال مرجع الدفع.",
+    "paymentSubmittedAt": "تم الإرسال في {{date}}.",
+    "waitingReviewTitle": "بانتظار المراجعة",
+    "waitingReviewBody": "مرجع الدفع لدى فريقنا. ستظهر تحديثات خطتك هنا بعد الموافقة والتفعيل.",
+    "cancelChangeButton": "إلغاء الطلب",
+    "cancelChangeTitle": "إلغاء تغيير الاشتراك؟",
+    "cancelChangeBody": "سيُلغى طلبك الجاري. يمكنك بدء ترقية أو تجديد جديد عندما تكون جاهزاً.",
+    "confirmCancelChange": "إلغاء الطلب",
+    "cancellingChange": "جاري الإلغاء…",
+    "changeCancelledSuccess": "تم إلغاء تغيير الاشتراك.",
+    "changeCancelledError": "تعذر إلغاء تغيير الاشتراك.",
+    "changeTypeLabel": "النوع",
+    "changeType": {
+      "upgrade": "ترقية",
+      "renewal": "تجديد"
+    },
+    "stepper": {
+      "request": "تم إرسال الطلب",
+      "payment": "الدفع خارج المنصة",
+      "proof": "تم إرسال مرجع الدفع",
+      "review": "قيد المراجعة",
+      "active": "مفعّل"
+    },
+    "requestChangeTitle": "طلب تغيير الاشتراك",
+    "requestChangeHint": "اختر خطة مدفوعة ومدة الاشتراك. بعد التحقق من الدفع، سيتم تفعيل اشتراكك.",
+    "requestChangeButton": "إرسال طلب تغيير الاشتراك",
+    "renewalRequested": "تم إرسال طلب التجديد إلى {{name}} ({{months}} شهر/أشهر).",
+    "changeRequestError": "تعذر إرسال طلب تغيير الاشتراك.",
     "devNote": "تتطلب ترقيات الخطة موافقة المسؤول بعد تأكيد الدفع.",
     "availablePlans": "الخطط المتاحة",
     "modules": "الوحدات:",
     "requestUpgrade": "طلب الترقية إلى {{name}}",
-    "requesting": "جاري الطلب…",
-    "upgradeRequested": "تم إرسال طلب الترقية إلى {{name}}.",
+    "requesting": "جاري الإرسال…",
+    "upgradeRequested": "تم إرسال طلب تغيير الاشتراك إلى {{name}} ({{months}} شهر/أشهر).",
     "upgradeRequestError": "تعذر إرسال طلب الترقية.",
     "pendingRequestTitle": "طلب ترقية قيد الانتظار",
     "pendingRequestBody": "طلبت {{plan}} لمدة {{months}} شهر/أشهر ({{status}}).",
@@ -435,13 +1167,20 @@
       "expired": "منتهٍ",
       "cancelled": "ملغى"
     },
-    "requestHistory": "سجل الطلبات",
+    "requestHistory": "سجل التغييرات",
     "requestedPlan": "الخطة المطلوبة",
     "adminNote": "ملاحظة المسؤول",
     "requestStatus": {
-      "pending": "قيد الانتظار",
+      "requested": "مطلوب",
+      "pendingpayment": "بانتظار الدفع",
+      "paymentsubmitted": "تم إرسال الدفع",
+      "underreview": "قيد المراجعة",
       "approved": "موافق عليه",
-      "rejected": "مرفوض"
+      "activated": "مفعّل",
+      "rejected": "مرفوض",
+      "cancelled": "ملغى",
+      "expired": "منتهي",
+      "pending": "بانتظار الدفع"
     },
     "allModules": "جميع الوحدات",
     "moduleNames": {
@@ -451,6 +1190,112 @@
       "tickets": "التذاكر",
       "moderation": "الإشراف",
       "auto-role": "الدور التلقائي"
+    },
+    "hero": {
+      "ariaLabel": "نظرة عامة على الاشتراك",
+      "expiryLabel": "ينتهي {{date}}",
+      "titles": {
+        "plan": "{{plan}}",
+        "activeChange": "تغيير قيد التنفيذ",
+        "expired": "انتهى الاشتراك"
+      },
+      "descriptions": {
+        "default": "أدر خطتك والفوترة والوحدات المتضمنة من هذه الصفحة.",
+        "activeChange": "طلب {{changePlan}} قيد التنفيذ. أكمل الخطوات أدناه.",
+        "expired": "الوحدات المدفوعة مقفلة. اطلب تجديداً لاستعادة الوصول.",
+        "waiting": "نعالج تغيير اشتراكك."
+      },
+      "badges": {
+        "unknown": "غير معروف",
+        "expired": "منتهٍ",
+        "request": {
+          "requested": "تم إرسال الطلب",
+          "pendingpayment": "الدفع مطلوب",
+          "paymentsubmitted": "تم إرسال الدفع",
+          "underreview": "قيد المراجعة",
+          "approved": "موافق عليه"
+        }
+      },
+      "cta": {
+        "payment": "إكمال الدفع",
+        "renew": "تجديد الخطة",
+        "request": "طلب تغيير",
+        "modules": "الذهاب إلى الوحدات"
+      }
+    },
+    "trust": {
+      "ariaLabel": "معلومات دعم الفوترة",
+      "reviewSla": "تستغرق مراجعات الدفع اليدوية عادة {{days}}.",
+      "support": "تواصل مع الدعم",
+      "status": "حالة المنصة"
+    },
+    "paymentPanel": {
+      "ariaLabel": "تعليمات الدفع",
+      "title": "كيفية الدفع",
+      "intro": "أكمل التحويل البنكي باستخدام التفاصيل أدناه، ثم أرسل مرجع الدفع.",
+      "step1": "حوّل بالضبط {{amount}} إلى الحساب أدناه.",
+      "step2": "استخدم مرجع الدفع لمطابقة تحويلك.",
+      "step3": "عد هنا وأرسل مرجع البنك أو معرّف المعاملة.",
+      "bankName": "البنك",
+      "accountName": "اسم الحساب",
+      "iban": "رقم الآيبان",
+      "reference": "مرجع الدفع",
+      "amount": "المبلغ",
+      "copy": "نسخ",
+      "copied": "تم نسخ {{field}}",
+      "copyFailed": "تعذر النسخ إلى الحافظة",
+      "verifyMessage": "يتحقق فريقنا من كل دفعة يدوياً قبل تفعيل خطتك."
+    },
+    "states": {
+      "changeSummary": "{{type}} · {{plan}} · {{duration}}",
+      "tryAgain": "بدء طلب جديد",
+      "requested": {
+        "title": "تم إرسال الطلب",
+        "body": "تم إنشاء تغيير اشتراكك. تعليمات الدفع جاهزة."
+      },
+      "pendingPayment": {
+        "title": "أكمل الدفع",
+        "body": "حوّل الإجمالي التقديري، ثم أرسل مرجع الدفع أدناه."
+      },
+      "paymentSubmitted": {
+        "title": "تم استلام إثبات الدفع",
+        "body": "استلمنا مرجعك وسنتحقق منه قريباً."
+      },
+      "underReview": {
+        "title": "الدفع قيد المراجعة",
+        "body": "يقوم مسؤول المنصة بالتحقق من دفعتك. تستغرق المراجعات عادة 1–2 أيام عمل خلال النسخة التجريبية."
+      },
+      "approved": {
+        "title": "تمت الموافقة على الترقية",
+        "body": "جاري تفعيل اشتراكك."
+      },
+      "rejected": {
+        "title": "تم رفض الطلب",
+        "body": "لم تتم الموافقة على هذا التغيير. خطتك الحالية دون تغيير."
+      },
+      "cancelled": {
+        "title": "تم إلغاء الطلب",
+        "body": "تم إلغاء تغيير الاشتراك هذا. لم تُطبَّق أي رسوم."
+      },
+      "expired": {
+        "title": "انتهى الطلب",
+        "body": "لم يكتمل الدفع قبل الموعد النهائي. أرسل طلباً جديداً عندما تكون جاهزاً."
+      }
+    },
+    "empty": {
+      "noHistoryTitle": "لا يوجد سجل تغييرات بعد",
+      "noHistoryDescription": "عند إرسال تغيير اشتراك، سيظهر هنا.",
+      "noPlansTitle": "لا توجد خطط مدفوعة",
+      "noPlansDescription": "تواصل مع الدعم للوصول إلى الفوترة التجريبية."
+    },
+    "plansCompare": {
+      "title": "مقارنة الخطط"
+    },
+    "confirm": {
+      "title": "تأكيد تغيير الاشتراك",
+      "body": "أنت تطلب {{plan}} لمدة {{duration}}. الإجمالي التقديري: {{total}}.",
+      "betaNote": "الفوترة اليدوية سارية خلال النسخة التجريبية المغلقة. ستدفع خارج المنصة قبل التفعيل.",
+      "submit": "إرسال الطلب"
     }
   },
   "logs": {
@@ -476,6 +1321,63 @@
     "actor": "الفاعل",
     "target": "المستهدف",
     "channel": "القناة",
+    "workspace": {
+      "notice": "يُخزَّن النشاط في لوحة التحكم. فعّل الإرسال إلى Discord من الإعدادات ← السجلات.",
+      "footer": "الأعداد تعكس نتائج الفلتر الحالي.",
+      "filterAria": "فلاتر السجلات",
+      "listAria": "إدخالات سجل النشاط",
+      "listLead": "اختر إدخالاً لعرض التفاصيل الكاملة.",
+      "detailAria": "تفاصيل إدخال السجل",
+      "closeDetail": "إغلاق تفاصيل السجل",
+      "selectEntry": "عرض إدخال السجل: {{type}}",
+      "results": "{{count}} إدخال",
+      "clearFilters": "مسح الفلاتر",
+      "emptyTitle": "لا يوجد نشاط بعد",
+      "emptyBody": "ستظهر أحداث السيرفر هنا عند تفاعل الأعضاء وتشغيل الوحدات.",
+      "emptyFilteredTitle": "لا توجد سجلات مطابقة لهذه الفلاتر",
+      "emptyFilteredBody": "جرّب نوع حدث أو نطاق تاريخ أو كلمة بحث مختلفة.",
+      "selectPromptTitle": "اختر إدخال سجل",
+      "selectPromptBody": "اختر حدثاً من القائمة لعرض تفاصيله الكاملة هنا.",
+      "permissionTitle": "مطلوب الوصول إلى السجلات",
+      "permissionBody": "ليس لديك صلاحية عرض سجلات النشاط لهذا السيرفر.",
+      "eventType": "نوع الحدث",
+      "advancedDetails": "تفاصيل متقدمة",
+      "entryId": "معرّف الإدخال",
+      "actorId": "معرّف Discord للفاعل",
+      "targetId": "معرّف Discord للمستهدف",
+      "channelId": "معرّف القناة",
+      "noMetadata": "لا توجد بيانات إضافية لهذا الإدخال.",
+      "cta": {
+        "configure": "إعداد السجلات"
+      },
+      "stats": {
+        "total": "الإجمالي",
+        "today": "اليوم",
+        "warnings": "تحذيرات",
+        "errors": "أخطاء",
+        "discordDelivery": "إرسال Discord"
+      },
+      "delivery": {
+        "configured": "مُعد",
+        "incomplete": "غير مكتمل",
+        "disabled": "معطّل"
+      },
+      "severity": {
+        "success": "نجاح",
+        "warning": "تحذير",
+        "danger": "حرج",
+        "info": "معلومات",
+        "neutral": "محايد",
+        "brand": "العلامة",
+        "premium": "مميز",
+        "locked": "مقفل",
+        "enabled": "مفعّل",
+        "disabled": "معطّل",
+        "open": "مفتوح",
+        "closed": "مغلق",
+        "muted": "خافت"
+      }
+    },
     "eventTypes": {
       "memberJoined": "انضمام عضو",
       "welcomeSent": "إرسال ترحيب",
@@ -509,7 +1411,296 @@
     "deactivating": "جاري التعطيل…",
     "deactivated": "تم تعطيل اللوحة.",
     "deactivateError": "تعذر تعطيل لوحة أدوار التفاعل.",
-    "deactivatedWithTitle": "تم تعطيل \"{{title}}\"."
+    "deactivatedWithTitle": "تم تعطيل \"{{title}}\".",
+    "workspace": {
+      "notice": "تُنشأ اللوحات في Discord عبر /reaction-role create. يمكنك إدارتها ومعاينة الرسائل المرتبطة هنا.",
+      "filterAria": "تصفية لوحات أدوار التفاعل",
+      "listAria": "لوحات أدوار التفاعل",
+      "listLead": "اختر لوحة لمعاينة رسالتها وأدوارها.",
+      "detailAria": "تفاصيل لوحة أدوار التفاعل",
+      "closeDetail": "إغلاق تفاصيل اللوحة",
+      "selectPanel": "عرض اللوحة {{title}}",
+      "search": "بحث",
+      "searchPlaceholder": "ابحث في اللوحات أو القنوات أو الأدوار…",
+      "statusFilter": "تصفية الحالة",
+      "status": {
+        "all": "الكل",
+        "active": "نشطة",
+        "inactive": "غير نشطة"
+      },
+      "channelFilter": "القناة",
+      "allChannels": "جميع القنوات",
+      "results": "{{count}} لوحة",
+      "clearFilters": "مسح التصفية",
+      "configure": "تهيئة",
+      "copyLink": "نسخ الرابط",
+      "openDiscord": "فتح في Discord",
+      "copySuccess": "تم نسخ الرابط إلى الحافظة.",
+      "copyError": "تعذر نسخ الرابط.",
+      "edit": "تعديل في Discord",
+      "editHint": "عدّل لوحات أدوار التفاعل في Discord باستخدام أوامر /reaction-role.",
+      "messagePreview": "معاينة الرسالة",
+      "rolesIncluded": "الأدوار المضمّنة",
+      "targetChannel": "القناة المستهدفة",
+      "messageLinked": "رسالة مرتبطة",
+      "messageMissing": "لا توجد رسالة مرتبطة",
+      "roleCount": "{{count}} دور",
+      "advancedDetails": "تفاصيل متقدمة",
+      "messageId": "معرّف الرسالة",
+      "channelId": "معرّف القناة",
+      "buttonId": "معرّف الزر المخصص",
+      "emptyTitle": "لا توجد لوحات بعد",
+      "emptyBody": "أنشئ أول لوحة أدوار تفاعل في Discord باستخدام /reaction-role create.",
+      "emptyFilteredTitle": "لا توجد لوحات مطابقة لهذه التصفية",
+      "emptyFilteredBody": "جرّب بحثاً أو حالة أو قناة مختلفة.",
+      "selectPromptTitle": "اختر لوحة",
+      "selectPromptBody": "اختر لوحة من القائمة لمعاينة إعدادها هنا.",
+      "permissionTitle": "مطلوب صلاحية أدوار التفاعل",
+      "permissionBody": "ليس لديك صلاحية إدارة لوحات أدوار التفاعل لهذا السيرفر.",
+      "noLinkedMessageTitle": "لا توجد رسالة مرتبطة",
+      "noLinkedMessageBody": "لا تملك هذه اللوحة رسالة Discord مرتبطة بعد."
+    }
+  },
+  "autoRole": {
+    "workspace": {
+      "title": "مساحة الدور التلقائي",
+      "subtitle": "عيّن دوراً تلقائياً عند انضمام شخص إلى سيرفرك.",
+      "notice": "اضبط من يحصل على أي دور عند الانضمام. احفظ عندما تكون جاهزاً للنشر.",
+      "hero": {
+        "ariaLabel": "نظرة عامة على أتمتة الدور التلقائي"
+      },
+      "cta": {
+        "save": "حفظ التغييرات"
+      },
+      "stats": {
+        "enabled": "الدور التلقائي",
+        "role": "الدور المحدد",
+        "noRole": "لم يُحدد",
+        "newMembers": "الأعضاء الجدد",
+        "newMembersValue": "كل انضمام",
+        "botPermission": "صلاحية البوت",
+        "permissionReady": "جاهز للتعيين",
+        "permissionManaged": "دور مُدار محظور",
+        "permissionHierarchy": "الدور مرتفع جداً",
+        "permissionUnknown": "تحقق في Discord"
+      },
+      "footer": {
+        "disabled": "فعّل الدور التلقائي لتعيين دور عند انضمام الأعضاء.",
+        "noRole": "اختر دوراً لإكمال قاعدة الأتمتة.",
+        "blocked": "أصلح اختيار الدور أو ترتيب الأدوار قبل انضمام الأعضاء.",
+        "unknown": "زامِن أدوار Discord إذا كانت حالة الصلاحية غير واضحة.",
+        "ready": "قاعدة الدور التلقائي جاهزة للحفظ."
+      },
+      "toolbar": {
+        "ariaLabel": "شريط أدوات الدور التلقائي",
+        "noRole": "لم يتم اختيار دور",
+        "hint": "تُظهر المعاينة ما يحدث عند انضمام عضو."
+      },
+      "sections": {
+        "basic": {
+          "title": "أساسي",
+          "lead": "فعّل الدور التلقائي واختر الدور الذي يُعيَّن."
+        },
+        "behavior": {
+          "title": "سلوك التعيين",
+          "lead": "كيف يطبّق البوت الدور عند انضمام شخص."
+        },
+        "safety": {
+          "title": "الأمان والصلاحيات",
+          "lead": "تأكد أن البوت يستطيع تعيين الدور في Discord."
+        }
+      },
+      "fields": {
+        "roleHint": "تظهر هنا الأدوار القابلة للتعيين من سيرفر Discord المتزامن فقط."
+      },
+      "behavior": {
+        "newMembers": {
+          "title": "ينطبق على الأعضاء الجدد",
+          "body": "عند انضمام شخص إلى السيرفر، يحاول البوت إضافة الدور المحدد."
+        },
+        "timing": {
+          "title": "تعيين فوري",
+          "body": "تُعيَّن الأدوار فور انضمام العضو. خيارات التأخير غير متاحة بعد."
+        },
+        "existing": {
+          "title": "الأعضاء الحاليون دون تغيير",
+          "body": "الأعضاء الذين انضموا قبل تفعيل الدور التلقائي يحتفظون بأدوارهم الحالية."
+        }
+      },
+      "safety": {
+        "readyTitle": "يمكن للبوت تعيين هذا الدور",
+        "readyBody": "وفق ترتيب الأدوار المتزامن، دور البوت أعلى بما يكفي لتعيين الدور المحدد.",
+        "managedTitle": "لا يمكن تعيين الأدوار المُدارة",
+        "managedBody": "أدوار التكامل والأدوار التي يديرها البوت محظورة من التعيين التلقائي.",
+        "hierarchyTitle": "دور البوت منخفض جداً",
+        "hierarchyBody": "انقل دور البوت فوق الدور المستهدف في إعدادات السيرفر، ثم زامِن الأدوار.",
+        "unknownTitle": "حالة الصلاحية غير متاحة",
+        "unknownBody": "زامِن بيانات Discord أو تحقق أن للبوت صلاحية Manage Roles في سيرفرك.",
+        "hierarchyExplainTitle": "تسلسل الأدوار",
+        "hierarchyExplainBody": "يسمح Discord للبوتات بتعيين الأدوار التي تقع أسفل أعلى دور للبوت في قائمة الأدوار."
+      },
+      "preview": {
+        "ariaLabel": "معاينة التعيين",
+        "title": "معاينة التعيين",
+        "lead": "محاكاة تدفق الانضمام — تتحدّث أثناء تحرير القاعدة.",
+        "inactiveTitle": "الدور التلقائي متوقف",
+        "inactiveBody": "فعّل الدور التلقائي لمعاينة ما يحدث عند انضمام شخص.",
+        "emptyTitle": "لم يتم اختيار دور",
+        "emptyBody": "اختر دوراً لمعاينة تدفق التعيين.",
+        "blockedFootnote": "لا يستطيع البوت إكمال هذا التعيين حتى يُصلَح الدور أو مشكلة التسلسل.",
+        "steps": {
+          "join": {
+            "title": "ينضم عضو جديد",
+            "body": "{{server}} يستقبل عضواً جديداً."
+          },
+          "check": {
+            "title": "يفحص البوت القاعدة",
+            "body": "يؤكد البوت أن الدور التلقائي مفعّل وأن دوراً مُعدّاً."
+          },
+          "assign": {
+            "title": "تم تعيين الدور",
+            "body": "يضيف البوت {{role}} للعضو الجديد."
+          },
+          "assignBlocked": {
+            "title": "التعيين محظور",
+            "body": "لا يستطيع البوت إضافة {{role}} بسبب صلاحيات الدور أو التسلسل."
+          },
+          "complete": {
+            "title": "يحصل العضو على الصلاحيات",
+            "body": "تُطبَّق صلاحيات {{role}} للقنوات والوحدات فوراً."
+          }
+        }
+      },
+      "empty": {
+        "disabledTitle": "الدور التلقائي متوقف",
+        "disabledBody": "فعّل الدور التلقائي لمنح الأعضاء الجدد الصلاحيات المناسبة.",
+        "noRoleTitle": "لم يتم اختيار دور",
+        "noRoleBody": "اختر دوراً من القائمة لإكمال قاعدة الأتمتة."
+      },
+      "notes": {
+        "ariaLabel": "نشاط الدور التلقائي والملاحظات",
+        "title": "النشاط والملاحظات",
+        "lead": "سياق مفيد أثناء إعداد الدور التلقائي.",
+        "items": {
+          "audit": "تظهر التعيينات الناجحة في سجل النشاط كأحداث تعيين دور تلقائي.",
+          "sync": "إذا بدت الأدوار قديمة، زامِن بيانات Discord من تبويب عام.",
+          "welcome": "يعمل الدور التلقائي مع رسائل الترحيب — اضبط كليهما لتجربة انضمام كاملة."
+        },
+        "viewLogs": "عرض سجل النشاط"
+      },
+      "sample": {
+        "server": "سيرفرك"
+      }
+    }
+  },
+  "welcome": {
+    "workspace": {
+      "title": "استوديو رسالة الترحيب",
+      "subtitle": "صمّم الرسالة التي يراها الأعضاء الجدد عند انضمامهم إلى سيرفرك.",
+      "notice": "تتحدّث المعاينة فوراً. احفظ عندما تكون جاهزاً للنشر.",
+      "hero": {
+        "ariaLabel": "نظرة عامة على استوديو رسالة الترحيب"
+      },
+      "cta": {
+        "save": "حفظ التغييرات"
+      },
+      "stats": {
+        "enabled": "الترحيب مفعّل",
+        "previewReady": "المعاينة جاهزة",
+        "readyValue": "جاهزة",
+        "notReadyValue": "غير جاهزة",
+        "variablesUsed": "المتغيّرات المستخدمة",
+        "testStatus": "حالة الاختبار",
+        "testReady": "المعاينة جاهزة",
+        "testPending": "يتطلب إعداداً"
+      },
+      "footer": {
+        "disabled": "فعّل رسائل الترحيب لاستقبال الأعضاء الجدد.",
+        "incomplete": "اختر قناة واكتب رسالة لإكمال الإعداد.",
+        "ready": "رسالة الترحيب جاهزة للحفظ."
+      },
+      "toolbar": {
+        "ariaLabel": "شريط أدوات استوديو الترحيب",
+        "noChannel": "لم يتم اختيار قناة",
+        "hint": "تتحدّث المعاينة أثناء الكتابة — لا يلزم الحفظ."
+      },
+      "sections": {
+        "basic": {
+          "title": "أساسي",
+          "lead": "فعّل رسائل الترحيب واختر القناة التي تُرسَل إليها."
+        },
+        "message": {
+          "title": "الرسالة",
+          "lead": "اكتب ما يقرأه الأعضاء الجدد داخل تضمين Discord."
+        },
+        "appearance": {
+          "title": "المظهر",
+          "lead": "يطبّق البوت هذه التفاصيل تلقائياً."
+        },
+        "advanced": {
+          "title": "متقدم",
+          "lead": "الإشارات والإضافات المدعومة في قالب الترحيب."
+        }
+      },
+      "fields": {
+        "title": "العنوان",
+        "titleValue": "اسم العضو الجديد",
+        "titleHint": "يظهر ككاتب التضمين عند انضمام شخص.",
+        "description": "الوصف",
+        "embedColor": "لون التضمين",
+        "embedColorValue": "أخضر نجاح البوت",
+        "thumbnail": "صورة الكاتب",
+        "thumbnailValue": "يستخدم صورة العضو المنضم",
+        "footer": "التذييل",
+        "footerValue": "مرحباً بك في {{server}}",
+        "mentionMember": "إشارة العضو",
+        "mentionMemberHint": "ضمّن {user} أو {mention} في رسالتك لإشارة العضو الجديد.",
+        "mentionRole": "إشارة دور",
+        "mentionRoleHint": "إشارات الأدوار غير مدعومة في رسائل الترحيب بعد."
+      },
+      "preview": {
+        "ariaLabel": "معاينة ترحيب Discord",
+        "title": "معاينة مباشرة",
+        "lead": "عرض تقريبي لـ Discord — يتحدّث فوراً أثناء التحرير.",
+        "botBadge": "بوت",
+        "timestamp": "اليوم 12:00",
+        "embedTitle": "مرحباً",
+        "footerTemplate": "مرحباً بك في {{server}}",
+        "ready": "المعاينة جاهزة"
+      },
+      "variables": {
+        "ariaLabel": "متغيّرات رسالة الترحيب",
+        "title": "المتغيّرات",
+        "lead": "انقر على شريحة لإدراجها في حقل الرسالة.",
+        "insert": "إدراج {{variable}}",
+        "used": "{{count}} متغيّر مستخدم"
+      },
+      "test": {
+        "ariaLabel": "إرسال ترحيب تجريبي",
+        "title": "اختبار الترحيب",
+        "lead": "راجع إعدادك قبل انضمام الأعضاء.",
+        "channel": "القناة",
+        "member": "العضو المستهدف",
+        "noChannel": "لم يتم اختيار قناة",
+        "memberPlaceholder": "اختر عضواً (قريباً)",
+        "send": "إرسال ترحيب تجريبي",
+        "hint": "إرسال الاختبار المباشر غير متاح في لوحة التحكم بعد. استخدم المعاينة أعلاه أو انضم بحساب تجريبي.",
+        "notReadyTitle": "الإعداد غير مكتمل",
+        "notReadyBody": "فعّل الترحيب واختر قناة واكتب رسالة قبل الاختبار."
+      },
+      "sample": {
+        "server": "سيرفرك",
+        "member": "عضو جديد"
+      },
+      "empty": {
+        "disabledTitle": "الترحيب متوقف",
+        "disabledBody": "فعّل رسائل الترحيب لمعاينة ما سيراه الأعضاء الجدد.",
+        "noChannelTitle": "لم يتم اختيار قناة",
+        "noChannelBody": "اختر قناة ترحيب ليعرف البوت أين ينشر الرسالة.",
+        "noMessageTitle": "لا توجد رسالة بعد",
+        "noMessageBody": "اكتب رسالة ترحيب لمعاينة وصف التضمين."
+      }
+    }
   },
   "admin": {
     "statsLoading": "جاري تحميل إحصائيات المنصة…",
@@ -540,19 +1731,53 @@
     "lastLogin": "آخر تسجيل دخول",
     "guildPlanChanged": "تم نقل {{guild}} إلى {{plan}}.",
     "planChangeError": "تعذر تغيير الخطة.",
-    "upgradeRequestsLoading": "جاري تحميل طلبات الترقية…",
-    "upgradeRequestsError": "تعذر تحميل طلبات الترقية",
-    "noUpgradeRequests": "لا توجد طلبات ترقية",
+    "upgradeRequestsLoading": "جاري تحميل تغييرات الاشتراك…",
+    "upgradeRequestsError": "تعذر تحميل تغييرات الاشتراك",
+    "subscriptionChangesLoading": "جاري تحميل تغييرات الاشتراك…",
+    "subscriptionChangesError": "تعذر تحميل تغييرات الاشتراك",
+    "noUpgradeRequests": "لا توجد تغييرات اشتراك",
     "noUpgradeRequestsHint": "يرسل مالكو السيرفر الطلبات من صفحة الاشتراك.",
+    "noSubscriptionChanges": "لا توجد تغييرات اشتراك",
+    "noSubscriptionChangesHint": "يرسل مالكو السيرفرات تغييرات الاشتراك من صفحة الاشتراك.",
+    "noMatchingChanges": "لا توجد تغييرات مطابقة",
+    "noMatchingChangesHint": "جرّب تعديل الفلاتر أو استعلام البحث.",
+    "filtersTitle": "الفلاتر",
+    "filterAllStatuses": "جميع الحالات",
+    "filterAllChangeTypes": "جميع الأنواع",
+    "filterSearch": "السيرفر أو المالك",
+    "filterSearchPlaceholder": "ابحث باسم السيرفر أو المالك أو معرّف السيرفر…",
+    "filteredCount": "عرض {{count}} من {{total}} تغيير اشتراك",
+    "paymentReference": "مرجع الدفع",
+    "noPaymentReference": "لم يُرسَل",
+    "requestExpiresAt": "انتهاء الطلب",
+    "paymentSubmittedAt": "تاريخ إرسال الدفع",
+    "noPaymentReferenceWarning": "لم يُرسَل مرجع دفع. أكّد الدفع يدوياً قبل الموافقة، أو أدخل سبب تجاوز أدناه.",
+    "overrideReasonLabel": "سبب تجاوز المسؤول",
+    "overrideReasonPlaceholder": "لماذا توافق قبل إثبات الدفع؟",
+    "overrideReasonRequired": "سبب تجاوز المسؤول مطلوب عندما لم يُرسَل الدفع.",
+    "rejectReasonLabel": "سبب الرفض",
+    "rejectReasonPlaceholder": "اشرح سبب رفض تغيير الاشتراك…",
+    "rejectReasonRequired": "سبب الرفض مطلوب.",
+    "approveChangeTitle": "الموافقة على تغيير الاشتراك؟",
+    "approveChangeBody": "تفعيل {{type}} إلى {{plan}} لـ {{guild}} بعد التحقق من الدفع.",
+    "confirmApproveChange": "الموافقة على التغيير",
+    "approvingChange": "جاري الموافقة…",
+    "rejectChangeTitle": "رفض تغيير الاشتراك؟",
+    "rejectChangeBody": "رفض تغيير الاشتراك لـ {{guild}} ({{plan}}). سيرى المالك سببك.",
+    "confirmRejectChange": "رفض التغيير",
+    "rejectingChange": "جاري الرفض…",
     "currentPlan": "الخطة الحالية",
     "requestedPlan": "الخطة المطلوبة",
     "requester": "مقدم الطلب",
     "approve": "موافقة",
     "reject": "رفض",
-    "adminNotePlaceholder": "ملاحظة اختيارية…",
+    "adminNotePlaceholder": "ملاحظة داخلية اختيارية…",
     "upgradeApproved": "تم ترقية {{guild}} إلى {{plan}}.",
-    "upgradeRejected": "تم رفض طلب ترقية {{guild}}.",
-    "upgradeReviewError": "تعذر مراجعة طلب الترقية."
+    "upgradeRejected": "تم رفض تغيير الاشتراك لـ {{guild}}.",
+    "changeApproved": "تمت الموافقة على تغيير اشتراك {{guild}} — تم تفعيل {{plan}}.",
+    "changeRejected": "تم رفض تغيير اشتراك {{guild}} ({{plan}}).",
+    "upgradeReviewError": "تعذرت مراجعة تغيير الاشتراك.",
+    "changeReviewError": "تعذرت مراجعة تغيير الاشتراك."
   },
   "adminPlans": {
     "loading": "جاري تحميل خطط الاشتراك…",
@@ -591,6 +1816,7 @@
     "loadError": "تعذر تحميل ملف السيرفر",
     "saved": "تم حفظ ملف السيرفر. نفّذ /server في Discord لمعاينة التحديث.",
     "saveError": "تعذر حفظ ملف السيرفر.",
+    "saving": "جاري الحفظ…",
     "title": "ملف السيرفر",
     "hint": "هذا الملف يستخدمه البوت فقط. لا يغيّر اسم سيرفر Discord في إعدادات السيرفر. بعد الحفظ، نفّذ /server في Discord لمعاينة التغييرات.",
     "discordName": "اسم سيرفر Discord (لا يتغير من هذه الصفحة)",
@@ -603,7 +1829,58 @@
     "supportMessage": "رسالة الدعم",
     "supportMessageHint": "كيف يمكن للأعضاء الحصول على المساعدة (تُعرض في معلومات السيرفر).",
     "rulesUrl": "رابط القواعد",
-    "websiteUrl": "رابط الموقع"
+    "websiteUrl": "رابط الموقع",
+    "hero": {
+      "ariaLabel": "نظرة عامة على ملف السيرفر",
+      "noCommunityType": "لم يُحدد نوع المجتمع",
+      "noDescription": "أضف وصفاً قصيراً لمجتمعك"
+    },
+    "sections": {
+      "basic": {
+        "title": "المعلومات الأساسية",
+        "lead": "الاسم الذي يراه الأعضاء عند تنفيذ /server في Discord."
+      },
+      "branding": {
+        "title": "الهوية البصرية",
+        "lead": "يظهر أيقونة السيرفر في صورة embed أمر /server.",
+        "iconHint": "تتزامن الأيقونات من Discord. ارفع أيقونة في إعدادات السيرفر ثم نفّذ /sync."
+      },
+      "communityDetails": {
+        "title": "تفاصيل المجتمع",
+        "lead": "صف محتوى سيرفرك والجمهور المستهدف."
+      },
+      "communityLinks": {
+        "title": "روابط المجتمع",
+        "lead": "روابط اختيارية تظهر كحقول في embed أمر /server."
+      },
+      "support": {
+        "title": "الدعم",
+        "lead": "أخبر الأعضاء كيف يحصلون على المساعدة داخل مجتمعك."
+      },
+      "advanced": {
+        "title": "متقدم",
+        "lead": "كيف يرتبط هذا الملف بـ Discord والبوت.",
+        "noteDiscord": "التغييرات هنا لا تعيد تسمية سيرفر Discord في إعدادات السيرفر.",
+        "notePreview": "بعد الحفظ، نفّذ /server في Discord لرؤية embed المباشر."
+      }
+    },
+    "preview": {
+      "ariaLabel": "معاينة مباشرة لـ embed أمر /server",
+      "title": "معاينة",
+      "lead": "تتحدث أثناء التحرير. تطابق embed أمر /server.",
+      "footer": "حقول حالة الوحدات تظهر في Discord ولا تُحرّر من هنا.",
+      "emptyDescription": "لا يوجد وصف بعد",
+      "emptyCommunityType": "غير محدد",
+      "emptySupport": "لا توجد رسالة دعم",
+      "emptyLink": "غير مضاف"
+    },
+    "empty": {
+      "noLogo": "لم تتزامن أيقونة السيرفر",
+      "noLogoHint": "ارفع أيقونة في إعدادات سيرفر Discord، ثم نفّذ /sync.",
+      "noDescriptionPlaceholder": "صف مجتمعك…",
+      "noLinksPlaceholder": "https://",
+      "noSupportPlaceholder": "كيف يمكن للأعضاء الحصول على المساعدة؟"
+    }
   },
   "moderationSettings": {
     "loading": "جاري تحميل أدوار الإشراف…",
@@ -649,7 +1926,9 @@
     "addButton": "إضافة دور",
     "adding": "جاري الإضافة…",
     "added": "تمت إضافة دور الصلاحيات.",
+    "updated": "تم تحديث دور الصلاحيات.",
     "addError": "تعذر إضافة دور الصلاحيات.",
+    "updateError": "تعذر تحديث دور الصلاحيات.",
     "remove": "إزالة",
     "removed": "تمت إزالة دور الصلاحيات.",
     "removeError": "تعذر إزالة دور الصلاحيات.",
@@ -680,6 +1959,142 @@
       "clearLogs": "مسح السجلات",
       "manageReactionRoles": "إدارة أدوار التفاعل",
       "managePermissionRoles": "إدارة أدوار الصلاحيات"
+    },
+    "workspace": {
+      "title": "إدارة صلاحيات الأدوار",
+      "subtitle": "أدر ربط أدوار Discord ووصول لوحة التحكم لفريقك.",
+      "footer": "يرث الأعضاء الصلاحيات من أدوار Discord المربوطة بعد تنفيذ /sync.",
+      "hero": {
+        "ariaLabel": "نظرة عامة على إدارة صلاحيات الأدوار"
+      },
+      "stats": {
+        "roles": "أدوار الصلاحيات",
+        "linked": "أدوار Discord المربوطة",
+        "groups": "مجموعات الصلاحيات",
+        "owners": "أدوار المالك"
+      },
+      "cta": {
+        "addRole": "إضافة دور صلاحيات",
+        "createFirst": "إنشاء أول دور صلاحيات"
+      },
+      "search": "بحث",
+      "searchPlaceholder": "ابحث باسم الدور أو دور Discord…",
+      "roleFilter": "الدور",
+      "statusFilter": "الحالة",
+      "permissionFilter": "الصلاحيات",
+      "filterAria": "تصفية أدوار الصلاحيات",
+      "clearFilters": "مسح الفلاتر",
+      "results": "{{count}} أدوار معروضة",
+      "roleFilters": {
+        "all": "جميع المستويات",
+        "owner": "وصول المالك",
+        "moderator": "وصول المشرف",
+        "support": "وصول الدعم"
+      },
+      "statusFilters": {
+        "all": "جميع الحالات",
+        "active": "نشط",
+        "inactive": "غير نشط"
+      },
+      "permissionFilters": {
+        "all": "جميع مجالات الصلاحيات",
+        "moderation": "الإشراف",
+        "tickets": "التذاكر",
+        "logs": "السجلات",
+        "modules": "الوحدات",
+        "settings": "الإعدادات"
+      },
+      "listTitle": "أدوار الصلاحيات",
+      "listLead": "اختر دوراً لفحص الصلاحيات ووصول Discord المرتبط والإجراءات.",
+      "listAria": "قائمة أدوار الصلاحيات",
+      "detailAria": "تفاصيل دور الصلاحيات",
+      "selectPromptTitle": "اختر دور صلاحيات",
+      "selectPromptBody": "اختر دوراً مربوطاً لمراجعة مجموعات الصلاحيات وربط Discord والإجراءات المتاحة.",
+      "selectRole": "اختيار {{name}}",
+      "closeDetail": "إغلاق التفاصيل",
+      "emptyTitle": "لا توجد أدوار صلاحيات بعد",
+      "emptyBody": "يربط تعيين الأدوار دور Discord في السيرفر بصلاحيات لوحة التحكم. أنشئ أول ربط لمنح فريقك الوصول للصفحات وأوامر البوت المناسبة.",
+      "emptyFilteredTitle": "لا توجد أدوار تطابق الفلاتر",
+      "emptyFilteredBody": "جرّب مصطلح بحث مختلفاً أو امسح الفلاتر لعرض جميع الأدوار المربوطة.",
+      "noPermissions": "لا توجد صلاحيات معيّنة",
+      "noPermissionsTitle": "لا توجد صلاحيات ممنوحة",
+      "noPermissionsBody": "عدّل هذا الدور لتعيين صلاحيات لوحة التحكم والبوت.",
+      "permissionCount": "{{count}} صلاحيات",
+      "updated": "آخر تحديث {{date}}",
+      "editing": "قيد التعديل",
+      "status": {
+        "active": "نشط",
+        "inactive": "غير نشط"
+      },
+      "invitation": {
+        "activeRole": "ربط دور نشط"
+      },
+      "permissionSummaryTitle": "مفتش الصلاحيات",
+      "permissionInspectorLead": "القدرات الممنوحة مجمّعة حسب المجال.",
+      "permissionSummaryAria": "مفتش الصلاحيات",
+      "permissionGroups": {
+        "moderation": "الإشراف",
+        "tickets": "التذاكر",
+        "logs": "السجلات",
+        "modules": "الوحدات",
+        "settings": "الإعدادات"
+      },
+      "modulesCatalog": {
+        "modules": "الوحدات",
+        "reactionRoles": "أدوار التفاعل",
+        "tickets": "التذاكر",
+        "moderation": "الإشراف",
+        "logs": "السجلات",
+        "none": "لا شيء مُعد"
+      },
+      "advancedDetails": "بيانات وصفية متقدمة",
+      "detail": {
+        "discordRole": "دور Discord",
+        "updated": "آخر تحديث",
+        "roleId": "معرف الدور",
+        "discordRoleId": "معرف دور Discord",
+        "createdAt": "تاريخ الإنشاء"
+      },
+      "actions": {
+        "editPermissions": "تعديل الصلاحيات",
+        "scrollToEditor": "الانتقال للمحرر",
+        "deleteMapping": "حذف الربط"
+      }
+    },
+    "editor": {
+      "ariaLabel": "محرر دور الصلاحيات",
+      "modeAria": "سير عمل محرر دور الصلاحيات",
+      "addTrigger": "إضافة دور صلاحيات",
+      "createTitle": "إنشاء دور صلاحيات",
+      "createHint": "اربط دور Discord بوصول لوحة التحكم وأوامر البوت.",
+      "editTitle": "تعديل دور الصلاحيات",
+      "editHint": "حدّث دور Discord المرتبط والصلاحيات الممنوحة.",
+      "saveCreate": "إنشاء الدور",
+      "backToManagement": "العودة إلى إدارة الأدوار",
+      "advanced": "بيانات وصفية متقدمة",
+      "sections": {
+        "basic": {
+          "title": "المعلومات الأساسية",
+          "lead": "سمِّ الربط واختر دور Discord الذي ينطبق عليه."
+        },
+        "preview": {
+          "title": "معاينة الصلاحيات",
+          "lead": "ملخص مباشر للوصول الذي سيمنحه هذا الربط."
+        },
+        "groups": {
+          "title": "مجموعات الصلاحيات",
+          "lead": "اختر قدرات لوحة التحكم والبوت حسب المجال."
+        }
+      },
+      "preview": {
+        "discordRole": "دور Discord",
+        "permissionCount": "الصلاحيات المحددة",
+        "groupCount": "المجموعات النشطة",
+        "groupsActive": "{{count}} مجموعات نشطة",
+        "noDiscordRole": "غير محدد",
+        "emptyTitle": "لا توجد صلاحيات محددة",
+        "emptyBody": "حدد الصلاحيات أدناه لمعاينة الوصول الذي سيتلقاه هذا الدور."
+      }
     }
   },
   "toast": {

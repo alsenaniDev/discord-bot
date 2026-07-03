@@ -37,13 +37,46 @@ Subscriptions are **per guild**, not per user.
 ### PlanUpgradeRequest
 
 **File:** `src/DiscordBot.Domain/Entities/PlanUpgradeRequest.cs`  
-**Table:** `PlanUpgradeRequests`
+**Table:** `PlanUpgradeRequests`  
+**Workflow rules:** `src/DiscordBot.Domain/SubscriptionBilling/PlanUpgradeRequestWorkflow.cs`
 
-Manual upgrade workflow:
+Manual subscription change workflow (SB-002 foundation + SB-003 payment reference):
 
-1. Owner creates request (target plan + duration months)
-2. Status: Pending → Approved / Rejected by platform admin
-3. On approve: subscription activated/extended, `ApprovedRequestId` linked
+1. Owner creates **subscription change** request (upgrade or renewal + duration months) → `Requested` → `PendingPayment`
+2. `ChangeType`: `Upgrade` (different plan) or `Renewal` (same paid plan)
+3. Price and plan snapshots stored on the request (`CurrentPlanId`, `RequestedPlanId`, `RequestedPlanMonthlyPrice`, `EstimatedTotalAmount`)
+4. `RequestExpiresAt` set on create (default 14 days); lazy expiry on read (no worker yet)
+5. Owner submits **payment reference** (text only, no file upload) from `PendingPayment` → `PaymentSubmitted` → `UnderReview`
+6. Admin approves from `UnderReview` or `PaymentSubmitted` → `Approved` → `Activated` (subscription updated)
+7. Admin may approve from `PendingPayment` only with `AdminOverrideReason` (bypass payment proof)
+8. Admin rejects from reviewable states → `Rejected`
+9. Owner or admin can cancel in-flight requests → `Cancelled`
+
+**Status enum** (`PlanUpgradeRequestStatus`):
+
+| Value | Meaning |
+|-------|---------|
+| `Requested` | Created (transient — moves to PendingPayment immediately) |
+| `PendingPayment` | Awaiting off-platform payment (legacy `Pending` migrates here) |
+| `PaymentSubmitted` | Payment reference submitted by owner |
+| `UnderReview` | Admin reviewing |
+| `Approved` | Admin approved (transient — moves to Activated) |
+| `Activated` | Subscription activated (terminal; legacy `Approved` migrates here) |
+| `Rejected` | Admin rejected |
+| `Cancelled` | Owner or admin cancelled |
+| `Expired` | Request expired without payment |
+
+| Field | Purpose |
+|-------|---------|
+| `ChangeType` | `Upgrade` or `Renewal` |
+| `GuildId`, `RequestedPlanId`, `CurrentPlanId` | Plan snapshots |
+| `DurationMonths` | Activation period |
+| `RequestedPlanMonthlyPrice`, `EstimatedTotalAmount` | Price snapshots at request time |
+| `PaymentReference`, `PaymentSubmittedAt` | Owner-submitted payment reference (SB-003) |
+| `RequestExpiresAt` | Optional request expiry |
+| `AdminOverrideReason` | Logged when admin bypasses validation |
+| `CancelledAt`, `CancelledByUserId` | Cancel audit |
+| `AdminNote`, `ReviewedAt`, `ReviewedByAdminId` | Review audit |
 
 ## Plan keys and defaults
 
@@ -84,8 +117,17 @@ Allowed months: **1, 3, 6, 12**
 
 **File:** `src/DiscordBot.Infrastructure/Services/PlanUpgradeRequestService.cs`
 
-Owner: create/list requests for their guild.  
-Admin: list all pending, approve/reject.
+Owner: create/list/cancel requests; submit payment reference; get current change and combined subscription status.  
+Admin: list all, approve/reject/cancel.
+
+Business rules enforced:
+
+- One active (non-terminal) request per guild
+- Upgrade requires a different plan; renewal requires the same paid plan (inferred when plan matches current)
+- Plan and price snapshots at creation
+- Payment reference submit only from `PendingPayment`; blocked if expired, cancelled, rejected, or already submitted
+- Validated state transitions via `PlanUpgradeRequestWorkflow`
+- Lazy request expiry when `RequestExpiresAt` is passed
 
 ## API endpoints
 
@@ -95,16 +137,21 @@ Admin: list all pending, approve/reject.
 |--------|-------|-------|
 | GET | `/api/plans` | All active plans |
 | GET | `/api/guilds/{id}/subscription` | Guild's current subscription |
-| PUT | `/api/guilds/{id}/subscription` | **403** — use upgrade requests |
-| GET/POST | `/api/guilds/{id}/subscription/upgrade-requests` | Owner workflow |
+| GET | `/api/guilds/{id}/subscription/status` | Subscription + current in-flight change (SB-003) |
+| PUT | `/api/guilds/{id}/subscription` | **403** — use subscription change requests |
+| GET/POST | `/api/guilds/{id}/subscription/upgrade-requests` | Owner create/list (legacy route name) |
+| GET | `/api/guilds/{id}/subscription/change-requests/current` | Active subscription change or 204 |
+| PUT | `/api/guilds/{id}/subscription/change-requests/{requestId}/payment` | Submit payment reference |
+| POST | `/api/guilds/{id}/subscription/upgrade-requests/{requestId}/cancel` | Owner cancel in-flight request |
 
 ### Admin (JWT + PlatformAdmin)
 
 | Method | Route |
 |--------|-------|
 | GET | `/api/admin/upgrade-requests` |
-| POST | `/api/admin/upgrade-requests/{id}/approve` |
-| POST | `/api/admin/upgrade-requests/{id}/reject` |
+| POST | `/api/admin/upgrade-requests/{id}/approve` | Body: `{ adminNote?, adminOverrideReason? }` |
+| POST | `/api/admin/upgrade-requests/{id}/reject` | Body: `{ adminNote }` — **reason required** (SB-004) |
+| POST | `/api/admin/upgrade-requests/{id}/cancel` |
 | PUT | `/api/admin/guilds/{id}/subscription` |
 | POST | `/api/admin/guilds/{id}/subscription/extend` |
 | POST | `/api/admin/guilds/{id}/subscription/cancel` |
@@ -124,8 +171,8 @@ Bot checks module enabled separately via `ModuleGuard` (does not re-check subscr
 
 ## Dashboard
 
-**Route:** `/guilds/:id/subscription` — shows plan, expiry, upgrade request form  
-**Admin:** `/admin/plans`, `/admin/upgrade-requests`
+**Route:** `/guilds/:id/subscription` — current plan card, subscription change stepper, payment reference form, waiting review card, renew CTA, change history  
+**Admin:** `/admin/plans`, `/admin/upgrade-requests` (UI: **Subscription Changes** — review queue with payment reference, filters, approve/reject dialogs)
 
 ## Assumptions
 

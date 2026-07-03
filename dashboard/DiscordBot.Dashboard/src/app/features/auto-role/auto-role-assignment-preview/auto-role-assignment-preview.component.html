@@ -1,0 +1,87 @@
+<section
+  class="auto-role-preview ws-panel-pad"
+  [attr.aria-label]="'autoRole.workspace.preview.ariaLabel' | translate"
+  [attr.data-state]="previewState"
+>
+  <header class="auto-role-preview-head">
+    <h2 class="auto-role-preview-title">{{ 'autoRole.workspace.preview.title' | translate }}</h2>
+    <p class="auto-role-preview-lead muted small">{{ 'autoRole.workspace.preview.lead' | translate }}</p>
+  </header>
+
+  <div class="auto-role-preview-body" aria-live="polite" aria-atomic="true">
+    <app-empty-state
+      *ngIf="previewState === 'inactive'"
+      [nested]="true"
+      icon="⏸️"
+      [title]="'autoRole.workspace.preview.inactiveTitle' | translate"
+      [description]="'autoRole.workspace.preview.inactiveBody' | translate"
+    ></app-empty-state>
+
+    <app-empty-state
+      *ngIf="previewState === 'empty'"
+      [nested]="true"
+      icon="🎭"
+      [title]="'autoRole.workspace.preview.emptyTitle' | translate"
+      [description]="'autoRole.workspace.preview.emptyBody' | translate"
+    ></app-empty-state>
+
+    <ol class="auto-role-flow" *ngIf="previewState === 'ready' || previewState === 'blocked'">
+      <li class="auto-role-flow-step" data-step="join">
+        <span class="auto-role-flow-marker" aria-hidden="true">1</span>
+        <div class="auto-role-flow-copy">
+          <p class="auto-role-flow-title">{{ 'autoRole.workspace.preview.steps.join.title' | translate }}</p>
+          <p class="muted small">{{ 'autoRole.workspace.preview.steps.join.body' | translate:{ server: guildName || ('autoRole.workspace.sample.server' | translate) } }}</p>
+        </div>
+      </li>
+
+      <li class="auto-role-flow-connector" aria-hidden="true"></li>
+
+      <li class="auto-role-flow-step" data-step="check">
+        <span class="auto-role-flow-marker" aria-hidden="true">2</span>
+        <div class="auto-role-flow-copy">
+          <p class="auto-role-flow-title">{{ 'autoRole.workspace.preview.steps.check.title' | translate }}</p>
+          <p class="muted small">{{ 'autoRole.workspace.preview.steps.check.body' | translate }}</p>
+        </div>
+      </li>
+
+      <li class="auto-role-flow-connector" aria-hidden="true"></li>
+
+      <li class="auto-role-flow-step" data-step="assign" [attr.data-status]="previewState === 'blocked' ? 'blocked' : 'success'">
+        <span class="auto-role-flow-marker" aria-hidden="true">3</span>
+        <div class="auto-role-flow-copy">
+          <p class="auto-role-flow-title">
+            {{
+              (previewState === 'blocked'
+                ? 'autoRole.workspace.preview.steps.assignBlocked.title'
+                : 'autoRole.workspace.preview.steps.assign.title') | translate
+            }}
+          </p>
+          <p class="muted small">
+            {{
+              (previewState === 'blocked'
+                ? 'autoRole.workspace.preview.steps.assignBlocked.body'
+                : 'autoRole.workspace.preview.steps.assign.body') | translate:{ role: roleName }
+            }}
+          </p>
+          <span class="badge" [attr.data-status]="previewState === 'blocked' ? 'warning' : 'success'">
+            {{ roleName }}
+          </span>
+        </div>
+      </li>
+
+      <li class="auto-role-flow-connector" *ngIf="previewState === 'ready'" aria-hidden="true"></li>
+
+      <li class="auto-role-flow-step" *ngIf="previewState === 'ready'" data-step="complete" data-status="success">
+        <span class="auto-role-flow-marker" aria-hidden="true">4</span>
+        <div class="auto-role-flow-copy">
+          <p class="auto-role-flow-title">{{ 'autoRole.workspace.preview.steps.complete.title' | translate }}</p>
+          <p class="muted small">{{ 'autoRole.workspace.preview.steps.complete.body' | translate:{ role: roleName } }}</p>
+        </div>
+      </li>
+    </ol>
+
+    <p class="auto-role-preview-footnote muted small" *ngIf="previewState === 'blocked'">
+      {{ 'autoRole.workspace.preview.blockedFootnote' | translate }}
+    </p>
+  </div>
+</section>

@@ -1,0 +1,91 @@
+<section
+  class="page-workspace-hero"
+  role="region"
+  [attr.aria-label]="ariaLabel"
+  [attr.aria-busy]="loading"
+>
+  <div class="page-workspace-hero-surface">
+    <div class="page-workspace-hero-body">
+      <div class="page-workspace-hero-top">
+        <div class="page-workspace-hero-brand">
+          <div class="page-workspace-hero-icon-well" aria-hidden="true">
+            <img
+              *ngIf="iconUrl; else iconGlyph"
+              [src]="iconUrl"
+              alt=""
+              class="page-workspace-hero-icon-image"
+            />
+            <ng-template #iconGlyph>
+              <app-ui-icon [name]="$any(icon)" size="lg"></app-ui-icon>
+            </ng-template>
+          </div>
+
+          <div class="page-workspace-hero-headcopy">
+            <div class="page-workspace-hero-meta" *ngIf="badge">
+              <span class="badge" [attr.data-status]="badge.tone ?? 'neutral'">{{ badge.label }}</span>
+            </div>
+
+            <h1 class="page-workspace-hero-title">{{ title }}</h1>
+            <p class="page-workspace-hero-description muted" *ngIf="description">{{ description }}</p>
+          </div>
+        </div>
+
+        <div class="page-workspace-hero-actions" *ngIf="primaryAction && !primaryAction.hidden">
+          <button
+            *ngIf="primaryAction.type === 'submit'; else actionButton"
+            type="submit"
+            class="btn btn-primary page-workspace-hero-cta"
+            [disabled]="primaryAction.disabled || primaryAction.loading"
+          >
+            <span class="spinner inline" *ngIf="primaryAction.loading" aria-hidden="true"></span>
+            {{ primaryAction.label }}
+          </button>
+
+          <ng-template #actionButton>
+            <button
+              type="button"
+              class="btn btn-primary page-workspace-hero-cta"
+              [disabled]="primaryAction.disabled || primaryAction.loading"
+              (click)="onPrimaryActionClick()"
+            >
+              <span class="spinner inline" *ngIf="primaryAction.loading" aria-hidden="true"></span>
+              {{ primaryAction.label }}
+            </button>
+          </ng-template>
+        </div>
+      </div>
+
+      <dl class="page-workspace-hero-stats" *ngIf="stats.length > 0">
+        <div
+          class="page-workspace-hero-stat"
+          *ngFor="let stat of stats"
+          [class.page-workspace-hero-stat--compact]="stat.compact"
+        >
+          <dt class="muted">{{ stat.label }}</dt>
+          <dd>{{ stat.value }}</dd>
+        </div>
+      </dl>
+    </div>
+
+    <footer
+      class="page-workspace-hero-footer"
+      *ngIf="footerMessage"
+      [attr.data-tone]="footerTone"
+    >
+      <span class="page-workspace-hero-footer-icon" aria-hidden="true">
+        <app-ui-icon name="check-circle" size="sm"></app-ui-icon>
+      </span>
+      <p class="page-workspace-hero-footer-copy muted small">{{ footerMessage }}</p>
+    </footer>
+  </div>
+
+  <button
+    *ngIf="dismissible"
+    type="button"
+    class="icon-btn page-workspace-hero-dismiss btn-ghost"
+    (click)="onDismissClick()"
+    [attr.aria-label]="'overview.v2.dismiss.label' | translate"
+  >
+    <app-ui-icon name="x" size="sm"></app-ui-icon>
+  </button>
+</section>

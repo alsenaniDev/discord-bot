@@ -49,6 +49,7 @@ public static class DependencyInjection
         services.AddScoped<IGuildProfileService, GuildProfileService>();
         services.AddScoped<IPlanUpgradeRequestService, PlanUpgradeRequestService>();
         services.AddScoped<IOnboardingService, OnboardingService>();
+        services.AddScoped<IGuildOverviewExperienceService, GuildOverviewExperienceService>();
         services.AddHostedService<ModuleSeeder>();
         services.AddHostedService<SubscriptionPlanSeeder>();
         services.AddHostedService<PlatformAdminSeeder>();

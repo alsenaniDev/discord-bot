@@ -1,92 +1,213 @@
-<div class="page-content">
-  <app-loading-state *ngIf="loading" [message]="'admin.upgradeRequestsLoading' | translate"></app-loading-state>
+<div class="page-content page-wide">
+  <app-loading-state *ngIf="loading" [message]="'admin.subscriptionChangesLoading' | translate"></app-loading-state>
 
   <app-empty-state
     *ngIf="!loading && error"
     icon="⚠️"
-    [title]="'admin.upgradeRequestsError' | translate"
+    [title]="'admin.subscriptionChangesError' | translate"
     [description]="error"
   >
     <button type="button" class="btn btn-primary btn-sm" (click)="loadData()">{{ 'common.tryAgain' | translate }}</button>
   </app-empty-state>
 
-  <app-empty-state
-    *ngIf="!loading && !error && requests.length === 0"
-    icon="📋"
-    [title]="'admin.noUpgradeRequests' | translate"
-    [description]="'admin.noUpgradeRequestsHint' | translate"
-  ></app-empty-state>
+  <ng-container *ngIf="!loading && !error">
+    <section class="card filters-card">
+      <h2>{{ 'admin.filtersTitle' | translate }}</h2>
+      <div class="filters-grid">
+        <label class="form-field">
+          <span>{{ 'common.status' | translate }}</span>
+          <select class="input" [(ngModel)]="filterStatus">
+            <option *ngFor="let status of statusFilterOptions" [ngValue]="status">
+              {{ statusFilterLabel(status) }}
+            </option>
+          </select>
+        </label>
 
-  <div class="card table-card" *ngIf="!loading && !error && requests.length > 0">
-    <div class="table-wrap">
-      <table class="data-table">
-        <thead>
-          <tr>
-            <th>{{ 'admin.guild' | translate }}</th>
-            <th>{{ 'admin.currentPlan' | translate }}</th>
+        <label class="form-field">
+          <span>{{ 'subscription.changeTypeLabel' | translate }}</span>
+          <select class="input" [(ngModel)]="filterChangeType">
+            <option *ngFor="let changeType of changeTypeFilterOptions" [ngValue]="changeType">
+              {{ changeTypeFilterLabel(changeType) }}
+            </option>
+          </select>
+        </label>
+
+        <label class="form-field filter-search">
+          <span>{{ 'admin.filterSearch' | translate }}</span>
+          <input
+            type="search"
+            class="input"
+            [(ngModel)]="searchQuery"
+            [placeholder]="'admin.filterSearchPlaceholder' | translate"
+          />
+        </label>
+      </div>
+      <p class="muted small">{{ 'admin.filteredCount' | translate:{ count: filteredRequests.length, total: requests.length } }}</p>
+    </section>
+
+    <app-empty-state
+      *ngIf="requests.length === 0"
+      icon="📋"
+      [title]="'admin.noSubscriptionChanges' | translate"
+      [description]="'admin.noSubscriptionChangesHint' | translate"
+    ></app-empty-state>
+
+    <app-empty-state
+      *ngIf="requests.length > 0 && filteredRequests.length === 0"
+      icon="🔍"
+      [title]="'admin.noMatchingChanges' | translate"
+      [description]="'admin.noMatchingChangesHint' | translate"
+    ></app-empty-state>
+
+    <div class="card table-card" *ngIf="filteredRequests.length > 0">
+      <div class="table-wrap">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>{{ 'admin.guild' | translate }}</th>
+              <th>{{ 'subscription.changeTypeLabel' | translate }}</th>
+              <th>{{ 'admin.currentPlan' | translate }}</th>
               <th>{{ 'admin.requestedPlan' | translate }}</th>
-              <th>{{ 'subscription.estimatedTotal' | translate }}</th>
               <th>{{ 'subscription.duration' | translate }}</th>
-            <th>{{ 'subscription.expiresAt' | translate }}</th>
-            <th>{{ 'admin.requester' | translate }}</th>
-            <th>{{ 'common.created' | translate }}</th>
-            <th>{{ 'common.status' | translate }}</th>
-            <th>{{ 'subscription.adminNote' | translate }}</th>
-            <th>{{ 'common.actions' | translate }}</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr *ngFor="let request of requests">
-            <td>
-              <strong>{{ request.guildName }}</strong>
-              <div class="muted small mono">{{ request.guildId }}</div>
-            </td>
-            <td>{{ request.currentPlanName }}</td>
-            <td>{{ request.requestedPlanName }}</td>
-            <td>
-              {{ request.estimatedTotalPrice | currency:'USD':'symbol':'1.2-2' }}
-              <div class="muted small">
-                {{ request.requestedPlanMonthlyPrice | currency:'USD':'symbol':'1.2-2' }} × {{ request.durationMonths }}
-              </div>
-            </td>
-            <td>{{ durationLabel(request.durationMonths) }}</td>
-            <td>{{ request.estimatedExpiresAtIfApprovedToday | date:'medium' }}</td>
-            <td>
-              <div>{{ request.requestedByUsername }}</div>
-              <div class="muted small mono">{{ request.requestedByDiscordUserId }}</div>
-            </td>
-            <td>{{ request.createdAt | date:'medium' }}</td>
-            <td>{{ statusLabel(request.status) }}</td>
-            <td>
-              <input
-                type="text"
-                class="input input-sm"
-                [(ngModel)]="notes[request.id]"
-                [placeholder]="'admin.adminNotePlaceholder' | translate"
-                [disabled]="request.status !== 'Pending'"
-              />
-            </td>
-            <td class="actions-cell">
-              <button
-                type="button"
-                class="btn btn-primary btn-sm"
-                [disabled]="request.status !== 'Pending' || isProcessing(request)"
-                (click)="approve(request)"
-              >
-                {{ 'admin.approve' | translate }}
-              </button>
-              <button
-                type="button"
-                class="btn btn-secondary btn-sm"
-                [disabled]="request.status !== 'Pending' || isProcessing(request)"
-                (click)="reject(request)"
-              >
-                {{ 'admin.reject' | translate }}
-              </button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+              <th>{{ 'subscription.estimatedTotal' | translate }}</th>
+              <th>{{ 'admin.paymentReference' | translate }}</th>
+              <th>{{ 'admin.requestExpiresAt' | translate }}</th>
+              <th>{{ 'admin.paymentSubmittedAt' | translate }}</th>
+              <th>{{ 'common.status' | translate }}</th>
+              <th>{{ 'admin.requester' | translate }}</th>
+              <th>{{ 'common.created' | translate }}</th>
+              <th>{{ 'common.actions' | translate }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let request of filteredRequests" [class.reviewable-row]="isReviewable(request)">
+              <td>
+                <strong>{{ request.guildName }}</strong>
+                <div class="muted small mono">{{ request.guildId }}</div>
+              </td>
+              <td>{{ changeTypeLabel(request.changeType) }}</td>
+              <td>{{ request.currentPlanName }}</td>
+              <td>{{ request.requestedPlanName }}</td>
+              <td>{{ durationLabel(request.durationMonths) }}</td>
+              <td>
+                {{ request.estimatedTotalPrice | currency:'USD':'symbol':'1.2-2' }}
+                <div class="muted small">
+                  {{ request.requestedPlanMonthlyPrice | currency:'USD':'symbol':'1.2-2' }} × {{ request.durationMonths }}
+                </div>
+              </td>
+              <td>
+                <span *ngIf="hasPaymentReference(request)" class="mono payment-ref">{{ request.paymentReference }}</span>
+                <span *ngIf="!hasPaymentReference(request)" class="muted">{{ 'admin.noPaymentReference' | translate }}</span>
+              </td>
+              <td>
+                <span *ngIf="request.requestExpiresAt">{{ request.requestExpiresAt | date:'medium' }}</span>
+                <span *ngIf="!request.requestExpiresAt" class="muted">{{ 'common.emptyValue' | translate }}</span>
+              </td>
+              <td>
+                <span *ngIf="request.paymentSubmittedAt">{{ request.paymentSubmittedAt | date:'medium' }}</span>
+                <span *ngIf="!request.paymentSubmittedAt" class="muted">{{ 'common.emptyValue' | translate }}</span>
+              </td>
+              <td>{{ statusLabel(request.status) }}</td>
+              <td>
+                <div>{{ request.requestedByUsername }}</div>
+                <div class="muted small mono">{{ request.requestedByDiscordUserId }}</div>
+              </td>
+              <td>{{ request.createdAt | date:'medium' }}</td>
+              <td class="actions-cell">
+                <button
+                  type="button"
+                  class="btn btn-primary btn-sm"
+                  [disabled]="!isReviewable(request) || isProcessing(request)"
+                  (click)="openApproveDialog(request)"
+                >
+                  {{ 'admin.approve' | translate }}
+                </button>
+                <button
+                  type="button"
+                  class="btn btn-secondary btn-sm"
+                  [disabled]="!isReviewable(request) || isProcessing(request)"
+                  (click)="openRejectDialog(request)"
+                >
+                  {{ 'admin.reject' | translate }}
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </ng-container>
+
+  <div class="confirm-overlay" *ngIf="showApproveDialog && selectedRequest" (click)="closeApproveDialog()">
+    <div class="confirm-dialog card" role="dialog" aria-modal="true" (click)="$event.stopPropagation()">
+      <h3>{{ 'admin.approveChangeTitle' | translate }}</h3>
+      <p class="muted">{{ 'admin.approveChangeBody' | translate:{
+        guild: selectedRequest.guildName,
+        plan: selectedRequest.requestedPlanName,
+        type: changeTypeLabel(selectedRequest.changeType)
+      } }}</p>
+
+      <div class="warning-banner" *ngIf="!hasPaymentReference(selectedRequest)">
+        {{ 'admin.noPaymentReferenceWarning' | translate }}
+      </div>
+
+      <label class="form-field" *ngIf="requiresOverrideReason(selectedRequest)">
+        <span>{{ 'admin.overrideReasonLabel' | translate }}</span>
+        <textarea
+          class="input"
+          rows="3"
+          [(ngModel)]="adminOverrideReason"
+          [placeholder]="'admin.overrideReasonPlaceholder' | translate"
+        ></textarea>
+      </label>
+
+      <label class="form-field">
+        <span>{{ 'subscription.adminNote' | translate }}</span>
+        <input
+          type="text"
+          class="input"
+          [(ngModel)]="adminNote"
+          [placeholder]="'admin.adminNotePlaceholder' | translate"
+        />
+      </label>
+
+      <div class="confirm-actions">
+        <button type="button" class="btn btn-secondary" [disabled]="isProcessing(selectedRequest)" (click)="closeApproveDialog()">
+          {{ 'common.cancel' | translate }}
+        </button>
+        <button type="button" class="btn btn-primary" [disabled]="isProcessing(selectedRequest)" (click)="confirmApprove()">
+          {{ (isProcessing(selectedRequest) ? 'admin.approvingChange' : 'admin.confirmApproveChange') | translate }}
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="confirm-overlay" *ngIf="showRejectDialog && selectedRequest" (click)="closeRejectDialog()">
+    <div class="confirm-dialog card" role="dialog" aria-modal="true" (click)="$event.stopPropagation()">
+      <h3>{{ 'admin.rejectChangeTitle' | translate }}</h3>
+      <p class="muted">{{ 'admin.rejectChangeBody' | translate:{
+        guild: selectedRequest.guildName,
+        plan: selectedRequest.requestedPlanName
+      } }}</p>
+
+      <label class="form-field">
+        <span>{{ 'admin.rejectReasonLabel' | translate }}</span>
+        <textarea
+          class="input"
+          rows="3"
+          [(ngModel)]="adminNote"
+          [placeholder]="'admin.rejectReasonPlaceholder' | translate"
+        ></textarea>
+      </label>
+
+      <div class="confirm-actions">
+        <button type="button" class="btn btn-secondary" [disabled]="isProcessing(selectedRequest)" (click)="closeRejectDialog()">
+          {{ 'common.cancel' | translate }}
+        </button>
+        <button type="button" class="btn btn-danger" [disabled]="isProcessing(selectedRequest) || !adminNote.trim()" (click)="confirmReject()">
+          {{ (isProcessing(selectedRequest) ? 'admin.rejectingChange' : 'admin.confirmRejectChange') | translate }}
+        </button>
+      </div>
     </div>
   </div>
 </div>

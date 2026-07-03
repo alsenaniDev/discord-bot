@@ -1,0 +1,35 @@
+<button
+  type="button"
+  class="staff-role-card ws-feed-card"
+  [class.is-selected]="selected"
+  [class.is-editing]="editing"
+  [attr.aria-current]="selected ? 'true' : null"
+  [attr.aria-label]="'staff.workspace.selectRole' | translate:{ name: roleName }"
+  (click)="select.emit()"
+>
+  <span class="staff-role-card-accent" [style.background-color]="discordColor" aria-hidden="true"></span>
+
+  <span class="staff-role-card-color ws-icon-well" aria-hidden="true">
+    <span class="staff-role-card-swatch" [style.background-color]="discordColor"></span>
+  </span>
+
+  <span class="ws-feed-card-body">
+    <span class="ws-feed-card-head">
+      <span class="ws-feed-card-title">{{ roleName }}</span>
+      <app-status-badge [label]="statusLabel" [tone]="statusTone"></app-status-badge>
+    </span>
+
+    <span class="ws-feed-card-subtitle">{{ discordLabel }}</span>
+
+    <span class="ws-feed-card-preview muted" *ngIf="permissionSummary">{{ permissionSummary }}</span>
+
+    <span class="ws-feed-card-meta muted small">
+      <span>{{ 'staff.workspace.permissionCount' | translate:{ count: permissionCount } }}</span>
+      <span class="ws-feed-card-meta-sep" *ngIf="updatedLabel" aria-hidden="true">·</span>
+      <span *ngIf="updatedLabel">{{ updatedLabel }}</span>
+      <span class="staff-role-card-editing badge badge-muted" *ngIf="editing">
+        {{ 'staff.workspace.editing' | translate }}
+      </span>
+    </span>
+  </span>
+</button>

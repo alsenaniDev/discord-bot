@@ -1,57 +1,133 @@
-.page-content {
-  max-width: 1100px;
+/* Logs workspace — master/detail layout; shell uses ws-* utilities */
+
+.logs-page {
+  --logs-detail-width: min(26rem, 42%);
+  --logs-viewport-offset: calc(
+    var(--topbar-height) + clamp(var(--space-4), 3vw, var(--space-6)) * 2
+  );
 }
 
-.identity-cell {
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-1);
-}
-
-.identity-name {
-  font-weight: 500;
-}
-
-.filters-grid {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-}
-
-.section-header {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: var(--space-3);
-}
-
-.confirm-overlay {
-  position: fixed;
-  inset: 0;
-  z-index: 100;
-  display: grid;
-  place-items: center;
-  padding: var(--space-4);
-  background: rgba(0, 0, 0, 0.55);
-}
-
-.confirm-dialog {
-  width: min(100%, 420px);
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-3);
-}
-
-.confirm-dialog h3 {
+:host ::ng-deep .logs-atf app-page-workspace-hero .page-workspace-hero {
   margin: 0;
 }
 
-.confirm-actions {
+.logs-atf {
   display: flex;
-  justify-content: flex-end;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.logs-workspace-hero {
+  display: block;
+}
+
+.logs-workspace-filters {
+  flex-shrink: 0;
+}
+
+.logs-list-column {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+}
+
+.logs-list-scroll {
+  min-width: 0;
+  min-height: 0;
+}
+
+.logs-list {
+  display: grid;
   gap: var(--space-2);
 }
 
-@media (max-width: 720px) {
-  .filters-grid {
-    grid-template-columns: 1fr;
+.logs-detail-column {
+  display: none;
+  min-width: 0;
+  min-height: 0;
+}
+
+@media (min-width: 1024px) {
+  .logs-page {
+    display: flex;
+    flex-direction: column;
+    height: calc(100dvh - var(--logs-viewport-offset));
+    max-height: calc(100dvh - var(--logs-viewport-offset));
+    overflow: hidden;
+    padding-block-end: 0;
+    box-sizing: border-box;
+  }
+
+  .logs-layout {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  .logs-workspace {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  .ws-master-detail--split.logs-master-detail {
+    grid-template-columns: minmax(0, 1fr) var(--logs-detail-width);
+    align-items: stretch;
+    flex: 1 1 auto;
+    min-height: 0;
+    height: auto;
+    overflow: hidden;
+  }
+
+  .logs-list-column {
+    overflow: hidden;
+    border-radius: var(--radius-lg);
+    border: 1px solid color-mix(in srgb, var(--color-border) 50%, transparent);
+    background: color-mix(in srgb, var(--color-bg-panel) 40%, transparent);
+    padding: var(--space-3);
+  }
+
+  .logs-list-column app-empty-state {
+    flex: 1 1 auto;
+    min-height: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--space-6);
+  }
+
+  .logs-list-scroll {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .logs-detail-column {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    overflow: hidden;
+    border-radius: var(--radius-lg);
+    border: 1px solid color-mix(in srgb, var(--color-border) 50%, transparent);
+    background: var(--color-bg-card);
+  }
+
+  .logs-detail-column app-logs-detail-panel {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow: hidden;
+  }
+}
+
+@media (max-width: 1023px) {
+  .logs-detail-column {
+    display: contents;
+  }
+
+  .logs-detail-placeholder {
+    display: none;
   }
 }

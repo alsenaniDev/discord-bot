@@ -658,6 +658,19 @@ namespace DiscordBot.Infrastructure.Migrations
                         .HasMaxLength(2000)
                         .HasColumnType("character varying(2000)");
 
+                    b.Property<string>("AdminOverrideReason")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.Property<DateTimeOffset?>("CancelledAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid?>("CancelledByUserId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("ChangeType")
+                        .HasColumnType("integer");
+
                     b.Property<DateTimeOffset>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
@@ -667,14 +680,32 @@ namespace DiscordBot.Infrastructure.Migrations
                     b.Property<int>("DurationMonths")
                         .HasColumnType("integer");
 
+                    b.Property<decimal>("EstimatedTotalAmount")
+                        .HasPrecision(10, 2)
+                        .HasColumnType("numeric(10,2)");
+
                     b.Property<Guid>("GuildId")
                         .HasColumnType("uuid");
+
+                    b.Property<string>("PaymentReference")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<DateTimeOffset?>("PaymentSubmittedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTimeOffset?>("RequestExpiresAt")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<Guid>("RequestedByUserId")
                         .HasColumnType("uuid");
 
                     b.Property<Guid>("RequestedPlanId")
                         .HasColumnType("uuid");
+
+                    b.Property<decimal>("RequestedPlanMonthlyPrice")
+                        .HasPrecision(10, 2)
+                        .HasColumnType("numeric(10,2)");
 
                     b.Property<DateTimeOffset?>("ReviewedAt")
                         .HasColumnType("timestamp with time zone");
@@ -689,6 +720,8 @@ namespace DiscordBot.Infrastructure.Migrations
                         .HasColumnType("timestamp with time zone");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("CancelledByUserId");
 
                     b.HasIndex("CurrentPlanId");
 
@@ -1224,6 +1257,11 @@ namespace DiscordBot.Infrastructure.Migrations
 
             modelBuilder.Entity("DiscordBot.Domain.Entities.PlanUpgradeRequest", b =>
                 {
+                    b.HasOne("DiscordBot.Domain.Entities.User", "CancelledByUser")
+                        .WithMany()
+                        .HasForeignKey("CancelledByUserId")
+                        .OnDelete(DeleteBehavior.SetNull);
+
                     b.HasOne("DiscordBot.Domain.Entities.SubscriptionPlan", "CurrentPlan")
                         .WithMany()
                         .HasForeignKey("CurrentPlanId")
@@ -1252,6 +1290,8 @@ namespace DiscordBot.Infrastructure.Migrations
                         .WithMany()
                         .HasForeignKey("ReviewedByAdminId")
                         .OnDelete(DeleteBehavior.SetNull);
+
+                    b.Navigation("CancelledByUser");
 
                     b.Navigation("CurrentPlan");
 

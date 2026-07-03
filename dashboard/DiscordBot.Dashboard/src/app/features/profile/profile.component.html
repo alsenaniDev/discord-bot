@@ -1,74 +1,204 @@
-<div class="page-content">
+<div class="page-content page-workspace profile-page ws-page">
   <app-loading-state *ngIf="loading" [message]="'profile.loading' | translate"></app-loading-state>
 
-  <app-empty-state
+  <app-error-state
     *ngIf="!loading && error"
-    icon="⚠️"
     [title]="'profile.loadError' | translate"
     [description]="error"
-  >
-    <button type="button" class="btn btn-primary btn-sm" (click)="loadProfile()">{{ 'common.tryAgain' | translate }}</button>
-  </app-empty-state>
+    [retryLabel]="'common.tryAgain' | translate"
+    (retry)="loadProfile()"
+  ></app-error-state>
 
-  <form class="profile-form" [formGroup]="form" (ngSubmit)="save()" *ngIf="!loading && !error">
-    <section class="card card-section">
-      <div class="card-section-header">
-        <div class="profile-header">
-          <img *ngIf="iconUrl" [src]="iconUrl" alt="" class="profile-icon" />
-          <div>
-            <h2>{{ 'profile.title' | translate }}</h2>
-            <p class="muted small">{{ 'profile.hint' | translate }}</p>
-            <p class="muted small" *ngIf="serverName">{{ 'profile.discordName' | translate }}: {{ serverName }}</p>
+  <form
+    class="profile-layout ws-layout"
+    [formGroup]="form"
+    (ngSubmit)="save()"
+    *ngIf="!loading && !error"
+    novalidate
+  >
+    <header class="profile-atf ws-atf ws-atf--band">
+      <app-page-workspace-hero
+        [ariaLabel]="'profile.hero.ariaLabel' | translate"
+        icon="servers"
+        [iconUrl]="iconUrl"
+        [title]="previewDisplayName"
+        [description]="previewDescription || ('profile.hero.noDescription' | translate)"
+        [stats]="workspaceHeroStats"
+        [footerMessage]="workspaceHeroFooter"
+        [primaryAction]="workspaceHeroPrimaryAction"
+      ></app-page-workspace-hero>
+
+      <app-page-notice>{{ 'profile.hint' | translate }}</app-page-notice>
+    </header>
+
+    <div class="profile-workspace ws-grid ws-grid--main-rail">
+      <div class="profile-workspace-main ws-panel-pad">
+        <section class="profile-section" role="region" [attr.aria-labelledby]="'profile-section-basic-title'">
+          <app-section-header
+            [title]="'profile.sections.basic.title' | translate"
+            [lead]="'profile.sections.basic.lead' | translate"
+            titleId="profile-section-basic-title"
+          ></app-section-header>
+
+          <div class="profile-section-fields">
+            <label class="form-field">
+              <span>{{ 'profile.displayName' | translate }}</span>
+              <input class="input" type="text" formControlName="displayName" maxlength="256" [attr.aria-describedby]="'profile-displayName-hint'" />
+              <span class="hint" id="profile-displayName-hint">{{ 'profile.displayNameHint' | translate }}</span>
+              <span class="field-error" *ngIf="fieldError('displayName')">{{ fieldError('displayName') }}</span>
+            </label>
+
+            <p class="profile-discord-name muted small">
+              {{ 'profile.discordName' | translate }}: <strong>{{ serverName }}</strong>
+            </p>
           </div>
-        </div>
+        </section>
+
+        <section class="profile-section" role="region" [attr.aria-labelledby]="'profile-section-branding-title'">
+          <app-section-header
+            [title]="'profile.sections.branding.title' | translate"
+            [lead]="'profile.sections.branding.lead' | translate"
+            titleId="profile-section-branding-title"
+          ></app-section-header>
+
+          <div class="profile-branding">
+            <div class="profile-branding-icon" [class.is-empty]="!iconUrl">
+              <img *ngIf="iconUrl" [src]="iconUrl" alt="" />
+              <div *ngIf="!iconUrl" class="profile-branding-icon-empty">
+                <app-ui-icon name="servers" size="lg"></app-ui-icon>
+                <p class="muted small">{{ 'profile.empty.noLogo' | translate }}</p>
+                <p class="muted small">{{ 'profile.empty.noLogoHint' | translate }}</p>
+              </div>
+            </div>
+            <p class="profile-branding-note muted small">{{ 'profile.sections.branding.iconHint' | translate }}</p>
+          </div>
+        </section>
+
+        <section class="profile-section" role="region" [attr.aria-labelledby]="'profile-section-details-title'">
+          <app-section-header
+            [title]="'profile.sections.communityDetails.title' | translate"
+            [lead]="'profile.sections.communityDetails.lead' | translate"
+            titleId="profile-section-details-title"
+          ></app-section-header>
+
+          <div class="profile-section-fields">
+            <label class="form-field">
+              <span>{{ 'profile.communityType' | translate }}</span>
+              <input
+                class="input"
+                type="text"
+                formControlName="communityType"
+                maxlength="100"
+                [placeholder]="'profile.communityTypeHint' | translate"
+                [attr.aria-describedby]="'profile-communityType-hint'"
+              />
+              <span class="hint" id="profile-communityType-hint">{{ 'profile.communityTypeHint' | translate }}</span>
+              <span class="field-error" *ngIf="fieldError('communityType')">{{ fieldError('communityType') }}</span>
+            </label>
+
+            <label class="form-field">
+              <span>{{ 'profile.description' | translate }}</span>
+              <textarea
+                class="input"
+                formControlName="description"
+                rows="4"
+                maxlength="1000"
+                [placeholder]="'profile.empty.noDescriptionPlaceholder' | translate"
+                [attr.aria-describedby]="'profile-description-hint'"
+              ></textarea>
+              <span class="hint" id="profile-description-hint">{{ 'profile.descriptionHint' | translate }}</span>
+              <span class="field-error" *ngIf="fieldError('description')">{{ fieldError('description') }}</span>
+            </label>
+          </div>
+        </section>
+
+        <section class="profile-section" role="region" [attr.aria-labelledby]="'profile-section-links-title'">
+          <app-section-header
+            [title]="'profile.sections.communityLinks.title' | translate"
+            [lead]="'profile.sections.communityLinks.lead' | translate"
+            titleId="profile-section-links-title"
+          ></app-section-header>
+
+          <div class="profile-section-fields profile-section-fields--pair">
+            <label class="form-field">
+              <span>{{ 'profile.websiteUrl' | translate }}</span>
+              <input
+                class="input"
+                type="url"
+                formControlName="websiteUrl"
+                maxlength="2048"
+                [placeholder]="'profile.empty.noLinksPlaceholder' | translate"
+                inputmode="url"
+                autocomplete="url"
+              />
+              <span class="field-error" *ngIf="fieldError('websiteUrl')">{{ fieldError('websiteUrl') }}</span>
+            </label>
+
+            <label class="form-field">
+              <span>{{ 'profile.rulesUrl' | translate }}</span>
+              <input
+                class="input"
+                type="url"
+                formControlName="rulesUrl"
+                maxlength="2048"
+                [placeholder]="'profile.empty.noLinksPlaceholder' | translate"
+                inputmode="url"
+                autocomplete="url"
+              />
+              <span class="field-error" *ngIf="fieldError('rulesUrl')">{{ fieldError('rulesUrl') }}</span>
+            </label>
+          </div>
+        </section>
+
+        <section class="profile-section" role="region" [attr.aria-labelledby]="'profile-section-support-title'">
+          <app-section-header
+            [title]="'profile.sections.support.title' | translate"
+            [lead]="'profile.sections.support.lead' | translate"
+            titleId="profile-section-support-title"
+          ></app-section-header>
+
+          <div class="profile-section-fields">
+            <label class="form-field">
+              <span>{{ 'profile.supportMessage' | translate }}</span>
+              <textarea
+                class="input"
+                formControlName="supportMessage"
+                rows="3"
+                maxlength="1000"
+                [placeholder]="'profile.empty.noSupportPlaceholder' | translate"
+                [attr.aria-describedby]="'profile-supportMessage-hint'"
+              ></textarea>
+              <span class="hint" id="profile-supportMessage-hint">{{ 'profile.supportMessageHint' | translate }}</span>
+              <span class="field-error" *ngIf="fieldError('supportMessage')">{{ fieldError('supportMessage') }}</span>
+            </label>
+          </div>
+        </section>
+
+        <section class="profile-section profile-section--advanced" role="region" [attr.aria-labelledby]="'profile-section-advanced-title'">
+          <app-section-header
+            [title]="'profile.sections.advanced.title' | translate"
+            [lead]="'profile.sections.advanced.lead' | translate"
+            titleId="profile-section-advanced-title"
+          ></app-section-header>
+
+          <ul class="profile-advanced-notes muted small">
+            <li>{{ 'profile.sections.advanced.noteDiscord' | translate }}</li>
+            <li>{{ 'profile.sections.advanced.notePreview' | translate }}</li>
+          </ul>
+        </section>
       </div>
 
-      <label>
-        {{ 'profile.displayName' | translate }}
-        <input type="text" formControlName="displayName" maxlength="256" />
-        <span class="hint">{{ 'profile.displayNameHint' | translate }}</span>
-        <span class="field-error" *ngIf="fieldError('displayName')">{{ fieldError('displayName') }}</span>
-      </label>
-
-      <label>
-        {{ 'profile.description' | translate }}
-        <textarea formControlName="description" rows="4" maxlength="1000"></textarea>
-        <span class="hint">{{ 'profile.descriptionHint' | translate }}</span>
-        <span class="field-error" *ngIf="fieldError('description')">{{ fieldError('description') }}</span>
-      </label>
-
-      <label>
-        {{ 'profile.communityType' | translate }}
-        <input type="text" formControlName="communityType" maxlength="100" />
-        <span class="hint">{{ 'profile.communityTypeHint' | translate }}</span>
-        <span class="field-error" *ngIf="fieldError('communityType')">{{ fieldError('communityType') }}</span>
-      </label>
-
-      <label>
-        {{ 'profile.supportMessage' | translate }}
-        <textarea formControlName="supportMessage" rows="3" maxlength="1000"></textarea>
-        <span class="hint">{{ 'profile.supportMessageHint' | translate }}</span>
-        <span class="field-error" *ngIf="fieldError('supportMessage')">{{ fieldError('supportMessage') }}</span>
-      </label>
-
-      <label>
-        {{ 'profile.rulesUrl' | translate }}
-        <input type="url" formControlName="rulesUrl" maxlength="2048" />
-        <span class="field-error" *ngIf="fieldError('rulesUrl')">{{ fieldError('rulesUrl') }}</span>
-      </label>
-
-      <label>
-        {{ 'profile.websiteUrl' | translate }}
-        <input type="url" formControlName="websiteUrl" maxlength="2048" />
-        <span class="field-error" *ngIf="fieldError('websiteUrl')">{{ fieldError('websiteUrl') }}</span>
-      </label>
-    </section>
-
-    <div class="form-actions">
-      <button type="submit" class="btn btn-primary" [disabled]="saving || form.invalid">
-        <span class="spinner inline" *ngIf="saving"></span>
-        {{ 'common.save' | translate }}
-      </button>
+      <div class="profile-workspace-aside ws-aside--sticky">
+        <app-profile-preview
+          [iconUrl]="iconUrl"
+          [displayName]="previewDisplayName"
+          [description]="previewDescription"
+          [communityType]="previewCommunityType"
+          [supportMessage]="previewSupportMessage"
+          [websiteUrl]="previewWebsiteUrl"
+          [rulesUrl]="previewRulesUrl"
+        ></app-profile-preview>
+      </div>
     </div>
   </form>
 </div>

@@ -1,3 +1,18 @@
+.moderation-settings-layout {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+  min-width: 0;
+}
+
+.moderation-settings-atf {
+  min-width: 0;
+}
+
+.moderation-settings-workspace-hero {
+  display: block;
+}
+
 .add-role-form {
   display: grid;
   gap: var(--space-4);

@@ -1,71 +1,135 @@
-<div class="page-content">
+<div class="page-content page-workspace reaction-roles-page ws-page ws-workspace-page">
   <app-loading-state *ngIf="loading" [message]="'reactionRoles.loading' | translate"></app-loading-state>
 
-  <app-empty-state
+  <app-error-state
     *ngIf="!loading && error"
-    icon="⚠️"
     [title]="'reactionRoles.loadError' | translate"
     [description]="error"
-  >
-    <button type="button" class="btn btn-primary btn-sm" (click)="loadData()">{{ 'common.tryAgain' | translate }}</button>
-  </app-empty-state>
+    [retryLabel]="'common.tryAgain' | translate"
+    (retry)="loadData()"
+  ></app-error-state>
 
-  <ng-container *ngIf="!loading && !error">
-    <section class="card intro-card">
-      <h2>{{ 'reactionRoles.panelsTitle' | translate }}</h2>
-      <p class="muted">{{ 'reactionRoles.panelsSubtitle' | translate }}</p>
-    </section>
+  <app-empty-state
+    *ngIf="!loading && !error && !canAccessReactionRoles"
+    icon="🔒"
+    [title]="'reactionRoles.workspace.permissionTitle' | translate"
+    [description]="'reactionRoles.workspace.permissionBody' | translate"
+  ></app-empty-state>
 
-    <section class="card table-card">
-      <div class="section-header">
-        <h2>{{ 'reactionRoles.panels' | translate }}</h2>
-        <p class="muted small">{{ panels.length }}</p>
+  <div class="reaction-roles-layout ws-layout" *ngIf="!loading && !error && canAccessReactionRoles">
+    <header class="reaction-roles-atf ws-atf">
+      <app-page-workspace-hero
+        [ariaLabel]="'workspaceHero.reactionRoles.ariaLabel' | translate"
+        icon="roles"
+        [title]="'titles.reactionRoles' | translate"
+        [description]="'titles.reactionRolesSubtitle' | translate"
+        [stats]="workspaceHeroStats"
+        [footerMessage]="workspaceHeroFooter"
+        [primaryAction]="workspaceHeroPrimaryAction"
+        (primaryActionClick)="onHeroPrimaryAction()"
+      ></app-page-workspace-hero>
+
+      <app-page-notice>{{ 'reactionRoles.workspace.notice' | translate }}</app-page-notice>
+    </header>
+
+    <main class="reaction-roles-workspace ws-workspace">
+      <app-reaction-roles-filter-bar
+        class="reaction-roles-workspace-filters"
+        [ui]="uiFilters"
+        [channelOptions]="channelFilterOptions"
+        [resultCount]="filteredPanels.length"
+        (apply)="applyFilters()"
+        (clear)="clearFilters()"
+      ></app-reaction-roles-filter-bar>
+
+      <div class="reaction-roles-master-detail ws-master-detail ws-master-detail--split" id="reaction-roles-panels">
+        <section class="ws-feed-column" [attr.aria-label]="'reactionRoles.workspace.listAria' | translate">
+          <app-section-header
+            [title]="'reactionRoles.panels' | translate"
+            [lead]="'reactionRoles.workspace.listLead' | translate"
+            [compact]="true"
+          ></app-section-header>
+
+          <app-empty-state
+            *ngIf="filteredPanels.length === 0 && panels.length === 0"
+            icon="🎭"
+            [title]="'reactionRoles.workspace.emptyTitle' | translate"
+            [description]="'reactionRoles.workspace.emptyBody' | translate"
+          ></app-empty-state>
+
+          <app-empty-state
+            *ngIf="filteredPanels.length === 0 && panels.length > 0"
+            icon="🔍"
+            [title]="'reactionRoles.workspace.emptyFilteredTitle' | translate"
+            [description]="'reactionRoles.workspace.emptyFilteredBody' | translate"
+          >
+            <button type="button" class="btn btn-secondary btn-sm" (click)="clearFilters()">
+              {{ 'reactionRoles.workspace.clearFilters' | translate }}
+            </button>
+          </app-empty-state>
+
+          <div class="ws-feed-scroll" *ngIf="filteredPanels.length > 0">
+            <div class="ws-feed-list" role="list">
+              <div *ngFor="let panel of filteredPanels" role="listitem" [attr.id]="'reaction-role-panel-' + panel.id">
+                <app-reaction-roles-panel-card
+                  [title]="panel.title"
+                  [description]="panel.description"
+                  [channelLabel]="channelName(panel.channelDiscordId)"
+                  [roleLabel]="roleName(panel.roleDiscordId)"
+                  [messageStatusLabel]="messageStatusLabel(panel)"
+                  [messageLinked]="hasLinkedMessage(panel)"
+                  [active]="panel.isActive"
+                  [selected]="isSelected(panel)"
+                  [canOpen]="canOpenPanel(panel)"
+                  [canCopy]="hasLinkedMessage(panel)"
+                  (select)="selectPanel(panel)"
+                  (configure)="selectPanel(panel)"
+                  (copy)="copyPanelLink(panel)"
+                  (open)="openInDiscord(panel)"
+                ></app-reaction-roles-panel-card>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <aside class="ws-detail-column" [attr.aria-label]="'reactionRoles.workspace.detailAria' | translate">
+          <div class="ws-placeholder-panel" *ngIf="!selectedPanel">
+            <div class="ws-placeholder-panel-icon" aria-hidden="true">
+              <app-ui-icon name="roles" size="lg"></app-ui-icon>
+            </div>
+            <h2 class="ws-placeholder-panel-title">{{ 'reactionRoles.workspace.selectPromptTitle' | translate }}</h2>
+            <p class="ws-placeholder-panel-body muted">{{ 'reactionRoles.workspace.selectPromptBody' | translate }}</p>
+          </div>
+
+          <app-reaction-roles-detail-panel
+            *ngIf="selectedPanel"
+            #panelDetail
+            class="ws-detail-panel-host"
+            [open]="true"
+            [inline]="true"
+            [title]="selectedPanel.title"
+            [description]="selectedPanel.description"
+            [buttonLabel]="selectedPanel.buttonLabel"
+            [channelLabel]="channelName(selectedPanel.channelDiscordId)"
+            [roleLabel]="roleName(selectedPanel.roleDiscordId)"
+            [messageStatusLabel]="messageStatusLabel(selectedPanel)"
+            [messageLinked]="hasLinkedMessage(selectedPanel)"
+            [active]="selectedPanel.isActive"
+            [messageId]="selectedPanel.messageDiscordId"
+            [channelId]="selectedPanel.channelDiscordId"
+            [buttonCustomId]="selectedPanel.buttonCustomId"
+            [createdAt]="selectedPanel.createdAt"
+            [canOpen]="canOpenPanel(selectedPanel)"
+            [canCopy]="hasLinkedMessage(selectedPanel)"
+            [deactivating]="isDeactivating(selectedPanel)"
+            (closePanel)="closeDetail()"
+            (edit)="onEditPanel()"
+            (openDiscord)="openInDiscord(selectedPanel)"
+            (copyLink)="copyPanelLink(selectedPanel)"
+            (disable)="deactivate(selectedPanel)"
+          ></app-reaction-roles-detail-panel>
+        </aside>
       </div>
-
-      <div class="empty-inline" *ngIf="panels.length === 0">
-        <p class="muted small">{{ 'reactionRoles.empty' | translate }}</p>
-      </div>
-
-      <div class="table-wrap" *ngIf="panels.length > 0">
-        <table class="data-table">
-          <thead>
-            <tr>
-              <th>{{ 'reactionRoles.title' | translate }}</th>
-              <th>{{ 'reactionRoles.channel' | translate }}</th>
-              <th>{{ 'reactionRoles.role' | translate }}</th>
-              <th>{{ 'common.status' | translate }}</th>
-              <th>{{ 'common.created' | translate }}</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let panel of panels">
-              <td>
-                <strong>{{ panel.title }}</strong>
-                <p class="muted small panel-desc">{{ panel.description }}</p>
-              </td>
-              <td>{{ channelName(panel.channelDiscordId) }}</td>
-              <td>{{ roleName(panel.roleDiscordId) }}</td>
-              <td>
-                <span class="status-pill" [class.active]="panel.isActive" [class.inactive]="!panel.isActive">
-                  {{ (panel.isActive ? 'common.active' : 'common.inactive') | translate }}
-                </span>
-              </td>
-              <td>{{ panel.createdAt | date: 'medium' }}</td>
-              <td>
-                <button
-                  type="button"
-                  class="btn btn-secondary btn-sm"
-                  [disabled]="!panel.isActive || isDeactivating(panel)"
-                  (click)="deactivate(panel)"
-                >
-                  {{ (isDeactivating(panel) ? 'reactionRoles.deactivating' : 'reactionRoles.deactivate') | translate }}
-                </button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </section>
-  </ng-container>
+    </main>
+  </div>
 </div>

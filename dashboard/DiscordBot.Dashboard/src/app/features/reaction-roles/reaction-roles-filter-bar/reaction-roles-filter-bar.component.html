@@ -1,0 +1,51 @@
+<section
+  class="reaction-roles-filter-bar ws-toolbar"
+  role="search"
+  [attr.aria-label]="'reactionRoles.workspace.filterAria' | translate"
+>
+  <div class="reaction-roles-filter-bar-primary">
+    <label class="form-field reaction-roles-filter-search">
+      <span class="type-label">{{ 'reactionRoles.workspace.search' | translate }}</span>
+      <input
+        class="input"
+        type="search"
+        [(ngModel)]="ui.search"
+        [placeholder]="'reactionRoles.workspace.searchPlaceholder' | translate"
+        [disabled]="disabled"
+        (keyup.enter)="onApply()"
+      />
+    </label>
+
+    <div class="filter-pills" role="tablist" [attr.aria-label]="'reactionRoles.workspace.statusFilter' | translate">
+      <button
+        *ngFor="let filter of statusFilters"
+        type="button"
+        class="filter-pill"
+        role="tab"
+        [class.is-active]="ui.status === filter"
+        [attr.aria-selected]="ui.status === filter"
+        [disabled]="disabled"
+        (click)="ui.status = filter; onApply()"
+      >
+        {{ statusLabelKey(filter) | translate }}
+      </button>
+    </div>
+
+    <label class="form-field reaction-roles-filter-channel">
+      <span class="type-label">{{ 'reactionRoles.workspace.channelFilter' | translate }}</span>
+      <select class="input" [(ngModel)]="ui.channel" [disabled]="disabled" (change)="onApply()">
+        <option value="">{{ 'reactionRoles.workspace.allChannels' | translate }}</option>
+        <option *ngFor="let channel of channelOptions" [value]="channel.id">{{ channel.label }}</option>
+      </select>
+    </label>
+  </div>
+
+  <div class="reaction-roles-filter-bar-actions">
+    <p class="reaction-roles-filter-results muted small" *ngIf="resultCount >= 0">
+      {{ 'reactionRoles.workspace.results' | translate:{ count: resultCount } }}
+    </p>
+    <button type="button" class="btn btn-secondary btn-sm" [disabled]="disabled" (click)="onClear()">
+      {{ 'reactionRoles.workspace.clearFilters' | translate }}
+    </button>
+  </div>
+</section>

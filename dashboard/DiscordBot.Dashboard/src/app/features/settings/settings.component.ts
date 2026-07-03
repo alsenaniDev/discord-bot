@@ -1,8 +1,8 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { TranslateService } from '@ngx-translate/core';
-import { forkJoin } from 'rxjs';
+import { forkJoin, Subscription } from 'rxjs';
 import { GuildService } from '../../core/services/guild.service';
 import { AuthService } from '../../core/services/auth.service';
 import { GuildContextService } from '../../core/services/guild-context.service';
@@ -32,13 +32,19 @@ import {
 } from '../../core/models/auto-reply.models';
 import { getApiErrorMessage } from '../../core/utils/api-error.util';
 import { requiredWhenEnabled, optionalHttpUrlValidator, optionalSnowflakeValidator } from '../../core/utils/settings.validators';
+import {
+  PageWorkspaceHeroAction,
+  PageWorkspaceHeroIconName,
+  PageWorkspaceHeroStat
+} from '../../shared/ui/page-workspace-hero/page-workspace-hero.models';
+import { AutoRolePermissionStatus } from '../auto-role/auto-role-editor/auto-role-editor.component';
 
 @Component({
   selector: 'app-settings',
   templateUrl: './settings.component.html',
   styleUrls: ['./settings.component.css']
 })
-export class SettingsComponent implements OnInit {
+export class SettingsComponent implements OnInit, OnDestroy {
   guildId = '';
   form!: FormGroup;
   loading = true;
@@ -57,6 +63,10 @@ export class SettingsComponent implements OnInit {
   autoReplySaving = false;
   editingAutoReplyId = '';
   activeTab: SettingsTabId = 'general';
+  guildName = '';
+  guildIconUrl: string | null = null;
+  readonly welcomeVariables = ['{user}', '{server}', '{memberCount}', '{username}', '{mention}'];
+  private guildSub?: Subscription;
   autoReplyForm = {
     trigger: '',
     response: '',
@@ -145,6 +155,15 @@ export class SettingsComponent implements OnInit {
 
     this.loadPageData();
     this.loadAutoReplies();
+
+    this.guildSub = this.guildContext.selectedGuild$.subscribe(guild => {
+      this.guildName = guild?.name ?? '';
+      this.guildIconUrl = guild?.iconUrl ?? null;
+    });
+  }
+
+  ngOnDestroy(): void {
+    this.guildSub?.unsubscribe();
   }
 
   loadAutoReplies(): void {
@@ -446,8 +465,383 @@ export class SettingsComponent implements OnInit {
     return !tab.requiresTickets || this.ticketsEnabled;
   }
 
+  get workspaceHeroStats(): PageWorkspaceHeroStat[] {
+    const enabledFeatures = [
+      this.form?.get('welcomeEnabled')?.value,
+      this.form?.get('autoRoleEnabled')?.value,
+      this.form?.get('logsEnabled')?.value,
+      this.form?.get('commandPanelEnabled')?.value
+    ].filter(Boolean).length;
+    const visibleTabs = this.settingsTabs.filter(tab => this.isTabVisible(tab)).length;
+
+    return [
+      {
+        label: this.translate.instant('workspaceHero.settings.stats.features'),
+        value: String(enabledFeatures)
+      },
+      {
+        label: this.translate.instant('workspaceHero.settings.stats.sections'),
+        value: String(visibleTabs)
+      },
+      {
+        label: this.translate.instant('workspaceHero.settings.stats.channels'),
+        value: String(this.textChannels.length)
+      },
+      {
+        label: this.translate.instant('workspaceHero.settings.stats.autoReplies'),
+        value: String(this.autoReplies.length)
+      }
+    ];
+  }
+
+  get workspaceHeroFooter(): string {
+    return this.translate.instant('workspaceHero.settings.footer');
+  }
+
+  get workspaceHeroPrimaryAction(): PageWorkspaceHeroAction {
+    return {
+      label: this.translate.instant('workspaceHero.settings.cta.save'),
+      type: 'submit',
+      disabled: this.saving || this.form?.invalid,
+      loading: this.saving,
+      hidden: !this.showSaveButton
+    };
+  }
+
   get showSaveButton(): boolean {
-    return this.activeTab !== 'general' && this.activeTab !== 'autoReplies';
+    return this.activeTab !== 'general' && this.activeTab !== 'autoReplies' && !this.isWelcomeTab && !this.isAutoRoleTab;
+  }
+
+  get isWelcomeTab(): boolean {
+    return this.activeTab === 'welcome';
+  }
+
+  get isAutoRoleTab(): boolean {
+    return this.activeTab === 'autoRole';
+  }
+
+  get isWorkspaceTab(): boolean {
+    return this.isWelcomeTab || this.isAutoRoleTab;
+  }
+
+  get heroIcon(): PageWorkspaceHeroIconName {
+    if (this.isWelcomeTab) {
+      return 'bell';
+    }
+
+    if (this.isAutoRoleTab) {
+      return 'roles';
+    }
+
+    return 'settings';
+  }
+
+  get heroTitleKey(): string {
+    if (this.isWelcomeTab) {
+      return 'welcome.workspace.title';
+    }
+
+    if (this.isAutoRoleTab) {
+      return 'autoRole.workspace.title';
+    }
+
+    return 'titles.settings';
+  }
+
+  get heroDescriptionKey(): string {
+    if (this.isWelcomeTab) {
+      return 'welcome.workspace.subtitle';
+    }
+
+    if (this.isAutoRoleTab) {
+      return 'autoRole.workspace.subtitle';
+    }
+
+    return 'titles.settingsSubtitle';
+  }
+
+  get heroAriaLabelKey(): string {
+    if (this.isWelcomeTab) {
+      return 'welcome.workspace.hero.ariaLabel';
+    }
+
+    if (this.isAutoRoleTab) {
+      return 'autoRole.workspace.hero.ariaLabel';
+    }
+
+    return 'workspaceHero.settings.ariaLabel';
+  }
+
+  get heroStats(): PageWorkspaceHeroStat[] {
+    if (this.isWelcomeTab) {
+      return this.welcomeWorkspaceHeroStats;
+    }
+
+    if (this.isAutoRoleTab) {
+      return this.autoRoleWorkspaceHeroStats;
+    }
+
+    return this.workspaceHeroStats;
+  }
+
+  get heroFooterKey(): string {
+    if (this.isWelcomeTab) {
+      return this.welcomeWorkspaceHeroFooter;
+    }
+
+    if (this.isAutoRoleTab) {
+      return this.autoRoleWorkspaceHeroFooter;
+    }
+
+    return this.workspaceHeroFooter;
+  }
+
+  get heroPrimaryAction(): PageWorkspaceHeroAction {
+    if (this.isWelcomeTab) {
+      return this.welcomeWorkspaceHeroPrimaryAction;
+    }
+
+    if (this.isAutoRoleTab) {
+      return this.autoRoleWorkspaceHeroPrimaryAction;
+    }
+
+    return this.workspaceHeroPrimaryAction;
+  }
+
+  get autoRoleSelectedRoleLabel(): string {
+    const roleId = this.form?.get('autoRoleId')?.value;
+    if (!roleId) {
+      return '';
+    }
+
+    const role = this.roles.find(item => item.discordRoleId === roleId);
+    return role ? roleLabel(role) : String(roleId);
+  }
+
+  get autoRolePermissionStatus(): AutoRolePermissionStatus {
+    if (!this.form?.get('autoRoleEnabled')?.value) {
+      return 'unknown';
+    }
+
+    const role = this.autoRoleSelectedRole;
+    if (!role) {
+      return 'unknown';
+    }
+
+    if (role.isManaged) {
+      return 'blockedManaged';
+    }
+
+    const botRole = this.autoRoleBotRole;
+    if (!botRole) {
+      return 'unknown';
+    }
+
+    if (role.position >= botRole.position) {
+      return 'blockedHierarchy';
+    }
+
+    return 'ready';
+  }
+
+  get autoRoleLogsRoute(): string {
+    return `/guilds/${this.guildId}/logs`;
+  }
+
+  get autoRoleWorkspaceHeroStats(): PageWorkspaceHeroStat[] {
+    return [
+      {
+        label: this.translate.instant('autoRole.workspace.stats.enabled'),
+        value: this.form?.get('autoRoleEnabled')?.value
+          ? this.translate.instant('common.enabled')
+          : this.translate.instant('common.disabled')
+      },
+      {
+        label: this.translate.instant('autoRole.workspace.stats.role'),
+        value: this.autoRoleSelectedRoleLabel || this.translate.instant('autoRole.workspace.stats.noRole')
+      },
+      {
+        label: this.translate.instant('autoRole.workspace.stats.newMembers'),
+        value: this.form?.get('autoRoleEnabled')?.value
+          ? this.translate.instant('autoRole.workspace.stats.newMembersValue')
+          : this.translate.instant('common.emptyValue')
+      },
+      {
+        label: this.translate.instant('autoRole.workspace.stats.botPermission'),
+        value: this.autoRolePermissionStatusLabel
+      }
+    ];
+  }
+
+  get autoRolePermissionStatusLabel(): string {
+    switch (this.autoRolePermissionStatus) {
+      case 'ready':
+        return this.translate.instant('autoRole.workspace.stats.permissionReady');
+      case 'blockedManaged':
+        return this.translate.instant('autoRole.workspace.stats.permissionManaged');
+      case 'blockedHierarchy':
+        return this.translate.instant('autoRole.workspace.stats.permissionHierarchy');
+      default:
+        return this.translate.instant('autoRole.workspace.stats.permissionUnknown');
+    }
+  }
+
+  get autoRoleWorkspaceHeroFooter(): string {
+    if (!this.form?.get('autoRoleEnabled')?.value) {
+      return this.translate.instant('autoRole.workspace.footer.disabled');
+    }
+
+    if (!this.form?.get('autoRoleId')?.value) {
+      return this.translate.instant('autoRole.workspace.footer.noRole');
+    }
+
+    if (this.autoRolePermissionStatus === 'blockedManaged' || this.autoRolePermissionStatus === 'blockedHierarchy') {
+      return this.translate.instant('autoRole.workspace.footer.blocked');
+    }
+
+    if (this.autoRolePermissionStatus === 'unknown') {
+      return this.translate.instant('autoRole.workspace.footer.unknown');
+    }
+
+    return this.translate.instant('autoRole.workspace.footer.ready');
+  }
+
+  get autoRoleWorkspaceHeroPrimaryAction(): PageWorkspaceHeroAction {
+    return {
+      label: this.translate.instant('autoRole.workspace.cta.save'),
+      type: 'submit',
+      disabled: this.saving || this.form?.invalid,
+      loading: this.saving
+    };
+  }
+
+  private get autoRoleSelectedRole(): DiscordRole | null {
+    const roleId = this.form?.get('autoRoleId')?.value;
+    if (!roleId) {
+      return null;
+    }
+
+    return this.roles.find(item => item.discordRoleId === roleId) ?? null;
+  }
+
+  private get autoRoleBotRole(): DiscordRole | null {
+    const managedRoles = this.roles.filter(role => role.isManaged);
+    if (managedRoles.length === 0) {
+      return null;
+    }
+
+    return managedRoles.reduce((highest, role) => (role.position > highest.position ? role : highest));
+  }
+
+  get welcomeWorkspaceHeroStats(): PageWorkspaceHeroStat[] {
+    return [
+      {
+        label: this.translate.instant('welcome.workspace.stats.enabled'),
+        value: this.form?.get('welcomeEnabled')?.value
+          ? this.translate.instant('common.enabled')
+          : this.translate.instant('common.disabled')
+      },
+      {
+        label: this.translate.instant('welcome.workspace.stats.previewReady'),
+        value: this.welcomePreviewReady
+          ? this.translate.instant('welcome.workspace.stats.readyValue')
+          : this.translate.instant('welcome.workspace.stats.notReadyValue')
+      },
+      {
+        label: this.translate.instant('welcome.workspace.stats.variablesUsed'),
+        value: String(this.welcomeVariablesUsedCount)
+      },
+      {
+        label: this.translate.instant('welcome.workspace.stats.testStatus'),
+        value: this.translate.instant(
+          this.welcomePreviewReady
+            ? 'welcome.workspace.stats.testReady'
+            : 'welcome.workspace.stats.testPending'
+        )
+      }
+    ];
+  }
+
+  get welcomeWorkspaceHeroFooter(): string {
+    if (!this.form?.get('welcomeEnabled')?.value) {
+      return this.translate.instant('welcome.workspace.footer.disabled');
+    }
+
+    if (!this.welcomePreviewReady) {
+      return this.translate.instant('welcome.workspace.footer.incomplete');
+    }
+
+    return this.translate.instant('welcome.workspace.footer.ready');
+  }
+
+  get welcomeWorkspaceHeroPrimaryAction(): PageWorkspaceHeroAction {
+    return {
+      label: this.translate.instant('welcome.workspace.cta.save'),
+      type: 'submit',
+      disabled: this.saving || this.form?.invalid,
+      loading: this.saving
+    };
+  }
+
+  get welcomePreviewReady(): boolean {
+    return !!(
+      this.form?.get('welcomeEnabled')?.value &&
+      this.form?.get('welcomeChannelId')?.value &&
+      this.form?.get('welcomeMessage')?.value?.trim()
+    );
+  }
+
+  get welcomeVariablesUsedCount(): number {
+    const message = String(this.form?.get('welcomeMessage')?.value ?? '');
+    return this.welcomeVariables.filter(token => message.includes(token)).length;
+  }
+
+  get welcomeSelectedChannelLabel(): string {
+    const channelId = this.form?.get('welcomeChannelId')?.value;
+    if (!channelId) {
+      return '';
+    }
+
+    const channel = this.textChannels.find(item => item.discordChannelId === channelId);
+    return channel ? channelLabel(channel) : channelId;
+  }
+
+  get welcomePreviewMessage(): string {
+    return this.formatWelcomePreview(String(this.form?.get('welcomeMessage')?.value ?? ''));
+  }
+
+  get welcomePreviewFooter(): string {
+    const server = this.guildName || this.translate.instant('welcome.workspace.sample.server');
+    return this.translate.instant('welcome.workspace.preview.footerTemplate', { server });
+  }
+
+  insertWelcomeVariable(variable: string): void {
+    const control = this.form.get('welcomeMessage');
+    if (!control) {
+      return;
+    }
+
+    const active = document.activeElement;
+    if (active instanceof HTMLTextAreaElement && active.classList.contains('welcome-message-input')) {
+      const start = active.selectionStart ?? active.value.length;
+      const end = active.selectionEnd ?? start;
+      const current = String(control.value ?? '');
+      const next = `${current.slice(0, start)}${variable}${current.slice(end)}`;
+      control.setValue(next);
+      control.markAsDirty();
+      control.markAsTouched();
+
+      requestAnimationFrame(() => {
+        active.focus();
+        const cursor = start + variable.length;
+        active.setSelectionRange(cursor, cursor);
+      });
+      return;
+    }
+
+    control.setValue(`${String(control.value ?? '')}${variable}`);
+    control.markAsDirty();
+    control.markAsTouched();
   }
 
   fieldError(controlName: string): string | null {
@@ -491,6 +885,16 @@ export class SettingsComponent implements OnInit {
   private handleAuthError(): void {
     this.auth.logout();
     this.router.navigate(['/login']);
+  }
+
+  private formatWelcomePreview(template: string): string {
+    const server = this.guildName || this.translate.instant('welcome.workspace.sample.server');
+    return template
+      .replace(/\{user\}/gi, '@NewMember')
+      .replace(/\{mention\}/gi, '@NewMember')
+      .replace(/\{username\}/gi, 'NewMember')
+      .replace(/\{server\}/gi, server)
+      .replace(/\{memberCount\}/gi, '1,234');
   }
 }
 

@@ -44,6 +44,7 @@ public class GuildService : IGuildService
     private readonly ILogService _logService;
     private readonly ISubscriptionService _subscriptionService;
     private readonly IOnboardingService _onboardingService;
+    private readonly IGuildOverviewExperienceService _overviewExperienceService;
     private readonly IGuildAccessService _guildAccessService;
 
     public GuildService(
@@ -52,6 +53,7 @@ public class GuildService : IGuildService
         ILogService logService,
         ISubscriptionService subscriptionService,
         IOnboardingService onboardingService,
+        IGuildOverviewExperienceService overviewExperienceService,
         IGuildAccessService guildAccessService)
     {
         _dbContext = dbContext;
@@ -59,6 +61,7 @@ public class GuildService : IGuildService
         _logService = logService;
         _subscriptionService = subscriptionService;
         _onboardingService = onboardingService;
+        _overviewExperienceService = overviewExperienceService;
         _guildAccessService = guildAccessService;
     }
 
@@ -343,7 +346,7 @@ public class GuildService : IGuildService
 
         var onboarding = await _onboardingService.GetGuildChecklistAsync(guildId, discordUserId, cancellationToken);
 
-        return new GuildOverviewDto
+        var baseOverview = new GuildOverviewDto
         {
             Name = overview.Name,
             IconUrl = overview.IconUrl,
@@ -359,6 +362,31 @@ public class GuildService : IGuildService
             LogsEnabled = overview.LogsEnabled,
             TicketsEnabled = overview.TicketsEnabled,
             Onboarding = onboarding
+        };
+
+        var experience = await _overviewExperienceService.BuildAsync(
+            guildId,
+            baseOverview,
+            onboarding,
+            cancellationToken);
+
+        return new GuildOverviewDto
+        {
+            Name = baseOverview.Name,
+            IconUrl = baseOverview.IconUrl,
+            IsActive = baseOverview.IsActive,
+            ResourcesSyncedAt = baseOverview.ResourcesSyncedAt,
+            TotalChannels = baseOverview.TotalChannels,
+            TotalRoles = baseOverview.TotalRoles,
+            TotalTickets = baseOverview.TotalTickets,
+            OpenTickets = baseOverview.OpenTickets,
+            ClosedTickets = baseOverview.ClosedTickets,
+            WelcomeEnabled = baseOverview.WelcomeEnabled,
+            AutoRoleEnabled = baseOverview.AutoRoleEnabled,
+            LogsEnabled = baseOverview.LogsEnabled,
+            TicketsEnabled = baseOverview.TicketsEnabled,
+            Onboarding = onboarding,
+            Experience = experience
         };
     }
 

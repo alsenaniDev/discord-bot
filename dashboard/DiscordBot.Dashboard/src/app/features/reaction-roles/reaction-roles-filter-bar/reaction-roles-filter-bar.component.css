@@ -1,0 +1,49 @@
+.reaction-roles-filter-bar {
+  flex-direction: column;
+  align-items: stretch;
+  gap: var(--space-4);
+}
+
+.reaction-roles-filter-bar-primary {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr) minmax(0, 0.9fr);
+  gap: var(--space-4);
+  align-items: end;
+  width: 100%;
+}
+
+.reaction-roles-filter-search,
+.reaction-roles-filter-channel {
+  display: grid;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.reaction-roles-filter-bar-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.reaction-roles-filter-results {
+  margin: 0;
+}
+
+@media (max-width: 960px) {
+  .reaction-roles-filter-bar-primary {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .reaction-roles-filter-bar-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .reaction-roles-filter-bar-actions .btn {
+    width: 100%;
+  }
+}

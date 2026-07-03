@@ -1,121 +1,121 @@
-<div class="page-content">
+<div class="page-content page-workspace logs-page ws-page">
   <app-loading-state *ngIf="loading" [message]="'logs.loading' | translate"></app-loading-state>
 
-  <app-empty-state
+  <app-error-state
     *ngIf="!loading && error"
-    icon="⚠️"
     [title]="'logs.loadError' | translate"
     [description]="error"
-  >
-    <button type="button" class="btn btn-primary btn-sm" (click)="loadLogs()">{{ 'common.tryAgain' | translate }}</button>
-  </app-empty-state>
+    [retryLabel]="'common.tryAgain' | translate"
+    (retry)="loadLogs()"
+  ></app-error-state>
 
-  <ng-container *ngIf="!loading && !error">
-    <section class="card filters-card">
-      <h2>{{ 'logs.filters' | translate }}</h2>
-      <div class="filters-grid">
-        <label>
-          {{ 'logs.eventType' | translate }}
-          <select [(ngModel)]="filters.type">
-            <option *ngFor="let option of typeOptions" [value]="option.value">
-              {{ option.labelKey | translate }}
-            </option>
-          </select>
-        </label>
-        <label>
-          {{ 'moderation.from' | translate }}
-          <input type="date" [(ngModel)]="filters.from" />
-        </label>
-        <label>
-          {{ 'moderation.to' | translate }}
-          <input type="date" [(ngModel)]="filters.to" />
-        </label>
-        <app-member-select
-          class="search-field"
-          [guildId]="guildId"
-          [label]="'logs.member' | translate"
-          [placeholder]="'memberSelect.placeholder' | translate"
-          [(ngModel)]="filters.userId"
-        ></app-member-select>
-        <label class="search-field">
-          {{ 'logs.search' | translate }}
-          <input
-            type="text"
-            [(ngModel)]="filters.search"
-            [placeholder]="'logs.searchPlaceholder' | translate"
-          />
-        </label>
-      </div>
-      <div class="filter-actions">
-        <button type="button" class="btn btn-primary btn-sm" (click)="applyFilters()">{{ 'common.apply' | translate }}</button>
-        <button type="button" class="btn btn-secondary btn-sm" (click)="clearFilters()">{{ 'common.clear' | translate }}</button>
-      </div>
-    </section>
+  <app-empty-state
+    *ngIf="!loading && !error && !canAccessLogs"
+    icon="🔒"
+    [title]="'logs.workspace.permissionTitle' | translate"
+    [description]="'logs.workspace.permissionBody' | translate"
+  ></app-empty-state>
 
-    <section class="card table-card">
-      <div class="section-header">
-        <div>
-          <h2>{{ 'logs.activityLog' | translate }}</h2>
-          <p class="muted small">{{ logs.length }}</p>
-        </div>
-        <button
-          *ngIf="canManageSettings"
-          type="button"
-          class="btn btn-danger btn-sm"
-          (click)="openClearDialog()"
-        >
-          {{ 'logs.clearAll' | translate }}
-        </button>
-      </div>
+  <div class="logs-layout ws-layout" *ngIf="!loading && !error && canAccessLogs">
+    <header class="logs-atf ws-atf">
+      <app-page-workspace-hero
+        class="logs-workspace-hero"
+        [ariaLabel]="'workspaceHero.logs.ariaLabel' | translate"
+        icon="logs"
+        [title]="'titles.logs' | translate"
+        [description]="'titles.logsSubtitle' | translate"
+        [stats]="workspaceHeroStats"
+        [footerMessage]="workspaceHeroFooter"
+        [primaryAction]="workspaceHeroPrimaryAction"
+        (primaryActionClick)="configureLogs()"
+      ></app-page-workspace-hero>
 
-      <div class="empty-inline" *ngIf="logs.length === 0">
-        <p class="muted small">{{ 'logs.noLogs' | translate }}</p>
-      </div>
+      <app-page-notice>{{ 'logs.workspace.notice' | translate }}</app-page-notice>
+    </header>
 
-      <div class="table-wrap" *ngIf="logs.length > 0">
-        <table class="data-table">
-          <thead>
-            <tr>
-              <th>{{ 'moderation.date' | translate }}</th>
-              <th>{{ 'moderation.type' | translate }}</th>
-              <th>{{ 'logs.message' | translate }}</th>
-              <th>{{ 'logs.actor' | translate }}</th>
-              <th>{{ 'logs.target' | translate }}</th>
-              <th>{{ 'logs.channel' | translate }}</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let log of logs">
-              <td>{{ log.createdAt | date: 'medium' }}</td>
-              <td>{{ log.typeLabel }}</td>
-              <td>{{ log.message }}</td>
-              <td>
-                <div class="identity-cell" *ngIf="log.actorDiscordUserId || log.actorDisplayName; else emptyActor">
-                  <span class="identity-name">{{ displayMember(log.actorDisplayName, log.actorDiscordUserId) }}</span>
-                  <span class="muted small mono" *ngIf="log.actorDisplayName">{{ log.actorDiscordUserId }}</span>
-                </div>
-                <ng-template #emptyActor>{{ displayValue(null) }}</ng-template>
-              </td>
-              <td>
-                <div class="identity-cell" *ngIf="log.targetDiscordUserId || log.targetDisplayName; else emptyTarget">
-                  <span class="identity-name">{{ displayMember(log.targetDisplayName, log.targetDiscordUserId) }}</span>
-                  <span class="muted small mono" *ngIf="log.targetDisplayName">{{ log.targetDiscordUserId }}</span>
-                </div>
-                <ng-template #emptyTarget>{{ displayValue(null) }}</ng-template>
-              </td>
-              <td>
-                <div class="identity-cell" *ngIf="log.channelDiscordId || log.channelName; else emptyChannel">
-                  <span class="identity-name">{{ displayChannel(log.channelName, log.channelDiscordId) }}</span>
-                  <span class="muted small mono" *ngIf="log.channelName">{{ log.channelDiscordId }}</span>
-                </div>
-                <ng-template #emptyChannel>{{ displayValue(null) }}</ng-template>
-              </td>
-            </tr>
-          </tbody>
-        </table>
+    <main class="logs-workspace ws-workspace">
+      <app-logs-filter-bar
+        class="logs-workspace-filters"
+        [guildId]="guildId"
+        [filters]="filters"
+        [resultCount]="logs.length"
+        (apply)="applyFilters()"
+        (clear)="clearFilters()"
+      ></app-logs-filter-bar>
+
+      <div class="logs-master-detail ws-master-detail ws-master-detail--split">
+        <section class="logs-list-column" [attr.aria-label]="'logs.workspace.listAria' | translate">
+          <app-section-header
+            [title]="'logs.activityLog' | translate"
+            [lead]="'logs.workspace.listLead' | translate"
+            [compact]="true"
+          ></app-section-header>
+
+          <app-empty-state
+            *ngIf="logs.length === 0 && !hasActiveFilters"
+            icon="📋"
+            [title]="'logs.workspace.emptyTitle' | translate"
+            [description]="'logs.workspace.emptyBody' | translate"
+          ></app-empty-state>
+
+          <app-empty-state
+            *ngIf="logs.length === 0 && hasActiveFilters"
+            icon="🔍"
+            [title]="'logs.workspace.emptyFilteredTitle' | translate"
+            [description]="'logs.workspace.emptyFilteredBody' | translate"
+          >
+            <button type="button" class="btn btn-secondary btn-sm" (click)="clearFilters()">
+              {{ 'logs.workspace.clearFilters' | translate }}
+            </button>
+          </app-empty-state>
+
+          <div class="logs-list-scroll" *ngIf="logs.length > 0">
+            <div class="logs-list" role="list">
+              <div *ngFor="let log of logs" role="listitem" [attr.id]="'log-' + log.id">
+                <app-logs-entry-card
+                  [log]="log"
+                  [selected]="isSelected(log)"
+                  [severity]="severityTone(log.type)"
+                  [severityLabel]="severityLabel(log.type)"
+                  [iconName]="eventIcon(log.type)"
+                  [actorLabel]="actorLabel(log)"
+                  [targetLabel]="targetLabel(log)"
+                  (select)="selectLog(log)"
+                ></app-logs-entry-card>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <aside class="logs-detail-column" [attr.aria-label]="'logs.workspace.detailAria' | translate">
+          <div class="logs-detail-placeholder ws-placeholder-panel" *ngIf="!selectedLog">
+            <div class="logs-detail-placeholder-icon ws-placeholder-panel-icon" aria-hidden="true">
+              <app-ui-icon name="logs" size="lg"></app-ui-icon>
+            </div>
+            <h2 class="ws-placeholder-panel-title">{{ 'logs.workspace.selectPromptTitle' | translate }}</h2>
+            <p class="ws-placeholder-panel-body muted">{{ 'logs.workspace.selectPromptBody' | translate }}</p>
+          </div>
+
+          <app-logs-detail-panel
+            *ngIf="selectedLog"
+            #logDetailPanel
+            [log]="selectedLog"
+            [open]="true"
+            [inline]="true"
+            [severity]="severityTone(selectedLog.type)"
+            [severityLabel]="severityLabel(selectedLog.type)"
+            [actorLabel]="actorLabel(selectedLog)"
+            [targetLabel]="targetLabel(selectedLog)"
+            [channelLabel]="channelLabel(selectedLog)"
+            [metadataPreview]="metadataPreview(selectedLog)"
+            [canClear]="canClearLogs"
+            (closePanel)="closeDetail()"
+            (clearAll)="openClearDialog()"
+          ></app-logs-detail-panel>
+        </aside>
       </div>
-    </section>
-  </ng-container>
+    </main>
+  </div>
 
   <div class="confirm-overlay" *ngIf="showClearDialog" (click)="closeClearDialog()">
     <div class="confirm-dialog card" role="dialog" aria-modal="true" (click)="$event.stopPropagation()">

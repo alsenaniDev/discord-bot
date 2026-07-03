@@ -1,0 +1,135 @@
+<div
+  *ngIf="model"
+  class="context-drawer"
+  [class.is-open]="isOpen"
+  role="region"
+  [attr.aria-label]="'overview.v2.drawer.ariaLabel' | translate"
+>
+  <button
+    #toggleButton
+    type="button"
+    class="context-drawer-toggle btn btn-ghost"
+    [attr.aria-expanded]="isOpen"
+    [attr.aria-controls]="'context-drawer-panel'"
+    (click)="toggleDrawer()"
+  >
+    <app-ui-icon [name]="isOpen ? 'chevron-down' : 'chevron-right'" size="sm" class="context-drawer-toggle-icon"></app-ui-icon>
+    <span class="context-drawer-toggle-label">
+      {{ (isOpen ? 'overview.v2.drawer.toggleHide' : 'overview.v2.drawer.toggle') | translate }}
+    </span>
+    <span class="context-drawer-toggle-hints muted" *ngIf="!isOpen && model.sectionHints.length > 0">
+      <ng-container *ngFor="let hint of model.sectionHints; let last = last">
+        {{ hint | translate }}<span *ngIf="!last"> · </span>
+      </ng-container>
+    </span>
+  </button>
+
+  <div
+    *ngIf="isOpen"
+    class="context-drawer-backdrop"
+    (click)="onBackdropClick($event)"
+    aria-hidden="true"
+  ></div>
+
+  <aside
+    *ngIf="isOpen"
+    #panel
+    id="context-drawer-panel"
+    class="context-drawer-panel"
+    role="dialog"
+    aria-modal="true"
+    [attr.aria-label]="'overview.v2.drawer.ariaLabel' | translate"
+  >
+    <div class="context-drawer-inner">
+      <section *ngIf="model.modules.length > 0" class="context-drawer-section">
+        <h3 class="context-drawer-section-title type-label">{{ 'overview.v2.drawer.modules.heading' | translate }}</h3>
+        <ul class="context-drawer-module-list">
+          <li *ngFor="let row of model.modules">
+            <button
+              type="button"
+              [class]="moduleRowClass(row)"
+              (click)="onModuleRowClick(row.route)"
+              [attr.aria-label]="(row.nameKey | translate) + ', ' + (statusLabelKey(row.status) | translate)"
+            >
+              <span class="context-drawer-module-name">{{ row.nameKey | translate }}</span>
+              <span class="context-drawer-module-status" [attr.data-status]="row.status">
+                <app-ui-icon [name]="$any(statusIcon(row.status))" size="sm"></app-ui-icon>
+              </span>
+              <app-ui-icon name="chevron-right" size="sm" class="context-drawer-row-arrow"></app-ui-icon>
+            </button>
+          </li>
+        </ul>
+      </section>
+
+      <section *ngIf="model.showSubscription && model.subscription" class="context-drawer-section">
+        <h3 class="context-drawer-section-title type-label">{{ 'overview.v2.drawer.subscription.heading' | translate }}</h3>
+        <dl class="context-drawer-subscription">
+          <div class="context-drawer-subscription-row">
+            <dt class="muted">{{ 'overview.v2.drawer.subscription.plan' | translate }}</dt>
+            <dd>{{ model.subscription.planName }}</dd>
+          </div>
+          <div class="context-drawer-subscription-row" *ngIf="model.subscription.expiresAt">
+            <dt class="muted">{{ 'overview.v2.drawer.subscription.expires' | translate }}</dt>
+            <dd>{{ formatExpiry(model.subscription.expiresAt) }}</dd>
+          </div>
+        </dl>
+        <div class="context-drawer-actions">
+          <button
+            *ngIf="model.subscription.showRenew"
+            type="button"
+            class="btn btn-primary btn-sm"
+            (click)="onNavigate(model.subscription.renewRoute)"
+          >
+            {{ 'overview.v2.drawer.subscription.renew' | translate }}
+          </button>
+          <button type="button" class="btn btn-ghost btn-sm" (click)="onNavigate(model.subscription.manageRoute)">
+            {{ 'overview.v2.drawer.subscription.manage' | translate }}
+          </button>
+        </div>
+      </section>
+
+      <section *ngIf="model.showSetup && model.setup" class="context-drawer-section">
+        <h3 class="context-drawer-section-title type-label">{{ 'overview.v2.drawer.setup.heading' | translate }}</h3>
+        <p class="context-drawer-setup-phase">{{ model.setup.phaseLabelKey | translate }}</p>
+        <p class="muted context-drawer-setup-remaining">
+          {{ 'overview.v2.drawer.setup.remaining' | translate: { count: model.setup.remainingSteps } }}
+        </p>
+        <div class="context-drawer-progress" aria-hidden="true">
+          <span class="context-drawer-progress-fill" [style.width.%]="model.setup.progressPercent"></span>
+        </div>
+        <button type="button" class="btn btn-ghost btn-sm" (click)="onNavigate(model.setup.resumeRoute)">
+          {{ 'overview.v2.drawer.setup.resume' | translate }}
+        </button>
+      </section>
+
+      <section class="context-drawer-section">
+        <h3 class="context-drawer-section-title type-label">{{ 'overview.v2.drawer.help.heading' | translate }}</h3>
+        <ul class="context-drawer-link-list">
+          <li *ngFor="let link of model.helpLinks">
+            <a
+              [href]="link.url"
+              class="context-drawer-link"
+              [attr.target]="link.external ? '_blank' : null"
+              [attr.rel]="link.external ? 'noopener noreferrer' : null"
+            >
+              <span>{{ link.labelKey | translate }}</span>
+              <app-ui-icon name="external" size="sm" *ngIf="link.external"></app-ui-icon>
+            </a>
+          </li>
+        </ul>
+      </section>
+
+      <section *ngIf="model.suggestions.length > 0" class="context-drawer-section">
+        <h3 class="context-drawer-section-title type-label">{{ 'overview.v2.drawer.suggestions.heading' | translate }}</h3>
+        <ul class="context-drawer-link-list">
+          <li *ngFor="let item of model.suggestions">
+            <button type="button" class="context-drawer-link context-drawer-suggestion" (click)="onSuggestionClick(item.route)">
+              <span>{{ item.titleKey | translate }}</span>
+              <app-ui-icon name="chevron-right" size="sm"></app-ui-icon>
+            </button>
+          </li>
+        </ul>
+      </section>
+    </div>
+  </aside>
+</div>

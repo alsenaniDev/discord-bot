@@ -24,7 +24,12 @@ type IconName =
   | 'bot'
   | 'check'
   | 'x'
-  | 'refresh';
+  | 'refresh'
+  | 'check-circle'
+  | 'alert-circle'
+  | 'clock'
+  | 'cloud-off'
+  | 'lock';
 
 @Component({
   selector: 'app-ui-icon',
@@ -68,6 +73,11 @@ type IconName =
         <g *ngSwitchCase="'check'"><polyline points="20 6 9 17 4 12"/></g>
         <g *ngSwitchCase="'x'"><path d="M18 6 6 18M6 6l12 12"/></g>
         <g *ngSwitchCase="'refresh'"><path d="M21 12a9 9 0 1 1-2.64-6.36"/><path d="M21 3v6h-6"/></g>
+        <g *ngSwitchCase="'check-circle'"><circle cx="12" cy="12" r="10"/><polyline points="9 12 11 14 15 10"/></g>
+        <g *ngSwitchCase="'alert-circle'"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></g>
+        <g *ngSwitchCase="'clock'"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></g>
+        <g *ngSwitchCase="'cloud-off'"><path d="m2 2 20 20"/><path d="M8.5 8.5a5 5 0 0 1 7 7"/><path d="M2 15a5 5 0 0 1 8.4-3.6"/><path d="M12 22a5 5 0 0 0 4.9-4"/></g>
+        <g *ngSwitchCase="'lock'"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></g>
       </ng-container>
     </svg>
   `,

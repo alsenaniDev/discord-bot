@@ -155,6 +155,74 @@ export interface RequestResourceSyncResponse {
   resourcesSyncedAt?: string | null;
 }
 
+export interface OverviewSubscriptionSummary {
+  planKey: string;
+  planName: string;
+  status: string;
+  expiresAt?: string | null;
+  isPaid: boolean;
+  isExpired: boolean;
+}
+
+export interface ActivationStep {
+  key: string;
+  phase: string;
+  completed: boolean;
+  weight: number;
+  actionRoute: string;
+}
+
+export interface ActivationProgress {
+  progressPercent: number;
+  isActivated: boolean;
+  currentStepKey?: string | null;
+  primaryCtaKey: string;
+  primaryActionRoute: string;
+  steps: ActivationStep[];
+}
+
+export interface HealthFactor {
+  key: string;
+  passed: boolean;
+  pointsEarned: number;
+  pointsPossible: number;
+  isWarning: boolean;
+}
+
+export interface CommunityHealth {
+  score: number;
+  level: 'Excellent' | 'Good' | 'NeedsAttention' | 'Critical';
+  factors: HealthFactor[];
+}
+
+export interface OverviewRecommendation {
+  id: string;
+  priority: 'High' | 'Medium' | 'Low';
+  route: string;
+  sortOrder: number;
+}
+
+export interface OverviewActivityItem {
+  type: string;
+  message: string;
+  occurredAt: string;
+}
+
+export interface GuildOverviewExperience {
+  subscription: OverviewSubscriptionSummary;
+  botOnline: boolean;
+  activation: ActivationProgress;
+  health: CommunityHealth;
+  recommendations: OverviewRecommendation[];
+  recentActivity: OverviewActivityItem[];
+}
+
+export interface QuickAction {
+  id: string;
+  route: string;
+  icon: string;
+}
+
 export interface GuildOverview {
   name: string;
   iconUrl?: string | null;
@@ -170,6 +238,7 @@ export interface GuildOverview {
   logsEnabled: boolean;
   ticketsEnabled: boolean;
   onboarding?: OnboardingChecklist;
+  experience?: GuildOverviewExperience;
 }
 
 export function isTextChannel(channel: DiscordChannel): boolean {

@@ -55,3 +55,46 @@ html[dir='rtl'] .onboarding-steps ol {
     inset-inline: var(--space-4);
   }
 }
+
+html[dir='rtl'] .tickets-filter-bar,
+html[dir='rtl'] .tickets-queue-card,
+html[dir='rtl'] .tickets-context-drawer-panel,
+html[dir='rtl'] .tickets-master-detail,
+html[dir='rtl'] .logs-filter-bar,
+html[dir='rtl'] .logs-entry-card,
+html[dir='rtl'] .logs-detail-panel-shell,
+html[dir='rtl'] .logs-master-detail,
+html[dir='rtl'] .moderation-filter-bar,
+html[dir='rtl'] .moderation-master-detail,
+html[dir='rtl'] .reaction-roles-filter-bar,
+html[dir='rtl'] .reaction-roles-master-detail,
+html[dir='rtl'] .rr-panel-card,
+html[dir='rtl'] .welcome-workspace,
+html[dir='rtl'] .auto-role-workspace,
+html[dir='rtl'] .staff-filter-bar,
+html[dir='rtl'] .staff-role-card,
+html[dir='rtl'] .staff-role-editor,
+html[dir='rtl'] .staff-editor-mode,
+html[dir='rtl'] .staff-detail-panel,
+html[dir='rtl'] .staff-master-detail,
+html[dir='rtl'] .welcome-toolbar,
+html[dir='rtl'] .auto-role-toolbar,
+html[dir='rtl'] .welcome-workspace-split,
+html[dir='rtl'] .auto-role-workspace-split,
+html[dir='rtl'] .welcome-workspace-editor,
+html[dir='rtl'] .auto-role-workspace-editor,
+html[dir='rtl'] .welcome-workspace-rail,
+html[dir='rtl'] .auto-role-workspace-rail,
+html[dir='rtl'] .welcome-editor,
+html[dir='rtl'] .auto-role-editor,
+html[dir='rtl'] .auto-role-preview,
+html[dir='rtl'] .auto-role-notes,
+html[dir='rtl'] .ws-discord-preview,
+html[dir='rtl'] .ws-feed-card {
+  direction: rtl;
+  text-align: start;
+}
+
+html[dir='rtl'] .staff-role-editor-back-icon {
+  transform: none;
+}

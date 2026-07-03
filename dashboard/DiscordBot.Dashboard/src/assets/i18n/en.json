@@ -58,7 +58,7 @@
     "staff": "Roles & permissions",
     "profile": "Server profile",
     "moderationSettings": "Moderation permissions",
-    "upgradeRequests": "Upgrade Requests",
+    "upgradeRequests": "Subscription Changes",
     "adminPlans": "Subscription plans",
     "breadcrumbHome": "Home"
   },
@@ -67,7 +67,7 @@
     "serversSubtitle": "Select a server to manage",
     "serversSignedIn": "Signed in as {{name}}",
     "overview": "Server overview",
-    "overviewSubtitle": "Summary of bot status and server activity",
+    "overviewSubtitle": "Community health, next steps, and recent activity",
     "settings": "Server settings",
     "settingsSubtitle": "Configure bot features for this server",
     "tickets": "Tickets",
@@ -90,8 +90,8 @@
     "adminGuildsSubtitle": "Manage customer servers and subscriptions",
     "adminUsers": "Dashboard users",
     "adminUsersSubtitle": "People who logged in via Discord",
-    "adminUpgradeRequests": "Upgrade requests",
-    "adminUpgradeRequestsSubtitle": "Review manual plan upgrade requests",
+    "adminUpgradeRequests": "Subscription changes",
+    "adminUpgradeRequestsSubtitle": "Review manual subscription change requests",
     "adminPlans": "Subscription plans",
     "adminPlansSubtitle": "Manage plan pricing, modules, and availability",
     "staff": "Roles & permissions",
@@ -100,6 +100,139 @@
     "profileSubtitle": "Public server info shown in Discord bot commands",
     "moderationSettings": "Moderation permissions",
     "moderationSettingsSubtitle": "Map Discord roles to bot moderation commands"
+  },
+  "workspaceHero": {
+    "overview": {
+      "ariaLabel": "Server overview",
+      "description": "Community health, activation progress, and what needs attention.",
+      "footer": {
+        "operational": "Everything is operating normally.",
+        "staffCalm": "No urgent actions for your role right now."
+      }
+    },
+    "subscription": {
+      "footer": "Premium includes all platform modules.",
+      "stats": {
+        "plan": "Current plan",
+        "expires": "Expires",
+        "requests": "Requests",
+        "payments": "Approved Requests"
+      }
+    },
+    "profile": {
+      "footer": "Changes are reflected immediately after saving.",
+      "stats": {
+        "links": "Links",
+        "fields": "Fields",
+        "completion": "Completion",
+        "visibility": "Visibility"
+      },
+      "visibilityConfigured": "Configured",
+      "visibilityIncomplete": "Incomplete",
+      "cta": {
+        "save": "Save changes"
+      }
+    },
+    "logs": {
+      "ariaLabel": "Activity logs overview",
+      "footer": "Filtered results reflect your current search.",
+      "storageValue": "Dashboard",
+      "retentionValue": "Server default",
+      "exportAvailable": "Available",
+      "exportLocked": "Admin only",
+      "stats": {
+        "entries": "Entries",
+        "storage": "Storage",
+        "retention": "Retention",
+        "export": "Export"
+      },
+      "cta": {
+        "clear": "Clear logs",
+        "configure": "Configure logs"
+      }
+    },
+    "tickets": {
+      "ariaLabel": "Tickets overview",
+      "footer": "Support requests opened in Discord appear here in real time.",
+      "stats": {
+        "open": "Open",
+        "closed": "Closed",
+        "total": "Total",
+        "page": "Page"
+      },
+      "cta": {
+        "review": "Review tickets"
+      }
+    },
+    "moderation": {
+      "ariaLabel": "Moderation overview",
+      "footer": "Warnings and cases reflect your current filters.",
+      "stats": {
+        "warnings": "Warnings",
+        "cases": "Cases",
+        "types": "Types",
+        "results": "Results"
+      },
+      "cta": {
+        "apply": "Apply filters",
+        "settings": "Moderation settings"
+      }
+    },
+    "settings": {
+      "ariaLabel": "Server settings overview",
+      "footer": "Save changes to apply them in Discord.",
+      "stats": {
+        "features": "Features",
+        "sections": "Sections",
+        "channels": "Channels",
+        "autoReplies": "Auto replies"
+      },
+      "cta": {
+        "save": "Save settings"
+      }
+    },
+    "staff": {
+      "ariaLabel": "Roles and permissions overview",
+      "footer": "Dashboard access is inherited from mapped Discord roles.",
+      "stats": {
+        "roles": "Roles",
+        "discordRoles": "Discord roles",
+        "permissions": "Permissions",
+        "grants": "Grants"
+      },
+      "cta": {
+        "add": "Add staff roles"
+      }
+    },
+    "moderationSettings": {
+      "ariaLabel": "Moderation permissions overview",
+      "footer": "Bot moderation commands use these Discord role mappings.",
+      "stats": {
+        "roles": "Roles",
+        "discordRoles": "Discord roles",
+        "permissions": "Permissions",
+        "grants": "Grants"
+      },
+      "cta": {
+        "add": "Add moderation role"
+      }
+    },
+    "reactionRoles": {
+      "ariaLabel": "Reaction roles overview",
+      "footer": "Create panels in Discord to let members self-assign roles.",
+      "stats": {
+        "panels": "Total panels",
+        "active": "Active panels",
+        "rolesAssigned": "Roles assigned",
+        "messagesLinked": "Messages linked",
+        "channels": "Channels",
+        "roles": "Roles"
+      },
+      "cta": {
+        "manage": "View panels",
+        "create": "Create panel"
+      }
+    }
   },
   "auth": {
     "loginTitle": "Discord Bot Dashboard",
@@ -146,21 +279,410 @@
   "overview": {
     "loading": "Loading server overview…",
     "loadError": "Could not load overview",
-    "subtitle": "Server dashboard overview",
+    "subtitle": "Your community command center",
     "syncDiscord": "Sync Discord Data",
     "syncing": "Syncing…",
+    "botOnline": "Bot online",
+    "botOffline": "Bot offline",
     "botStatus": "Bot Status",
     "channels": "Channels",
     "roles": "Roles",
-    "totalTickets": "Tickets",
-    "openTickets": "Open Tickets",
+    "totalTickets": "Total tickets",
+    "openTickets": "Open tickets",
     "lastSync": "Last Sync",
     "neverSynced": "Never synced",
     "statsHint": "Module status is loaded from the same data as the Modules page. Configure channels and roles in Settings for features to run in Discord.",
     "welcome": "Welcome module",
     "autoRole": "Auto Role module",
     "logs": "Logs module",
-    "ticketsModule": "Tickets module"
+    "ticketsModule": "Tickets module",
+    "activation": {
+      "title": "Activation progress",
+      "progressShort": "{{percent}}% activated",
+      "activatedBadge": "Activated",
+      "messages": {
+        "start": "Let's connect your Discord community and reach your first win.",
+        "inProgress": "You're making progress — keep going to activate your first module.",
+        "almostThere": "One step away from your first successful outcome.",
+        "activated": "Your community is activated. Explore recommendations below."
+      },
+      "steps": {
+        "addBot": "Add bot to Discord",
+        "linkGuild": "Link guild (/setup)",
+        "enableModule": "Enable a module",
+        "configureModule": "Configure your first module",
+        "firstValue": "Achieve first value",
+        "inviteStaff": "Invite staff roles",
+        "enableLogs": "Enable activity logs",
+        "reviewSubscription": "Review subscription"
+      },
+      "cta": {
+        "addBot": "Invite bot",
+        "linkGuild": "Complete setup",
+        "enableModule": "Enable modules",
+        "configureModule": "Open settings",
+        "firstValue": "Open tickets",
+        "inviteStaff": "Add staff roles",
+        "enableLogs": "Configure logs",
+        "reviewSubscription": "View subscription",
+        "exploreModules": "Explore modules"
+      }
+    },
+    "health": {
+      "title": "Community health",
+      "emptyTitle": "Health score unavailable",
+      "emptyDescription": "Complete activation steps to calculate your community health.",
+      "level": {
+        "excellent": "Excellent",
+        "good": "Good",
+        "needsAttention": "Needs attention",
+        "critical": "Critical"
+      },
+      "factor": {
+        "guildLinked": "Guild linked",
+        "botOnline": "Bot online",
+        "modulesEnabled": "Modules enabled",
+        "activationComplete": "Activation complete",
+        "ticketsConfigured": "Tickets configured",
+        "logsConfigured": "Logs configured",
+        "permissionsConfigured": "Staff permissions configured",
+        "subscriptionActive": "Paid subscription active",
+        "recentActivity": "Recent activity"
+      }
+    },
+    "recommendations": {
+      "title": "Recommended next steps",
+      "emptyTitle": "You're all caught up",
+      "emptyDescription": "No urgent recommendations right now. Explore modules or review settings.",
+      "emptyCta": "Browse modules",
+      "syncResources": {
+        "title": "Sync Discord resources",
+        "description": "Run /setup or sync so channels and roles are available in the dashboard.",
+        "cta": "Go to servers"
+      },
+      "enableModules": {
+        "title": "Enable your first module",
+        "description": "Turn on Welcome, Logs, or another module to start delivering value.",
+        "cta": "Open modules"
+      },
+      "configureWelcome": {
+        "title": "Configure Welcome",
+        "description": "Set a welcome channel and message for new members.",
+        "cta": "Open settings"
+      },
+      "createTicketPanel": {
+        "title": "Create a ticket panel",
+        "description": "Configure ticket category or run /ticket setup in Discord.",
+        "cta": "Configure tickets"
+      },
+      "openFirstTicket": {
+        "title": "Open your first ticket",
+        "description": "Test support flow by opening a ticket from Discord.",
+        "cta": "View tickets"
+      },
+      "enableLogs": {
+        "title": "Enable activity logs",
+        "description": "Pick a log channel to start your audit trail.",
+        "cta": "Configure logs"
+      },
+      "inviteStaff": {
+        "title": "Invite staff",
+        "description": "Map Discord roles so your team can help in the dashboard.",
+        "cta": "Add roles"
+      },
+      "createReactionPanel": {
+        "title": "Create a role panel",
+        "description": "Let members self-assign roles with button panels.",
+        "cta": "Reaction roles"
+      },
+      "renewSubscription": {
+        "title": "Renew subscription",
+        "description": "Your paid plan expires soon — submit a renewal change.",
+        "cta": "View billing"
+      },
+      "upgradeSubscription": {
+        "title": "Upgrade plan",
+        "description": "Unlock Tickets, Moderation, and more modules on a paid plan.",
+        "cta": "View plans"
+      }
+    },
+    "priority": {
+      "high": "High priority",
+      "medium": "Medium",
+      "low": "Low"
+    },
+    "quickActions": {
+      "title": "Quick actions",
+      "emptyTitle": "No quick actions available",
+      "emptyDescription": "You may not have permission to manage settings yet.",
+      "welcome": "Configure welcome",
+      "ticketPanel": "Ticket settings",
+      "moderation": "Moderation permissions",
+      "reactionRoles": "Reaction roles",
+      "billing": "Billing",
+      "logs": "Activity logs",
+      "modules": "Modules",
+      "tickets": "Tickets"
+    },
+    "activity": {
+      "title": "Recent activity",
+      "emptyTitle": "No recent activity",
+      "emptyDescription": "Events appear here when tickets open, modules enable, or logs record actions.",
+      "emptyCta": "View logs"
+    },
+    "stats": {
+      "title": "At a glance"
+    },
+    "v2": {
+      "status": {
+        "ariaLabel": "Server status",
+        "staffAccess": "Staff access",
+        "botOnline": "Online",
+        "botOffline": "Offline",
+        "syncing": "Syncing…",
+        "notSynced": "Not synced",
+        "syncedAgo": "Synced {{time}}",
+        "justNow": "just now",
+        "minutesAgo": "{{count}}m ago",
+        "hoursAgo": "{{count}}h ago",
+        "daysAgo": "{{count}}d ago"
+      },
+      "mission": {
+        "ariaLabel": "Mission control",
+        "loading": {
+          "title": "Loading mission",
+          "body": "Determining what needs your attention."
+        },
+        "error": {
+          "title": "Unable to load mission",
+          "body": "Other overview data may still be available below.",
+          "retry": "Retry"
+        },
+        "botOffline": {
+          "title": "Bot is disconnected",
+          "body": "Members won't receive bot features until it reconnects.",
+          "cta": "Open Discord"
+        },
+        "subscriptionExpired": {
+          "title": "Subscription expired",
+          "body": "Paid modules are locked until you renew.",
+          "cta": "Renew plan"
+        },
+        "paymentRejected": {
+          "title": "Subscription change declined",
+          "body": "Review the reason and update your payment reference.",
+          "cta": "View billing"
+        },
+        "syncStale": {
+          "title": "Server data is outdated",
+          "body": "Sync to refresh channels and roles in the dashboard.",
+          "cta": "Sync now"
+        },
+        "syncNever": {
+          "title": "Server not synced yet",
+          "body": "Sync once to load channels and roles for configuration.",
+          "cta": "Go to servers"
+        },
+        "ticketBacklogCritical": {
+          "title": "{{count}} open tickets need attention",
+          "body": "At least one ticket has waited too long.",
+          "cta": "Review tickets"
+        },
+        "ticketBacklog": {
+          "title": "{{count}} open tickets waiting",
+          "body": "Review support requests before they pile up.",
+          "cta": "Review tickets"
+        },
+        "subscriptionExpiring": {
+          "title": "Subscription expires in {{days}} days",
+          "body": "Renew to keep paid modules active.",
+          "cta": "Renew plan"
+        },
+        "setupConnect": {
+          "title": "Finish connecting your server",
+          "body": "Invite the bot and link this server to your account.",
+          "cta": "Start setup"
+        },
+        "setupConfigure": {
+          "title": "Configure your first module",
+          "body": "Enable welcome, tickets, or logs to deliver value.",
+          "cta": "Open settings"
+        },
+        "setupFirstWin": {
+          "title": "Get your first win",
+          "body": "Complete one outcome in Discord — open a ticket or send a welcome.",
+          "cta": "Continue setup"
+        },
+        "inviteStaff": {
+          "title": "Add staff to help manage",
+          "body": "Map permission roles so moderators can work without owner access.",
+          "cta": "Add staff roles"
+        },
+        "enableModule": {
+          "title": "Enable your first module",
+          "body": "Turn on tickets, welcome, or logs to start serving members.",
+          "cta": "Browse modules"
+        },
+        "createWelcome": {
+          "title": "Set up welcome messages",
+          "body": "New members won't get a greeting until welcome is configured.",
+          "cta": "Configure welcome"
+        },
+        "createTicketPanel": {
+          "title": "Create a ticket panel",
+          "body": "Tickets are enabled but members can't open one yet.",
+          "cta": "Set up tickets"
+        },
+        "createReactionPanel": {
+          "title": "Create a reaction role panel",
+          "body": "Let members self-assign roles from a panel in Discord.",
+          "cta": "Set up reaction roles"
+        },
+        "paymentRequired": {
+          "title": "Upgrade to unlock modules",
+          "body": "This module requires a paid plan.",
+          "cta": "View plans"
+        },
+        "reviewLogs": {
+          "title": "Logs are quiet",
+          "body": "No log events in 7 days — confirm logging is configured.",
+          "cta": "Check logs"
+        },
+        "allClear": {
+          "title": "Everything looks good",
+          "body": "No action required. Community health: {{score}}."
+        },
+        "staffCalm": {
+          "title": "No urgent actions for your role",
+          "body": "Check recent activity below for ticket updates."
+        }
+      },
+      "progress": {
+        "ariaLabel": "Setup progress",
+        "connect": "Connect",
+        "configure": "Configure",
+        "firstWin": "First win"
+      },
+      "dismiss": {
+        "label": "Snooze for 7 days",
+        "snoozed": "Reminder snoozed for 7 days"
+      },
+      "pulse": {
+        "ariaLabel": "Community pulse",
+        "loading": "Loading",
+        "health": "Health",
+        "healthValue": "{{score}} · {{level}}",
+        "channels": "Channels",
+        "openTickets": "Open tickets",
+        "logsToday": "Logs today",
+        "bot": "Bot",
+        "modules": "Modules",
+        "modulesActive": "{{enabled}} of {{total}} active",
+        "countValue": "{{count}}",
+        "recentActivity": "Recent activity",
+        "roles": "Roles",
+        "setup": "Setup",
+        "setupPhase": {
+          "connect": "Connect",
+          "configure": "Configure",
+          "firstWin": "First win"
+        }
+      },
+      "activity": {
+        "ariaLabel": "Recent activity",
+        "title": "Recent activity",
+        "viewAll": "View all activity",
+        "today": "Today",
+        "yesterday": "Yesterday",
+        "earlier": "Earlier",
+        "empty": "Everything is quiet. Activity will appear here as your community grows.",
+        "emptyCta": "View all activity",
+        "error": "We couldn't load recent activity right now.",
+        "retry": "Try again",
+        "rowAriaLink": "{{message}}, {{time}}",
+        "rowAriaStatic": "{{message}}, {{time}}",
+        "time": {
+          "justNow": "Just now",
+          "minuteAgo": "1 min ago",
+          "minutesAgoDual": "2 min ago",
+          "minutesAgo": "{{count}} min ago",
+          "hourAgo": "1 hour ago",
+          "hoursAgo": "{{count}} hours ago",
+          "yesterday": "Yesterday",
+          "dayAgo": "1 day ago",
+          "daysAgo": "{{count}} days ago"
+        },
+        "ticketCreated": "Ticket #{{number}} opened",
+        "ticketClosed": "Ticket #{{number}} closed",
+        "ticketReply": "New reply on ticket #{{number}}",
+        "moduleEnabled": "{{moduleName}} enabled",
+        "moduleDisabled": "{{moduleName}} disabled",
+        "logEntryGeneric": "New log event recorded",
+        "memberWarned": "Member warned",
+        "staffAdded": "Staff member added",
+        "subscriptionChange": "Subscription updated",
+        "unknown": "Activity recorded",
+        "moduleNames": {
+          "welcome": "Welcome",
+          "logs": "Logs",
+          "reaction-roles": "Reaction Roles",
+          "tickets": "Tickets",
+          "moderation": "Moderation",
+          "auto-role": "Auto Role"
+        }
+      },
+      "drawer": {
+        "ariaLabel": "Context details",
+        "toggle": "Show details",
+        "toggleHide": "Hide details",
+        "sections": {
+          "modules": "Modules",
+          "subscription": "Subscription",
+          "setup": "Setup",
+          "help": "Help",
+          "suggestions": "Suggestions"
+        },
+        "modules": {
+          "heading": "Modules",
+          "status": {
+            "enabled": "Active",
+            "warning": "Needs attention",
+            "disabled": "Off"
+          }
+        },
+        "subscription": {
+          "heading": "Subscription",
+          "plan": "Current plan",
+          "expires": "Expires",
+          "renew": "Renew",
+          "manage": "Manage subscription"
+        },
+        "setup": {
+          "heading": "Setup",
+          "remaining": "{{count}} steps remaining",
+          "resume": "Resume setup"
+        },
+        "help": {
+          "heading": "Help",
+          "docs": "Documentation",
+          "support": "Discord support",
+          "status": "Status page",
+          "releaseNotes": "Release notes"
+        },
+        "suggestions": {
+          "heading": "Suggestions"
+        },
+        "moduleNames": {
+          "welcome": "Welcome",
+          "logs": "Logs",
+          "reactionRoles": "Reaction Roles",
+          "tickets": "Tickets",
+          "moderation": "Moderation",
+          "autoRole": "Auto Role",
+          "unknown": "Module"
+        }
+      }
+    }
   },
   "settings": {
     "loading": "Loading settings…",
@@ -307,6 +829,22 @@
       "status": "Status",
       "all": "All tickets"
     },
+    "workspace": {
+      "filterAria": "Filter ticket queue",
+      "filterAll": "All",
+      "filterOpen": "Open",
+      "filterClosed": "Closed",
+      "results": "{{count}} tickets",
+      "queueAria": "Ticket queue",
+      "selectTicket": "Open ticket #{{number}}",
+      "drawerAria": "Ticket details",
+      "closeDrawer": "Close ticket panel",
+      "emptyFilteredTitle": "No tickets match this filter",
+      "emptyFilteredBody": "Try another status or show all tickets.",
+      "clearFilter": "Show all tickets",
+      "selectPromptTitle": "Select a ticket",
+      "selectPromptBody": "Choose a ticket from the queue to view its conversation here."
+    },
     "pagination": {
       "total": "{{count}} tickets",
       "prev": "Previous",
@@ -386,13 +924,67 @@
     "moderator": "Moderator",
     "reason": "Reason",
     "date": "Date",
-    "details": "Details"
+    "details": "Details",
+    "workspace": {
+      "notice": "Review warnings and enforcement actions in one feed. Configure permissions and channels in Moderation Settings.",
+      "footer": "Counts reflect loaded results for the current server filters.",
+      "filterAria": "Moderation filters",
+      "feedAria": "Moderation activity feed",
+      "feedTitle": "Moderation feed",
+      "feedLead": "Select an action to inspect full case details.",
+      "detailAria": "Moderation action details",
+      "closeDetail": "Close action details",
+      "selectEntry": "View {{action}} for {{member}}",
+      "results": "{{count}} actions",
+      "clearFilters": "Clear filters",
+      "search": "Search",
+      "searchPlaceholder": "Search reason or member…",
+      "moderator": "Moderator",
+      "emptyTitle": "No moderation actions yet",
+      "emptyBody": "Warnings and enforcement actions will appear here when staff take action.",
+      "emptyFilteredTitle": "No actions match these filters",
+      "emptyFilteredBody": "Try a different action type, member, moderator, or date range.",
+      "selectPromptTitle": "Select an action",
+      "selectPromptBody": "Choose an entry from the feed to view full details here.",
+      "permissionTitle": "Moderation access required",
+      "permissionBody": "You do not have permission to view moderation activity for this server.",
+      "advancedDetails": "Advanced details",
+      "entryId": "Entry ID",
+      "targetId": "Target Discord ID",
+      "moderatorId": "Moderator Discord ID",
+      "channelId": "Channel ID",
+      "messageCount": "Messages cleared",
+      "messageCountValue": "{{count}} messages",
+      "cta": {
+        "settings": "Moderation settings"
+      },
+      "stats": {
+        "active": "Active actions",
+        "warningsToday": "Warnings today",
+        "timeoutsToday": "Timeouts today",
+        "bansToday": "Bans today"
+      },
+      "actions": {
+        "warning": "Warning",
+        "timeout": "Timeout",
+        "kick": "Kick",
+        "ban": "Ban",
+        "unban": "Unban",
+        "mute": "Mute"
+      },
+      "detail": {
+        "user": "User",
+        "action": "Action",
+        "evidence": "Evidence",
+        "duration": "Duration"
+      }
+    }
   },
   "modules": {
     "loading": "Loading modules…",
     "loadError": "Could not load modules",
     "title": "Bot modules",
-    "subtitle": "Enable or disable features for this server. Plan limits still apply. After enabling a module, configure it in Settings (channels, roles, categories).",
+    "subtitle": "Turn capabilities on or off for this server. Plan limits still apply. After enabling a module, configure channels and roles in Settings.",
     "notInPlan": "Not included in your current plan",
     "lockedByPlan": "Locked by plan",
     "upgradePlan": "Upgrade your plan to enable this module.",
@@ -400,19 +992,159 @@
     "disabledLabel": "Disabled",
     "moduleEnabled": "{{name}} enabled.",
     "moduleDisabled": "{{name}} disabled.",
-    "updateError": "Could not update module."
+    "updateError": "Could not update module.",
+    "hero": {
+      "ariaLabel": "Modules overview",
+      "eyebrow": "Capabilities",
+      "description": "See what is active, what your plan includes, and what to configure next.",
+      "currentPlan": "Current plan",
+      "planUnknown": "Your plan",
+      "manageAria": "Manage subscription",
+      "stats": {
+        "active": "Active",
+        "locked": "Locked",
+        "available": "On your plan",
+        "total": "Total"
+      },
+      "planAccess": "{{plan}} includes {{available}} of {{total}} modules.",
+      "planAccessUnknown": "Your plan includes {{available}} of {{total}} modules.",
+      "footer": {
+        "allAvailable": "{{plan}} includes access to all modules on this server.",
+        "upgradeRequired": "{{count}} module(s) require a plan upgrade to unlock."
+      },
+      "cta": {
+        "upgrade": "Upgrade plan",
+        "review": "Review modules",
+        "upgradeHint": "{{count}} module(s) require a plan upgrade."
+      }
+    },
+    "categories": {
+      "community": {
+        "title": "Community",
+        "lead": "Onboarding and first impressions for new members."
+      },
+      "support": {
+        "title": "Support",
+        "lead": "Help members reach your team when they need assistance."
+      },
+      "moderation": {
+        "title": "Moderation",
+        "lead": "Keep your server safe with staff moderation tools."
+      },
+      "automation": {
+        "title": "Automation",
+        "lead": "Reduce manual work when members join or interact."
+      },
+      "engagement": {
+        "title": "Engagement",
+        "lead": "Let members choose roles and participate in your community."
+      },
+      "logs": {
+        "title": "Logs",
+        "lead": "Track important server activity in a dedicated channel."
+      }
+    },
+    "moduleNames": {
+      "welcome": {
+        "name": "Welcome",
+        "description": "Send welcome messages when members join."
+      },
+      "tickets": {
+        "name": "Tickets",
+        "description": "Support ticket commands and tracking."
+      },
+      "moderation": {
+        "name": "Moderation",
+        "description": "Warn, kick, clear, and moderation cases."
+      },
+      "logs": {
+        "name": "Logs",
+        "description": "Send server event logs to a channel."
+      },
+      "auto-role": {
+        "name": "Auto Role",
+        "description": "Automatically assign a role when members join."
+      },
+      "reaction-roles": {
+        "name": "Reaction Roles",
+        "description": "Button-based role assignment panels."
+      }
+    },
+    "status": {
+      "enabled": "Enabled",
+      "disabled": "Not enabled",
+      "locked": "Locked",
+      "needsSetup": "Needs setup"
+    },
+    "actions": {
+      "configure": "Customize",
+      "enable": "Enable",
+      "upgrade": "Upgrade plan"
+    },
+    "card": {
+      "planLocked": "Plan required",
+      "lockedBody": "This module is not included on your current plan.",
+      "configureHint": "Module is on. Finish setup in Settings before members use it.",
+      "needsSetupBody": "Module is on. Finish setup in Settings before members use it.",
+      "toggleAria": "Toggle {{name}}",
+      "enabledMeta": "Ready to configure in Settings.",
+      "disabledMeta": "Turn this module on to start using it.",
+      "lockedMeta": "Available on a higher plan."
+    }
   },
   "subscription": {
     "loading": "Loading subscription…",
     "loadError": "Could not load subscription",
+    "betaBillingNotice": "Manual billing is active during Closed Beta. After you submit a subscription change, pay off-platform using the instructions shown, then enter your payment reference so our team can verify and activate your plan.",
     "currentPlan": "Current plan",
     "includedModules": "Included modules:",
+    "renewButton": "Renew plan",
+    "activatedTitle": "Subscription active",
+    "activatedBody": "{{plan}} is active until {{expiry}}. Activated on {{activated}}.",
+    "changeProgressTitle": "Subscription change progress",
+    "requestExpiresHint": "Complete payment before {{date}} or this request will expire.",
+    "paymentTitle": "Submit payment reference",
+    "paymentInstructions": "Transfer the estimated total using your bank or payment method. Then enter the reference number or transaction ID below so we can match your payment.",
+    "paymentReferenceLabel": "Payment reference",
+    "paymentReferencePlaceholder": "e.g. bank transfer reference or transaction ID",
+    "paymentReferenceHint": "No file upload is required for beta manual billing.",
+    "submitPaymentReference": "Submit payment reference",
+    "submittingPayment": "Submitting…",
+    "paymentSubmittedSuccess": "Payment reference submitted. Our team will review it shortly.",
+    "paymentSubmittedError": "Could not submit payment reference.",
+    "paymentSubmittedAt": "Submitted on {{date}}.",
+    "waitingReviewTitle": "Waiting for review",
+    "waitingReviewBody": "Your payment reference is with our team. You will see your plan update here once it is approved and activated.",
+    "cancelChangeButton": "Cancel request",
+    "cancelChangeTitle": "Cancel subscription change?",
+    "cancelChangeBody": "This releases your in-progress request. You can start a new upgrade or renewal when ready.",
+    "confirmCancelChange": "Cancel request",
+    "cancellingChange": "Cancelling…",
+    "changeCancelledSuccess": "Subscription change cancelled.",
+    "changeCancelledError": "Could not cancel subscription change.",
+    "changeTypeLabel": "Type",
+    "changeType": {
+      "upgrade": "Upgrade",
+      "renewal": "Renewal"
+    },
+    "stepper": {
+      "request": "Request submitted",
+      "payment": "Pay off-platform",
+      "proof": "Payment reference submitted",
+      "review": "Under review",
+      "active": "Activated"
+    },
+    "requestChangeTitle": "Request a subscription change",
+    "requestChangeHint": "Choose a paid plan and duration. After payment verification, your subscription will be activated.",
+    "requestChangeButton": "Submit subscription change",
+    "renewalRequested": "Renewal request submitted for {{name}} ({{months}} month(s)).",
+    "changeRequestError": "Could not submit subscription change.",
     "devNote": "Plan upgrades require admin approval after payment confirmation.",
     "availablePlans": "Available plans",
     "modules": "Modules:",
     "requestUpgrade": "Request upgrade to {{name}}",
-    "requesting": "Requesting…",
-    "upgradeRequested": "Upgrade request submitted for {{name}}.",
+    "requesting": "Submitting…",
+    "upgradeRequested": "Subscription change submitted for {{name}} ({{months}} month(s)).",
     "upgradeRequestError": "Could not submit upgrade request.",
     "pendingRequestTitle": "Pending upgrade request",
     "pendingRequestBody": "You requested {{plan}} for {{months}} month(s) ({{status}}).",
@@ -435,13 +1167,20 @@
       "expired": "Expired",
       "cancelled": "Cancelled"
     },
-    "requestHistory": "Request history",
+    "requestHistory": "Change history",
     "requestedPlan": "Requested plan",
     "adminNote": "Admin note",
     "requestStatus": {
-      "pending": "Pending",
+      "requested": "Requested",
+      "pendingpayment": "Pending payment",
+      "paymentsubmitted": "Payment submitted",
+      "underreview": "Under review",
       "approved": "Approved",
-      "rejected": "Rejected"
+      "activated": "Activated",
+      "rejected": "Rejected",
+      "cancelled": "Cancelled",
+      "expired": "Expired",
+      "pending": "Pending payment"
     },
     "allModules": "All modules",
     "moduleNames": {
@@ -451,6 +1190,112 @@
       "tickets": "Tickets",
       "moderation": "Moderation",
       "auto-role": "Auto Role"
+    },
+    "hero": {
+      "ariaLabel": "Subscription overview",
+      "expiryLabel": "Expires {{date}}",
+      "titles": {
+        "plan": "{{plan}}",
+        "activeChange": "Change in progress",
+        "expired": "Subscription expired"
+      },
+      "descriptions": {
+        "default": "Manage your plan, billing, and included modules from this page.",
+        "activeChange": "Your {{changePlan}} request is in progress. Complete the steps below.",
+        "expired": "Paid modules are locked. Request a renewal to restore access.",
+        "waiting": "We are processing your subscription change."
+      },
+      "badges": {
+        "unknown": "Unknown",
+        "expired": "Expired",
+        "request": {
+          "requested": "Request submitted",
+          "pendingpayment": "Payment due",
+          "paymentsubmitted": "Payment submitted",
+          "underreview": "Under review",
+          "approved": "Approved"
+        }
+      },
+      "cta": {
+        "payment": "Complete payment",
+        "renew": "Renew plan",
+        "request": "Request change",
+        "modules": "Go to modules"
+      }
+    },
+    "trust": {
+      "ariaLabel": "Billing support information",
+      "reviewSla": "Manual payment reviews typically take {{days}}.",
+      "support": "Contact support",
+      "status": "Platform status"
+    },
+    "paymentPanel": {
+      "ariaLabel": "Payment instructions",
+      "title": "How to pay",
+      "intro": "Complete your bank transfer using the details below, then submit your payment reference.",
+      "step1": "Transfer exactly {{amount}} to the account below.",
+      "step2": "Use the payment reference so we can match your transfer.",
+      "step3": "Return here and submit your bank reference or transaction ID.",
+      "bankName": "Bank",
+      "accountName": "Account name",
+      "iban": "IBAN",
+      "reference": "Payment reference",
+      "amount": "Amount",
+      "copy": "Copy",
+      "copied": "{{field}} copied",
+      "copyFailed": "Could not copy to clipboard",
+      "verifyMessage": "Our team verifies every payment manually before activating your plan."
+    },
+    "states": {
+      "changeSummary": "{{type}} · {{plan}} · {{duration}}",
+      "tryAgain": "Start new request",
+      "requested": {
+        "title": "Request submitted",
+        "body": "Your subscription change was created. Payment instructions are ready."
+      },
+      "pendingPayment": {
+        "title": "Complete your payment",
+        "body": "Transfer the estimated total, then submit your payment reference below."
+      },
+      "paymentSubmitted": {
+        "title": "Payment proof received",
+        "body": "We received your reference and will verify it shortly."
+      },
+      "underReview": {
+        "title": "Payment under review",
+        "body": "A platform administrator is verifying your payment. Reviews typically take 1–2 business days during beta."
+      },
+      "approved": {
+        "title": "Upgrade approved",
+        "body": "Your subscription is being activated."
+      },
+      "rejected": {
+        "title": "Request declined",
+        "body": "This change was not approved. Your current plan is unchanged."
+      },
+      "cancelled": {
+        "title": "Request cancelled",
+        "body": "This subscription change was cancelled. No charges were applied."
+      },
+      "expired": {
+        "title": "Request expired",
+        "body": "Payment was not completed before the deadline. Submit a new request when ready."
+      }
+    },
+    "empty": {
+      "noHistoryTitle": "No change history yet",
+      "noHistoryDescription": "When you submit a subscription change, it will appear here.",
+      "noPlansTitle": "No paid plans available",
+      "noPlansDescription": "Contact support for beta billing access."
+    },
+    "plansCompare": {
+      "title": "Compare plans"
+    },
+    "confirm": {
+      "title": "Confirm subscription change",
+      "body": "You are requesting {{plan}} for {{duration}}. Estimated total: {{total}}.",
+      "betaNote": "Manual billing applies during Closed Beta. You will pay off-platform before activation.",
+      "submit": "Submit request"
     }
   },
   "logs": {
@@ -476,6 +1321,63 @@
     "actor": "Actor",
     "target": "Target",
     "channel": "Channel",
+    "workspace": {
+      "notice": "Activity is stored in the dashboard. Enable Discord delivery in Settings → Logs.",
+      "footer": "Counts reflect the current filter results.",
+      "filterAria": "Log filters",
+      "listAria": "Activity log entries",
+      "listLead": "Select an entry to inspect full details.",
+      "detailAria": "Log entry details",
+      "closeDetail": "Close log details",
+      "selectEntry": "View log entry: {{type}}",
+      "results": "{{count}} entries",
+      "clearFilters": "Clear filters",
+      "emptyTitle": "No activity yet",
+      "emptyBody": "Server events will appear here as members interact and modules run.",
+      "emptyFilteredTitle": "No logs match these filters",
+      "emptyFilteredBody": "Try a different event type, date range, or search term.",
+      "selectPromptTitle": "Select a log entry",
+      "selectPromptBody": "Choose an event from the list to view its full details here.",
+      "permissionTitle": "Logs access required",
+      "permissionBody": "You do not have permission to view activity logs for this server.",
+      "eventType": "Event type",
+      "advancedDetails": "Advanced details",
+      "entryId": "Entry ID",
+      "actorId": "Actor Discord ID",
+      "targetId": "Target Discord ID",
+      "channelId": "Channel ID",
+      "noMetadata": "No additional metadata for this entry.",
+      "cta": {
+        "configure": "Configure logs"
+      },
+      "stats": {
+        "total": "Total",
+        "today": "Today",
+        "warnings": "Warnings",
+        "errors": "Errors",
+        "discordDelivery": "Discord delivery"
+      },
+      "delivery": {
+        "configured": "Configured",
+        "incomplete": "Incomplete",
+        "disabled": "Disabled"
+      },
+      "severity": {
+        "success": "Success",
+        "warning": "Warning",
+        "danger": "Critical",
+        "info": "Info",
+        "neutral": "Neutral",
+        "brand": "Brand",
+        "premium": "Premium",
+        "locked": "Locked",
+        "enabled": "Enabled",
+        "disabled": "Disabled",
+        "open": "Open",
+        "closed": "Closed",
+        "muted": "Muted"
+      }
+    },
     "eventTypes": {
       "memberJoined": "Member joined",
       "welcomeSent": "Welcome sent",
@@ -509,7 +1411,296 @@
     "deactivating": "Deactivating…",
     "deactivated": "Panel deactivated.",
     "deactivateError": "Could not deactivate reaction role.",
-    "deactivatedWithTitle": "\"{{title}}\" deactivated."
+    "deactivatedWithTitle": "\"{{title}}\" deactivated.",
+    "workspace": {
+      "notice": "Panels are created in Discord with /reaction-role create. Manage and preview linked messages here.",
+      "filterAria": "Reaction role panel filters",
+      "listAria": "Reaction role panels",
+      "listLead": "Select a panel to preview its message and roles.",
+      "detailAria": "Reaction role panel details",
+      "closeDetail": "Close panel details",
+      "selectPanel": "View panel {{title}}",
+      "search": "Search",
+      "searchPlaceholder": "Search panels, channels, or roles…",
+      "statusFilter": "Status filter",
+      "status": {
+        "all": "All",
+        "active": "Active",
+        "inactive": "Inactive"
+      },
+      "channelFilter": "Channel",
+      "allChannels": "All channels",
+      "results": "{{count}} panels",
+      "clearFilters": "Clear filters",
+      "configure": "Configure",
+      "copyLink": "Copy link",
+      "openDiscord": "Open in Discord",
+      "copySuccess": "Link copied to clipboard.",
+      "copyError": "Could not copy link.",
+      "edit": "Edit in Discord",
+      "editHint": "Edit reaction role panels in Discord using /reaction-role commands.",
+      "messagePreview": "Message preview",
+      "rolesIncluded": "Roles included",
+      "targetChannel": "Target channel",
+      "messageLinked": "Message linked",
+      "messageMissing": "No linked message",
+      "roleCount": "{{count}} role",
+      "advancedDetails": "Advanced details",
+      "messageId": "Message ID",
+      "channelId": "Channel ID",
+      "buttonId": "Button custom ID",
+      "emptyTitle": "No panels yet",
+      "emptyBody": "Create your first reaction role panel in Discord with /reaction-role create.",
+      "emptyFilteredTitle": "No panels match these filters",
+      "emptyFilteredBody": "Try a different search, status, or channel filter.",
+      "selectPromptTitle": "Select a panel",
+      "selectPromptBody": "Choose a panel from the list to preview its setup here.",
+      "permissionTitle": "Reaction roles access required",
+      "permissionBody": "You do not have permission to manage reaction role panels for this server.",
+      "noLinkedMessageTitle": "No linked message",
+      "noLinkedMessageBody": "This panel does not have a linked Discord message yet."
+    }
+  },
+  "autoRole": {
+    "workspace": {
+      "title": "Auto Role Workspace",
+      "subtitle": "Automatically assign a role when someone joins your server.",
+      "notice": "Configure who gets which role on join. Save when you are ready to publish.",
+      "hero": {
+        "ariaLabel": "Auto role automation overview"
+      },
+      "cta": {
+        "save": "Save changes"
+      },
+      "stats": {
+        "enabled": "Auto role",
+        "role": "Selected role",
+        "noRole": "None selected",
+        "newMembers": "New members",
+        "newMembersValue": "Every join",
+        "botPermission": "Bot permission",
+        "permissionReady": "Ready to assign",
+        "permissionManaged": "Managed role blocked",
+        "permissionHierarchy": "Role too high",
+        "permissionUnknown": "Check in Discord"
+      },
+      "footer": {
+        "disabled": "Enable auto role to assign a role when members join.",
+        "noRole": "Choose a role to complete your automation rule.",
+        "blocked": "Fix role selection or bot hierarchy before members join.",
+        "unknown": "Sync Discord roles if permission status looks unclear.",
+        "ready": "Your auto role rule is ready to save."
+      },
+      "toolbar": {
+        "ariaLabel": "Auto role toolbar",
+        "noRole": "No role selected",
+        "hint": "Preview simulates what happens when a member joins."
+      },
+      "sections": {
+        "basic": {
+          "title": "Basic",
+          "lead": "Turn auto role on and choose which role to assign."
+        },
+        "behavior": {
+          "title": "Assignment behavior",
+          "lead": "How the bot applies the role when someone joins."
+        },
+        "safety": {
+          "title": "Safety & permissions",
+          "lead": "Make sure the bot can assign the role in Discord."
+        }
+      },
+      "fields": {
+        "roleHint": "Only assignable roles from your synced Discord server are listed."
+      },
+      "behavior": {
+        "newMembers": {
+          "title": "Applies to new members",
+          "body": "When someone joins the server, the bot attempts to add the selected role."
+        },
+        "timing": {
+          "title": "Immediate assignment",
+          "body": "Roles are assigned as soon as the member joins. Delay options are not available yet."
+        },
+        "existing": {
+          "title": "Existing members unchanged",
+          "body": "Members who joined before you enabled auto role keep their current roles."
+        }
+      },
+      "safety": {
+        "readyTitle": "Bot can assign this role",
+        "readyBody": "Based on synced role order, the bot role is high enough to assign the selected role.",
+        "managedTitle": "Managed roles cannot be assigned",
+        "managedBody": "Integration and bot-managed roles are blocked from auto role assignment.",
+        "hierarchyTitle": "Bot role is too low",
+        "hierarchyBody": "Move the bot role above the target role in Discord server settings, then sync roles.",
+        "unknownTitle": "Permission status unavailable",
+        "unknownBody": "Sync Discord data or verify the bot has Manage Roles in your server.",
+        "hierarchyExplainTitle": "Role hierarchy",
+        "hierarchyExplainBody": "Discord only allows bots to assign roles that sit below the bot's highest role in the role list."
+      },
+      "preview": {
+        "ariaLabel": "Assignment preview",
+        "title": "Assignment preview",
+        "lead": "Simulated join flow — updates as you edit the rule.",
+        "inactiveTitle": "Auto role is off",
+        "inactiveBody": "Enable auto role to preview what happens when someone joins.",
+        "emptyTitle": "No role selected",
+        "emptyBody": "Choose a role to preview the assignment flow.",
+        "blockedFootnote": "The bot cannot complete this assignment until the role or hierarchy issue is fixed.",
+        "steps": {
+          "join": {
+            "title": "New member joins",
+            "body": "{{server}} welcomes a new member."
+          },
+          "check": {
+            "title": "Bot checks rule",
+            "body": "The bot confirms auto role is enabled and a role is configured."
+          },
+          "assign": {
+            "title": "Role assigned",
+            "body": "The bot adds {{role}} to the new member."
+          },
+          "assignBlocked": {
+            "title": "Assignment blocked",
+            "body": "The bot cannot add {{role}} because of role permissions or hierarchy."
+          },
+          "complete": {
+            "title": "Member receives permissions",
+            "body": "{{role}} channel and module access applies immediately."
+          }
+        }
+      },
+      "empty": {
+        "disabledTitle": "Auto role is off",
+        "disabledBody": "Enable auto role to greet new members with the right permissions.",
+        "noRoleTitle": "No role selected",
+        "noRoleBody": "Pick a role from the list to finish your automation rule."
+      },
+      "notes": {
+        "ariaLabel": "Auto role activity and notes",
+        "title": "Activity & notes",
+        "lead": "Helpful context while you configure auto role.",
+        "items": {
+          "audit": "Successful assignments appear in Activity Logs as Auto Role Assigned events.",
+          "sync": "If roles look outdated, sync Discord data from the General tab.",
+          "welcome": "Auto role works alongside Welcome messages — configure both for a complete join experience."
+        },
+        "viewLogs": "View activity logs"
+      },
+      "sample": {
+        "server": "Your Server"
+      }
+    }
+  },
+  "welcome": {
+    "workspace": {
+      "title": "Welcome Message Studio",
+      "subtitle": "Design the message new members see when they join your server.",
+      "notice": "Changes preview instantly. Save when you are ready to publish.",
+      "hero": {
+        "ariaLabel": "Welcome message studio overview"
+      },
+      "cta": {
+        "save": "Save changes"
+      },
+      "stats": {
+        "enabled": "Welcome enabled",
+        "previewReady": "Preview ready",
+        "readyValue": "Ready",
+        "notReadyValue": "Not ready",
+        "variablesUsed": "Variables used",
+        "testStatus": "Test status",
+        "testReady": "Preview ready",
+        "testPending": "Needs setup"
+      },
+      "footer": {
+        "disabled": "Enable welcome messages to greet new members.",
+        "incomplete": "Choose a channel and write a message to finish setup.",
+        "ready": "Your welcome message is ready to save."
+      },
+      "toolbar": {
+        "ariaLabel": "Welcome studio toolbar",
+        "noChannel": "No channel selected",
+        "hint": "Preview updates as you type — no save required."
+      },
+      "sections": {
+        "basic": {
+          "title": "Basic",
+          "lead": "Turn welcome messages on and choose where they are sent."
+        },
+        "message": {
+          "title": "Message",
+          "lead": "Write what new members read in the Discord embed."
+        },
+        "appearance": {
+          "title": "Appearance",
+          "lead": "These styling details are applied automatically by the bot."
+        },
+        "advanced": {
+          "title": "Advanced",
+          "lead": "Mentions and extras supported by the welcome template."
+        }
+      },
+      "fields": {
+        "title": "Title",
+        "titleValue": "New member name",
+        "titleHint": "Shown as the embed author when someone joins.",
+        "description": "Description",
+        "embedColor": "Embed color",
+        "embedColorValue": "Bot success green",
+        "thumbnail": "Author avatar",
+        "thumbnailValue": "Uses the joining member's avatar",
+        "footer": "Footer",
+        "footerValue": "Welcome to {{server}}",
+        "mentionMember": "Mention member",
+        "mentionMemberHint": "Include {user} or {mention} in your message to ping the new member.",
+        "mentionRole": "Mention role",
+        "mentionRoleHint": "Role mentions are not supported in welcome messages yet."
+      },
+      "preview": {
+        "ariaLabel": "Discord welcome preview",
+        "title": "Live preview",
+        "lead": "Approximate Discord rendering — updates instantly while you edit.",
+        "botBadge": "BOT",
+        "timestamp": "Today at 12:00",
+        "embedTitle": "Welcome",
+        "footerTemplate": "Welcome to {{server}}",
+        "ready": "Preview ready"
+      },
+      "variables": {
+        "ariaLabel": "Welcome message variables",
+        "title": "Variables",
+        "lead": "Click a chip to insert into the message field.",
+        "insert": "Insert {{variable}}",
+        "used": "{{count}} variables in use"
+      },
+      "test": {
+        "ariaLabel": "Send test welcome",
+        "title": "Test welcome",
+        "lead": "Review your setup before members join.",
+        "channel": "Channel",
+        "member": "Target member",
+        "noChannel": "No channel selected",
+        "memberPlaceholder": "Select a member (coming soon)",
+        "send": "Send test welcome",
+        "hint": "Live test sends are not available in the dashboard yet. Use the preview above or join with a test account.",
+        "notReadyTitle": "Setup incomplete",
+        "notReadyBody": "Enable welcome, choose a channel, and write a message before testing."
+      },
+      "sample": {
+        "server": "Your Server",
+        "member": "NewMember"
+      },
+      "empty": {
+        "disabledTitle": "Welcome is off",
+        "disabledBody": "Enable welcome messages to preview what new members will see.",
+        "noChannelTitle": "No channel selected",
+        "noChannelBody": "Choose a welcome channel so the bot knows where to post.",
+        "noMessageTitle": "No message yet",
+        "noMessageBody": "Write a welcome message to preview the embed description."
+      }
+    }
   },
   "admin": {
     "statsLoading": "Loading platform stats…",
@@ -540,19 +1731,53 @@
     "lastLogin": "Last login",
     "guildPlanChanged": "{{guild}} moved to {{plan}}.",
     "planChangeError": "Could not change plan.",
-    "upgradeRequestsLoading": "Loading upgrade requests…",
-    "upgradeRequestsError": "Could not load upgrade requests",
-    "noUpgradeRequests": "No upgrade requests",
-    "noUpgradeRequestsHint": "Guild owners submit requests from the subscription page.",
+    "upgradeRequestsLoading": "Loading subscription changes…",
+    "upgradeRequestsError": "Could not load subscription changes",
+    "subscriptionChangesLoading": "Loading subscription changes…",
+    "subscriptionChangesError": "Could not load subscription changes",
+    "noUpgradeRequests": "No subscription changes",
+    "noUpgradeRequestsHint": "Guild owners submit changes from the subscription page.",
+    "noSubscriptionChanges": "No subscription changes",
+    "noSubscriptionChangesHint": "Guild owners submit subscription changes from the subscription page.",
+    "noMatchingChanges": "No matching subscription changes",
+    "noMatchingChangesHint": "Try adjusting your filters or search query.",
+    "filtersTitle": "Filters",
+    "filterAllStatuses": "All statuses",
+    "filterAllChangeTypes": "All types",
+    "filterSearch": "Guild or owner",
+    "filterSearchPlaceholder": "Search guild name, owner, or guild ID…",
+    "filteredCount": "Showing {{count}} of {{total}} subscription changes",
+    "paymentReference": "Payment reference",
+    "noPaymentReference": "Not submitted",
+    "requestExpiresAt": "Request expires",
+    "paymentSubmittedAt": "Payment submitted",
+    "noPaymentReferenceWarning": "No payment reference was submitted. Confirm payment manually before approving, or enter an override reason below.",
+    "overrideReasonLabel": "Admin override reason",
+    "overrideReasonPlaceholder": "Why are you approving before payment proof?",
+    "overrideReasonRequired": "An admin override reason is required when payment has not been submitted.",
+    "rejectReasonLabel": "Rejection reason",
+    "rejectReasonPlaceholder": "Explain why this subscription change is rejected…",
+    "rejectReasonRequired": "A rejection reason is required.",
+    "approveChangeTitle": "Approve subscription change?",
+    "approveChangeBody": "Activate {{type}} to {{plan}} for {{guild}} after payment verification.",
+    "confirmApproveChange": "Approve change",
+    "approvingChange": "Approving…",
+    "rejectChangeTitle": "Reject subscription change?",
+    "rejectChangeBody": "Reject the subscription change for {{guild}} ({{plan}}). The owner will see your reason.",
+    "confirmRejectChange": "Reject change",
+    "rejectingChange": "Rejecting…",
     "currentPlan": "Current plan",
     "requestedPlan": "Requested plan",
     "requester": "Requester",
     "approve": "Approve",
     "reject": "Reject",
-    "adminNotePlaceholder": "Optional note…",
+    "adminNotePlaceholder": "Optional internal note…",
     "upgradeApproved": "{{guild}} upgraded to {{plan}}.",
-    "upgradeRejected": "Upgrade request for {{guild}} rejected.",
-    "upgradeReviewError": "Could not review upgrade request."
+    "upgradeRejected": "Subscription change for {{guild}} rejected.",
+    "changeApproved": "{{guild}} subscription change approved — {{plan}} activated.",
+    "changeRejected": "Subscription change for {{guild}} ({{plan}}) rejected.",
+    "upgradeReviewError": "Could not review subscription change.",
+    "changeReviewError": "Could not review subscription change."
   },
   "adminPlans": {
     "loading": "Loading subscription plans…",
@@ -591,6 +1816,7 @@
     "loadError": "Could not load server profile",
     "saved": "Server profile saved. Run /server in Discord to preview the updated embed.",
     "saveError": "Could not save server profile.",
+    "saving": "Saving…",
     "title": "Server profile",
     "hint": "This profile is used by the bot only. It does not rename your Discord server in Server Settings. Run /server in Discord to preview changes after saving.",
     "discordName": "Discord server name (unchanged by this page)",
@@ -603,7 +1829,58 @@
     "supportMessage": "Support message",
     "supportMessageHint": "How members can get help (shown in server info).",
     "rulesUrl": "Rules URL",
-    "websiteUrl": "Website URL"
+    "websiteUrl": "Website URL",
+    "hero": {
+      "ariaLabel": "Server profile overview",
+      "noCommunityType": "No community type set",
+      "noDescription": "Add a short description for your community"
+    },
+    "sections": {
+      "basic": {
+        "title": "Basic information",
+        "lead": "The name members see when they run /server in Discord."
+      },
+      "branding": {
+        "title": "Branding",
+        "lead": "Your server icon appears in the /server embed thumbnail.",
+        "iconHint": "Icons sync from Discord. Upload one in Server Settings, then run /sync."
+      },
+      "communityDetails": {
+        "title": "Community details",
+        "lead": "Describe what your server is about and who it is for."
+      },
+      "communityLinks": {
+        "title": "Community links",
+        "lead": "Optional URLs shown as fields in the /server embed."
+      },
+      "support": {
+        "title": "Support",
+        "lead": "Tell members how to get help inside your community."
+      },
+      "advanced": {
+        "title": "Advanced",
+        "lead": "How this profile relates to Discord and the bot.",
+        "noteDiscord": "Changes here do not rename your Discord server in Server Settings.",
+        "notePreview": "After saving, run /server in Discord to see the live embed."
+      }
+    },
+    "preview": {
+      "ariaLabel": "Live preview of the /server embed",
+      "title": "Preview",
+      "lead": "Updates as you edit. Matches the /server command embed.",
+      "footer": "Module status fields appear in Discord but are not edited here.",
+      "emptyDescription": "No description yet",
+      "emptyCommunityType": "Not set",
+      "emptySupport": "No support message",
+      "emptyLink": "Not added"
+    },
+    "empty": {
+      "noLogo": "No server icon synced",
+      "noLogoHint": "Upload an icon in Discord Server Settings, then run /sync.",
+      "noDescriptionPlaceholder": "Describe your community…",
+      "noLinksPlaceholder": "https://",
+      "noSupportPlaceholder": "How can members get help?"
+    }
   },
   "moderationSettings": {
     "loading": "Loading moderation roles…",
@@ -649,7 +1926,9 @@
     "addButton": "Add role",
     "adding": "Adding…",
     "added": "Permission role added.",
+    "updated": "Permission role updated.",
     "addError": "Could not add permission role.",
+    "updateError": "Could not update permission role.",
     "remove": "Remove",
     "removed": "Permission role removed.",
     "removeError": "Could not remove permission role.",
@@ -680,6 +1959,131 @@
       "clearLogs": "Clear logs",
       "manageReactionRoles": "Manage reaction roles",
       "managePermissionRoles": "Manage permission roles"
+    },
+    "workspace": {
+      "title": "Role permission management",
+      "subtitle": "Manage Discord role mappings and dashboard access for your team.",
+      "footer": "Members inherit permissions from mapped Discord roles after /sync.",
+      "hero": {
+        "ariaLabel": "Role permission management overview"
+      },
+      "stats": {
+        "roles": "Permission roles",
+        "linked": "Discord roles linked",
+        "groups": "Permission groups",
+        "owners": "Owner roles"
+      },
+      "cta": {
+        "addRole": "Add permission role",
+        "createFirst": "Create first permission role"
+      },
+      "search": "Search",
+      "searchPlaceholder": "Search by role name or Discord role…",
+      "roleFilter": "Role",
+      "statusFilter": "Status",
+      "permissionFilter": "Permissions",
+      "filterAria": "Filter permission roles",
+      "clearFilters": "Clear filters",
+      "results": "{{count}} roles shown",
+      "roleFilters": {
+        "all": "All tiers",
+        "owner": "Owner access",
+        "moderator": "Moderator access",
+        "support": "Support access"
+      },
+      "statusFilters": {
+        "all": "All statuses",
+        "active": "Active",
+        "inactive": "Inactive"
+      },
+      "permissionFilters": {
+        "all": "All permission areas",
+        "moderation": "Moderation",
+        "tickets": "Tickets",
+        "logs": "Logs",
+        "modules": "Modules",
+        "settings": "Settings"
+      },
+      "listTitle": "Permission roles",
+      "listLead": "Select a role to inspect permissions, linked Discord access, and actions.",
+      "listAria": "Permission role list",
+      "detailAria": "Permission role details",
+      "selectPromptTitle": "Select a permission role",
+      "selectPromptBody": "Choose a mapped role to review its permission groups, Discord link, and available actions.",
+      "selectRole": "Select {{name}}",
+      "closeDetail": "Close details",
+      "emptyTitle": "No permission roles yet",
+      "emptyBody": "Role mapping links a Discord server role to dashboard permissions. Create your first mapping to give staff access to the right pages and bot commands.",
+      "emptyFilteredTitle": "No roles match your filters",
+      "emptyFilteredBody": "Try a different search term or clear filters to see all mapped roles.",
+      "noPermissions": "No permissions assigned",
+      "noPermissionsTitle": "No permissions granted",
+      "noPermissionsBody": "Edit this role to assign dashboard and bot permissions.",
+      "permissionCount": "{{count}} permissions",
+      "updated": "Updated {{date}}",
+      "editing": "Editing",
+      "status": {
+        "active": "Active",
+        "inactive": "Inactive"
+      },
+      "permissionSummaryTitle": "Permission inspector",
+      "permissionInspectorLead": "Granted capabilities grouped by area.",
+      "permissionSummaryAria": "Permission inspector",
+      "permissionGroups": {
+        "moderation": "Moderation",
+        "tickets": "Tickets",
+        "logs": "Logs",
+        "modules": "Modules",
+        "settings": "Settings"
+      },
+      "advancedDetails": "Advanced metadata",
+      "detail": {
+        "discordRole": "Discord role",
+        "updated": "Last updated",
+        "roleId": "Role ID",
+        "discordRoleId": "Discord role ID",
+        "createdAt": "Created"
+      },
+      "actions": {
+        "editPermissions": "Edit permissions",
+        "scrollToEditor": "Scroll to editor",
+        "deleteMapping": "Delete mapping"
+      }
+    },
+    "editor": {
+      "ariaLabel": "Permission role editor",
+      "modeAria": "Permission role editor workflow",
+      "addTrigger": "Add permission role",
+      "createTitle": "Create permission role",
+      "createHint": "Map a Discord role to dashboard access and bot commands.",
+      "editTitle": "Edit permission role",
+      "editHint": "Update the linked Discord role and granted permissions.",
+      "saveCreate": "Create role",
+      "backToManagement": "Back to role management",
+      "advanced": "Advanced metadata",
+      "sections": {
+        "basic": {
+          "title": "Basic information",
+          "lead": "Name the mapping and choose the Discord role it applies to."
+        },
+        "preview": {
+          "title": "Permission preview",
+          "lead": "Live summary of the access this mapping will grant."
+        },
+        "groups": {
+          "title": "Permission groups",
+          "lead": "Choose dashboard and bot capabilities by area."
+        }
+      },
+      "preview": {
+        "discordRole": "Discord role",
+        "permissionCount": "Selected permissions",
+        "groupCount": "Active groups",
+        "groupsActive": "{{count}} groups active",
+        "noDiscordRole": "Not selected",
+        "emptyTitle": "No permissions selected",
+        "emptyBody": "Select permissions below to preview the access this role will receive."
+      }
     }
   },
   "toast": {

@@ -1,136 +1,230 @@
-<div class="page-content">
+<div class="page-content page-workspace subscription-page ws-page">
   <app-loading-state *ngIf="loading" [message]="'subscription.loading' | translate"></app-loading-state>
 
-  <app-empty-state *ngIf="!loading && error" icon="⚠️" [title]="'subscription.loadError' | translate"
-    [description]="error">
-    <button type="button" class="btn btn-primary btn-sm" (click)="loadData()">{{ 'common.tryAgain' | translate
-      }}</button>
-  </app-empty-state>
+  <app-error-state
+    *ngIf="!loading && error"
+    [title]="'subscription.loadError' | translate"
+    [description]="error"
+    [retryLabel]="'common.tryAgain' | translate"
+    (retry)="loadData()"
+  ></app-error-state>
 
-  <ng-container *ngIf="!loading && !error && subscription">
-    <section class="card current-plan-card" *ngIf="pendingRequest">
-      <h2>{{ 'subscription.pendingRequestTitle' | translate }}</h2>
-      <p>
-        {{ 'subscription.pendingRequestBody' | translate:{
-        plan: pendingRequest!.requestedPlanName,
-        months: pendingRequest!.durationMonths,
-        status: statusLabel(pendingRequest!.status)
-        } }}
-      </p>
-      <p class="pending-price">
-        <strong>{{ 'subscription.estimatedTotal' | translate }}:</strong>
-        {{ pendingRequest!.estimatedTotalPrice | currency:'USD':'symbol':'1.2-2' }}
-        <span class="muted small">
-          ({{ pendingRequest!.requestedPlanMonthlyPrice | currency:'USD':'symbol':'1.2-2' }} × {{ pendingRequest!.durationMonths }})
-        </span>
-      </p>
-      <p class="muted small">{{ 'subscription.pendingApprovalNote' | translate }}</p>
-    </section>
+  <div class="subscription-layout ws-layout" *ngIf="!loading && !error && subscription">
+    <header class="subscription-atf ws-atf ws-atf--band">
+      <app-page-notice [accent]="true">{{ 'subscription.betaBillingNotice' | translate }}</app-page-notice>
 
-    <section class="card current-plan-card">
-      <h2>{{ 'subscription.currentPlan' | translate }}</h2>
-      <p class="plan-name">{{ subscription.planName }}</p>
-      <p class="muted">{{ subscription.planDescription }}</p>
-      <p class="modules-line">
-        <strong>{{ 'subscription.includedModules' | translate }}</strong> {{ formatModules(subscription.allowedModules)
-        }}
-      </p>
-      <p class="subscription-meta" *ngIf="subscription.status">
-        <strong>{{ 'common.status' | translate }}:</strong> {{ subscriptionStatusLabel(subscription.status) }}
-      </p>
-      <p class="subscription-meta muted" *ngIf="subscription.startedAt">
-        <strong>{{ 'subscription.startedAt' | translate }}:</strong> {{ subscription.startedAt | date:'medium' }}
-      </p>
-      <p class="subscription-meta muted" *ngIf="subscription.expiresAt">
-        <strong>{{ 'subscription.expiresAt' | translate }}:</strong> {{ subscription.expiresAt | date:'medium' }}
-      </p>
-      <p class="expired-note" *ngIf="subscription.isExpired">
-        {{ 'subscription.expiredNote' | translate }}
-      </p>
-    </section>
+      <div class="subscription-atf-primary">
+        <app-page-workspace-hero
+          [ariaLabel]="'subscription.hero.ariaLabel' | translate"
+          icon="subscription"
+          [title]="workspaceHeroTitle"
+          [description]="workspaceHeroDescription"
+          [badge]="workspaceHeroBadge"
+          [stats]="workspaceHeroStats"
+          [footerMessage]="workspaceHeroFooter"
+          [primaryAction]="workspaceHeroPrimaryAction"
+          (primaryActionClick)="onHeroCta(heroCta)"
+        ></app-page-workspace-hero>
+      </div>
 
-    <section class="card request-card">
-      <h2>{{ 'subscription.requestUpgradeTitle' | translate }}</h2>
-      <p class="muted">{{ 'subscription.requestUpgradeHint' | translate }}</p>
+      <div class="subscription-atf-meta">
+        <aside class="subscription-trust-strip" [attr.aria-label]="'subscription.trust.ariaLabel' | translate">
+          <p class="subscription-trust-sla muted small">{{ 'subscription.trust.reviewSla' | translate:{ days:
+            billingConfig.reviewSlaDays } }}</p>
+          <div class="subscription-trust-links">
+            <a class="subscription-trust-link" [href]="billingConfig.supportUrl" target="_blank"
+              rel="noopener noreferrer">
+              {{ 'subscription.trust.support' | translate }}
+            </a>
+            <span class="subscription-trust-sep" aria-hidden="true">·</span>
+            <a class="subscription-trust-link" [href]="billingConfig.statusUrl" target="_blank"
+              rel="noopener noreferrer">
+              {{ 'subscription.trust.status' | translate }}
+            </a>
+          </div>
+        </aside>
+      </div>
+    </header>
 
-      <div class="request-form">
-        <label class="form-field">
-          <span>{{ 'subscription.selectPlan' | translate }}</span>
-          <select class="input" [(ngModel)]="selectedPlanKey" [disabled]="hasPendingRequest">
-            <option *ngFor="let plan of plans" [value]="plan.key">{{ plan.name }}</option>
-          </select>
-        </label>
+    <main
+      class="subscription-workspace ws-grid"
+      [class.is-active]="!!currentChange"
+      [class.is-idle]="!currentChange"
+      [class.has-aside]="!!currentChange && showPaymentInstructions"
+      [class.ws-grid--main-action]="!!currentChange"
+      [class.ws-grid--action-main]="!currentChange"
+    >
+      <ng-container *ngIf="currentChange">
+        <div class="subscription-workspace-main">
+          <app-subscription-change-flow [currentChange]="currentChange" [stepperIndex]="stepperIndex"
+            [paymentReference]="paymentReference" [submittingPayment]="submittingPayment" [cancelling]="cancelling"
+            (paymentReferenceChange)="paymentReference = $event" (submitPayment)="submitPaymentReference()"
+            (cancelRequest)="openCancelDialog()"></app-subscription-change-flow>
+        </div>
 
-        <label class="form-field">
-          <span>{{ 'subscription.selectDuration' | translate }}</span>
-          <select class="input" [(ngModel)]="selectedDurationMonths" [disabled]="hasPendingRequest">
-            <option *ngFor="let months of durationOptions" [ngValue]="months">
-              {{ durationLabel(months) }}
-            </option>
-          </select>
-        </label>
+        <aside *ngIf="showPaymentInstructions" id="subscription-payment-section"
+          class="subscription-workspace-aside ws-aside--sticky"
+          aria-labelledby="subscription-payment-section-title">
+          <app-subscription-payment-instructions [amount]="paymentAmount"
+            [paymentReferenceHint]="paymentReferenceHint"></app-subscription-payment-instructions>
+        </aside>
+      </ng-container>
 
-        <p class="estimated-expiry muted" *ngIf="selectedPlan">
-          {{ 'subscription.estimatedExpiry' | translate:{
-          plan: selectedPlan!.name,
-          date: (estimatedExpiryDate | date:'medium')
-          } }}
-        </p>
+      <section *ngIf="!currentChange && recentTerminalRequest as terminal"
+        class="subscription-workspace-span ws-grid-span subscription-workspace-notice"
+        [attr.data-tone]="terminalStateTone(terminal.status)" role="status"
+        [attr.aria-label]="terminalStateTitle(terminal.status)">
+        <div class="ws-icon-well" [attr.data-tone]="terminalStateTone(terminal.status)" aria-hidden="true">
+          <app-ui-icon [name]="$any(terminalStateIcon(terminal.status))" size="lg"></app-ui-icon>
+        </div>
+        <div class="subscription-workspace-notice-copy">
+          <h2 class="ws-section-title">{{ terminalStateTitle(terminal.status) }}</h2>
+          <p class="muted">{{ terminalStateBody(terminal.status) }}</p>
+          <p class="muted small" *ngIf="terminal.adminNote && terminal.status === 'Rejected'">
+            {{ 'subscription.adminNote' | translate }}: {{ terminal.adminNote }}
+          </p>
+          <button type="button" class="btn btn-primary btn-sm" (click)="startNewRequest()">
+            {{ 'subscription.states.tryAgain' | translate }}
+          </button>
+        </div>
+      </section>
 
-        <p class="estimated-price" *ngIf="selectedPlan">
-          <strong>{{ 'subscription.estimatedTotal' | translate }}:</strong>
-          {{ estimatedTotalPrice | currency:'USD':'symbol':'1.2-2' }}
-          <span class="muted small">
-            ({{ selectedPlan!.monthlyPrice | currency:'USD':'symbol':'1.2-2' }} × {{ selectedDurationMonths }})
-          </span>
-        </p>
+      <ng-container *ngIf="!hasActiveChange">
+        <section *ngIf="plans.length > 0" id="subscription-request"
+          class="subscription-workspace-main subscription-workspace-action ws-panel-pad"
+          role="region"
+          [attr.aria-label]="'subscription.requestChangeTitle' | translate">
+          <app-section-header
+            [title]="'subscription.requestChangeTitle' | translate"
+            [lead]="'subscription.requestChangeHint' | translate"
+          ></app-section-header>
 
-        <button type="button" class="btn btn-primary" [disabled]="!selectedPlan || submitting || hasPendingRequest"
-          (click)="requestUpgrade()">
-          {{ (submitting ? 'subscription.requesting' : 'subscription.requestUpgradeButton') | translate }}
+          <div class="subscription-request-form">
+            <label class="form-field">
+              <span>{{ 'subscription.selectPlan' | translate }}</span>
+              <select class="input" [(ngModel)]="selectedPlanKey" (ngModelChange)="onPlanSelectionChange()">
+                <option *ngFor="let plan of plans" [value]="plan.key">{{ plan.name }}</option>
+              </select>
+            </label>
+
+            <label class="form-field">
+              <span>{{ 'subscription.selectDuration' | translate }}</span>
+              <select class="input" [(ngModel)]="selectedDurationMonths">
+                <option *ngFor="let months of durationOptions" [ngValue]="months">
+                  {{ durationLabel(months) }}
+                </option>
+              </select>
+            </label>
+
+            <dl class="subscription-request-summary" *ngIf="selectedPlan">
+              <div>
+                <dt class="muted">{{ 'subscription.changeTypeLabel' | translate }}</dt>
+                <dd>{{ changeTypeLabel(pendingChangeType) }}</dd>
+              </div>
+              <div>
+                <dt class="muted">{{ 'subscription.estimatedTotal' | translate }}</dt>
+                <dd>{{ estimatedTotalPrice | currency:'USD':'symbol':'1.2-2' }}</dd>
+              </div>
+              <div>
+                <dt class="muted">{{ 'subscription.expiresAt' | translate }}</dt>
+                <dd>{{ estimatedExpiryDate | date:'medium' }}</dd>
+              </div>
+            </dl>
+
+            <button type="button" class="btn btn-primary" [disabled]="!selectedPlan || submitting"
+              (click)="openConfirmDialog()">
+              {{ 'subscription.requestChangeButton' | translate }}
+            </button>
+          </div>
+        </section>
+
+        <section *ngIf="plans.length > 0" class="subscription-workspace-aside subscription-workspace-reference ws-panel-border-start"
+          role="region" [attr.aria-label]="'subscription.plansCompare.title' | translate">
+          <app-section-header
+            [title]="'subscription.plansCompare.title' | translate"
+            [compact]="true"
+          ></app-section-header>
+
+          <div class="subscription-plans-table-wrap">
+            <table class="data-table subscription-plans-table">
+              <thead>
+                <tr>
+                  <th>{{ 'subscription.selectPlan' | translate }}</th>
+                  <th>{{ 'subscription.estimatedTotal' | translate }}</th>
+                  <th>{{ 'subscription.modules' | translate }}</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let plan of plans" [class.is-current]="isCurrentPlan(plan)">
+                  <td>
+                    <strong>{{ plan.name }}</strong>
+                    <span style="margin-inline-start: 10px;" class="badge" data-status="success"
+                      *ngIf="isCurrentPlan(plan)">{{ 'common.current' | translate }}</span>
+                    <p class="muted small">{{ plan.description }}</p>
+                  </td>
+                  <td>{{ plan.monthlyPrice | currency:'USD':'symbol':'1.2-2' }} / {{ 'subscription.perMonth' | translate
+                    }}</td>
+                  <td>{{ formatModules(plan.allowedModules) }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+        <div class="subscription-workspace-span" *ngIf="plans.length === 0">
+          <app-empty-state icon="📦" [title]="'subscription.empty.noPlansTitle' | translate"
+            [description]="'subscription.empty.noPlansDescription' | translate">
+            <a class="btn btn-ghost btn-sm" [href]="billingConfig.supportUrl" target="_blank" rel="noopener noreferrer">
+              {{ 'subscription.trust.support' | translate }}
+            </a>
+          </app-empty-state>
+        </div>
+      </ng-container>
+    </main>
+
+    <footer class="subscription-archive">
+      <app-subscription-history [requests]="upgradeRequests"></app-subscription-history>
+    </footer>
+  </div>
+
+  <div class="subscription-sticky-cta hide-desktop" *ngIf="stickyCtaLabelKey && !loading && !error">
+    <div class="subscription-sticky-cta-inner">
+      <button type="button" class="btn btn-primary subscription-sticky-cta-btn" (click)="onStickyCta()">
+        {{ stickyCtaLabelKey | translate }}
+      </button>
+    </div>
+  </div>
+
+  <div class="confirm-overlay" *ngIf="showConfirmDialog" (click)="closeConfirmDialog()" role="presentation">
+    <div class="confirm-dialog card" role="dialog" aria-modal="true"
+      [attr.aria-label]="'subscription.confirm.title' | translate" (click)="$event.stopPropagation()">
+      <h3>{{ 'subscription.confirm.title' | translate }}</h3>
+      <p class="muted">{{ 'subscription.confirm.body' | translate: confirmDialogParams }}</p>
+      <p class="muted small">{{ 'subscription.confirm.betaNote' | translate }}</p>
+      <div class="confirm-actions">
+        <button type="button" class="btn btn-secondary" (click)="closeConfirmDialog()" [disabled]="submitting">
+          {{ 'common.cancel' | translate }}
+        </button>
+        <button type="button" class="btn btn-primary" (click)="requestChange()" [disabled]="submitting">
+          {{ (submitting ? 'subscription.requesting' : 'subscription.confirm.submit') | translate }}
         </button>
       </div>
-    </section>
+    </div>
+  </div>
 
-    <section class="plans-grid">
-      <article class="card plan-card" *ngFor="let plan of plans" [class.current]="isCurrentPlan(plan)">
-        <div class="plan-card-header">
-          <h3>{{ plan.name }}</h3>
-          <span class="current-badge" *ngIf="isCurrentPlan(plan)">{{ 'common.current' | translate }}</span>
-        </div>
-        <p class="plan-price">{{ plan.monthlyPrice | currency:'USD':'symbol':'1.2-2' }} / {{ 'subscription.perMonth' | translate }}</p>
-        <p class="muted">{{ plan.description }}</p>
-        <p class="modules-line">
-          <strong>{{ 'subscription.modules' | translate }}</strong> {{ formatModules(plan.allowedModules) }}
-        </p>
-      </article>
-    </section>
-
-    <section class="card" style="margin: 20px 0px;" *ngIf="upgradeRequests.length > 0">
-      <h2>{{ 'subscription.requestHistory' | translate }}</h2>
-      <div class="table-wrap">
-        <table class="data-table">
-          <thead>
-            <tr>
-              <th>{{ 'subscription.requestedPlan' | translate }}</th>
-              <th>{{ 'subscription.estimatedTotal' | translate }}</th>
-              <th>{{ 'subscription.duration' | translate }}</th>
-              <th>{{ 'common.created' | translate }}</th>
-              <th>{{ 'subscription.adminNote' | translate }}</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let request of upgradeRequests">
-              <td>{{ request.requestedPlanName }}</td>
-              <td>{{ request.estimatedTotalPrice | currency:'USD':'symbol':'1.2-2' }}</td>
-              <td>{{ durationLabel(request.durationMonths) }}</td>
-              <td>{{ statusLabel(request.status) }}</td>
-              <td>{{ request.createdAt | date:'medium' }}</td>
-              <td>{{ request.adminNote || ('common.emptyValue' | translate) }}</td>
-            </tr>
-          </tbody>
-        </table>
+  <div class="confirm-overlay" *ngIf="showCancelDialog" (click)="closeCancelDialog()" role="presentation">
+    <div class="confirm-dialog is-sm card" role="dialog" aria-modal="true"
+      [attr.aria-label]="'subscription.cancelChangeTitle' | translate" (click)="$event.stopPropagation()">
+      <h3>{{ 'subscription.cancelChangeTitle' | translate }}</h3>
+      <p>{{ 'subscription.cancelChangeBody' | translate }}</p>
+      <div class="confirm-actions">
+        <button type="button" class="btn btn-secondary" (click)="closeCancelDialog()" [disabled]="cancelling">
+          {{ 'common.cancel' | translate }}
+        </button>
+        <button type="button" class="btn btn-danger" (click)="confirmCancelChange()" [disabled]="cancelling">
+          {{ (cancelling ? 'subscription.cancellingChange' : 'subscription.confirmCancelChange') | translate }}
+        </button>
       </div>
-    </section>
-  </ng-container>
+    </div>
+  </div>
 </div>

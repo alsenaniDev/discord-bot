@@ -17,7 +17,12 @@ import { GuildModule, UpdateGuildModuleRequest } from '../models/module.models';
 import { LogEntry, LogFilters } from '../models/log.models';
 import { ReactionRolePanel } from '../models/reaction-role.models';
 import { GuildSubscription, SubscriptionPlan } from '../models/subscription.models';
-import { PlanUpgradeRequest, CreatePlanUpgradeRequest } from '../models/upgrade-request.models';
+import {
+  PlanUpgradeRequest,
+  CreatePlanUpgradeRequest,
+  SubmitPaymentReferenceRequest,
+  GuildSubscriptionStatus
+} from '../models/upgrade-request.models';
 import {
   CreateGuildPermissionRoleRequest,
   GuildAccess,
@@ -293,6 +298,39 @@ export class GuildService {
 
   getGuildAccess(guildId: string): Observable<GuildAccess> {
     return this.http.get<GuildAccess>(`${this.baseUrl}/api/guilds/${guildId}/access`);
+  }
+
+  getSubscriptionStatus(guildId: string): Observable<GuildSubscriptionStatus> {
+    return this.http.get<GuildSubscriptionStatus>(
+      `${this.baseUrl}/api/guilds/${guildId}/subscription/status`
+    );
+  }
+
+  getCurrentChangeRequest(guildId: string): Observable<PlanUpgradeRequest | null> {
+    return this.http.get<PlanUpgradeRequest>(
+      `${this.baseUrl}/api/guilds/${guildId}/subscription/change-requests/current`,
+      { observe: 'response' }
+    ).pipe(
+      map(response => (response.status === 204 ? null : response.body!))
+    );
+  }
+
+  submitPaymentReference(
+    guildId: string,
+    requestId: string,
+    body: SubmitPaymentReferenceRequest
+  ): Observable<PlanUpgradeRequest> {
+    return this.http.put<PlanUpgradeRequest>(
+      `${this.baseUrl}/api/guilds/${guildId}/subscription/change-requests/${requestId}/payment`,
+      body
+    );
+  }
+
+  cancelUpgradeRequest(guildId: string, requestId: string): Observable<PlanUpgradeRequest> {
+    return this.http.post<PlanUpgradeRequest>(
+      `${this.baseUrl}/api/guilds/${guildId}/subscription/upgrade-requests/${requestId}/cancel`,
+      {}
+    );
   }
 
   getUpgradeRequests(guildId: string): Observable<PlanUpgradeRequest[]> {

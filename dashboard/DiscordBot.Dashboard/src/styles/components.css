@@ -13,7 +13,10 @@
 }
 
 .page-content {
-  max-width: var(--content-max-width);
+  width: 100%;
+  max-width: var(--page-width-workspace);
+  margin-inline: auto;
+  box-sizing: border-box;
   animation: fadeIn var(--duration-normal) var(--ease-out);
 }
 
@@ -370,6 +373,62 @@ label.form-field {
   border-color: rgba(88, 101, 242, 0.35);
 }
 
+/* Unified badge tone API via data-status */
+.badge[data-status='success'],
+.badge[data-status='open'],
+.badge[data-status='enabled'],
+.badge[data-status='activated'] {
+  background: var(--color-success-soft);
+  color: var(--color-text-success);
+  border-color: rgba(35, 165, 89, 0.3);
+}
+
+.badge[data-status='warning'],
+.badge[data-status='pending'],
+.badge[data-status='offline'] {
+  background: var(--color-warning-soft);
+  color: var(--color-text-warning);
+  border-color: rgba(240, 178, 50, 0.3);
+}
+
+.badge[data-status='danger'],
+.badge[data-status='error'],
+.badge[data-status='closed'],
+.badge[data-status='expired'] {
+  background: var(--color-error-soft);
+  color: var(--color-text-danger);
+  border-color: rgba(218, 55, 60, 0.3);
+}
+
+.badge[data-status='info'],
+.badge[data-status='review'] {
+  background: var(--color-info-soft);
+  color: var(--color-text-info);
+  border-color: rgba(0, 168, 252, 0.3);
+}
+
+.badge[data-status='neutral'],
+.badge[data-status='muted'],
+.badge[data-status='disabled'] {
+  background: var(--color-neutral-soft);
+  color: var(--color-text-muted);
+  border-color: rgba(148, 163, 184, 0.25);
+}
+
+.badge[data-status='brand'],
+.badge[data-status='premium'],
+.badge[data-status='plan'] {
+  background: var(--color-brand-soft);
+  color: var(--color-text-brand);
+  border-color: rgba(88, 101, 242, 0.35);
+}
+
+.badge[data-status='locked'] {
+  background: var(--color-neutral-soft);
+  color: var(--color-text-secondary);
+  border-color: rgba(148, 163, 184, 0.35);
+}
+
 /* Tables */
 .table-wrap,
 .ds-table-wrap {
@@ -423,24 +482,17 @@ label.form-field {
 .table-card {
   padding: 0;
   overflow: hidden;
-  margin: 20px 0px;
-}
-
-.request-card {
-  overflow: hidden;
-  margin: 20px 0px;
+  margin: var(--space-5) 0;
 }
 
 /* Stats */
-.stats-grid,
-.ds-stats-grid {
+.stats-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
   gap: var(--space-4);
 }
 
-.stat-card,
-.ds-stat-card {
+.stat-card {
   padding: var(--space-5);
   background: var(--color-bg-card);
   border: 1px solid var(--color-border);
@@ -448,8 +500,7 @@ label.form-field {
   transition: transform var(--duration-fast) var(--ease-out), border-color var(--duration-fast) var(--ease-out);
 }
 
-.stat-card:hover,
-.ds-stat-card:hover {
+.stat-card:hover {
   transform: translateY(-2px);
   border-color: var(--color-border-strong);
 }
@@ -494,8 +545,7 @@ label.form-field {
   color: var(--color-text-secondary);
 }
 
-.spinner,
-.ds-spinner {
+.spinner {
   width: 1.25rem;
   height: 1.25rem;
   border: 2px solid var(--color-border);
@@ -517,8 +567,7 @@ label.form-field {
 }
 
 /* Skeleton */
-.skeleton,
-.ds-skeleton {
+.skeleton {
   background: linear-gradient(90deg, var(--color-bg-panel) 25%, var(--color-bg-card-hover) 50%, var(--color-bg-panel) 75%);
   background-size: 200% 100%;
   animation: shimmer 1.4s ease infinite;
@@ -568,12 +617,6 @@ label.form-field {
   border: 1px solid rgba(218, 55, 60, 0.35);
 }
 
-.alert-success {
-  background: var(--color-success-soft);
-  color: var(--color-text-success);
-  border: 1px solid rgba(35, 165, 89, 0.35);
-}
-
 /* Dropdown menu */
 .ds-dropdown {
   position: relative;
@@ -589,7 +632,7 @@ label.form-field {
   border-radius: var(--radius-lg);
   box-shadow: var(--shadow-lg);
   padding: var(--space-2);
-  z-index: 200;
+  z-index: var(--z-dropdown);
   animation: slideDown var(--duration-normal) var(--ease-out);
 }
 
@@ -620,20 +663,24 @@ label.form-field {
 }
 
 /* Page width variants */
+.page-workspace {
+  max-width: var(--page-width-workspace);
+}
+
 .page-narrow {
-  max-width: 760px;
+  max-width: var(--page-width-narrow);
 }
 
 .page-medium {
-  max-width: 960px;
+  max-width: var(--page-width-medium);
 }
 
 .page-wide {
-  max-width: 1100px;
+  max-width: var(--page-width-wide);
 }
 
 .page-full {
-  max-width: var(--content-max-width);
+  max-width: var(--page-width-full);
 }
 
 .page-stack {
