@@ -16,7 +16,7 @@
 .member-select-clear {
   position: absolute;
   top: 50%;
-  right: var(--space-2);
+  inset-inline-end: var(--space-2);
   transform: translateY(-50%);
   border: 0;
   background: transparent;
@@ -29,8 +29,7 @@
 .member-select-dropdown {
   position: absolute;
   top: calc(100% + var(--space-1));
-  left: 0;
-  right: 0;
+  inset-inline: 0;
   z-index: 20;
   max-height: 240px;
   overflow-y: auto;
@@ -65,7 +64,7 @@
 
 .member-select-option:hover,
 .member-select-option:focus-visible {
-  background: var(--color-bg-muted);
+  background: var(--color-bg-card-hover);
 }
 
 .member-select-name {

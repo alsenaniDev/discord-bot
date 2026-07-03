@@ -1,5 +1,35 @@
+.filters-card h2 {
+  margin-top: 0;
+}
+
+.filters-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+  gap: var(--space-4);
+  margin-bottom: var(--space-3);
+}
+
+.filter-search {
+  grid-column: span 2;
+}
+
+@media (max-width: 720px) {
+  .filter-search {
+    grid-column: span 1;
+  }
+}
+
+.reviewable-row {
+  background: color-mix(in srgb, var(--color-brand) 6%, transparent);
+}
+
+.payment-ref {
+  word-break: break-all;
+}
+
 .actions-cell {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.5rem;
+  gap: var(--space-2);
+  min-width: 9rem;
 }

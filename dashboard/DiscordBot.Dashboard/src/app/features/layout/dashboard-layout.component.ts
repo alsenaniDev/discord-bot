@@ -5,7 +5,9 @@ import { AuthService } from '../../core/services/auth.service';
 import { GuildContextService } from '../../core/services/guild-context.service';
 import { GuildService } from '../../core/services/guild.service';
 import { GuildAccessService } from '../../core/services/guild-access.service';
+import { MissionControlHeaderService } from '../../core/services/mission-control-header.service';
 import { GuildSummary } from '../../core/models/guild.models';
+import { MissionControlHeaderState } from '../../core/models/mission-control.models';
 import { GuildAccess } from '../../core/models/staff.models';
 import { UserProfile } from '../../core/models/auth.models';
 import { BreadcrumbItem } from '../../shared/ui/breadcrumbs/breadcrumbs.component';
@@ -25,20 +27,32 @@ export class DashboardLayoutComponent implements OnInit, OnDestroy {
   pageSubtitleKey = 'titles.serversSubtitle';
   pageSubtitleParams: Record<string, string> = {};
   breadcrumbs: BreadcrumbItem[] = [];
+  usesWorkspaceHero = false;
   notificationsOpen = false;
   guildAccess: GuildAccess | null = null;
+  missionControlHeader: MissionControlHeaderState = {
+    visible: false,
+    loading: false,
+    model: null
+  };
 
   private routerSub?: Subscription;
   private guildSub?: Subscription;
   private accessSub?: Subscription;
+  private missionHeaderSub?: Subscription;
 
   constructor(
     private router: Router,
     private auth: AuthService,
     private guildService: GuildService,
     private guildContext: GuildContextService,
-    private guildAccessService: GuildAccessService
+    private guildAccessService: GuildAccessService,
+    private missionControlHeaderService: MissionControlHeaderService
   ) {}
+
+  get showMissionControlStatus(): boolean {
+    return this.missionControlHeader.visible;
+  }
 
   get discordServerUrl(): string | null {
     return this.guildContext.discordServerUrl;
@@ -85,12 +99,17 @@ export class DashboardLayoutComponent implements OnInit, OnDestroy {
 
     this.syncGuildFromRoute();
     this.updateTitles();
+
+    this.missionHeaderSub = this.missionControlHeaderService.state$.subscribe(state => {
+      this.missionControlHeader = state;
+    });
   }
 
   ngOnDestroy(): void {
     this.routerSub?.unsubscribe();
     this.guildSub?.unsubscribe();
     this.accessSub?.unsubscribe();
+    this.missionHeaderSub?.unsubscribe();
   }
 
   toggleSidebar(): void { this.sidebarOpen = !this.sidebarOpen; }
@@ -132,7 +151,7 @@ export class DashboardLayoutComponent implements OnInit, OnDestroy {
     const guildId = this.selectedGuild?.id;
 
     if (url.startsWith('/guilds/') && url.includes('/overview')) {
-      this.setGuildPage('titles.overview', 'titles.overviewSubtitle', guildName, guildId, 'common.overview');
+      this.setGuildPage('titles.overview', '', guildName, guildId, 'common.overview');
       return;
     }
     if (url.includes('/settings') && !url.includes('/moderation/settings')) {
@@ -222,6 +241,7 @@ export class DashboardLayoutComponent implements OnInit, OnDestroy {
       ? { name: this.user.globalName || this.user.username }
       : {};
     this.breadcrumbs = [{ label: 'nav.servers' }];
+    this.usesWorkspaceHero = false;
   }
 
   private setGuildPage(
@@ -241,6 +261,7 @@ export class DashboardLayoutComponent implements OnInit, OnDestroy {
     }
     crumbs.push({ label: pageLabel });
     this.setPage(titleKey, subtitleKey, guildName, crumbs, !!guildName);
+    this.usesWorkspaceHero = true;
   }
 
   private setPage(
@@ -255,5 +276,6 @@ export class DashboardLayoutComponent implements OnInit, OnDestroy {
     this.pageSubtitleKey = subtitleKey;
     this.pageSubtitleParams = {};
     this.breadcrumbs = crumbs;
+    this.usesWorkspaceHero = false;
   }
 }

@@ -1,0 +1,43 @@
+<button
+  type="button"
+  class="tickets-queue-card"
+  [class.is-selected]="selected"
+  [class.is-open]="open"
+  [attr.aria-current]="selected ? 'true' : null"
+  [attr.aria-label]="'tickets.workspace.selectTicket' | translate:{ number: ticket.ticketNumber }"
+  (click)="select.emit()"
+>
+  <div class="tickets-queue-card-head">
+    <div class="tickets-queue-card-id">
+      <span class="tickets-queue-card-number">#{{ ticket.ticketNumber }}</span>
+      <span class="badge tickets-queue-card-status" [class.badge-open]="open">
+        {{ statusLabelKey | translate }}
+      </span>
+    </div>
+    <time class="tickets-queue-card-time muted small" [dateTime]="ticket.lastActivityAt">
+      {{ ticket.lastActivityAt | date: 'medium' }}
+    </time>
+  </div>
+
+  <div class="tickets-queue-card-owner">
+    <span class="tickets-queue-card-owner-name">{{ ownerLabel }}</span>
+    <span class="tickets-queue-card-owner-id muted small mono">{{ ticket.ownerDiscordId }}</span>
+  </div>
+
+  <p class="tickets-queue-card-preview muted" *ngIf="preview; else noPreview">{{ preview }}</p>
+  <ng-template #noPreview>
+    <p class="tickets-queue-card-preview tickets-queue-card-preview--empty muted">{{ 'common.emptyValue' | translate }}</p>
+  </ng-template>
+
+  <div class="tickets-queue-card-stats muted small">
+    <span>{{ 'tickets.statsMessages' | translate:{ count: ticket.messageCount } }}</span>
+    <span class="tickets-queue-card-stat-sep" aria-hidden="true">·</span>
+    <span>{{ 'tickets.statsReplies' | translate:{ count: ticket.staffReplyCount } }}</span>
+    <span
+      *ngIf="ticket.failedDeliveryCount > 0"
+      class="tickets-queue-card-stat-failed"
+    >
+      {{ 'tickets.statsFailed' | translate:{ count: ticket.failedDeliveryCount } }}
+    </span>
+  </div>
+</button>

@@ -1,4 +1,4 @@
-<div class="page-content">
+<div class="page-content page-workspace">
   <app-loading-state *ngIf="loading" [message]="'settings.loading' | translate"></app-loading-state>
 
   <app-empty-state
@@ -10,7 +10,27 @@
     <button type="button" class="btn btn-primary btn-sm" (click)="loadPageData()">{{ 'common.tryAgain' | translate }}</button>
   </app-empty-state>
 
-  <form class="settings-stack" [formGroup]="form" (ngSubmit)="save()" *ngIf="!loading && !error">
+  <form
+    class="settings-stack"
+    [class.settings-stack--welcome]="isWelcomeTab"
+    [class.settings-stack--auto-role]="isAutoRoleTab"
+    [formGroup]="form"
+    (ngSubmit)="save()"
+    *ngIf="!loading && !error"
+  >
+    <header class="settings-atf" [class.settings-atf--welcome]="isWelcomeTab" [class.settings-atf--auto-role]="isAutoRoleTab">
+      <app-page-workspace-hero
+        class="settings-workspace-hero"
+        [ariaLabel]="heroAriaLabelKey | translate"
+        [icon]="heroIcon"
+        [title]="heroTitleKey | translate"
+        [description]="heroDescriptionKey | translate"
+        [stats]="heroStats"
+        [footerMessage]="heroFooterKey | translate"
+        [primaryAction]="heroPrimaryAction"
+      ></app-page-workspace-hero>
+    </header>
+
     <nav class="settings-tabs" [attr.aria-label]="'settings.tabs.label' | translate">
       <ng-container *ngFor="let tab of settingsTabs">
         <button
@@ -42,58 +62,107 @@
       </div>
     </section>
 
-    <section class="card card-section" *ngIf="activeTab === 'welcome'">
-      <div class="card-section-header">
-        <div>
-          <h2>{{ 'settings.welcome' | translate }}</h2>
-          <p class="muted small">{{ 'settings.welcomeHint' | translate }}</p>
+    <section class="welcome-workspace" *ngIf="activeTab === 'welcome'">
+      <div class="welcome-workspace-head">
+        <app-page-notice>{{ 'welcome.workspace.notice' | translate }}</app-page-notice>
+
+        <div class="welcome-toolbar ws-toolbar" [attr.aria-label]="'welcome.workspace.toolbar.ariaLabel' | translate">
+          <div class="welcome-toolbar-status">
+            <app-status-badge
+              [label]="(form.get('welcomeEnabled')?.value ? 'common.enabled' : 'common.disabled') | translate"
+              [tone]="form.get('welcomeEnabled')?.value ? 'success' : 'neutral'"
+            ></app-status-badge>
+            <span class="welcome-toolbar-channel muted small">
+              {{ welcomeSelectedChannelLabel || ('welcome.workspace.toolbar.noChannel' | translate) }}
+            </span>
+          </div>
+          <p class="welcome-toolbar-hint muted small">{{ 'welcome.workspace.toolbar.hint' | translate }}</p>
         </div>
       </div>
 
-      <label class="checkbox">
-        <input type="checkbox" formControlName="welcomeEnabled" />
-        {{ 'settings.enableWelcome' | translate }}
-      </label>
-      <label>
-        {{ 'settings.welcomeChannel' | translate }}
-        <select formControlName="welcomeChannelId">
-          <option value="">{{ 'settings.selectChannel' | translate }}</option>
-          <option *ngFor="let channel of textChannels" [value]="channel.discordChannelId">
-            {{ channelLabel(channel) }}
-          </option>
-        </select>
-        <span class="field-error" *ngIf="fieldError('welcomeChannelId')">{{ fieldError('welcomeChannelId') }}</span>
-      </label>
-      <label>
-        {{ 'settings.welcomeMessage' | translate }}
-        <textarea formControlName="welcomeMessage" rows="3"></textarea>
-        <span class="hint">{{ 'settings.welcomePlaceholderHint' | translate }}</span>
-        <span class="field-error" *ngIf="fieldError('welcomeMessage')">{{ fieldError('welcomeMessage') }}</span>
-      </label>
+      <div class="welcome-workspace-split">
+        <div class="welcome-workspace-editor">
+          <div class="welcome-studio-editor ws-panel-pad">
+            <app-welcome-editor
+              [form]="form"
+              [textChannels]="textChannels"
+              [guildName]="guildName"
+              [variables]="welcomeVariables"
+              [variablesUsedCount]="welcomeVariablesUsedCount"
+              [testChannelLabel]="welcomeSelectedChannelLabel"
+              [testEnabled]="!!form.get('welcomeEnabled')?.value"
+              [testPreviewReady]="welcomePreviewReady"
+              [fieldErrorFn]="fieldError.bind(this)"
+              (variableInsert)="insertWelcomeVariable($event)"
+            ></app-welcome-editor>
+          </div>
+        </div>
+
+        <aside class="welcome-workspace-rail" [attr.aria-label]="'welcome.workspace.preview.ariaLabel' | translate">
+          <div class="welcome-workspace-rail-sticky">
+            <div class="welcome-workspace-rail-shell">
+              <app-welcome-discord-preview
+                [enabled]="!!form.get('welcomeEnabled')?.value"
+                [channelLabel]="welcomeSelectedChannelLabel"
+                [guildName]="guildName"
+                [botName]="'common.appName' | translate"
+                [previewMessage]="welcomePreviewMessage"
+                [footerText]="welcomePreviewFooter"
+                [embedTitle]="'welcome.workspace.preview.embedTitle' | translate"
+                [authorName]="'welcome.workspace.sample.member' | translate"
+                [previewReady]="welcomePreviewReady"
+              ></app-welcome-discord-preview>
+            </div>
+          </div>
+        </aside>
+      </div>
     </section>
 
-    <section class="card card-section" *ngIf="activeTab === 'autoRole'">
-      <div class="card-section-header">
-        <div>
-          <h2>{{ 'settings.autoRole' | translate }}</h2>
-          <p class="muted small">{{ 'settings.autoRoleHint' | translate }}</p>
+    <section class="auto-role-workspace" *ngIf="activeTab === 'autoRole'">
+      <div class="auto-role-workspace-head">
+        <app-page-notice>{{ 'autoRole.workspace.notice' | translate }}</app-page-notice>
+
+        <div class="auto-role-toolbar ws-toolbar" [attr.aria-label]="'autoRole.workspace.toolbar.ariaLabel' | translate">
+          <div class="auto-role-toolbar-status">
+            <app-status-badge
+              [label]="(form.get('autoRoleEnabled')?.value ? 'common.enabled' : 'common.disabled') | translate"
+              [tone]="form.get('autoRoleEnabled')?.value ? 'success' : 'neutral'"
+            ></app-status-badge>
+            <span class="auto-role-toolbar-role muted small">
+              {{ autoRoleSelectedRoleLabel || ('autoRole.workspace.toolbar.noRole' | translate) }}
+            </span>
+          </div>
+          <p class="auto-role-toolbar-hint muted small">{{ 'autoRole.workspace.toolbar.hint' | translate }}</p>
         </div>
       </div>
 
-      <label class="checkbox">
-        <input type="checkbox" formControlName="autoRoleEnabled" />
-        {{ 'settings.enableAutoRole' | translate }}
-      </label>
-      <label>
-        {{ 'settings.role' | translate }}
-        <select formControlName="autoRoleId">
-          <option value="">{{ 'settings.selectRole' | translate }}</option>
-          <option *ngFor="let role of assignableRoles" [value]="role.discordRoleId">
-            {{ roleLabel(role) }}
-          </option>
-        </select>
-        <span class="field-error" *ngIf="fieldError('autoRoleId')">{{ fieldError('autoRoleId') }}</span>
-      </label>
+      <div class="auto-role-workspace-split">
+        <div class="auto-role-workspace-editor">
+          <div class="auto-role-studio-editor ws-panel-pad">
+            <app-auto-role-editor
+              [form]="form"
+              [assignableRoles]="assignableRoles"
+              [permissionStatus]="autoRolePermissionStatus"
+              [fieldErrorFn]="fieldError.bind(this)"
+            ></app-auto-role-editor>
+          </div>
+        </div>
+
+        <aside class="auto-role-workspace-rail" [attr.aria-label]="'autoRole.workspace.preview.ariaLabel' | translate">
+          <div class="auto-role-workspace-rail-sticky">
+            <div class="auto-role-workspace-rail-shell">
+              <app-auto-role-assignment-preview
+                [enabled]="!!form.get('autoRoleEnabled')?.value"
+                [roleName]="autoRoleSelectedRoleLabel"
+                [guildName]="guildName"
+                [permissionStatus]="autoRolePermissionStatus"
+              ></app-auto-role-assignment-preview>
+            </div>
+          </div>
+        </aside>
+      </div>
+
+      <app-auto-role-notes [logsRoute]="autoRoleLogsRoute"></app-auto-role-notes>
     </section>
 
     <section class="card card-section" *ngIf="activeTab === 'logs'">
@@ -354,7 +423,7 @@
       </div>
     </section>
 
-    <div class="form-actions" *ngIf="showSaveButton">
+    <div class="form-actions" *ngIf="showSaveButton && !isWelcomeTab && !isAutoRoleTab">
       <button type="submit" class="btn btn-primary" [disabled]="saving || form.invalid">
         <span class="spinner inline" *ngIf="saving"></span>
         {{ 'common.save' | translate }}

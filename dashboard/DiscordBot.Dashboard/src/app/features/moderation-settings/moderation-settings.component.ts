@@ -14,6 +14,10 @@ import {
   isAssignableRole
 } from '../../core/models/guild.models';
 import { getApiErrorMessage } from '../../core/utils/api-error.util';
+import {
+  PageWorkspaceHeroAction,
+  PageWorkspaceHeroStat
+} from '../../shared/ui/page-workspace-hero/page-workspace-hero.models';
 
 @Component({
   selector: 'app-moderation-settings',
@@ -158,6 +162,45 @@ export class ModerationSettingsComponent implements OnInit {
 
   get formTitleKey(): string {
     return this.editingRoleId ? 'moderationSettings.editTitle' : 'moderationSettings.addTitle';
+  }
+
+  get workspaceHeroStats(): PageWorkspaceHeroStat[] {
+    const activePermissions = this.roles.reduce((total, role) => {
+      return total + this.permissionOptions.filter(option => role[option.value]).length;
+    }, 0);
+
+    return [
+      {
+        label: this.translate.instant('workspaceHero.moderationSettings.stats.roles'),
+        value: String(this.roles.length)
+      },
+      {
+        label: this.translate.instant('workspaceHero.moderationSettings.stats.discordRoles'),
+        value: String(this.discordRoles.length)
+      },
+      {
+        label: this.translate.instant('workspaceHero.moderationSettings.stats.permissions'),
+        value: String(this.permissionOptions.length)
+      },
+      {
+        label: this.translate.instant('workspaceHero.moderationSettings.stats.grants'),
+        value: String(activePermissions)
+      }
+    ];
+  }
+
+  get workspaceHeroFooter(): string {
+    return this.translate.instant('workspaceHero.moderationSettings.footer');
+  }
+
+  get workspaceHeroPrimaryAction(): PageWorkspaceHeroAction {
+    return {
+      label: this.translate.instant('workspaceHero.moderationSettings.cta.add')
+    };
+  }
+
+  onHeroPrimaryAction(): void {
+    document.querySelector('.add-role-card')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 
   private buildPayload(roleDiscordId: string): CreateModerationPermissionRole {

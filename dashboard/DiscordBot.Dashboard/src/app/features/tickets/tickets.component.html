@@ -1,222 +1,121 @@
-<div class="page-content">
+<div class="page-content page-workspace tickets-page ws-page">
   <app-loading-state *ngIf="loading" [message]="'tickets.loading' | translate"></app-loading-state>
 
-  <app-empty-state
+  <app-error-state
     *ngIf="!loading && error"
-    icon="⚠️"
     [title]="'tickets.loadError' | translate"
     [description]="error"
-  >
-    <button type="button" class="btn btn-primary btn-sm" (click)="loadTickets()">{{ 'common.tryAgain' | translate }}</button>
-  </app-empty-state>
+    [retryLabel]="'common.tryAgain' | translate"
+    (retry)="loadTickets()"
+  ></app-error-state>
 
-  <div class="tickets-toolbar" *ngIf="!loading && !error">
-    <label class="filter-label">
-      {{ 'tickets.filters.status' | translate }}
-      <select [value]="statusFilter" (change)="onStatusFilterChange($any($event.target).value)">
-        <option value="all">{{ 'tickets.filters.all' | translate }}</option>
-        <option value="Open">{{ 'common.open' | translate }}</option>
-        <option value="Closed">{{ 'common.closed' | translate }}</option>
-      </select>
-    </label>
-    <span class="muted small" *ngIf="totalCount > 0">
-      {{ 'tickets.pagination.total' | translate:{ count: totalCount } }}
-    </span>
-  </div>
+  <div class="tickets-layout ws-layout" *ngIf="!loading && !error">
+    <header class="tickets-atf">
+      <app-page-workspace-hero
+        class="tickets-workspace-hero"
+        [ariaLabel]="'workspaceHero.tickets.ariaLabel' | translate"
+        icon="tickets"
+        [title]="'titles.tickets' | translate"
+        [description]="'titles.ticketsSubtitle' | translate"
+        [stats]="workspaceHeroStats"
+        [footerMessage]="workspaceHeroFooter"
+        [primaryAction]="workspaceHeroPrimaryAction"
+        (primaryActionClick)="onHeroPrimaryAction()"
+      ></app-page-workspace-hero>
+    </header>
 
-  <app-empty-state
-    *ngIf="!loading && !error && tickets.length === 0"
-    icon="🎫"
-    [title]="'tickets.emptyTitle' | translate"
-    [description]="'tickets.emptyBody' | translate"
-  ></app-empty-state>
+    <main class="tickets-workspace ws-workspace">
+      <app-tickets-filter-bar
+        class="tickets-workspace-filters"
+        [statusFilter]="statusFilter"
+        [totalCount]="totalCount"
+        [page]="page"
+        [totalPages]="totalPages"
+        (statusChange)="onStatusFilterChange($event)"
+        (prevPage)="goToPage(page - 1)"
+        (nextPage)="goToPage(page + 1)"
+      ></app-tickets-filter-bar>
 
-  <div class="card table-card" *ngIf="!loading && !error && tickets.length > 0">
-    <div class="table-wrap">
-      <table class="data-table">
-        <thead>
-          <tr>
-            <th>{{ 'tickets.number' | translate }}</th>
-            <th>{{ 'common.status' | translate }}</th>
-            <th>{{ 'tickets.owner' | translate }}</th>
-            <th>{{ 'tickets.lastActivity' | translate }}</th>
-            <th>{{ 'tickets.preview' | translate }}</th>
-            <th>{{ 'tickets.stats' | translate }}</th>
-            <th>{{ 'common.actions' | translate }}</th>
-          </tr>
-        </thead>
-        <tbody>
-          <ng-container *ngFor="let ticket of tickets">
-            <tr>
-              <td>{{ ticket.ticketNumber }}</td>
-              <td>
-                <span class="badge" [class.badge-open]="isOpen(ticket)">
-                  {{ statusLabel(ticket.status) | translate }}
-                </span>
-              </td>
-              <td>
-                <div class="identity-cell">
-                  <span class="identity-name">{{ displayMember(ticket.ownerUsername, ticket.ownerDiscordId) }}</span>
-                  <span class="muted small mono">{{ ticket.ownerDiscordId }}</span>
-                </div>
-              </td>
-              <td>{{ ticket.lastActivityAt | date: 'medium' }}</td>
-              <td>
-                <span class="preview-cell">{{ ticket.lastMessagePreview || '—' }}</span>
-              </td>
-              <td>
-                <div class="stats-cell muted small">
-                  <span>{{ 'tickets.statsMessages' | translate:{ count: ticket.messageCount } }}</span>
-                  <span>{{ 'tickets.statsReplies' | translate:{ count: ticket.staffReplyCount } }}</span>
-                  <span *ngIf="ticket.failedDeliveryCount > 0" class="stat-failed">
-                    {{ 'tickets.statsFailed' | translate:{ count: ticket.failedDeliveryCount } }}
-                  </span>
-                </div>
-              </td>
-              <td>
-                <div class="ticket-actions">
-                  <button
-                    type="button"
-                    class="btn btn-secondary btn-sm"
-                    *ngIf="!isOpen(ticket)"
-                    [routerLink]="['/guilds', guildId, 'tickets', ticket.ticketId, 'transcript']"
-                  >
-                    {{ 'tickets.transcript.view' | translate }}
-                  </button>
-                  <button type="button" class="btn btn-secondary btn-sm" (click)="toggleConversation(ticket)">
-                    {{ (isConversationExpanded(ticket) ? 'tickets.conversation.hide' : 'tickets.conversation.view') | translate }}
-                  </button>
-                  <button
-                    type="button"
-                    class="btn btn-secondary btn-sm"
-                    *ngIf="canReply && isOpen(ticket)"
-                    (click)="toggleReply(ticket)"
-                  >
-                    {{ 'tickets.reply' | translate }}
-                  </button>
-                  <button
-                    type="button"
-                    class="btn btn-danger btn-sm"
-                    *ngIf="canClose && isOpen(ticket)"
-                    [disabled]="isClosing(ticket)"
-                    (click)="closeTicket(ticket)"
-                  >
-                    <span class="spinner inline" *ngIf="isClosing(ticket)"></span>
-                    {{ 'tickets.close' | translate }}
-                  </button>
-                </div>
-                <div class="ticket-reply-box" *ngIf="isReplying(ticket)">
-                  <textarea
-                    rows="3"
-                    [(ngModel)]="replyDrafts[ticket.ticketId]"
-                    [placeholder]="'tickets.replyPlaceholder' | translate"
-                  ></textarea>
-                  <button
-                    type="button"
-                    class="btn btn-primary btn-sm"
-                    [disabled]="isSendingReply(ticket)"
-                    (click)="sendReply(ticket)"
-                  >
-                    <span class="spinner inline" *ngIf="isSendingReply(ticket)"></span>
-                    {{ 'tickets.replySend' | translate }}
-                  </button>
-                </div>
-              </td>
-            </tr>
-            <tr class="conversation-row" *ngIf="isConversationExpanded(ticket)">
-              <td colspan="7">
-                <div class="ticket-conversation-panel">
-                  <div class="ticket-conversation-header">
-                    <div>
-                      <h3>{{ 'tickets.conversation.title' | translate:{ number: ticket.ticketNumber } }}</h3>
-                      <p class="muted small">
-                        {{ 'tickets.conversation.channel' | translate }}: {{ displayChannel(ticket.discordChannelId) }}
-                        · {{ 'common.created' | translate }}: {{ ticket.createdAt | date: 'medium' }}
-                        <span *ngIf="ticket.closedAt">
-                          · {{ 'common.closed' | translate }}: {{ ticket.closedAt | date: 'medium' }}
-                        </span>
-                      </p>
-                    </div>
-                    <button
-                      type="button"
-                      class="btn btn-secondary btn-sm"
-                      [disabled]="isConversationLoading(ticket)"
-                      (click)="loadConversation(ticket, true)"
-                    >
-                      <span class="spinner inline" *ngIf="isConversationLoading(ticket)"></span>
-                      {{ 'tickets.conversation.refresh' | translate }}
-                    </button>
-                  </div>
+      <div class="tickets-master-detail ws-master-detail ws-master-detail--split">
+        <section class="tickets-queue-column" [attr.aria-label]="'tickets.workspace.queueAria' | translate">
+          <app-empty-state
+            *ngIf="tickets.length === 0 && statusFilter === 'all'"
+            icon="🎫"
+            [title]="'tickets.emptyTitle' | translate"
+            [description]="'tickets.emptyBody' | translate"
+          ></app-empty-state>
 
-                  <app-loading-state
-                    *ngIf="isConversationLoading(ticket) && !conversationFor(ticket).length"
-                    [message]="'tickets.conversation.loading' | translate"
-                  ></app-loading-state>
+          <app-empty-state
+            *ngIf="tickets.length === 0 && statusFilter !== 'all'"
+            icon="🔍"
+            [title]="'tickets.workspace.emptyFilteredTitle' | translate"
+            [description]="'tickets.workspace.emptyFilteredBody' | translate"
+          >
+            <button type="button" class="btn btn-secondary btn-sm" (click)="onStatusFilterChange('all')">
+              {{ 'tickets.workspace.clearFilter' | translate }}
+            </button>
+          </app-empty-state>
 
-                  <p class="muted" *ngIf="conversationError(ticket)">{{ conversationError(ticket) }}</p>
+          <div class="tickets-queue-scroll" *ngIf="tickets.length > 0">
+            <div class="tickets-queue" role="list">
+              <div *ngFor="let ticket of tickets" role="listitem" [attr.id]="'ticket-' + ticket.ticketId">
+                <app-tickets-queue-card
+                  [ticket]="ticket"
+                  [selected]="isSelected(ticket)"
+                  [open]="isOpen(ticket)"
+                  [statusLabelKey]="statusLabel(ticket.status)"
+                  [ownerLabel]="displayMember(ticket.ownerUsername, ticket.ownerDiscordId)"
+                  [preview]="ticket.lastMessagePreview || ''"
+                  (select)="selectTicket(ticket)"
+                ></app-tickets-queue-card>
+              </div>
+            </div>
+          </div>
+        </section>
 
-                  <p class="muted" *ngIf="!isConversationLoading(ticket) && !conversationError(ticket) && conversationFor(ticket).length === 0">
-                    {{ 'tickets.conversation.empty' | translate }}
-                  </p>
+        <aside
+          class="tickets-detail-column"
+          [attr.aria-label]="'tickets.workspace.drawerAria' | translate"
+        >
+          <div class="tickets-detail-placeholder ws-placeholder-panel" *ngIf="!selectedTicket">
+            <div class="tickets-detail-placeholder-icon ws-placeholder-panel-icon" aria-hidden="true">
+              <app-ui-icon name="tickets" size="lg"></app-ui-icon>
+            </div>
+            <h2 class="tickets-detail-placeholder-title ws-placeholder-panel-title">{{ 'tickets.workspace.selectPromptTitle' | translate }}</h2>
+            <p class="tickets-detail-placeholder-body ws-placeholder-panel-body muted">{{ 'tickets.workspace.selectPromptBody' | translate }}</p>
+          </div>
 
-                  <ol class="conversation-list" *ngIf="conversationFor(ticket).length > 0">
-                    <li
-                      class="conversation-item"
-                      *ngFor="let event of conversationFor(ticket)"
-                      [class.delivery-failed]="event.deliveryStatus === 'Failed'"
-                      [class.delivery-queued]="event.deliveryStatus === 'Queued'"
-                      [class.delivery-delivered]="event.deliveryStatus === 'Delivered'"
-                    >
-                      <div class="conversation-item-head">
-                        <span class="conversation-event-type">{{ eventLabel(event) | translate }}</span>
-                        <span class="muted small">{{ event.occurredAt | date: 'medium' }}</span>
-                      </div>
-                      <div class="conversation-item-meta muted small">
-                        <span>{{ event.actorType }}</span>
-                        <span *ngIf="event.actorUsername || event.actorDiscordId">
-                          · {{ displayMember(event.actorUsername, event.actorDiscordId) }}
-                        </span>
-                        <span class="delivery-badge" *ngIf="showDeliveryBadge(event)">
-                          {{ deliveryLabel(event) | translate }}
-                        </span>
-                      </div>
-                      <div class="conversation-item-content" *ngIf="event.content">{{ event.content }}</div>
-                    </li>
-                  </ol>
-
-                  <button
-                    type="button"
-                    class="btn btn-secondary btn-sm load-more-btn"
-                    *ngIf="hasMoreConversation(ticket)"
-                    [disabled]="isConversationLoadingMore(ticket)"
-                    (click)="loadConversation(ticket, false, true)"
-                  >
-                    <span class="spinner inline" *ngIf="isConversationLoadingMore(ticket)"></span>
-                    {{ 'tickets.conversation.loadMore' | translate }}
-                  </button>
-                </div>
-              </td>
-            </tr>
-          </ng-container>
-        </tbody>
-      </table>
-    </div>
-
-    <div class="pagination-bar" *ngIf="totalPages > 1">
-      <button type="button" class="btn btn-secondary btn-sm" [disabled]="page <= 1" (click)="goToPage(page - 1)">
-        {{ 'tickets.pagination.prev' | translate }}
-      </button>
-      <span class="muted small">
-        {{ 'tickets.pagination.page' | translate:{ page: page, total: totalPages } }}
-      </span>
-      <button
-        type="button"
-        class="btn btn-secondary btn-sm"
-        [disabled]="page >= totalPages"
-        (click)="goToPage(page + 1)"
-      >
-        {{ 'tickets.pagination.next' | translate }}
-      </button>
-    </div>
+          <app-tickets-context-drawer
+            *ngIf="selectedTicket"
+            #ticketDetailPanel
+            [ticket]="selectedTicket"
+            [guildId]="guildId"
+            [open]="true"
+            [inline]="true"
+            [statusLabelKey]="statusLabel(selectedTicket.status)"
+            [ownerLabel]="displayMember(selectedTicket.ownerUsername, selectedTicket.ownerDiscordId)"
+            [channelLabel]="displayChannel(selectedTicket.discordChannelId)"
+            [canReply]="canReply"
+            [canClose]="canClose"
+            [isClosing]="isClosing(selectedTicket)"
+            [isReplying]="isReplying(selectedTicket)"
+            [isSendingReply]="isSendingReply(selectedTicket)"
+            [replyDraft]="replyDrafts[selectedTicket.ticketId] || ''"
+            [conversation]="conversationFor(selectedTicket)"
+            [conversationLoading]="isConversationLoading(selectedTicket)"
+            [conversationLoadingMore]="isConversationLoadingMore(selectedTicket)"
+            [conversationError]="conversationError(selectedTicket)"
+            [hasMoreConversation]="hasMoreConversation(selectedTicket)"
+            (closeDrawer)="closeDrawer()"
+            (refreshConversation)="loadConversation(selectedTicket, true)"
+            (loadMoreConversation)="loadConversation(selectedTicket, false, true)"
+            (toggleReply)="toggleReply(selectedTicket)"
+            (replyDraftChange)="onReplyDraftChange(selectedTicket.ticketId, $event)"
+            (sendReply)="sendReply(selectedTicket)"
+            (closeTicket)="closeTicket(selectedTicket)"
+          ></app-tickets-context-drawer>
+        </aside>
+      </div>
+    </main>
   </div>
 </div>

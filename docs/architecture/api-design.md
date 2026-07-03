@@ -67,7 +67,7 @@ Enums serialized as **strings** in JSON.
 | Modules | GET/PUT `/{id}/modules`, PUT `/{id}/modules/{moduleKey}` |
 | Logs | GET/DELETE `/{id}/logs` |
 | Reaction roles | GET/DELETE `/{id}/reaction-roles`, DELETE `/{id}/reaction-roles/{reactionRoleId}` |
-| Subscription | GET/PUT `/{id}/subscription`, GET/POST `/{id}/subscription/upgrade-requests` |
+| Subscription | GET/PUT `/{id}/subscription`, GET `/{id}/subscription/status`, GET/POST `/{id}/subscription/upgrade-requests`, GET `/{id}/subscription/change-requests/current`, PUT `/{id}/subscription/change-requests/{requestId}/payment` |
 | Access | GET `/{id}/access` |
 | Permission roles | GET/POST `/{id}/permission-roles`, PUT/DELETE `/{id}/permission-roles/{roleId}` |
 | Profile | GET/PUT `/{id}/profile` |

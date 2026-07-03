@@ -15,32 +15,29 @@ import { CallbackComponent } from './features/auth/callback/callback.component';
 import { DashboardLayoutComponent } from './features/layout/dashboard-layout.component';
 import { ServersComponent } from './features/servers/servers.component';
 import { OverviewComponent } from './features/overview/overview.component';
+import { ActivityTimelineComponent } from './features/overview/mission-control/activity-timeline/activity-timeline.component';
+import { ContextDrawerComponent } from './features/overview/mission-control/context-drawer/context-drawer.component';
+import { StatusStripComponent } from './features/overview/mission-control/status-strip/status-strip.component';
 import { ModerationComponent } from './features/moderation/moderation.component';
-import { SettingsComponent } from './features/settings/settings.component';
+import { ModerationFilterBarComponent } from './features/moderation/moderation-filter-bar/moderation-filter-bar.component';
+import { ModerationEntryCardComponent } from './features/moderation/moderation-entry-card/moderation-entry-card.component';
+import { ModerationDetailPanelComponent } from './features/moderation/moderation-detail-panel/moderation-detail-panel.component';
 import { TicketsComponent } from './features/tickets/tickets.component';
-import { TicketTranscriptComponent } from './features/tickets/ticket-transcript.component';
+import { TicketsContextDrawerComponent } from './features/tickets/tickets-context-drawer/tickets-context-drawer.component';
+import { TicketsFilterBarComponent } from './features/tickets/tickets-filter-bar/tickets-filter-bar.component';
+import { TicketsQueueCardComponent } from './features/tickets/tickets-queue-card/tickets-queue-card.component';
 import { ModulesComponent } from './features/modules/modules.component';
+import { ModulesModuleCardComponent } from './features/modules/modules-module-card/modules-module-card.component';
 import { LogsComponent } from './features/logs/logs.component';
-import { ReactionRolesComponent } from './features/reaction-roles/reaction-roles.component';
-import { SubscriptionComponent } from './features/subscription/subscription.component';
-import { StaffComponent } from './features/staff/staff.component';
+import { LogsFilterBarComponent } from './features/logs/logs-filter-bar/logs-filter-bar.component';
+import { LogsEntryCardComponent } from './features/logs/logs-entry-card/logs-entry-card.component';
+import { LogsDetailPanelComponent } from './features/logs/logs-detail-panel/logs-detail-panel.component';
 import { ProfileComponent } from './features/profile/profile.component';
+import { ProfilePreviewComponent } from './features/profile/profile-preview/profile-preview.component';
 import { ModerationSettingsComponent } from './features/moderation-settings/moderation-settings.component';
-import { AdminHomeComponent } from './features/admin/admin-home/admin-home.component';
-import { AdminGuildsComponent } from './features/admin/admin-guilds/admin-guilds.component';
-import { AdminUsersComponent } from './features/admin/admin-users/admin-users.component';
-import { AdminUpgradeRequestsComponent } from './features/admin/admin-upgrade-requests/admin-upgrade-requests.component';
-import { AdminPlansComponent } from './features/admin/admin-plans/admin-plans.component';
 import { ToastContainerComponent } from './shared/toast-container/toast-container.component';
 import { OnboardingChecklistComponent } from './shared/onboarding-checklist/onboarding-checklist.component';
-import { UiIconComponent } from './shared/ui/ui-icon/ui-icon.component';
-import { LanguageSwitcherComponent } from './shared/ui/language-switcher/language-switcher.component';
-import { ProfileMenuComponent } from './shared/ui/profile-menu/profile-menu.component';
-import { ServerSwitcherComponent } from './shared/ui/server-switcher/server-switcher.component';
-import { BreadcrumbsComponent } from './shared/ui/breadcrumbs/breadcrumbs.component';
-import { EmptyStateComponent } from './shared/ui/empty-state/empty-state.component';
-import { LoadingStateComponent } from './shared/ui/loading-state/loading-state.component';
-import { MemberSelectComponent } from './shared/ui/member-select/member-select.component';
+import { SharedUiModule } from './shared/shared-ui.module';
 
 export function HttpLoaderFactory(http: HttpClient) {
   return new TranslateHttpLoader(http, './assets/i18n/', '.json');
@@ -54,32 +51,28 @@ export function HttpLoaderFactory(http: HttpClient) {
     DashboardLayoutComponent,
     ServersComponent,
     OverviewComponent,
-    SettingsComponent,
+    StatusStripComponent,
+    ActivityTimelineComponent,
+    ContextDrawerComponent,
     TicketsComponent,
-    TicketTranscriptComponent,
+    TicketsFilterBarComponent,
+    TicketsQueueCardComponent,
+    TicketsContextDrawerComponent,
     ModerationComponent,
+    ModerationFilterBarComponent,
+    ModerationEntryCardComponent,
+    ModerationDetailPanelComponent,
     ModulesComponent,
+    ModulesModuleCardComponent,
     LogsComponent,
-    ReactionRolesComponent,
-    SubscriptionComponent,
-    StaffComponent,
+    LogsFilterBarComponent,
+    LogsEntryCardComponent,
+    LogsDetailPanelComponent,
     ProfileComponent,
+    ProfilePreviewComponent,
     ModerationSettingsComponent,
-    AdminHomeComponent,
-    AdminGuildsComponent,
-    AdminUsersComponent,
-    AdminUpgradeRequestsComponent,
-    AdminPlansComponent,
     OnboardingChecklistComponent,
-    ToastContainerComponent,
-    UiIconComponent,
-    LanguageSwitcherComponent,
-    ProfileMenuComponent,
-    ServerSwitcherComponent,
-    BreadcrumbsComponent,
-    EmptyStateComponent,
-    LoadingStateComponent,
-    MemberSelectComponent
+    ToastContainerComponent
   ],
   imports: [
     BrowserModule,
@@ -87,6 +80,7 @@ export function HttpLoaderFactory(http: HttpClient) {
     HttpClientModule,
     ReactiveFormsModule,
     FormsModule,
+    SharedUiModule,
     AppRoutingModule,
     TranslateModule.forRoot({
       defaultLanguage: 'en',

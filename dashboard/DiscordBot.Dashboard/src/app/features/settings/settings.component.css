@@ -1,5 +1,10 @@
-.page-content {
-  max-width: 900px;
+.settings-atf {
+  min-width: 0;
+  margin-block-end: var(--space-2);
+}
+
+.settings-workspace-hero {
+  display: block;
 }
 
 .settings-tabs {
@@ -36,6 +41,258 @@
   border-color: var(--color-border);
   color: var(--color-primary);
   box-shadow: inset 0 -2px 0 var(--color-primary);
+}
+
+.settings-atf--welcome,
+.settings-atf--auto-role {
+  margin-block-end: 0;
+}
+
+.settings-stack--welcome,
+.settings-stack--auto-role {
+  gap: var(--space-5);
+}
+
+/* Welcome studio split — sticky preview requires stretch + no overflow clipping on ancestors */
+
+.welcome-workspace {
+  --welcome-editor-width: minmax(0, 60%);
+  --welcome-rail-width: minmax(0, 40%);
+  --welcome-sticky-top: calc(var(--topbar-height) + var(--space-4));
+  --welcome-rail-max-height: calc(100dvh - var(--welcome-sticky-top) - var(--space-6));
+
+  display: grid;
+  gap: var(--space-5);
+  min-width: 0;
+}
+
+.welcome-workspace-head {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.welcome-toolbar {
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.welcome-toolbar-status {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.welcome-toolbar-channel,
+.welcome-toolbar-hint {
+  margin: 0;
+}
+
+.welcome-workspace-split {
+  display: grid;
+  grid-template-columns: var(--welcome-editor-width) var(--welcome-rail-width);
+  gap: var(--space-5);
+  align-items: stretch;
+  min-width: 0;
+}
+
+.welcome-workspace-editor,
+.welcome-workspace-rail {
+  min-width: 0;
+}
+
+.welcome-studio-editor {
+  border-radius: var(--radius-lg);
+  border: 1px solid color-mix(in srgb, var(--color-border) 55%, transparent);
+  background: var(--color-bg-card);
+}
+
+.welcome-workspace-rail-sticky {
+  position: sticky;
+  top: var(--welcome-sticky-top);
+  align-self: start;
+  width: 100%;
+}
+
+.welcome-workspace-rail-shell {
+  display: flex;
+  flex-direction: column;
+  max-height: var(--welcome-rail-max-height);
+  min-height: 0;
+}
+
+:host ::ng-deep .welcome-workspace-rail-shell .ws-discord-preview {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  flex: 1 1 auto;
+  max-height: var(--welcome-rail-max-height);
+  overflow: hidden;
+}
+
+:host ::ng-deep .welcome-workspace-rail-shell .ws-discord-preview-body {
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+@media (max-width: 960px) {
+  .welcome-workspace-split {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+  }
+
+  .welcome-workspace-editor {
+    order: 1;
+  }
+
+  .welcome-workspace-rail {
+    order: 2;
+  }
+
+  .welcome-workspace-rail-sticky {
+    position: static;
+    top: auto;
+  }
+
+  .welcome-workspace-rail-shell,
+  :host ::ng-deep .welcome-workspace-rail-shell .ws-discord-preview {
+    max-height: none;
+    overflow: visible;
+  }
+
+  :host ::ng-deep .welcome-workspace-rail-shell .ws-discord-preview-body {
+    overflow-y: visible;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .welcome-workspace-rail-shell,
+  :host ::ng-deep .welcome-workspace-rail-shell .ws-discord-preview-body {
+    scroll-behavior: auto;
+  }
+}
+
+/* Auto Role workspace — mirrors welcome studio split */
+
+.auto-role-workspace {
+  --auto-role-editor-width: minmax(0, 60%);
+  --auto-role-rail-width: minmax(0, 40%);
+  --auto-role-sticky-top: calc(var(--topbar-height) + var(--space-4));
+  --auto-role-rail-max-height: calc(100dvh - var(--auto-role-sticky-top) - var(--space-6));
+
+  display: grid;
+  gap: var(--space-5);
+  min-width: 0;
+}
+
+.auto-role-workspace-head {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.auto-role-toolbar {
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.auto-role-toolbar-status {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.auto-role-toolbar-role,
+.auto-role-toolbar-hint {
+  margin: 0;
+}
+
+.auto-role-workspace-split {
+  display: grid;
+  grid-template-columns: var(--auto-role-editor-width) var(--auto-role-rail-width);
+  gap: var(--space-5);
+  align-items: stretch;
+  min-width: 0;
+}
+
+.auto-role-workspace-editor,
+.auto-role-workspace-rail {
+  min-width: 0;
+}
+
+.auto-role-studio-editor {
+  border-radius: var(--radius-lg);
+  border: 1px solid color-mix(in srgb, var(--color-border) 55%, transparent);
+  background: var(--color-bg-card);
+}
+
+.auto-role-workspace-rail-sticky {
+  position: sticky;
+  top: var(--auto-role-sticky-top);
+  align-self: start;
+  width: 100%;
+}
+
+.auto-role-workspace-rail-shell {
+  display: flex;
+  flex-direction: column;
+  max-height: var(--auto-role-rail-max-height);
+  min-height: 0;
+}
+
+:host ::ng-deep .auto-role-workspace-rail-shell .auto-role-preview {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  flex: 1 1 auto;
+  max-height: var(--auto-role-rail-max-height);
+  overflow: hidden;
+}
+
+:host ::ng-deep .auto-role-workspace-rail-shell .auto-role-preview-body {
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+@media (max-width: 960px) {
+  .auto-role-workspace-split {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-4);
+  }
+
+  .auto-role-workspace-editor {
+    order: 1;
+  }
+
+  .auto-role-workspace-rail {
+    order: 2;
+  }
+
+  .auto-role-workspace-rail-sticky {
+    position: static;
+    top: auto;
+  }
+
+  .auto-role-workspace-rail-shell,
+  :host ::ng-deep .auto-role-workspace-rail-shell .auto-role-preview {
+    max-height: none;
+    overflow: visible;
+  }
+
+  :host ::ng-deep .auto-role-workspace-rail-shell .auto-role-preview-body {
+    overflow-y: visible;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .auto-role-workspace-rail-shell,
+  :host ::ng-deep .auto-role-workspace-rail-shell .auto-role-preview-body {
+    scroll-behavior: auto;
+  }
 }
 
 .form-actions {

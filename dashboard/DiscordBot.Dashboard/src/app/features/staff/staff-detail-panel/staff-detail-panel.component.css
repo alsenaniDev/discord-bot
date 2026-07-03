@@ -1,0 +1,103 @@
+.staff-detail-headcopy {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: var(--space-3);
+  align-items: start;
+}
+
+.staff-detail-color {
+  width: 3rem;
+  height: 3rem;
+  border-radius: var(--radius-full);
+}
+
+.staff-detail-swatch {
+  width: 1.125rem;
+  height: 1.125rem;
+  border-radius: var(--radius-full);
+  border: 1px solid color-mix(in srgb, var(--color-border) 60%, transparent);
+}
+
+.staff-detail-count {
+  margin: var(--space-2) 0 0;
+}
+
+.staff-detail-editing {
+  display: inline-flex;
+  margin-top: var(--space-2);
+}
+
+.staff-permission-summary {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.staff-permission-summary-grid {
+  display: grid;
+  gap: var(--space-3);
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.staff-permission-group {
+  padding: var(--space-3);
+  border-radius: var(--radius-md);
+  border: 1px solid color-mix(in srgb, var(--color-border) 50%, transparent);
+  background: color-mix(in srgb, var(--color-bg-panel) 55%, transparent);
+}
+
+.staff-permission-group-title {
+  margin: 0 0 var(--space-2);
+  font-size: var(--text-sm);
+  font-weight: 700;
+  color: var(--color-text);
+}
+
+.staff-permission-group-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: var(--space-1);
+}
+
+.staff-permission-group-list li {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: var(--space-2);
+  align-items: start;
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+}
+
+.staff-permission-group-list li.is-granted {
+  color: var(--color-text);
+}
+
+.staff-permission-group-list li.is-denied {
+  display: none;
+}
+
+.staff-permission-mark {
+  width: 1rem;
+  text-align: center;
+  font-weight: 700;
+  color: var(--color-success);
+}
+
+.staff-detail-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  padding-top: var(--space-2);
+  border-top: 1px solid var(--color-border);
+}
+
+@media (max-width: 640px) {
+  .staff-permission-summary-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .staff-detail-actions .btn {
+    flex: 1 1 calc(50% - var(--space-2));
+  }
+}

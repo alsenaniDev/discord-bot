@@ -99,12 +99,87 @@
   --sidebar-width: 272px;
   --topbar-height: 64px;
   --content-max-width: 1200px;
+  --page-width-workspace: 1120px;
+  --page-width-narrow: 760px;
+  --page-width-medium: 960px;
+  --page-width-wide: 1100px;
+  --page-width-full: var(--content-max-width);
+
+  /* Breakpoints (reference for media queries) */
+  --breakpoint-sm: 640px;
+  --breakpoint-md: 720px;
+  --breakpoint-lg: 900px;
+  --breakpoint-xl: 1024px;
+
+  /* Elevation */
+  --elevation-0: none;
+  --elevation-1: var(--shadow-sm);
+  --elevation-2: var(--shadow-md);
+  --elevation-3: var(--shadow-lg);
+  --elevation-brand: var(--shadow-glow);
+
+  /* Z-index scale */
+  --z-dropdown: 200;
+  --z-sticky: 50;
+  --z-sidebar: 100;
+  --z-backdrop: 900;
+  --z-dialog: 1050;
+  --z-toast: 1100;
+
+  /* Legacy aliases (PP-001 — migrate pages off these over time) */
+  --surface-elevated: var(--color-bg-elevated);
+  --border-color: var(--color-border);
+  --text-primary: var(--color-text);
+  --text-muted: var(--color-text-muted);
+  --text-secondary: var(--color-text-secondary);
+
+  /* Extended status palette */
+  --color-neutral: #94a3b8;
+  --color-neutral-soft: rgba(148, 163, 184, 0.15);
+  --color-online: var(--color-success);
+  --color-online-soft: var(--color-success-soft);
+  --color-offline: var(--color-warning);
+  --color-offline-soft: var(--color-warning-soft);
+  --color-pending: var(--color-warning);
+  --color-pending-soft: var(--color-warning-soft);
+  --color-review: var(--color-info);
+  --color-review-soft: var(--color-info-soft);
+  --color-activated: var(--color-success);
+  --color-activated-soft: var(--color-success-soft);
+  --color-expired: var(--color-error);
+  --color-expired-soft: var(--color-error-soft);
+
+  /* Dialog */
+  --dialog-overlay: rgba(0, 0, 0, 0.55);
+  --dialog-width-sm: 28rem;
+  --dialog-width-md: 32rem;
+  --dialog-width-lg: 42rem;
 
   /* Motion */
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
   --duration-fast: 150ms;
   --duration-normal: 250ms;
   --duration-slow: 400ms;
+  --motion-fast: var(--duration-fast);
+  --motion-normal: var(--duration-normal);
+  --motion-slow: var(--duration-slow);
+
+  /* Surfaces (elevation aliases) */
+  --surface: var(--color-bg-card);
+  --surface-hover: var(--color-bg-card-hover);
+  --surface-raised: var(--color-bg-elevated);
+  --surface-overlay: var(--color-bg-panel);
+
+  /* Typography roles */
+  --type-page-title: var(--text-2xl);
+  --type-section-title: var(--text-xl);
+  --type-card-title: var(--text-lg);
+  --type-body: var(--text-base);
+  --type-caption: var(--text-xs);
+  --type-label: var(--text-sm);
+  --type-badge: var(--text-xs);
+  --type-metric: var(--text-lg);
+  --type-hint: var(--text-xs);
 
   /* Toggle */
   --toggle-track-off: var(--color-border-strong);

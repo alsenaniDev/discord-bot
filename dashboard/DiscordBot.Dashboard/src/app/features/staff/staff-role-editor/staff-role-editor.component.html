@@ -1,0 +1,193 @@
+<section
+  class="staff-role-editor"
+  id="staff-role-editor"
+  role="region"
+  [attr.aria-label]="'staff.editor.modeAria' | translate"
+>
+  <header class="staff-role-editor-workflow">
+    <button
+      type="button"
+      class="btn btn-ghost btn-sm staff-role-editor-back"
+      [disabled]="saving"
+      (click)="onBack()"
+    >
+      <app-ui-icon name="chevron-right" size="sm" class="staff-role-editor-back-icon"></app-ui-icon>
+      {{ 'staff.editor.backToManagement' | translate }}
+    </button>
+
+    <div class="staff-role-editor-workflow-copy">
+      <h1 id="staff-editor-mode-title" class="staff-role-editor-workflow-title" tabindex="-1">
+        {{ (editing ? 'staff.editor.editTitle' : 'staff.editor.createTitle') | translate }}
+      </h1>
+      <p class="staff-role-editor-workflow-lead muted">
+        {{ (editing ? 'staff.editor.editHint' : 'staff.editor.createHint') | translate }}
+      </p>
+    </div>
+  </header>
+
+  <div class="staff-role-editor-shell card card-section">
+    <div class="staff-role-editor-top-grid">
+      <section class="staff-role-editor-card" [attr.aria-labelledby]="'staff-editor-basic-title'">
+        <app-section-header
+          titleId="staff-editor-basic-title"
+          [title]="'staff.editor.sections.basic.title' | translate"
+          [lead]="'staff.editor.sections.basic.lead' | translate"
+          [compact]="true"
+        ></app-section-header>
+
+        <div class="staff-role-editor-fields">
+          <label class="form-field">
+            <span class="type-label">{{ 'staff.roleName' | translate }}</span>
+            <input
+              type="text"
+              class="input"
+              [ngModel]="roleName"
+              (ngModelChange)="roleNameChange.emit($event)"
+              [placeholder]="'staff.roleNamePlaceholder' | translate"
+              [disabled]="disabled || saving"
+            />
+          </label>
+
+          <label class="form-field">
+            <span class="type-label">{{ 'staff.discordRole' | translate }}</span>
+            <select
+              class="input"
+              [ngModel]="discordRoleId"
+              (ngModelChange)="discordRoleIdChange.emit($event)"
+              [disabled]="disabled || saving"
+            >
+              <option value="">{{ 'staff.discordRolePlaceholder' | translate }}</option>
+              <option *ngFor="let role of discordRoles" [value]="role.discordRoleId">
+                {{ role.name }}
+              </option>
+            </select>
+          </label>
+        </div>
+      </section>
+
+      <section class="staff-role-editor-card staff-role-editor-preview" [attr.aria-labelledby]="'staff-editor-preview-title'">
+        <app-section-header
+          titleId="staff-editor-preview-title"
+          [title]="'staff.editor.sections.preview.title' | translate"
+          [lead]="'staff.editor.sections.preview.lead' | translate"
+          [compact]="true"
+        ></app-section-header>
+
+        <dl class="staff-role-editor-preview-stats">
+          <div class="staff-role-editor-preview-stat">
+            <dt class="type-label muted">{{ 'staff.editor.preview.discordRole' | translate }}</dt>
+            <dd>{{ selectedDiscordRoleName }}</dd>
+          </div>
+          <div class="staff-role-editor-preview-stat">
+            <dt class="type-label muted">{{ 'staff.editor.preview.permissionCount' | translate }}</dt>
+            <dd>{{ 'staff.workspace.permissionCount' | translate:{ count: selectedPermissionCount } }}</dd>
+          </div>
+          <div class="staff-role-editor-preview-stat">
+            <dt class="type-label muted">{{ 'staff.editor.preview.groupCount' | translate }}</dt>
+            <dd>{{ 'staff.editor.preview.groupsActive' | translate:{ count: activeGroupCount } }}</dd>
+          </div>
+        </dl>
+
+        <app-empty-state
+          *ngIf="previewGroups.length === 0"
+          [nested]="true"
+          icon="🔒"
+          [title]="'staff.editor.preview.emptyTitle' | translate"
+          [description]="'staff.editor.preview.emptyBody' | translate"
+        ></app-empty-state>
+
+        <ul class="staff-role-editor-preview-list" *ngIf="previewGroups.length > 0">
+          <li *ngFor="let group of previewGroups">
+            <div class="staff-role-editor-preview-item">
+              <div class="staff-role-editor-preview-item-head">
+                <span class="staff-role-editor-preview-group">{{ group.labelKey | translate }}</span>
+                <span class="badge badge-muted">{{ group.count }}</span>
+              </div>
+              <ul class="staff-role-editor-preview-tags">
+                <li *ngFor="let item of group.items">{{ item.labelKey | translate }}</li>
+              </ul>
+            </div>
+          </li>
+        </ul>
+      </section>
+    </div>
+
+    <div class="staff-role-editor-scroll-body">
+      <section class="staff-role-editor-groups-section" [attr.aria-labelledby]="'staff-editor-groups-title'">
+        <app-section-header
+          titleId="staff-editor-groups-title"
+          [title]="'staff.editor.sections.groups.title' | translate"
+          [lead]="'staff.editor.sections.groups.lead' | translate"
+          [compact]="true"
+        ></app-section-header>
+
+        <div class="staff-role-editor-groups-list">
+          <details
+            class="staff-role-editor-group-card"
+            *ngFor="let group of permissionGroups"
+            [open]="isGroupOpen(group)"
+            (toggle)="onGroupToggle(group, $event)"
+            [attr.aria-label]="group.labelKey | translate"
+          >
+            <summary class="staff-role-editor-group-summary">
+              <span class="staff-role-editor-group-summary-main">
+                <span class="staff-role-editor-group-title">{{ group.labelKey | translate }}</span>
+                <span class="badge badge-muted">{{ groupSelectedCount(group) }}</span>
+              </span>
+              <app-ui-icon name="chevron-down" size="sm" class="staff-role-editor-group-chevron"></app-ui-icon>
+            </summary>
+
+            <div class="staff-role-editor-group-body">
+              <div class="staff-role-editor-group-options">
+                <label class="checkbox staff-role-editor-option" *ngFor="let key of group.keys">
+                  <input
+                    type="checkbox"
+                    [checked]="selectedPermissions[key]"
+                    (change)="onPermissionChange(key, $any($event.target).checked)"
+                    [disabled]="disabled || saving"
+                  />
+                  <span>{{ permissionLabel(key) | translate }}</span>
+                </label>
+              </div>
+            </div>
+          </details>
+        </div>
+      </section>
+
+      <details
+        class="ws-detail-advanced staff-role-editor-advanced"
+        *ngIf="editing"
+        [open]="advancedExpanded"
+        (toggle)="onAdvancedToggle($event)"
+      >
+        <summary>{{ 'staff.editor.advanced' | translate }}</summary>
+        <div class="ws-detail-advanced-body">
+          <dl class="ws-detail-meta">
+            <div class="ws-detail-meta-row">
+              <dt class="type-label muted">{{ 'staff.workspace.detail.roleId' | translate }}</dt>
+              <dd class="mono small">{{ roleId }}</dd>
+            </div>
+            <div class="ws-detail-meta-row">
+              <dt class="type-label muted">{{ 'staff.workspace.detail.discordRoleId' | translate }}</dt>
+              <dd class="mono small">{{ discordRoleId }}</dd>
+            </div>
+            <div class="ws-detail-meta-row" *ngIf="createdAt">
+              <dt class="type-label muted">{{ 'staff.workspace.detail.createdAt' | translate }}</dt>
+              <dd>{{ createdAt | date: 'medium' }}</dd>
+            </div>
+          </dl>
+        </div>
+      </details>
+    </div>
+
+    <footer class="staff-role-editor-footer">
+      <button type="button" class="btn btn-secondary" [disabled]="saving" (click)="cancel.emit()">
+        {{ 'common.cancel' | translate }}
+      </button>
+      <button type="button" class="btn btn-primary" [disabled]="saving || disabled" (click)="save.emit()">
+        <span class="spinner inline" *ngIf="saving"></span>
+        {{ (saving ? 'staff.adding' : (editing ? 'common.save' : 'staff.editor.saveCreate')) | translate }}
+      </button>
+    </footer>
+  </div>
+</section>

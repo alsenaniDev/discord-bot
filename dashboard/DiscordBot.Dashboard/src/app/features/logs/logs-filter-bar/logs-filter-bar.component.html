@@ -1,0 +1,60 @@
+<section
+  class="logs-filter-bar ws-toolbar"
+  role="search"
+  [attr.aria-label]="'logs.workspace.filterAria' | translate"
+>
+  <div class="logs-filter-bar-grid">
+    <label class="form-field logs-filter-field">
+      <span class="type-label">{{ 'logs.eventType' | translate }}</span>
+      <select class="input" [(ngModel)]="filters.type" [disabled]="disabled">
+        <option *ngFor="let option of typeOptions" [value]="option.value">
+          {{ option.labelKey | translate }}
+        </option>
+      </select>
+    </label>
+
+    <label class="form-field logs-filter-field">
+      <span class="type-label">{{ 'moderation.from' | translate }}</span>
+      <input class="input" type="date" [(ngModel)]="filters.from" [disabled]="disabled" />
+    </label>
+
+    <label class="form-field logs-filter-field">
+      <span class="type-label">{{ 'moderation.to' | translate }}</span>
+      <input class="input" type="date" [(ngModel)]="filters.to" [disabled]="disabled" />
+    </label>
+
+    <app-member-select
+      class="logs-filter-field"
+      [guildId]="guildId"
+      [label]="'logs.member' | translate"
+      [placeholder]="'memberSelect.placeholder' | translate"
+      [(ngModel)]="filters.userId"
+    ></app-member-select>
+
+    <label class="form-field logs-filter-field logs-filter-field--search">
+      <span class="type-label">{{ 'logs.search' | translate }}</span>
+      <input
+        class="input"
+        type="search"
+        [(ngModel)]="filters.search"
+        [placeholder]="'logs.searchPlaceholder' | translate"
+        [disabled]="disabled"
+        (keyup.enter)="onApply()"
+      />
+    </label>
+  </div>
+
+  <div class="logs-filter-bar-actions">
+    <p class="logs-filter-results muted small" *ngIf="resultCount >= 0">
+      {{ 'logs.workspace.results' | translate:{ count: resultCount } }}
+    </p>
+    <div class="logs-filter-bar-buttons">
+      <button type="button" class="btn btn-primary btn-sm" [disabled]="disabled" (click)="onApply()">
+        {{ 'common.apply' | translate }}
+      </button>
+      <button type="button" class="btn btn-secondary btn-sm" [disabled]="disabled" (click)="onClear()">
+        {{ 'logs.workspace.clearFilters' | translate }}
+      </button>
+    </div>
+  </div>
+</section>

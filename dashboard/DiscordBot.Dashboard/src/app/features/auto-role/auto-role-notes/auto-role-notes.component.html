@@ -1,0 +1,19 @@
+<section class="auto-role-notes ws-panel-pad" [attr.aria-label]="'autoRole.workspace.notes.ariaLabel' | translate">
+  <app-section-header
+    [title]="'autoRole.workspace.notes.title' | translate"
+    [lead]="'autoRole.workspace.notes.lead' | translate"
+    [compact]="true"
+  ></app-section-header>
+
+  <ul class="auto-role-notes-list">
+    <li>{{ 'autoRole.workspace.notes.items.audit' | translate }}</li>
+    <li>{{ 'autoRole.workspace.notes.items.sync' | translate }}</li>
+    <li>{{ 'autoRole.workspace.notes.items.welcome' | translate }}</li>
+  </ul>
+
+  <div class="auto-role-notes-actions">
+    <a *ngIf="logsRoute" class="btn btn-secondary btn-sm" [routerLink]="logsRoute">
+      {{ 'autoRole.workspace.notes.viewLogs' | translate }}
+    </a>
+  </div>
+</section>

@@ -1,0 +1,68 @@
+<article
+  class="modules-module-card"
+  [class.is-locked]="status === 'locked'"
+  [class.is-enabled]="status === 'enabled' || status === 'needsSetup'"
+  [class.is-disabled]="status === 'disabled'"
+  [attr.data-icon-tone]="iconTone"
+>
+  <div class="modules-module-card-main">
+    <div class="modules-module-card-copy">
+      <div class="modules-module-card-title-row">
+        <span class="badge modules-module-card-status" [attr.data-status]="statusBadgeTone">
+          {{ statusLabelKey | translate }}
+        </span>
+        <h3 class="modules-module-card-title">{{ displayName }}</h3>
+      </div>
+
+      <p class="modules-module-card-description muted">{{ displayDescription }}</p>
+
+      <p class="modules-module-card-meta muted small">
+        <app-ui-icon name="clock" size="sm"></app-ui-icon>
+        <span>{{ metaLabelKey | translate }}</span>
+      </p>
+    </div>
+
+    <div class="modules-module-card-icon" aria-hidden="true">
+      <app-ui-icon [name]="$any(icon)" size="sm"></app-ui-icon>
+    </div>
+  </div>
+
+  <div class="modules-module-card-footer">
+    <button
+      type="button"
+      class="btn btn-sm modules-module-card-primary"
+      [class.btn-primary]="primaryAction !== 'configure'"
+      [class.btn-secondary]="primaryAction === 'configure'"
+      [disabled]="saving"
+      (click)="onPrimaryAction()"
+    >
+      <span class="spinner inline" *ngIf="saving && primaryAction === 'enable'" aria-hidden="true"></span>
+      <app-ui-icon *ngIf="primaryAction === 'configure'" name="external" size="sm"></app-ui-icon>
+      {{ primaryActionLabelKey | translate }}
+    </button>
+
+    <div class="modules-module-card-toggle-wrap" *ngIf="status !== 'locked'; else lockedToggle">
+      <button
+        type="button"
+        class="modules-module-card-switch"
+        role="switch"
+        [class.is-on]="toggleChecked"
+        [class.is-saving]="saving"
+        [attr.aria-checked]="toggleChecked"
+        [attr.aria-label]="'modules.card.toggleAria' | translate:{ name: displayName }"
+        [disabled]="!canToggle || saving"
+        (click)="onToggleClick()"
+      >
+        <span class="modules-module-card-switch-track" aria-hidden="true">
+          <span class="modules-module-card-switch-thumb"></span>
+        </span>
+      </button>
+    </div>
+
+    <ng-template #lockedToggle>
+      <div class="modules-module-card-lock" aria-hidden="true">
+        <app-ui-icon name="lock" size="sm"></app-ui-icon>
+      </div>
+    </ng-template>
+  </div>
+</article>

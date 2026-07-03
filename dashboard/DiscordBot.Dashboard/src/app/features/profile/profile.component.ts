@@ -6,6 +6,10 @@ import { GuildService } from '../../core/services/guild.service';
 import { GuildContextService } from '../../core/services/guild-context.service';
 import { ToastService } from '../../core/services/toast.service';
 import { getApiErrorMessage } from '../../core/utils/api-error.util';
+import {
+  PageWorkspaceHeroAction,
+  PageWorkspaceHeroStat
+} from '../../shared/ui/page-workspace-hero/page-workspace-hero.models';
 
 @Component({
   selector: 'app-profile',
@@ -116,5 +120,77 @@ export class ProfileComponent implements OnInit {
     }
 
     return this.translate.instant('settings.validation.invalid');
+  }
+
+  get previewDisplayName(): string {
+    const displayName = this.form?.get('displayName')?.value?.trim();
+    return displayName || this.serverName || this.translate.instant('profile.title');
+  }
+
+  get previewDescription(): string {
+    return this.form?.get('description')?.value?.trim() ?? '';
+  }
+
+  get previewCommunityType(): string {
+    return this.form?.get('communityType')?.value?.trim() ?? '';
+  }
+
+  get previewSupportMessage(): string {
+    return this.form?.get('supportMessage')?.value?.trim() ?? '';
+  }
+
+  get previewRulesUrl(): string {
+    return this.form?.get('rulesUrl')?.value?.trim() ?? '';
+  }
+
+  get previewWebsiteUrl(): string {
+    return this.form?.get('websiteUrl')?.value?.trim() ?? '';
+  }
+
+  get workspaceHeroStats(): PageWorkspaceHeroStat[] {
+    const links = [this.previewRulesUrl, this.previewWebsiteUrl].filter(Boolean).length;
+    const fields = [
+      this.form?.get('displayName')?.value,
+      this.form?.get('description')?.value,
+      this.form?.get('communityType')?.value,
+      this.form?.get('supportMessage')?.value
+    ].filter(value => !!value?.trim()).length;
+    const totalFields = 4;
+    const completion = Math.round((fields / totalFields) * 100);
+
+    return [
+      {
+        label: this.translate.instant('workspaceHero.profile.stats.links'),
+        value: String(links)
+      },
+      {
+        label: this.translate.instant('workspaceHero.profile.stats.fields'),
+        value: `${fields}/${totalFields}`
+      },
+      {
+        label: this.translate.instant('workspaceHero.profile.stats.completion'),
+        value: `${completion}%`
+      },
+      {
+        label: this.translate.instant('workspaceHero.profile.stats.visibility'),
+        value: this.previewCommunityType
+          ? this.translate.instant('workspaceHero.profile.visibilityConfigured')
+          : this.translate.instant('workspaceHero.profile.visibilityIncomplete'),
+        compact: true
+      }
+    ];
+  }
+
+  get workspaceHeroFooter(): string {
+    return this.translate.instant('workspaceHero.profile.footer');
+  }
+
+  get workspaceHeroPrimaryAction(): PageWorkspaceHeroAction {
+    return {
+      label: this.translate.instant('workspaceHero.profile.cta.save'),
+      type: 'submit',
+      disabled: this.saving || this.form?.invalid,
+      loading: this.saving
+    };
   }
 }

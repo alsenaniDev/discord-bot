@@ -955,6 +955,7 @@ public class GuildsController : ControllerBase
                 userId.Value,
                 request.PlanKey,
                 request.DurationMonths,
+                request.ChangeType,
                 cancellationToken);
 
             if (created is null)
@@ -963,6 +964,134 @@ public class GuildsController : ControllerBase
             }
 
             return Ok(created);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
+    [HttpPost("{id:guid}/subscription/upgrade-requests/{requestId:guid}/cancel")]
+    public async Task<ActionResult<PlanUpgradeRequestDto>> CancelUpgradeRequest(
+        Guid id,
+        Guid requestId,
+        CancellationToken cancellationToken)
+    {
+        var discordUserId = User.GetDiscordUserId();
+        var userId = User.GetUserId();
+        if (string.IsNullOrWhiteSpace(discordUserId) || userId is null)
+        {
+            return Unauthorized(new { message = "Missing user identity in token." });
+        }
+
+        try
+        {
+            var cancelled = await _planUpgradeRequestService.CancelRequestAsync(
+                id,
+                requestId,
+                discordUserId,
+                userId.Value,
+                cancellationToken);
+
+            if (cancelled is null)
+            {
+                return NotFound(new { message = "Upgrade request not found or access denied." });
+            }
+
+            return Ok(cancelled);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
+    [HttpGet("{id:guid}/subscription/status")]
+    public async Task<ActionResult<GuildSubscriptionStatusDto>> GetSubscriptionStatus(
+        Guid id,
+        CancellationToken cancellationToken)
+    {
+        var discordUserId = User.GetDiscordUserId();
+        if (string.IsNullOrWhiteSpace(discordUserId))
+        {
+            return Unauthorized(new { message = "Missing Discord user identity in token." });
+        }
+
+        var status = await _planUpgradeRequestService.GetSubscriptionStatusAsync(
+            id,
+            discordUserId,
+            cancellationToken);
+
+        if (status is null)
+        {
+            return NotFound(new { message = "Guild not found or access denied." });
+        }
+
+        return Ok(status);
+    }
+
+    [HttpGet("{id:guid}/subscription/change-requests/current")]
+    public async Task<ActionResult<PlanUpgradeRequestDto>> GetCurrentChangeRequest(
+        Guid id,
+        CancellationToken cancellationToken)
+    {
+        var discordUserId = User.GetDiscordUserId();
+        if (string.IsNullOrWhiteSpace(discordUserId))
+        {
+            return Unauthorized(new { message = "Missing Discord user identity in token." });
+        }
+
+        if (!await _guildAccessService.IsOwnerAsync(id, discordUserId, cancellationToken))
+        {
+            return NotFound(new { message = "Guild not found or access denied." });
+        }
+
+        var current = await _planUpgradeRequestService.GetCurrentChangeRequestAsync(
+            id,
+            discordUserId,
+            cancellationToken);
+
+        if (current is null)
+        {
+            return NoContent();
+        }
+
+        return Ok(current);
+    }
+
+    [HttpPut("{id:guid}/subscription/change-requests/{requestId:guid}/payment")]
+    public async Task<ActionResult<PlanUpgradeRequestDto>> SubmitPaymentReference(
+        Guid id,
+        Guid requestId,
+        [FromBody] SubmitPaymentReferenceRequest request,
+        CancellationToken cancellationToken)
+    {
+        var discordUserId = User.GetDiscordUserId();
+        if (string.IsNullOrWhiteSpace(discordUserId))
+        {
+            return Unauthorized(new { message = "Missing Discord user identity in token." });
+        }
+
+        if (string.IsNullOrWhiteSpace(request.PaymentReference))
+        {
+            return BadRequest(new { message = "PaymentReference is required." });
+        }
+
+        try
+        {
+            var updated = await _planUpgradeRequestService.SubmitPaymentReferenceAsync(
+                id,
+                requestId,
+                discordUserId,
+                request.PaymentReference,
+                cancellationToken);
+
+            if (updated is null)
+            {
+                return NotFound(new { message = "Subscription change not found or access denied." });
+            }
+
+            return Ok(updated);
         }
         catch (InvalidOperationException ex)
         {

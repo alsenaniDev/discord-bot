@@ -1,0 +1,101 @@
+<div
+  class="ws-detail-panel"
+  *ngIf="open"
+  [class.is-open]="open"
+  [class.is-inline]="inline"
+>
+  <div
+    class="ws-detail-panel-backdrop"
+    (click)="onBackdropClick($event)"
+    aria-hidden="true"
+  ></div>
+
+  <aside
+    class="ws-detail-panel-shell"
+    [attr.role]="inline ? 'region' : 'dialog'"
+    [attr.aria-modal]="inline ? null : 'true'"
+    [attr.aria-label]="'moderation.workspace.detailAria' | translate"
+  >
+    <header class="ws-detail-panel-head">
+      <div class="ws-detail-panel-headcopy">
+        <div class="ws-feed-card-head">
+          <h2 #detailTitle class="ws-detail-panel-title" tabindex="-1">
+            {{ actionLabel }}
+          </h2>
+          <app-status-badge [label]="actionLabel" [tone]="badgeTone"></app-status-badge>
+        </div>
+        <time class="muted small" [dateTime]="createdAt">{{ createdAt | date: 'medium' }}</time>
+      </div>
+
+      <button
+        type="button"
+        class="icon-btn btn-ghost ws-detail-panel-close"
+        (click)="closePanel.emit()"
+        [attr.aria-label]="'moderation.workspace.closeDetail' | translate"
+      >
+        <app-ui-icon name="x" size="sm"></app-ui-icon>
+      </button>
+    </header>
+
+    <section class="ws-detail-panel-body">
+      <dl class="ws-detail-meta">
+        <div class="ws-detail-meta-row">
+          <dt class="type-label muted">{{ 'moderation.workspace.detail.user' | translate }}</dt>
+          <dd>{{ targetLabel }}</dd>
+        </div>
+        <div class="ws-detail-meta-row">
+          <dt class="type-label muted">{{ 'moderation.moderator' | translate }}</dt>
+          <dd>{{ moderatorLabel }}</dd>
+        </div>
+        <div class="ws-detail-meta-row">
+          <dt class="type-label muted">{{ 'moderation.workspace.detail.action' | translate }}</dt>
+          <dd>{{ actionLabel }}</dd>
+        </div>
+        <div class="ws-detail-meta-row">
+          <dt class="type-label muted">{{ 'moderation.reason' | translate }}</dt>
+          <dd>{{ reason }}</dd>
+        </div>
+        <div class="ws-detail-meta-row" *ngIf="evidence">
+          <dt class="type-label muted">{{ 'moderation.workspace.detail.evidence' | translate }}</dt>
+          <dd>{{ evidence }}</dd>
+        </div>
+        <div class="ws-detail-meta-row">
+          <dt class="type-label muted">{{ 'moderation.date' | translate }}</dt>
+          <dd>{{ createdAt | date: 'medium' }}</dd>
+        </div>
+        <div class="ws-detail-meta-row">
+          <dt class="type-label muted">{{ 'moderation.workspace.detail.duration' | translate }}</dt>
+          <dd>{{ durationLabel }}</dd>
+        </div>
+      </dl>
+
+      <details class="ws-detail-advanced" [open]="advancedExpanded" (toggle)="onAdvancedToggle($event)">
+        <summary>{{ 'moderation.workspace.advancedDetails' | translate }}</summary>
+        <div class="ws-detail-advanced-body">
+          <dl class="ws-detail-meta">
+            <div class="ws-detail-meta-row">
+              <dt class="type-label muted">{{ 'moderation.workspace.entryId' | translate }}</dt>
+              <dd class="mono small">{{ entryId }}</dd>
+            </div>
+            <div class="ws-detail-meta-row" *ngIf="targetUserId">
+              <dt class="type-label muted">{{ 'moderation.workspace.targetId' | translate }}</dt>
+              <dd class="mono small">{{ targetUserId }}</dd>
+            </div>
+            <div class="ws-detail-meta-row" *ngIf="moderatorUserId">
+              <dt class="type-label muted">{{ 'moderation.workspace.moderatorId' | translate }}</dt>
+              <dd class="mono small">{{ moderatorUserId }}</dd>
+            </div>
+            <div class="ws-detail-meta-row" *ngIf="channelId">
+              <dt class="type-label muted">{{ 'moderation.workspace.channelId' | translate }}</dt>
+              <dd class="mono small">{{ channelId }}</dd>
+            </div>
+            <div class="ws-detail-meta-row" *ngIf="messageCountLabel">
+              <dt class="type-label muted">{{ 'moderation.workspace.messageCount' | translate }}</dt>
+              <dd>{{ messageCountLabel }}</dd>
+            </div>
+          </dl>
+        </div>
+      </details>
+    </section>
+  </aside>
+</div>

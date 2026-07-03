@@ -1,0 +1,134 @@
+<div class="auto-role-editor" [formGroup]="form">
+  <section class="auto-role-editor-section" role="region" [attr.aria-labelledby]="'auto-role-section-basic'">
+    <app-section-header
+      [title]="'autoRole.workspace.sections.basic.title' | translate"
+      [lead]="'autoRole.workspace.sections.basic.lead' | translate"
+      titleId="auto-role-section-basic"
+      [compact]="true"
+    ></app-section-header>
+
+    <div class="auto-role-editor-fields">
+      <label class="checkbox auto-role-editor-toggle">
+        <input type="checkbox" formControlName="autoRoleEnabled" />
+        {{ 'settings.enableAutoRole' | translate }}
+      </label>
+
+      <label class="form-field">
+        <span class="type-label">{{ 'settings.role' | translate }}</span>
+        <select class="input" formControlName="autoRoleId" [attr.aria-describedby]="'auto-role-role-hint'">
+          <option value="">{{ 'settings.selectRole' | translate }}</option>
+          <option *ngFor="let role of assignableRoles" [value]="role.discordRoleId">
+            {{ roleLabel(role) }}
+          </option>
+        </select>
+        <span class="hint" id="auto-role-role-hint">{{ 'autoRole.workspace.fields.roleHint' | translate }}</span>
+        <span class="field-error" *ngIf="fieldError('autoRoleId')">{{ fieldError('autoRoleId') }}</span>
+      </label>
+
+      <app-empty-state
+        *ngIf="!form.get('autoRoleEnabled')?.value"
+        [nested]="true"
+        icon="⏸️"
+        [title]="'autoRole.workspace.empty.disabledTitle' | translate"
+        [description]="'autoRole.workspace.empty.disabledBody' | translate"
+      ></app-empty-state>
+
+      <app-empty-state
+        *ngIf="form.get('autoRoleEnabled')?.value && !form.get('autoRoleId')?.value"
+        [nested]="true"
+        icon="🎭"
+        [title]="'autoRole.workspace.empty.noRoleTitle' | translate"
+        [description]="'autoRole.workspace.empty.noRoleBody' | translate"
+      ></app-empty-state>
+    </div>
+  </section>
+
+  <section class="auto-role-editor-section" role="region" [attr.aria-labelledby]="'auto-role-section-behavior'">
+    <app-section-header
+      [title]="'autoRole.workspace.sections.behavior.title' | translate"
+      [lead]="'autoRole.workspace.sections.behavior.lead' | translate"
+      titleId="auto-role-section-behavior"
+      [compact]="true"
+    ></app-section-header>
+
+    <ul class="auto-role-info-list">
+      <li class="auto-role-info-item">
+        <span class="auto-role-info-icon" aria-hidden="true">👋</span>
+        <div>
+          <p class="type-label">{{ 'autoRole.workspace.behavior.newMembers.title' | translate }}</p>
+          <p class="muted small">{{ 'autoRole.workspace.behavior.newMembers.body' | translate }}</p>
+        </div>
+      </li>
+      <li class="auto-role-info-item">
+        <span class="auto-role-info-icon" aria-hidden="true">⚡</span>
+        <div>
+          <p class="type-label">{{ 'autoRole.workspace.behavior.timing.title' | translate }}</p>
+          <p class="muted small">{{ 'autoRole.workspace.behavior.timing.body' | translate }}</p>
+        </div>
+      </li>
+      <li class="auto-role-info-item">
+        <span class="auto-role-info-icon" aria-hidden="true">📋</span>
+        <div>
+          <p class="type-label">{{ 'autoRole.workspace.behavior.existing.title' | translate }}</p>
+          <p class="muted small">{{ 'autoRole.workspace.behavior.existing.body' | translate }}</p>
+        </div>
+      </li>
+    </ul>
+  </section>
+
+  <section class="auto-role-editor-section auto-role-editor-section--last" role="region" [attr.aria-labelledby]="'auto-role-section-safety'">
+    <app-section-header
+      [title]="'autoRole.workspace.sections.safety.title' | translate"
+      [lead]="'autoRole.workspace.sections.safety.lead' | translate"
+      titleId="auto-role-section-safety"
+      [compact]="true"
+    ></app-section-header>
+
+    <div class="auto-role-safety-stack">
+      <div
+        class="auto-role-safety-card"
+        *ngIf="form.get('autoRoleEnabled')?.value && permissionStatus === 'ready'"
+        data-tone="success"
+        role="status"
+      >
+        <p class="auto-role-safety-title">{{ 'autoRole.workspace.safety.readyTitle' | translate }}</p>
+        <p class="muted small">{{ 'autoRole.workspace.safety.readyBody' | translate }}</p>
+      </div>
+
+      <div
+        class="auto-role-safety-card"
+        *ngIf="form.get('autoRoleEnabled')?.value && permissionStatus === 'blockedManaged'"
+        data-tone="warning"
+        role="alert"
+      >
+        <p class="auto-role-safety-title">{{ 'autoRole.workspace.safety.managedTitle' | translate }}</p>
+        <p class="muted small">{{ 'autoRole.workspace.safety.managedBody' | translate }}</p>
+      </div>
+
+      <div
+        class="auto-role-safety-card"
+        *ngIf="form.get('autoRoleEnabled')?.value && permissionStatus === 'blockedHierarchy'"
+        data-tone="warning"
+        role="alert"
+      >
+        <p class="auto-role-safety-title">{{ 'autoRole.workspace.safety.hierarchyTitle' | translate }}</p>
+        <p class="muted small">{{ 'autoRole.workspace.safety.hierarchyBody' | translate }}</p>
+      </div>
+
+      <div
+        class="auto-role-safety-card"
+        *ngIf="form.get('autoRoleEnabled')?.value && permissionStatus === 'unknown'"
+        data-tone="neutral"
+        role="status"
+      >
+        <p class="auto-role-safety-title">{{ 'autoRole.workspace.safety.unknownTitle' | translate }}</p>
+        <p class="muted small">{{ 'autoRole.workspace.safety.unknownBody' | translate }}</p>
+      </div>
+
+      <div class="auto-role-safety-card auto-role-safety-card--info" data-tone="info">
+        <p class="auto-role-safety-title">{{ 'autoRole.workspace.safety.hierarchyExplainTitle' | translate }}</p>
+        <p class="muted small">{{ 'autoRole.workspace.safety.hierarchyExplainBody' | translate }}</p>
+      </div>
+    </div>
+  </section>
+</div>

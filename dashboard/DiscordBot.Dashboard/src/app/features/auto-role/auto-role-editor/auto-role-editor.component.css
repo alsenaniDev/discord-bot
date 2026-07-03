@@ -1,0 +1,92 @@
+.auto-role-editor {
+  display: grid;
+  gap: var(--space-6);
+}
+
+.auto-role-editor-section {
+  display: grid;
+  gap: var(--space-4);
+  padding-block-end: var(--space-5);
+  border-block-end: 1px solid color-mix(in srgb, var(--color-border) 40%, transparent);
+}
+
+.auto-role-editor-section--last {
+  padding-block-end: 0;
+  border-block-end: 0;
+}
+
+.auto-role-editor-fields {
+  display: grid;
+  gap: var(--space-4);
+}
+
+.auto-role-editor-toggle {
+  align-self: start;
+}
+
+.auto-role-info-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: var(--space-3);
+}
+
+.auto-role-info-item {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: var(--space-3);
+  align-items: start;
+  padding: var(--space-3);
+  border-radius: var(--radius-md);
+  border: 1px solid color-mix(in srgb, var(--color-border) 45%, transparent);
+  background: color-mix(in srgb, var(--color-bg-panel) 60%, transparent);
+}
+
+.auto-role-info-icon {
+  width: 2rem;
+  height: 2rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-md);
+  background: var(--color-bg-card);
+  border: 1px solid color-mix(in srgb, var(--color-border) 50%, transparent);
+}
+
+.auto-role-info-item p {
+  margin: 0;
+}
+
+.auto-role-safety-stack {
+  display: grid;
+  gap: var(--space-3);
+}
+
+.auto-role-safety-card {
+  padding: var(--space-4);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border);
+  background: var(--color-bg-panel);
+  border-inline-start: 3px solid var(--color-border);
+}
+
+.auto-role-safety-card[data-tone='success'] {
+  border-inline-start-color: var(--color-success);
+  background: color-mix(in srgb, var(--color-success-soft) 55%, var(--color-bg-panel));
+}
+
+.auto-role-safety-card[data-tone='warning'] {
+  border-inline-start-color: var(--color-warning);
+  background: color-mix(in srgb, var(--color-warning-soft) 55%, var(--color-bg-panel));
+}
+
+.auto-role-safety-card[data-tone='info'] {
+  border-inline-start-color: var(--color-info);
+}
+
+.auto-role-safety-title {
+  margin: 0 0 var(--space-1);
+  font-weight: 600;
+  color: var(--color-text);
+}

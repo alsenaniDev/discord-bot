@@ -1,21 +1,131 @@
-.page-content {
-  max-width: 720px;
+/* Profile page — domain-specific layout only; shell uses ws-* utilities */
+
+.profile-page {
+  --profile-section-gap: var(--ws-section-gap, var(--space-10));
+  --profile-field-gap: var(--space-5);
 }
 
-.profile-header {
+:host ::ng-deep .profile-atf app-page-workspace-hero .page-workspace-hero {
+  margin: 0;
+}
+
+.profile-workspace-main {
   display: flex;
-  align-items: flex-start;
-  gap: var(--space-4);
+  flex-direction: column;
+  gap: var(--profile-section-gap);
 }
 
-.profile-icon {
-  width: 3rem;
-  height: 3rem;
+.profile-section {
+  padding-block-end: var(--profile-section-gap);
+  border-block-end: 1px solid color-mix(in srgb, var(--color-border) 40%, transparent);
+}
+
+.profile-section:last-child,
+.profile-section--advanced {
+  padding-block-end: 0;
+  border-block-end: none;
+}
+
+.profile-section-fields {
+  display: grid;
+  gap: var(--profile-field-gap);
+  max-width: 36rem;
+}
+
+.profile-section-fields--pair {
+  max-width: none;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.profile-section-fields .form-field {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.profile-section-fields .form-field > span:first-child {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.profile-discord-name {
+  margin: 0;
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-md);
+  background: var(--color-bg-elevated);
+}
+
+.profile-discord-name strong {
+  font-weight: 600;
+}
+
+.profile-branding {
+  display: grid;
+  gap: var(--space-3);
+  max-width: 24rem;
+}
+
+.profile-branding-icon {
+  width: 4.5rem;
+  height: 4.5rem;
+}
+
+.profile-branding-icon img {
+  width: 100%;
+  height: 100%;
   border-radius: var(--radius-md);
   object-fit: cover;
 }
 
-.profile-form {
+.profile-branding-icon.is-empty {
+  width: auto;
+  height: auto;
+}
+
+.profile-branding-icon-empty {
   display: grid;
-  gap: var(--space-4);
+  gap: var(--space-2);
+  padding: var(--space-4);
+  border-radius: var(--radius-md);
+  border: 1px dashed color-mix(in srgb, var(--color-border) 65%, transparent);
+  background: color-mix(in srgb, var(--color-bg-elevated) 80%, transparent);
+  text-align: center;
+  justify-items: center;
+}
+
+.profile-branding-icon-empty p {
+  margin: 0;
+}
+
+.profile-branding-note {
+  margin: 0;
+  line-height: 1.5;
+}
+
+.profile-advanced-notes {
+  margin: 0;
+  padding-inline-start: var(--space-5);
+  display: grid;
+  gap: var(--space-2);
+  max-width: 38rem;
+}
+
+@media (max-width: 960px) {
+  .profile-workspace-aside {
+    order: -1;
+  }
+
+  .profile-section-fields--pair {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 768px) {
+  .profile-workspace-main {
+    gap: var(--space-8);
+  }
+
+  .profile-section {
+    padding-block-end: var(--space-8);
+  }
 }

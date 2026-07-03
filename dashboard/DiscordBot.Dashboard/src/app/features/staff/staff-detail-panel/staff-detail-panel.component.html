@@ -1,0 +1,123 @@
+<div
+  class="ws-detail-panel staff-detail-panel"
+  *ngIf="open"
+  [class.is-open]="open"
+  [class.is-inline]="inline"
+>
+  <div
+    class="ws-detail-panel-backdrop"
+    (click)="onBackdropClick($event)"
+    aria-hidden="true"
+  ></div>
+
+  <aside
+    class="ws-detail-panel-shell"
+    [attr.role]="inline ? 'region' : 'dialog'"
+    [attr.aria-modal]="inline ? null : 'true'"
+    [attr.aria-label]="'staff.workspace.detailAria' | translate"
+  >
+    <header class="ws-detail-panel-head">
+      <div class="ws-detail-panel-headcopy staff-detail-headcopy">
+        <span class="staff-detail-color ws-icon-well" aria-hidden="true">
+          <span class="staff-detail-swatch" [style.background-color]="discordColor"></span>
+        </span>
+        <div>
+          <div class="ws-feed-card-head">
+            <h2 #detailTitle class="ws-detail-panel-title" tabindex="-1">{{ roleName }}</h2>
+            <app-status-badge [label]="statusLabel" [tone]="statusTone"></app-status-badge>
+          </div>
+          <p class="muted small">{{ discordLabel }}</p>
+          <p class="staff-detail-count muted small">
+            {{ 'staff.workspace.permissionCount' | translate:{ count: permissionCount } }}
+            <span class="ws-feed-card-meta-sep" *ngIf="updatedLabel" aria-hidden="true">·</span>
+            <span *ngIf="updatedLabel">{{ updatedLabel }}</span>
+          </p>
+          <span class="badge badge-muted staff-detail-editing" *ngIf="editing">
+            {{ 'staff.workspace.editing' | translate }}
+          </span>
+        </div>
+      </div>
+
+      <button
+        type="button"
+        class="icon-btn btn-ghost ws-detail-panel-close"
+        (click)="closePanel.emit()"
+        [attr.aria-label]="'staff.workspace.closeDetail' | translate"
+      >
+        <app-ui-icon name="x" size="sm"></app-ui-icon>
+      </button>
+    </header>
+
+    <section class="ws-detail-panel-body">
+      <dl class="ws-detail-meta">
+        <div class="ws-detail-meta-row">
+          <dt class="type-label muted">{{ 'staff.workspace.detail.discordRole' | translate }}</dt>
+          <dd>{{ discordLabel }}</dd>
+        </div>
+        <div class="ws-detail-meta-row">
+          <dt class="type-label muted">{{ 'staff.workspace.detail.updated' | translate }}</dt>
+          <dd>{{ updatedLabel }}</dd>
+        </div>
+      </dl>
+
+      <section class="staff-permission-summary" [attr.aria-label]="'staff.workspace.permissionSummaryAria' | translate">
+        <app-section-header
+          [title]="'staff.workspace.permissionSummaryTitle' | translate"
+          [lead]="'staff.workspace.permissionInspectorLead' | translate"
+          [compact]="true"
+        ></app-section-header>
+
+        <app-empty-state
+          *ngIf="permissionGroups.length === 0"
+          icon="🔒"
+          [title]="'staff.workspace.noPermissionsTitle' | translate"
+          [description]="'staff.workspace.noPermissionsBody' | translate"
+        ></app-empty-state>
+
+        <div class="staff-permission-summary-grid" *ngIf="permissionGroups.length > 0">
+          <article class="staff-permission-group" *ngFor="let group of permissionGroups">
+            <h3 class="staff-permission-group-title">{{ group.labelKey | translate }}</h3>
+            <ul class="staff-permission-group-list">
+              <li *ngFor="let item of group.items">
+                <span class="staff-permission-mark" aria-hidden="true">✓</span>
+                <span>{{ item.labelKey | translate }}</span>
+              </li>
+            </ul>
+          </article>
+        </div>
+      </section>
+
+      <details class="ws-detail-advanced" [open]="advancedExpanded" (toggle)="onAdvancedToggle($event)">
+        <summary>{{ 'staff.workspace.advancedDetails' | translate }}</summary>
+        <div class="ws-detail-advanced-body">
+          <dl class="ws-detail-meta">
+            <div class="ws-detail-meta-row">
+              <dt class="type-label muted">{{ 'staff.workspace.detail.roleId' | translate }}</dt>
+              <dd class="mono small">{{ roleId }}</dd>
+            </div>
+            <div class="ws-detail-meta-row">
+              <dt class="type-label muted">{{ 'staff.workspace.detail.discordRoleId' | translate }}</dt>
+              <dd class="mono small">{{ discordRoleId }}</dd>
+            </div>
+            <div class="ws-detail-meta-row">
+              <dt class="type-label muted">{{ 'staff.workspace.detail.createdAt' | translate }}</dt>
+              <dd>{{ createdAt | date: 'medium' }}</dd>
+            </div>
+          </dl>
+        </div>
+      </details>
+
+      <div class="staff-detail-actions">
+        <button type="button" class="btn btn-primary btn-sm" (click)="editPermissions.emit()">
+          {{ 'staff.workspace.actions.editPermissions' | translate }}
+        </button>
+        <button type="button" class="btn btn-secondary btn-sm" (click)="scrollToEditor.emit()">
+          {{ 'staff.workspace.actions.scrollToEditor' | translate }}
+        </button>
+        <button type="button" class="btn btn-danger btn-sm" (click)="deleteMapping.emit()">
+          {{ 'staff.workspace.actions.deleteMapping' | translate }}
+        </button>
+      </div>
+    </section>
+  </aside>
+</div>

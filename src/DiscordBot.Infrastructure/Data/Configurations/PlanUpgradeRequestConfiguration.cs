@@ -13,7 +13,12 @@ public class PlanUpgradeRequestConfiguration : IEntityTypeConfiguration<PlanUpgr
 
         builder.Property(x => x.Status).IsRequired();
         builder.Property(x => x.DurationMonths).IsRequired();
+        builder.Property(x => x.RequestedPlanMonthlyPrice).HasPrecision(10, 2);
+        builder.Property(x => x.EstimatedTotalAmount).HasPrecision(10, 2);
         builder.Property(x => x.AdminNote).HasMaxLength(2000);
+        builder.Property(x => x.AdminOverrideReason).HasMaxLength(2000);
+        builder.Property(x => x.PaymentReference).HasMaxLength(500);
+        builder.Property(x => x.ChangeType).IsRequired();
 
         builder.HasOne(x => x.Guild)
             .WithMany()
@@ -38,6 +43,11 @@ public class PlanUpgradeRequestConfiguration : IEntityTypeConfiguration<PlanUpgr
         builder.HasOne(x => x.ReviewedByAdmin)
             .WithMany()
             .HasForeignKey(x => x.ReviewedByAdminId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        builder.HasOne(x => x.CancelledByUser)
+            .WithMany()
+            .HasForeignKey(x => x.CancelledByUserId)
             .OnDelete(DeleteBehavior.SetNull);
 
         builder.HasIndex(x => new { x.GuildId, x.Status });

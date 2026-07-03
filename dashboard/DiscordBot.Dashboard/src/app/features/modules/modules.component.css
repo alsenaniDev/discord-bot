@@ -1,7 +1,15 @@
-.page-content {
-  max-width: 720px;
+/* Modules page — category grid gap only; shell uses ws-* utilities */
+
+.modules-page {
+  --modules-grid-gap: var(--space-4);
 }
 
-.intro {
-  margin: 0 0 var(--space-4);
+.modules-category-grid {
+  gap: var(--modules-grid-gap);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .modules-layout {
+    scroll-behavior: auto;
+  }
 }

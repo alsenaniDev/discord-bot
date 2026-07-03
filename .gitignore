@@ -18,6 +18,9 @@ obj/
 **/appsettings.Secrets.json
 secrets.json
 
+# Node
+node_modules/
+
 # Angular
 dashboard/DiscordBot.Dashboard/node_modules/
 dashboard/DiscordBot.Dashboard/dist/

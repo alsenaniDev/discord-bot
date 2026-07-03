@@ -1,0 +1,165 @@
+<div
+  class="tickets-context-drawer"
+  *ngIf="ticket && open"
+  [class.is-open]="open"
+  [class.is-inline]="inline"
+>
+  <div
+    class="tickets-context-drawer-backdrop"
+    (click)="onBackdropClick($event)"
+    aria-hidden="true"
+  ></div>
+
+  <aside
+    class="tickets-context-drawer-panel"
+    [attr.role]="inline ? 'region' : 'dialog'"
+    [attr.aria-modal]="inline ? null : 'true'"
+    [attr.aria-label]="'tickets.workspace.drawerAria' | translate"
+  >
+    <header class="tickets-context-drawer-head">
+      <div class="tickets-context-drawer-headcopy">
+        <div class="tickets-context-drawer-title-row">
+          <h2
+            #detailTitle
+            class="tickets-context-drawer-title"
+            tabindex="-1"
+          >
+            {{ 'tickets.conversation.title' | translate:{ number: ticket.ticketNumber } }}
+          </h2>
+          <span class="badge tickets-context-drawer-status" [class.badge-open]="ticketIsOpen">
+            {{ statusLabelKey | translate }}
+          </span>
+        </div>
+        <p class="tickets-context-drawer-meta muted small">
+          {{ 'tickets.owner' | translate }}: {{ ownerLabel }}
+          · {{ 'tickets.conversation.channel' | translate }}: {{ channelLabel }}
+        </p>
+        <p class="tickets-context-drawer-meta muted small">
+          {{ 'common.created' | translate }}: {{ ticket.createdAt | date: 'medium' }}
+          <span *ngIf="ticket.closedAt">
+            · {{ 'common.closed' | translate }}: {{ ticket.closedAt | date: 'medium' }}
+          </span>
+        </p>
+      </div>
+
+      <button
+        type="button"
+        class="icon-btn btn-ghost tickets-context-drawer-close"
+        (click)="closeDrawer.emit()"
+        [attr.aria-label]="'tickets.workspace.closeDrawer' | translate"
+      >
+        <app-ui-icon name="x" size="sm"></app-ui-icon>
+      </button>
+    </header>
+
+    <div class="tickets-context-drawer-actions">
+      <button
+        type="button"
+        class="btn btn-secondary btn-sm"
+        [disabled]="conversationLoading"
+        (click)="refreshConversation.emit()"
+      >
+        <span class="spinner inline" *ngIf="conversationLoading" aria-hidden="true"></span>
+        {{ 'tickets.conversation.refresh' | translate }}
+      </button>
+
+      <button
+        type="button"
+        class="btn btn-secondary btn-sm"
+        *ngIf="canReply && ticketIsOpen"
+        (click)="toggleReply.emit()"
+      >
+        {{ 'tickets.reply' | translate }}
+      </button>
+
+      <button
+        type="button"
+        class="btn btn-danger btn-sm"
+        *ngIf="canClose && ticketIsOpen"
+        [disabled]="isClosing"
+        (click)="closeTicket.emit()"
+      >
+        <span class="spinner inline" *ngIf="isClosing" aria-hidden="true"></span>
+        {{ 'tickets.close' | translate }}
+      </button>
+
+      <a
+        *ngIf="!ticketIsOpen"
+        class="btn btn-secondary btn-sm"
+        [routerLink]="['/guilds', guildId, 'tickets', ticket.ticketId, 'transcript']"
+      >
+        {{ 'tickets.transcript.view' | translate }}
+      </a>
+    </div>
+
+    <section class="tickets-context-drawer-conversation" [attr.aria-label]="'tickets.conversation.title' | translate:{ number: ticket.ticketNumber }">
+      <app-loading-state
+        *ngIf="conversationLoading && conversation.length === 0"
+        [message]="'tickets.conversation.loading' | translate"
+      ></app-loading-state>
+
+      <p class="tickets-context-drawer-error" *ngIf="conversationError">{{ conversationError }}</p>
+
+      <p
+        class="muted tickets-context-drawer-empty"
+        *ngIf="!conversationLoading && !conversationError && conversation.length === 0"
+      >
+        {{ 'tickets.conversation.empty' | translate }}
+      </p>
+
+      <ol class="tickets-conversation-list" *ngIf="conversation.length > 0">
+        <li
+          class="tickets-conversation-item"
+          *ngFor="let event of conversation"
+          [class.is-failed]="event.deliveryStatus === 'Failed'"
+          [class.is-queued]="event.deliveryStatus === 'Queued'"
+          [class.is-delivered]="event.deliveryStatus === 'Delivered'"
+        >
+          <div class="tickets-conversation-item-head">
+            <span class="tickets-conversation-event-type">{{ eventLabel(event) | translate }}</span>
+            <time class="muted small" [dateTime]="event.occurredAt">{{ event.occurredAt | date: 'medium' }}</time>
+          </div>
+          <div class="tickets-conversation-item-meta muted small">
+            <span>{{ event.actorType }}</span>
+            <span *ngIf="event.actorUsername || event.actorDiscordId">
+              · {{ displayMember(event.actorUsername, event.actorDiscordId) }}
+            </span>
+            <span class="tickets-conversation-delivery" *ngIf="showDeliveryBadge(event)">
+              {{ deliveryLabel(event) | translate }}
+            </span>
+          </div>
+          <div class="tickets-conversation-item-content" *ngIf="event.content">{{ event.content }}</div>
+        </li>
+      </ol>
+
+      <button
+        type="button"
+        class="btn btn-secondary btn-sm tickets-context-drawer-load-more"
+        *ngIf="hasMoreConversation"
+        [disabled]="conversationLoadingMore"
+        (click)="loadMoreConversation.emit()"
+      >
+        <span class="spinner inline" *ngIf="conversationLoadingMore" aria-hidden="true"></span>
+        {{ 'tickets.conversation.loadMore' | translate }}
+      </button>
+    </section>
+
+    <div class="tickets-context-drawer-reply" *ngIf="isReplying && canReply && ticketIsOpen">
+      <textarea
+        rows="3"
+        [value]="replyDraft"
+        (input)="onReplyDraftInput($any($event.target).value)"
+        [placeholder]="'tickets.replyPlaceholder' | translate"
+      ></textarea>
+      <button
+        type="button"
+        class="btn btn-primary btn-sm"
+        [disabled]="isSendingReply"
+        (click)="sendReply.emit()"
+      >
+        <span class="spinner inline" *ngIf="isSendingReply" aria-hidden="true"></span>
+        {{ 'tickets.replySend' | translate }}
+      </button>
+    </div>
+  </aside>
+</div>

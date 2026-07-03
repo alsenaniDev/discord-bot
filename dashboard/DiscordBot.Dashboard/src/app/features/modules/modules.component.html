@@ -1,61 +1,62 @@
-<div class="page-content">
+<div class="page-content page-workspace modules-page ws-page ws-page--compact">
   <app-loading-state *ngIf="loading" [message]="'modules.loading' | translate"></app-loading-state>
 
-  <app-empty-state
+  <app-error-state
     *ngIf="!loading && error"
-    icon="⚠️"
     [title]="'modules.loadError' | translate"
     [description]="error"
-  >
-    <button type="button" class="btn btn-secondary btn-sm" (click)="loadModules()">{{ 'common.retry' | translate }}</button>
-  </app-empty-state>
+    [retryLabel]="'common.retry' | translate"
+    (retry)="loadModules()"
+  ></app-error-state>
 
-  <div *ngIf="!loading && !error" class="modules-stack">
-    <p class="muted intro">{{ 'modules.subtitle' | translate }}</p>
+  <div class="modules-layout ws-layout" *ngIf="!loading && !error">
+    <header class="modules-atf ws-atf">
+      <app-page-workspace-hero
+        [ariaLabel]="'modules.hero.ariaLabel' | translate"
+        icon="modules"
+        [title]="'modules.title' | translate"
+        [description]="'modules.hero.description' | translate"
+        [stats]="workspaceHeroStats"
+        [footerMessage]="workspaceHeroFooter"
+        [primaryAction]="workspaceHeroPrimaryAction"
+        (primaryActionClick)="onHeroCta(heroCta)"
+      ></app-page-workspace-hero>
+    </header>
 
-    <article
-      class="card module-card"
-      *ngFor="let module of modules"
-      [class.module-locked]="!module.allowedByPlan"
-    >
-      <div class="module-card-body">
-        <div>
-          <h2>{{ module.name }}</h2>
-          <p class="muted">{{ module.description }}</p>
+    <main class="modules-workspace ws-workspace ws-workspace--sections" id="modules-workspace">
+      <section
+        *ngFor="let group of groupedModules"
+        class="modules-category"
+        role="region"
+        [attr.aria-labelledby]="'modules-category-' + group.category"
+      >
+        <app-section-header
+          [title]="categoryTitleKey(group.category) | translate"
+          [lead]="categoryLeadKey(group.category) | translate"
+          [titleId]="'modules-category-' + group.category"
+          [emphasis]="true"
+          [wideLead]="true"
+          [compact]="true"
+        ></app-section-header>
 
-          <span
-            class="status-pill"
-            *ngIf="module.allowedByPlan"
-            [class.enabled]="effectiveEnabled(module)"
-            [class.disabled]="!effectiveEnabled(module)"
-          >
-            {{ (effectiveEnabled(module) ? 'modules.enabledLabel' : 'modules.disabledLabel') | translate }}
-          </span>
-
-          <span class="status-pill locked" *ngIf="!module.allowedByPlan">
-            {{ 'modules.lockedByPlan' | translate }}
-          </span>
-
-          <p class="plan-upgrade muted small" *ngIf="!module.allowedByPlan">
-            {{ 'modules.upgradePlan' | translate }}
-          </p>
+        <div class="modules-category-grid ws-grid ws-grid--2">
+          <app-modules-module-card
+            *ngFor="let module of group.modules"
+            [module]="module"
+            [icon]="$any(moduleIcon(module.key))"
+            [iconTone]="$any(moduleIconTone(module.key))"
+            [displayName]="moduleDisplayName(module)"
+            [displayDescription]="moduleDisplayDescription(module)"
+            [status]="moduleStatus(module)"
+            [primaryAction]="modulePrimaryAction(module)"
+            [saving]="isSaving(module)"
+            [canToggle]="canToggle(module)"
+            [toggleChecked]="effectiveEnabled(module)"
+            (primaryActionClick)="onModulePrimaryAction(module)"
+            (toggleChange)="onToggle(module, $event)"
+          ></app-modules-module-card>
         </div>
-
-        <label
-          class="toggle"
-          [class.saving]="isSaving(module)"
-          [class.locked]="!module.allowedByPlan"
-        >
-          <input
-            type="checkbox"
-            [checked]="effectiveEnabled(module)"
-            [disabled]="!canToggle(module)"
-            (change)="onToggle(module, $any($event.target).checked)"
-          />
-          <span class="toggle-track" aria-hidden="true"></span>
-          <span class="sr-only">{{ module.name }}</span>
-        </label>
-      </div>
-    </article>
+      </section>
+    </main>
   </div>
 </div>

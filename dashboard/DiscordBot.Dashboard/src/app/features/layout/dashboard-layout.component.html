@@ -15,14 +15,16 @@
     </div>
 
     <nav class="sidebar-nav">
-      <a routerLink="/servers" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }" (click)="closeSidebar()">
+      <a routerLink="/servers" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }"
+        (click)="closeSidebar()">
         <app-ui-icon name="servers" size="sm"></app-ui-icon>
         {{ 'nav.servers' | translate }}
       </a>
 
       <ng-container *ngIf="user?.isAdmin">
         <div class="nav-section-label">{{ 'nav.platformAdmin' | translate }}</div>
-        <a routerLink="/admin" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }" (click)="closeSidebar()">
+        <a routerLink="/admin" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }"
+          (click)="closeSidebar()">
           <app-ui-icon name="admin" size="sm"></app-ui-icon>
           {{ 'nav.adminOverview' | translate }}
         </a>
@@ -46,102 +48,58 @@
 
       <ng-container *ngIf="showGuildNav">
         <div class="nav-section-label">{{ selectedGuild?.name }}</div>
-        <a
-          *ngIf="canManageGuild"
-          [routerLink]="['/guilds', selectedGuild!.id, 'overview']"
-          routerLinkActive="active"
-          (click)="closeSidebar()"
-        >
+        <a *ngIf="canManageGuild" [routerLink]="['/guilds', selectedGuild!.id, 'overview']" routerLinkActive="active"
+          (click)="closeSidebar()">
           <app-ui-icon name="overview" size="sm"></app-ui-icon>
           {{ 'common.overview' | translate }}
         </a>
-        <a
-          *ngIf="canManageGuild"
-          [routerLink]="['/guilds', selectedGuild!.id, 'profile']"
-          routerLinkActive="active"
-          (click)="closeSidebar()"
-        >
+        <a *ngIf="canManageGuild" [routerLink]="['/guilds', selectedGuild!.id, 'profile']" routerLinkActive="active"
+          (click)="closeSidebar()">
           <app-ui-icon name="overview" size="sm"></app-ui-icon>
           {{ 'nav.profile' | translate }}
         </a>
-        <a
-          *ngIf="canManageGuild"
-          [routerLink]="['/guilds', selectedGuild!.id, 'settings']"
-          routerLinkActive="active"
-          (click)="closeSidebar()"
-        >
+        <a *ngIf="canManageGuild" [routerLink]="['/guilds', selectedGuild!.id, 'settings']" routerLinkActive="active"
+          (click)="closeSidebar()">
           <app-ui-icon name="settings" size="sm"></app-ui-icon>
           {{ 'common.settings' | translate }}
         </a>
-        <a
-          *ngIf="canAccessModeration"
-          [routerLink]="['/guilds', selectedGuild!.id, 'tickets']"
-          routerLinkActive="active"
-          (click)="closeSidebar()"
-        >
+        <a *ngIf="canAccessModeration" [routerLink]="['/guilds', selectedGuild!.id, 'tickets']"
+          routerLinkActive="active" (click)="closeSidebar()">
           <app-ui-icon name="tickets" size="sm"></app-ui-icon>
           {{ 'common.tickets' | translate }}
         </a>
-        <a
-          *ngIf="canAccessModeration"
-          [routerLink]="['/guilds', selectedGuild!.id, 'moderation']"
-          routerLinkActive="active"
-          (click)="closeSidebar()"
-        >
+        <a *ngIf="canAccessModeration" [routerLink]="['/guilds', selectedGuild!.id, 'moderation']"
+          routerLinkActive="active" (click)="closeSidebar()">
           <app-ui-icon name="shield" size="sm"></app-ui-icon>
           {{ 'nav.moderation' | translate }}
         </a>
-        <a
-          *ngIf="canManageGuild"
-          [routerLink]="['/guilds', selectedGuild!.id, 'modules']"
-          routerLinkActive="active"
-          (click)="closeSidebar()"
-        >
+        <a *ngIf="canManageGuild" [routerLink]="['/guilds', selectedGuild!.id, 'modules']" routerLinkActive="active"
+          (click)="closeSidebar()">
           <app-ui-icon name="modules" size="sm"></app-ui-icon>
           {{ 'common.modules' | translate }}
         </a>
-        <a
-          *ngIf="canManageGuild"
-          [routerLink]="['/guilds', selectedGuild!.id, 'subscription']"
-          routerLinkActive="active"
-          (click)="closeSidebar()"
-        >
+        <a *ngIf="canManageGuild" [routerLink]="['/guilds', selectedGuild!.id, 'subscription']"
+          routerLinkActive="active" (click)="closeSidebar()">
           <app-ui-icon name="subscription" size="sm"></app-ui-icon>
           {{ 'common.subscription' | translate }}
         </a>
-        <a
-          *ngIf="canAccessModeration"
-          [routerLink]="['/guilds', selectedGuild!.id, 'logs']"
-          routerLinkActive="active"
-          (click)="closeSidebar()"
-        >
+        <a *ngIf="canAccessModeration" [routerLink]="['/guilds', selectedGuild!.id, 'logs']" routerLinkActive="active"
+          (click)="closeSidebar()">
           <app-ui-icon name="logs" size="sm"></app-ui-icon>
           {{ 'nav.logs' | translate }}
         </a>
-        <a
-          *ngIf="canManageGuild"
-          [routerLink]="['/guilds', selectedGuild!.id, 'reaction-roles']"
-          routerLinkActive="active"
-          (click)="closeSidebar()"
-        >
+        <a *ngIf="canManageGuild" [routerLink]="['/guilds', selectedGuild!.id, 'reaction-roles']"
+          routerLinkActive="active" (click)="closeSidebar()">
           <app-ui-icon name="roles" size="sm"></app-ui-icon>
           {{ 'nav.reactionRoles' | translate }}
         </a>
-        <a
-          *ngIf="canManageGuild"
-          [routerLink]="['/guilds', selectedGuild!.id, 'moderation', 'settings']"
-          routerLinkActive="active"
-          (click)="closeSidebar()"
-        >
+        <a *ngIf="canManageGuild" [routerLink]="['/guilds', selectedGuild!.id, 'moderation', 'settings']"
+          routerLinkActive="active" (click)="closeSidebar()">
           <app-ui-icon name="shield" size="sm"></app-ui-icon>
           {{ 'nav.moderationSettings' | translate }}
         </a>
-        <a
-          *ngIf="canManageGuild"
-          [routerLink]="['/guilds', selectedGuild!.id, 'staff']"
-          routerLinkActive="active"
-          (click)="closeSidebar()"
-        >
+        <a *ngIf="canManageGuild" [routerLink]="['/guilds', selectedGuild!.id, 'staff']" routerLinkActive="active"
+          (click)="closeSidebar()">
           <app-ui-icon name="users" size="sm"></app-ui-icon>
           {{ 'nav.staff' | translate }}
         </a>
@@ -150,35 +108,35 @@
   </aside>
 
   <div class="dashboard-main">
-    <header class="topbar">
+    <header class="topbar" [class.topbar--workspace-hero]="usesWorkspaceHero">
       <div class="topbar-start">
-        <button type="button" class="icon-btn menu-toggle" (click)="toggleSidebar()" [attr.aria-label]="'common.menu' | translate">
+        <button type="button" class="icon-btn menu-toggle" (click)="toggleSidebar()"
+          [attr.aria-label]="'common.menu' | translate">
           <app-ui-icon name="menu" size="sm"></app-ui-icon>
         </button>
         <div class="topbar-titles">
           <app-breadcrumbs [items]="breadcrumbs"></app-breadcrumbs>
-          <h1>{{ pageTitleText || (pageTitleKey | translate: pageSubtitleParams) }}</h1>
-          <p class="muted small" *ngIf="pageSubtitleKey">{{ pageSubtitleKey | translate: pageSubtitleParams }}</p>
+          <h1 *ngIf="!usesWorkspaceHero">{{ pageTitleText || (pageTitleKey | translate: pageSubtitleParams) }}</h1>
+          <app-status-strip *ngIf="showMissionControlStatus && !usesWorkspaceHero"
+            [loading]="missionControlHeader.loading" [model]="missionControlHeader.model"></app-status-strip>
+          <p class="muted small" *ngIf="pageSubtitleKey && !showMissionControlStatus && !usesWorkspaceHero">
+            {{ pageSubtitleKey | translate: pageSubtitleParams }}
+          </p>
         </div>
       </div>
 
       <div class="topbar-end">
-        <a
-          *ngIf="discordServerUrl"
-          [href]="discordServerUrl"
-          target="_blank"
-          rel="noopener noreferrer"
-          class="btn btn-secondary btn-sm"
-        >
+        <a *ngIf="discordServerUrl" [href]="discordServerUrl" target="_blank" rel="noopener noreferrer"
+          class="btn btn-secondary btn-sm">
           <app-ui-icon name="external" size="sm"></app-ui-icon>
           <span class="hide-mobile">{{ 'common.openDiscord' | translate }}</span>
         </a>
 
-        <div class="ds-dropdown notifications">
+        <!-- <div class="ds-dropdown notifications">
           <button type="button" class="icon-btn" [attr.aria-label]="'common.notifications' | translate">
             <app-ui-icon name="bell" size="sm"></app-ui-icon>
           </button>
-        </div>
+        </div> -->
 
         <app-language-switcher></app-language-switcher>
         <app-profile-menu [user]="user" (logoutClick)="logout()"></app-profile-menu>

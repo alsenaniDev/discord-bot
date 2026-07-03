@@ -1,0 +1,361 @@
+/**
+ * PP-001 — Design System Foundation
+ * Unified visual language for the Discord Bot Platform dashboard.
+ * Use these classes before adding page-local CSS.
+ */
+
+/* ─── Typography hierarchy ─── */
+
+.type-section-title {
+  font-size: var(--text-xl);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: var(--leading-tight);
+  color: var(--color-text);
+  margin: 0 0 var(--space-3);
+}
+
+.type-card-title {
+  font-size: var(--text-lg);
+  font-weight: 600;
+  line-height: var(--leading-tight);
+  color: var(--color-text);
+  margin: 0 0 var(--space-2);
+}
+
+.type-subtitle {
+  font-size: var(--text-base);
+  font-weight: 500;
+  color: var(--color-text-secondary);
+  margin: 0 0 var(--space-2);
+}
+
+.type-body {
+  font-size: var(--text-base);
+  line-height: var(--leading-normal);
+  color: var(--color-text);
+}
+
+.type-caption {
+  font-size: var(--text-xs);
+  line-height: var(--leading-normal);
+  color: var(--color-text-muted);
+}
+
+.type-label {
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--color-text-secondary);
+}
+
+.type-overline {
+  font-size: var(--text-xs);
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+
+/* ─── Button extensions ─── */
+
+.btn:focus-visible,
+.ds-btn:focus-visible,
+.icon-btn:focus-visible,
+.ds-icon-btn:focus-visible {
+  outline: 2px solid var(--color-brand);
+  outline-offset: 2px;
+}
+
+/* ─── Status badges (extend global .badge) ─── */
+
+.badge-neutral,
+.ds-badge-neutral,
+.badge-muted {
+  background: var(--color-neutral-soft);
+  color: var(--color-text-muted);
+  border-color: rgba(148, 163, 184, 0.25);
+}
+
+.badge-plan,
+.ds-badge-plan {
+  background: var(--color-brand-soft);
+  color: var(--color-text-brand);
+  border-color: rgba(88, 101, 242, 0.35);
+}
+
+.badge-health[data-level='Excellent'],
+.badge-health[data-level='Good'] {
+  background: var(--color-success-soft);
+  color: var(--color-text-success);
+  border-color: rgba(35, 165, 89, 0.3);
+}
+
+.badge-health[data-level='NeedsAttention'] {
+  background: var(--color-warning-soft);
+  color: var(--color-text-warning);
+  border-color: rgba(240, 178, 50, 0.3);
+}
+
+.badge-health[data-level='Critical'] {
+  background: var(--color-error-soft);
+  color: var(--color-text-danger);
+  border-color: rgba(218, 55, 60, 0.3);
+}
+
+.priority-badge {
+  display: inline-flex;
+  font-size: var(--text-xs);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.priority-badge[data-priority='High'] {
+  color: var(--color-text-danger);
+}
+
+.priority-badge[data-priority='Medium'] {
+  color: var(--color-text-warning);
+}
+
+.priority-badge[data-priority='Low'] {
+  color: var(--color-text-muted);
+}
+
+/* ─── Dialogs ─── */
+
+.confirm-overlay,
+.ds-dialog-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-dialog);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-4);
+  background: var(--dialog-overlay);
+  animation: fadeIn var(--duration-fast) var(--ease-out);
+}
+
+.confirm-dialog,
+.ds-dialog {
+  width: min(100%, var(--dialog-width-md));
+  max-height: calc(100vh - var(--space-8));
+  overflow-y: auto;
+  padding: var(--space-6);
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--elevation-3);
+  animation: scaleIn var(--duration-normal) var(--ease-out);
+}
+
+.confirm-dialog.is-sm,
+.ds-dialog.is-sm {
+  width: min(100%, var(--dialog-width-sm));
+}
+
+.confirm-dialog.is-lg,
+.ds-dialog.is-lg {
+  width: min(100%, var(--dialog-width-lg));
+}
+
+.confirm-dialog h2,
+.confirm-dialog h3,
+.ds-dialog h2,
+.ds-dialog h3 {
+  margin: 0 0 var(--space-3);
+  font-size: var(--text-lg);
+}
+
+.confirm-dialog .type-subtitle,
+.ds-dialog .type-subtitle {
+  margin-bottom: var(--space-4);
+}
+
+.confirm-actions,
+.ds-dialog-footer {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: var(--space-2);
+  margin-top: var(--space-5);
+}
+
+/* ─── Banners & notices ─── */
+
+.banner,
+.notice-banner {
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-md);
+  font-size: var(--text-sm);
+  border: 1px solid var(--color-border);
+}
+
+.banner-warning,
+.warning-banner {
+  background: var(--color-warning-soft);
+  border-color: rgba(240, 178, 50, 0.35);
+  color: var(--color-text);
+}
+
+.banner-info {
+  background: var(--color-info-soft);
+  border-color: rgba(0, 168, 252, 0.25);
+  color: var(--color-text);
+}
+
+.banner-success {
+  background: var(--color-success-soft);
+  border-color: rgba(35, 165, 89, 0.35);
+  color: var(--color-text);
+}
+
+.banner-brand,
+.beta-notice {
+  border-inline-start: 4px solid var(--color-brand);
+  background: var(--color-brand-soft);
+  border-color: rgba(88, 101, 242, 0.25);
+}
+
+/* ─── Empty states ─── */
+
+.empty-state-nested {
+  padding: var(--space-6) var(--space-4);
+  background: transparent;
+  border: none;
+  box-shadow: none;
+}
+
+.empty-state-nested .empty-icon {
+  font-size: 2rem;
+  margin-bottom: var(--space-3);
+}
+
+.empty-state-nested h2 {
+  font-size: var(--text-lg);
+}
+
+/* ─── Conversation delivery indicators ─── */
+
+.delivery-indicator {
+  border-inline-start: 3px solid var(--color-border);
+}
+
+.delivery-indicator.is-queued,
+.delivery-indicator.is-warning {
+  border-inline-start-color: var(--color-warning);
+}
+
+.delivery-indicator.is-delivered,
+.delivery-indicator.is-success {
+  border-inline-start-color: var(--color-success);
+}
+
+.delivery-indicator.is-failed,
+.delivery-indicator.is-error {
+  border-inline-start-color: var(--color-error);
+}
+
+.delivery-indicator.is-internal {
+  border-inline-start-color: var(--color-warning);
+}
+
+/* ─── Metric inset tiles ─── */
+
+.metric-tile-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-3);
+}
+
+.metric-tile {
+  padding: var(--space-3);
+  border-radius: var(--radius-md);
+  background: var(--color-bg-elevated);
+  border: 1px solid var(--color-border);
+  min-height: 4.5rem;
+  display: grid;
+  gap: var(--space-1);
+}
+
+.delivery-badge,
+.internal-badge {
+  display: inline-block;
+  margin-inline-start: var(--space-2);
+  padding: 0.1rem 0.4rem;
+  border-radius: var(--radius-full);
+  background: var(--color-bg-panel);
+  border: 1px solid var(--color-border);
+  color: var(--color-text-secondary);
+}
+
+/* ─── Conversation timeline (tickets) ─── */
+
+.conversation-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.conversation-item {
+  padding: var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-bg-elevated);
+  color: var(--color-text);
+  border-inline-start: 3px solid var(--color-border);
+}
+
+.conversation-item.delivery-queued,
+.conversation-item.internal-note {
+  border-inline-start-color: var(--color-warning);
+}
+
+.conversation-item.delivery-delivered {
+  border-inline-start-color: var(--color-success);
+}
+
+.conversation-item.delivery-failed {
+  border-inline-start-color: var(--color-error);
+}
+
+.conversation-item-head {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+  margin-bottom: var(--space-1);
+}
+
+.conversation-event-type {
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.conversation-item-meta {
+  margin-bottom: var(--space-1);
+  color: var(--color-text-secondary);
+}
+
+.conversation-item-content {
+  margin-top: var(--space-2);
+  white-space: pre-wrap;
+  word-break: break-word;
+  color: var(--color-text);
+}
+
+@media (max-width: 640px) {
+  .confirm-actions,
+  .ds-dialog-footer {
+    flex-direction: column;
+  }
+
+  .confirm-actions .btn,
+  .ds-dialog-footer .btn {
+    width: 100%;
+  }
+}

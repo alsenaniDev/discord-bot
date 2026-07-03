@@ -8,22 +8,12 @@ import { DashboardLayoutComponent } from './features/layout/dashboard-layout.com
 import { ServersComponent } from './features/servers/servers.component';
 import { OverviewComponent } from './features/overview/overview.component';
 import { ModerationComponent } from './features/moderation/moderation.component';
-import { SettingsComponent } from './features/settings/settings.component';
 import { TicketsComponent } from './features/tickets/tickets.component';
-import { TicketTranscriptComponent } from './features/tickets/ticket-transcript.component';
 import { ModulesComponent } from './features/modules/modules.component';
 import { LogsComponent } from './features/logs/logs.component';
-import { ReactionRolesComponent } from './features/reaction-roles/reaction-roles.component';
-import { SubscriptionComponent } from './features/subscription/subscription.component';
-import { StaffComponent } from './features/staff/staff.component';
 import { ProfileComponent } from './features/profile/profile.component';
 import { ModerationSettingsComponent } from './features/moderation-settings/moderation-settings.component';
 import { AdminGuard } from './core/guards/admin.guard';
-import { AdminHomeComponent } from './features/admin/admin-home/admin-home.component';
-import { AdminGuildsComponent } from './features/admin/admin-guilds/admin-guilds.component';
-import { AdminUsersComponent } from './features/admin/admin-users/admin-users.component';
-import { AdminUpgradeRequestsComponent } from './features/admin/admin-upgrade-requests/admin-upgrade-requests.component';
-import { AdminPlansComponent } from './features/admin/admin-plans/admin-plans.component';
 
 const routes: Routes = [
   { path: 'login', component: LoginComponent },
@@ -42,13 +32,15 @@ const routes: Routes = [
       },
       {
         path: 'guilds/:id/settings',
-        component: SettingsComponent,
+        loadChildren: () =>
+          import('./features/settings/settings.module').then(m => m.SettingsModule),
         canActivate: [GuildAccessGuard],
         data: { guildAccess: 'owner' }
       },
       {
         path: 'guilds/:id/tickets/:ticketId/transcript',
-        component: TicketTranscriptComponent,
+        loadChildren: () =>
+          import('./features/tickets/ticket-transcript.module').then(m => m.TicketTranscriptModule),
         canActivate: [GuildAccessGuard],
         data: { guildAccess: 'moderation' }
       },
@@ -86,13 +78,15 @@ const routes: Routes = [
       },
       {
         path: 'guilds/:id/reaction-roles',
-        component: ReactionRolesComponent,
+        loadChildren: () =>
+          import('./features/reaction-roles/reaction-roles.module').then(m => m.ReactionRolesModule),
         canActivate: [GuildAccessGuard],
         data: { guildAccess: 'owner' }
       },
       {
         path: 'guilds/:id/subscription',
-        component: SubscriptionComponent,
+        loadChildren: () =>
+          import('./features/subscription/subscription.module').then(m => m.SubscriptionModule),
         canActivate: [GuildAccessGuard],
         data: { guildAccess: 'owner' }
       },
@@ -104,19 +98,16 @@ const routes: Routes = [
       },
       {
         path: 'guilds/:id/staff',
-        component: StaffComponent,
+        loadChildren: () =>
+          import('./features/staff/staff.module').then(m => m.StaffModule),
         canActivate: [GuildAccessGuard],
         data: { guildAccess: 'owner' }
       },
-      { path: 'admin', component: AdminHomeComponent, canActivate: [AdminGuard] },
-      { path: 'admin/guilds', component: AdminGuildsComponent, canActivate: [AdminGuard] },
-      { path: 'admin/users', component: AdminUsersComponent, canActivate: [AdminGuard] },
       {
-        path: 'admin/upgrade-requests',
-        component: AdminUpgradeRequestsComponent,
+        path: 'admin',
+        loadChildren: () => import('./features/admin/admin.module').then(m => m.AdminModule),
         canActivate: [AdminGuard]
       },
-      { path: 'admin/plans', component: AdminPlansComponent, canActivate: [AdminGuard] },
       { path: '', redirectTo: 'servers', pathMatch: 'full' }
     ]
   },
@@ -127,4 +118,4 @@ const routes: Routes = [
   imports: [RouterModule.forRoot(routes)],
   exports: [RouterModule]
 })
-export class AppRoutingModule { }
+export class AppRoutingModule {}

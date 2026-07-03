@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ViewChild } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { TranslateService } from '@ngx-translate/core';
 import { GuildService } from '../../core/services/guild.service';
@@ -18,6 +18,11 @@ import {
   ticketTimelineEventLabel
 } from '../../core/models/ticket.models';
 import { getApiErrorMessage } from '../../core/utils/api-error.util';
+import {
+  PageWorkspaceHeroAction,
+  PageWorkspaceHeroStat
+} from '../../shared/ui/page-workspace-hero/page-workspace-hero.models';
+import { TicketsContextDrawerComponent } from './tickets-context-drawer/tickets-context-drawer.component';
 
 type StatusFilter = 'all' | 'Open' | 'Closed';
 
@@ -27,6 +32,8 @@ type StatusFilter = 'all' | 'Open' | 'Closed';
   styleUrls: ['./tickets.component.css']
 })
 export class TicketsComponent implements OnInit {
+  @ViewChild('ticketDetailPanel') ticketDetailPanel?: TicketsContextDrawerComponent;
+
   guildId = '';
   tickets: TicketSummaryReadModel[] = [];
   loading = true;
@@ -43,7 +50,7 @@ export class TicketsComponent implements OnInit {
   replyDrafts: Record<string, string> = {};
   sendingReplyId = '';
 
-  expandedConversationTicketId = '';
+  selectedTicketId = '';
   conversationLoadingId = '';
   conversationLoadMoreId = '';
   conversationErrors: Record<string, string> = {};
@@ -94,6 +101,10 @@ export class TicketsComponent implements OnInit {
           this.pageSize = page.pageSize;
           this.totalCount = page.totalCount;
           this.totalPages = page.totalPages;
+          if (!this.tickets.some(ticket => ticket.ticketId === this.selectedTicketId)) {
+            this.selectedTicketId = '';
+            this.replyingTicketId = '';
+          }
           this.loading = false;
         },
         error: err => {
@@ -137,6 +148,9 @@ export class TicketsComponent implements OnInit {
     this.guildService.closeTicket(this.guildId, ticket.ticketId).subscribe({
       next: () => {
         this.closingTicketId = '';
+        if (this.selectedTicketId === ticket.ticketId) {
+          this.closeDrawer();
+        }
         this.toast.success(this.translate.instant('tickets.closeSuccess'));
         this.loadTickets();
       },
@@ -177,7 +191,7 @@ export class TicketsComponent implements OnInit {
         this.replyingTicketId = '';
         this.toast.success(this.translate.instant('tickets.replySuccess'));
         this.loadTickets();
-        if (this.expandedConversationTicketId === ticket.ticketId) {
+        if (this.selectedTicketId === ticket.ticketId) {
           this.loadConversation(ticket, true);
         }
       },
@@ -188,16 +202,41 @@ export class TicketsComponent implements OnInit {
     });
   }
 
-  toggleConversation(ticket: TicketSummaryReadModel): void {
-    if (this.expandedConversationTicketId === ticket.ticketId) {
-      this.expandedConversationTicketId = '';
+  selectTicket(ticket: TicketSummaryReadModel): void {
+    if (this.selectedTicketId === ticket.ticketId) {
       return;
     }
 
-    this.expandedConversationTicketId = ticket.ticketId;
+    this.selectedTicketId = ticket.ticketId;
+    this.replyingTicketId = '';
     if (!this.conversations[ticket.ticketId]) {
       this.loadConversation(ticket);
     }
+
+    this.focusSelectedTicket(ticket.ticketId);
+  }
+
+  private focusSelectedTicket(ticketId: string): void {
+    setTimeout(() => {
+      this.ticketDetailPanel?.focusTitle();
+      document.getElementById(`ticket-${ticketId}`)?.scrollIntoView({
+        behavior: 'smooth',
+        block: 'nearest'
+      });
+    });
+  }
+
+  closeDrawer(): void {
+    this.selectedTicketId = '';
+    this.replyingTicketId = '';
+  }
+
+  onReplyDraftChange(ticketId: string, value: string): void {
+    this.replyDrafts[ticketId] = value;
+  }
+
+  get selectedTicket(): TicketSummaryReadModel | null {
+    return this.tickets.find(ticket => ticket.ticketId === this.selectedTicketId) ?? null;
   }
 
   loadConversation(ticket: TicketSummaryReadModel, force = false, append = false): void {
@@ -254,6 +293,54 @@ export class TicketsComponent implements OnInit {
     return this.conversationMeta[ticket.ticketId]?.hasMore ?? false;
   }
 
+  get workspaceHeroStats(): PageWorkspaceHeroStat[] {
+    const openCount = this.tickets.filter(ticket => isTicketOpen(ticket.status)).length;
+    const closedCount = this.tickets.length - openCount;
+
+    return [
+      {
+        label: this.translate.instant('workspaceHero.tickets.stats.open'),
+        value: String(this.statusFilter === 'Open' ? this.totalCount : openCount)
+      },
+      {
+        label: this.translate.instant('workspaceHero.tickets.stats.closed'),
+        value: String(this.statusFilter === 'Closed' ? this.totalCount : closedCount)
+      },
+      {
+        label: this.translate.instant('workspaceHero.tickets.stats.total'),
+        value: String(this.totalCount)
+      },
+      {
+        label: this.translate.instant('workspaceHero.tickets.stats.page'),
+        value: `${this.page}/${Math.max(this.totalPages, 1)}`
+      }
+    ];
+  }
+
+  get workspaceHeroFooter(): string {
+    return this.translate.instant('workspaceHero.tickets.footer');
+  }
+
+  get workspaceHeroPrimaryAction(): PageWorkspaceHeroAction | null {
+    if (!this.canClose) {
+      return null;
+    }
+
+    return {
+      label: this.translate.instant('workspaceHero.tickets.cta.review'),
+      disabled: this.totalCount === 0
+    };
+  }
+
+  onHeroPrimaryAction(): void {
+    const firstOpen = this.tickets.find(ticket => isTicketOpen(ticket.status));
+    if (!firstOpen) {
+      return;
+    }
+
+    this.selectTicket(firstOpen);
+  }
+
   get canReply(): boolean {
     return !!this.access?.canReplyToTickets;
   }
@@ -278,8 +365,8 @@ export class TicketsComponent implements OnInit {
     return this.sendingReplyId === ticket.ticketId;
   }
 
-  isConversationExpanded(ticket: TicketSummaryReadModel): boolean {
-    return this.expandedConversationTicketId === ticket.ticketId;
+  isSelected(ticket: TicketSummaryReadModel): boolean {
+    return this.selectedTicketId === ticket.ticketId;
   }
 
   isConversationLoading(ticket: TicketSummaryReadModel): boolean {

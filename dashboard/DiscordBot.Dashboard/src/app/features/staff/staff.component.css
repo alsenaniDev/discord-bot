@@ -1,28 +1,123 @@
-.add-staff-form {
-  display: grid;
-  gap: var(--space-4);
-  max-width: 42rem;
+.staff-page {
+  --ws-zone-gap: var(--space-4);
 }
 
-.permission-grid {
-  display: grid;
-  gap: var(--space-2);
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+.staff-page--editor-mode {
+  padding-block-end: var(--space-8);
 }
 
-.permission-grid-label {
-  grid-column: 1 / -1;
-  font-weight: 600;
+.staff-page--editor-mode .staff-layout {
+  gap: 0;
 }
 
-.permission-option {
+.staff-editor-mode {
   display: flex;
-  align-items: center;
-  gap: var(--space-2);
+  flex-direction: column;
+  min-width: 0;
+  min-height: 0;
+  scroll-margin-top: var(--topbar-height);
 }
 
-@media (min-width: 768px) {
-  .add-staff-form {
-    max-width: none;
+.staff-layout {
+  gap: var(--space-4);
+}
+
+.staff-atf,
+.staff-workspace-hero {
+  display: block;
+  min-width: 0;
+}
+
+.staff-workspace {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  min-width: 0;
+  min-height: 0;
+}
+
+.staff-workspace-filters {
+  flex-shrink: 0;
+  margin-block-end: 0;
+}
+
+.staff-role-workspace {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.staff-master-detail {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.staff-feed-list {
+  gap: var(--space-3);
+}
+
+.staff-detail-column {
+  position: sticky;
+  top: calc(var(--topbar-height) + var(--space-4));
+  align-self: start;
+}
+
+.staff-management-actions {
+  display: flex;
+  justify-content: flex-start;
+  padding-top: var(--space-2);
+}
+
+.staff-page .ws-feed-column app-empty-state {
+  flex: 0 1 auto;
+  align-self: stretch;
+  padding: var(--space-3);
+}
+
+.staff-page .ws-feed-column app-empty-state .empty-state {
+  padding: var(--space-6) var(--space-4);
+}
+
+.staff-page .ws-feed-column app-empty-state .empty-icon {
+  font-size: 2rem;
+  margin-bottom: var(--space-3);
+}
+
+.staff-page .ws-placeholder-panel {
+  min-height: 11rem;
+  padding: var(--space-6) var(--space-4);
+}
+
+@media (min-width: 1024px) {
+  .staff-page:not(.staff-page--editor-mode) .staff-workspace {
+    gap: var(--space-3);
+  }
+
+  .staff-page:not(.staff-page--editor-mode) .staff-role-workspace {
+    flex: 1 1 auto;
+    min-height: 0;
+  }
+}
+
+@media (max-width: 960px) {
+  .staff-detail-column {
+    position: static;
+  }
+
+  .staff-role-workspace {
+    overflow: visible;
+  }
+
+  .staff-master-detail {
+    overflow: visible;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .staff-layout {
+    scroll-behavior: auto;
   }
 }

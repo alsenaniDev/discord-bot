@@ -1,0 +1,48 @@
+<section
+  class="tickets-filter-bar ws-toolbar"
+  role="search"
+  [attr.aria-label]="'tickets.workspace.filterAria' | translate"
+>
+  <div class="tickets-filter-bar-primary">
+    <div class="filter-pills" role="tablist" [attr.aria-label]="'tickets.filters.status' | translate">
+      <button
+        *ngFor="let filter of filters"
+        type="button"
+        class="filter-pill"
+        role="tab"
+        [class.is-active]="statusFilter === filter"
+        [attr.aria-selected]="statusFilter === filter"
+        [disabled]="disabled"
+        (click)="onFilterClick(filter)"
+      >
+        {{ filterLabelKey(filter) | translate }}
+      </button>
+    </div>
+
+    <p class="tickets-filter-results muted small" *ngIf="totalCount >= 0">
+      {{ 'tickets.workspace.results' | translate:{ count: totalCount } }}
+    </p>
+  </div>
+
+  <div class="tickets-filter-pagination" *ngIf="totalPages > 1">
+    <button
+      type="button"
+      class="btn btn-secondary btn-sm"
+      [disabled]="disabled || page <= 1"
+      (click)="onPrevPage()"
+    >
+      {{ 'tickets.pagination.prev' | translate }}
+    </button>
+    <span class="tickets-filter-page muted small">
+      {{ 'tickets.pagination.page' | translate:{ page: page, total: totalPages } }}
+    </span>
+    <button
+      type="button"
+      class="btn btn-secondary btn-sm"
+      [disabled]="disabled || page >= totalPages"
+      (click)="onNextPage()"
+    >
+      {{ 'tickets.pagination.next' | translate }}
+    </button>
+  </div>
+</section>

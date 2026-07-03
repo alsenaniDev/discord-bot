@@ -1,0 +1,70 @@
+<section
+  class="staff-filter-bar ws-toolbar"
+  role="search"
+  [attr.aria-label]="'staff.workspace.filterAria' | translate"
+>
+  <div class="staff-filter-bar-grid">
+    <label class="form-field staff-filter-field staff-filter-field--search">
+      <span class="type-label">{{ 'staff.workspace.search' | translate }}</span>
+      <input
+        class="input"
+        type="search"
+        [ngModel]="search"
+        (ngModelChange)="searchChange.emit($event)"
+        [placeholder]="'staff.workspace.searchPlaceholder' | translate"
+        [disabled]="disabled"
+      />
+    </label>
+
+    <label class="form-field staff-filter-field">
+      <span class="type-label">{{ 'staff.workspace.roleFilter' | translate }}</span>
+      <select
+        class="input"
+        [ngModel]="roleFilter"
+        (ngModelChange)="roleFilterChange.emit($event)"
+        [disabled]="disabled"
+      >
+        <option *ngFor="let option of roleFilters" [value]="option">
+          {{ ('staff.workspace.roleFilters.' + option) | translate }}
+        </option>
+      </select>
+    </label>
+
+    <label class="form-field staff-filter-field">
+      <span class="type-label">{{ 'staff.workspace.statusFilter' | translate }}</span>
+      <select
+        class="input"
+        [ngModel]="statusFilter"
+        (ngModelChange)="statusFilterChange.emit($event)"
+        [disabled]="disabled"
+      >
+        <option *ngFor="let option of statusFilters" [value]="option">
+          {{ ('staff.workspace.statusFilters.' + option) | translate }}
+        </option>
+      </select>
+    </label>
+
+    <label class="form-field staff-filter-field">
+      <span class="type-label">{{ 'staff.workspace.permissionFilter' | translate }}</span>
+      <select
+        class="input"
+        [ngModel]="permissionFilter"
+        (ngModelChange)="permissionFilterChange.emit($event)"
+        [disabled]="disabled"
+      >
+        <option *ngFor="let option of permissionFilters" [value]="option">
+          {{ ('staff.workspace.permissionFilters.' + option) | translate }}
+        </option>
+      </select>
+    </label>
+  </div>
+
+  <div class="staff-filter-bar-actions">
+    <p class="staff-filter-results muted small" *ngIf="resultCount >= 0">
+      {{ 'staff.workspace.results' | translate:{ count: resultCount } }}
+    </p>
+    <button type="button" class="btn btn-secondary btn-sm" [disabled]="disabled" (click)="onClear()">
+      {{ 'staff.workspace.clearFilters' | translate }}
+    </button>
+  </div>
+</section>

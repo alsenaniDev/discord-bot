@@ -1,24 +1,185 @@
-.page-content {
-  max-width: 960px;
+/* Subscription page — billing-specific layout; shell uses ws-* utilities */
+
+.subscription-page {
+  padding-block-end: calc(var(--ws-zone-gap) + 4.5rem);
 }
 
-.request-form {
+:host ::ng-deep .subscription-atf app-page-workspace-hero .page-workspace-hero {
+  margin-block-end: 0;
+}
+
+:host ::ng-deep .subscription-workspace app-subscription-change-flow .subscription-change-flow {
+  margin-block-end: 0;
+}
+
+:host ::ng-deep .subscription-archive app-subscription-history .subscription-history {
+  margin-block-start: 0;
+}
+
+.subscription-atf {
+  gap: var(--space-6);
+}
+
+.subscription-atf-primary {
+  min-width: 0;
+}
+
+.subscription-atf-meta {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+}
+
+.subscription-trust-strip {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3) var(--space-6);
+  width: 100%;
+  min-width: 0;
+}
+
+.subscription-trust-sla {
+  margin: 0;
+  flex: 1 1 12rem;
+}
+
+.subscription-trust-links {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  flex-shrink: 0;
+}
+
+.subscription-trust-link {
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+  text-decoration: none;
+}
+
+.subscription-trust-link:hover {
+  color: var(--color-brand);
+}
+
+.subscription-trust-sep {
+  color: var(--color-text-muted);
+  user-select: none;
+}
+
+.subscription-workspace.is-active:not(.has-aside) {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.subscription-workspace.is-active:not(.has-aside) .subscription-workspace-main {
+  max-width: 42rem;
+}
+
+.subscription-request-form {
   display: grid;
-  gap: 1rem;
-  max-width: 28rem;
+  gap: var(--space-4);
 }
 
-.expired-note {
-  color: var(--color-warning, #f59e0b);
-  margin-top: 0.75rem;
-}
-
-.subscription-meta {
-  margin-top: 0.35rem;
-}
-
-.estimated-expiry {
-  padding: 0.75rem 1rem;
+.subscription-request-summary {
+  margin: 0;
+  padding: var(--space-4);
   border-radius: var(--radius-md);
-  background: var(--surface-elevated);
+  background: var(--color-bg-elevated);
+  display: grid;
+  gap: var(--space-3);
+}
+
+.subscription-request-summary div {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-4);
+}
+
+.subscription-request-summary dt,
+.subscription-request-summary dd {
+  margin: 0;
+}
+
+.subscription-plans-table-wrap {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.subscription-plans-table tr.is-current {
+  background: color-mix(in srgb, var(--color-success-soft) 12%, transparent);
+}
+
+.subscription-workspace-notice {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: var(--space-4);
+  max-width: 42rem;
+  padding: var(--space-5) 0;
+}
+
+.subscription-workspace-notice-copy .btn {
+  margin-block-start: var(--space-4);
+}
+
+.subscription-archive {
+  padding-block-start: var(--ws-block-gap);
+  border-block-start: 1px solid color-mix(in srgb, var(--color-border) 55%, transparent);
+}
+
+.subscription-sticky-cta {
+  position: fixed;
+  inset-inline: 0;
+  inset-block-end: 0;
+  z-index: var(--z-sticky, 50);
+  padding: var(--space-3) var(--space-4);
+  background: color-mix(in srgb, var(--color-bg-app) 92%, transparent);
+  border-block-start: 1px solid var(--color-border);
+  backdrop-filter: blur(8px);
+}
+
+.subscription-sticky-cta-inner {
+  max-width: var(--page-width-wide);
+  margin-inline: auto;
+}
+
+.subscription-sticky-cta-btn {
+  width: 100%;
+  min-height: 2.75rem;
+}
+
+@media (max-width: 960px) {
+  .subscription-workspace.is-active:not(.has-aside) .subscription-workspace-main {
+    max-width: none;
+  }
+}
+
+@media (max-width: 768px) {
+  .subscription-page {
+    padding-block-end: calc(var(--ws-zone-gap) + 5rem);
+  }
+
+  .subscription-atf {
+    gap: var(--space-5);
+    padding-block-end: var(--space-6);
+  }
+
+  .subscription-trust-strip {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .subscription-trust-sep {
+    display: none;
+  }
+
+  .subscription-workspace-notice {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .subscription-sticky-cta {
+    backdrop-filter: none;
+  }
 }

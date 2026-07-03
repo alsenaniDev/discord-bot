@@ -1,0 +1,81 @@
+<section
+  *ngIf="model"
+  class="activity-timeline"
+  role="region"
+  [attr.aria-label]="'overview.v2.activity.ariaLabel' | translate"
+  [attr.aria-busy]="model.loading"
+>
+  <header class="activity-timeline-header">
+    <h2 class="type-card-title activity-timeline-title">{{ 'overview.v2.activity.title' | translate }}</h2>
+    <button type="button" class="btn btn-ghost btn-sm activity-timeline-view-all" (click)="viewAllClick.emit()">
+      <span>{{ 'overview.v2.activity.viewAll' | translate }}</span>
+      <app-ui-icon name="chevron-right" size="sm" class="activity-timeline-view-all-icon"></app-ui-icon>
+    </button>
+  </header>
+
+  <div class="activity-timeline-panel">
+    <div *ngIf="model.loading" class="activity-timeline-loading" aria-hidden="true">
+      <div class="activity-timeline-row skeleton" *ngFor="let _ of [0, 1, 2]">
+        <span class="activity-timeline-icon skeleton"></span>
+        <span class="activity-timeline-message skeleton skeleton-text"></span>
+        <span class="activity-timeline-time skeleton skeleton-text"></span>
+      </div>
+    </div>
+
+    <div
+      *ngIf="model.error && !model.loading"
+      class="activity-timeline-error"
+      role="status"
+      aria-live="polite"
+    >
+      <p class="type-body">{{ 'overview.v2.activity.error' | translate }}</p>
+      <button type="button" class="btn btn-ghost btn-sm" (click)="retryClick.emit()">
+        {{ 'overview.v2.activity.retry' | translate }}
+      </button>
+    </div>
+
+    <div *ngIf="!model.loading && !model.error && !hasRows" class="activity-timeline-empty">
+      <p class="type-body">{{ 'overview.v2.activity.empty' | translate }}</p>
+      <button type="button" class="btn btn-ghost btn-sm activity-timeline-view-all" (click)="viewAllClick.emit()">
+        <span>{{ 'overview.v2.activity.emptyCta' | translate }}</span>
+        <app-ui-icon name="chevron-right" size="sm" class="activity-timeline-view-all-icon"></app-ui-icon>
+      </button>
+    </div>
+
+    <ng-container *ngIf="!model.loading && !model.error && hasRows">
+      <div class="activity-timeline-group" *ngFor="let group of model.groups; let isLastGroup = last">
+        <h3 class="type-overline activity-timeline-group-label">{{ group.labelKey | translate }}</h3>
+        <ul class="activity-timeline-list" role="list" [class.is-last-group]="isLastGroup">
+          <li *ngFor="let row of group.rows" class="activity-timeline-item" role="listitem">
+            <a
+              *ngIf="row.route; else staticRow"
+              class="activity-timeline-row is-link"
+              [routerLink]="row.route"
+              [attr.aria-label]="rowAriaLabel(row, group.group)"
+              (click)="onRowClick(row, $event)"
+            >
+              <span class="activity-timeline-icon" [attr.data-tone]="row.iconTone" aria-hidden="true">
+                <app-ui-icon [name]="$any(row.icon)" size="sm"></app-ui-icon>
+              </span>
+              <time class="activity-timeline-time type-caption" [attr.datetime]="row.occurredAt">
+                {{ relativeTime(row.occurredAt, group.group) }}
+              </time>
+              <span class="activity-timeline-message type-body">{{ rowMessage(row) }}</span>
+            </a>
+            <ng-template #staticRow>
+              <div class="activity-timeline-row" [attr.aria-label]="rowAriaLabel(row, group.group)">
+                <span class="activity-timeline-icon" [attr.data-tone]="row.iconTone" aria-hidden="true">
+                  <app-ui-icon [name]="$any(row.icon)" size="sm"></app-ui-icon>
+                </span>
+                <time class="activity-timeline-time type-caption" [attr.datetime]="row.occurredAt">
+                  {{ relativeTime(row.occurredAt, group.group) }}
+                </time>
+                <span class="activity-timeline-message type-body">{{ rowMessage(row) }}</span>
+              </div>
+            </ng-template>
+          </li>
+        </ul>
+      </div>
+    </ng-container>
+  </div>
+</section>

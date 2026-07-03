@@ -1,0 +1,105 @@
+.tickets-queue-card {
+  width: 100%;
+  display: grid;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  border-radius: 14px;
+  border: 1px solid color-mix(in srgb, var(--color-border) 50%, transparent);
+  border-inline-start-width: 3px;
+  background: color-mix(in srgb, var(--color-bg-card) 92%, transparent);
+  color: inherit;
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+  transition:
+    border-color var(--duration-fast) var(--ease-out),
+    background var(--duration-fast) var(--ease-out),
+    box-shadow var(--duration-fast) var(--ease-out);
+}
+
+.tickets-queue-card:hover {
+  border-color: color-mix(in srgb, var(--color-brand) 28%, transparent);
+  background: color-mix(in srgb, var(--color-bg-card-hover) 88%, transparent);
+}
+
+.tickets-queue-card.is-selected {
+  border-color: color-mix(in srgb, var(--color-brand) 45%, transparent);
+  border-inline-start-color: var(--color-brand);
+  background: color-mix(in srgb, var(--color-brand) 10%, var(--color-bg-card));
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--color-brand) 18%, transparent);
+}
+
+.tickets-queue-card-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.tickets-queue-card-id {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.tickets-queue-card-number {
+  font-size: var(--text-lg);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+
+.tickets-queue-card-status {
+  font-size: var(--text-xs);
+}
+
+.tickets-queue-card-time {
+  flex-shrink: 0;
+  white-space: nowrap;
+}
+
+.tickets-queue-card-owner {
+  display: grid;
+  gap: var(--space-1);
+}
+
+.tickets-queue-card-owner-name {
+  font-weight: 500;
+}
+
+.tickets-queue-card-preview {
+  margin: 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  line-height: 1.5;
+  font-size: var(--text-sm);
+}
+
+.tickets-queue-card-preview--empty {
+  font-style: italic;
+}
+
+.tickets-queue-card-stats {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.tickets-queue-card-stat-sep {
+  opacity: 0.5;
+}
+
+.tickets-queue-card-stat-failed {
+  color: var(--color-text-danger);
+  font-weight: 600;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tickets-queue-card {
+    transition: none;
+  }
+}

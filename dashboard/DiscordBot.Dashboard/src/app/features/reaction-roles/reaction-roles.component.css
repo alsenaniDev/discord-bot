@@ -1,3 +1,53 @@
-.page-content {
-  max-width: 1000px;
+.reaction-roles-page {
+  --ws-detail-width: min(26rem, 42%);
+  --ws-viewport-offset: calc(
+    var(--topbar-height) + clamp(var(--space-4), 3vw, var(--space-6)) * 2
+  );
+}
+
+:host ::ng-deep .reaction-roles-atf app-page-workspace-hero .page-workspace-hero {
+  margin: 0;
+}
+
+.reaction-roles-atf {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.reaction-roles-workspace-filters {
+  flex-shrink: 0;
+}
+
+.reaction-roles-master-detail {
+  min-height: 0;
+}
+
+.rr-detail-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  flex-shrink: 0;
+}
+
+.rr-message-preview h3 {
+  margin: 0 0 var(--space-2);
+}
+
+.rr-message-preview-card {
+  display: grid;
+  gap: var(--space-2);
+  padding: var(--space-4);
+  border-radius: var(--radius-md);
+  border: 1px solid color-mix(in srgb, var(--color-border) 50%, transparent);
+  background: color-mix(in srgb, var(--color-bg-panel) 80%, transparent);
+}
+
+.rr-message-preview-title {
+  font-size: var(--text-base);
+}
+
+.rr-message-preview-button {
+  justify-self: start;
+  pointer-events: none;
 }

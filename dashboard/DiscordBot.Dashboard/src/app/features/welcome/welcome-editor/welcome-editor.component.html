@@ -1,0 +1,174 @@
+<div class="welcome-editor" [formGroup]="form">
+  <section class="welcome-editor-section" role="region" [attr.aria-labelledby]="'welcome-section-basic'">
+    <app-section-header
+      [title]="'welcome.workspace.sections.basic.title' | translate"
+      [lead]="'welcome.workspace.sections.basic.lead' | translate"
+      titleId="welcome-section-basic"
+      [compact]="true"
+    ></app-section-header>
+
+    <div class="welcome-editor-fields">
+      <label class="checkbox welcome-editor-toggle">
+        <input type="checkbox" formControlName="welcomeEnabled" />
+        {{ 'settings.enableWelcome' | translate }}
+      </label>
+
+      <label class="form-field">
+        <span class="type-label">{{ 'settings.welcomeChannel' | translate }}</span>
+        <select class="input" formControlName="welcomeChannelId">
+          <option value="">{{ 'settings.selectChannel' | translate }}</option>
+          <option *ngFor="let channel of textChannels" [value]="channel.discordChannelId">
+            {{ channelLabel(channel) }}
+          </option>
+        </select>
+        <span class="field-error" *ngIf="fieldError('welcomeChannelId')">{{ fieldError('welcomeChannelId') }}</span>
+      </label>
+
+      <app-empty-state
+        *ngIf="!form.get('welcomeEnabled')?.value"
+        [nested]="true"
+        icon="🔕"
+        [title]="'welcome.workspace.empty.disabledTitle' | translate"
+        [description]="'welcome.workspace.empty.disabledBody' | translate"
+      ></app-empty-state>
+
+      <app-empty-state
+        *ngIf="form.get('welcomeEnabled')?.value && !form.get('welcomeChannelId')?.value"
+        [nested]="true"
+        icon="📣"
+        [title]="'welcome.workspace.empty.noChannelTitle' | translate"
+        [description]="'welcome.workspace.empty.noChannelBody' | translate"
+      ></app-empty-state>
+    </div>
+  </section>
+
+  <section class="welcome-editor-section" role="region" [attr.aria-labelledby]="'welcome-section-message'">
+    <app-section-header
+      [title]="'welcome.workspace.sections.message.title' | translate"
+      [lead]="'welcome.workspace.sections.message.lead' | translate"
+      titleId="welcome-section-message"
+      [compact]="true"
+    ></app-section-header>
+
+    <div class="welcome-editor-fields">
+      <label class="form-field">
+        <span class="type-label">{{ 'welcome.workspace.fields.title' | translate }}</span>
+        <input
+          class="input"
+          type="text"
+          [value]="'welcome.workspace.fields.titleValue' | translate"
+          readonly
+          tabindex="-1"
+          [attr.aria-describedby]="'welcome-title-hint'"
+        />
+        <span class="hint" id="welcome-title-hint">{{ 'welcome.workspace.fields.titleHint' | translate }}</span>
+      </label>
+
+      <label class="form-field">
+        <span class="type-label">{{ 'welcome.workspace.fields.description' | translate }}</span>
+        <textarea
+          class="input welcome-message-input"
+          formControlName="welcomeMessage"
+          rows="5"
+          maxlength="2000"
+          [attr.aria-describedby]="'welcome-message-hint'"
+          (focus)="onFieldFocus('welcomeMessage')"
+        ></textarea>
+        <span class="hint" id="welcome-message-hint">{{ 'settings.welcomePlaceholderHint' | translate }}</span>
+        <span class="field-error" *ngIf="fieldError('welcomeMessage')">{{ fieldError('welcomeMessage') }}</span>
+      </label>
+
+      <div class="welcome-editor-variables">
+        <p class="type-label">{{ 'welcome.workspace.variables.title' | translate }}</p>
+        <p class="hint welcome-editor-variables-lead">{{ 'welcome.workspace.variables.lead' | translate }}</p>
+        <div class="welcome-editor-variables-chips" role="list" [attr.aria-label]="'welcome.workspace.variables.ariaLabel' | translate">
+          <button
+            *ngFor="let variable of variables"
+            type="button"
+            class="welcome-variable-chip filter-pill"
+            role="listitem"
+            [attr.aria-label]="'welcome.workspace.variables.insert' | translate:{ variable: variable }"
+            (click)="onVariableInsert(variable)"
+          >
+            <code>{{ variable }}</code>
+          </button>
+        </div>
+        <p class="welcome-editor-variables-meta muted small">
+          {{ 'welcome.workspace.variables.used' | translate:{ count: variablesUsedCount } }}
+        </p>
+      </div>
+
+      <app-empty-state
+        *ngIf="!form.get('welcomeMessage')?.value?.trim()"
+        [nested]="true"
+        icon="✍️"
+        [title]="'welcome.workspace.empty.noMessageTitle' | translate"
+        [description]="'welcome.workspace.empty.noMessageBody' | translate"
+      ></app-empty-state>
+    </div>
+  </section>
+
+  <section class="welcome-editor-section" role="region" [attr.aria-labelledby]="'welcome-section-appearance'">
+    <app-section-header
+      [title]="'welcome.workspace.sections.appearance.title' | translate"
+      [lead]="'welcome.workspace.sections.appearance.lead' | translate"
+      titleId="welcome-section-appearance"
+      [compact]="true"
+    ></app-section-header>
+
+    <dl class="welcome-editor-meta ws-detail-meta">
+      <div class="ws-detail-meta-row">
+        <dt class="type-label muted">{{ 'welcome.workspace.fields.embedColor' | translate }}</dt>
+        <dd class="welcome-editor-appearance-value">
+          <span class="welcome-editor-color-swatch" aria-hidden="true"></span>
+          {{ 'welcome.workspace.fields.embedColorValue' | translate }}
+        </dd>
+      </div>
+      <div class="ws-detail-meta-row">
+        <dt class="type-label muted">{{ 'welcome.workspace.fields.thumbnail' | translate }}</dt>
+        <dd class="welcome-editor-appearance-value">
+          <span class="welcome-editor-thumb-preview" aria-hidden="true">
+            <span class="welcome-editor-thumb-initials">NM</span>
+          </span>
+          {{ 'welcome.workspace.fields.thumbnailValue' | translate }}
+        </dd>
+      </div>
+      <div class="ws-detail-meta-row">
+        <dt class="type-label muted">{{ 'welcome.workspace.fields.footer' | translate }}</dt>
+        <dd>{{ 'welcome.workspace.fields.footerValue' | translate:{ server: guildName || ('welcome.workspace.sample.server' | translate) } }}</dd>
+      </div>
+    </dl>
+  </section>
+
+  <details class="welcome-editor-advanced">
+    <summary class="welcome-editor-advanced-summary">
+      <app-section-header
+        [title]="'welcome.workspace.sections.advanced.title' | translate"
+        [lead]="'welcome.workspace.sections.advanced.lead' | translate"
+        [compact]="true"
+      ></app-section-header>
+    </summary>
+
+    <div class="welcome-editor-fields welcome-editor-advanced-body">
+      <label class="checkbox welcome-editor-readonly-toggle">
+        <input type="checkbox" checked disabled />
+        {{ 'welcome.workspace.fields.mentionMember' | translate }}
+      </label>
+      <p class="hint">{{ 'welcome.workspace.fields.mentionMemberHint' | translate }}</p>
+
+      <label class="checkbox welcome-editor-readonly-toggle">
+        <input type="checkbox" disabled />
+        {{ 'welcome.workspace.fields.mentionRole' | translate }}
+      </label>
+      <p class="hint">{{ 'welcome.workspace.fields.mentionRoleHint' | translate }}</p>
+    </div>
+  </details>
+
+  <section class="welcome-editor-section welcome-editor-test hide-mobile" role="region" [attr.aria-labelledby]="'welcome-section-test'">
+    <app-welcome-test-section
+      [enabled]="testEnabled"
+      [channelLabel]="testChannelLabel"
+      [previewReady]="testPreviewReady"
+    ></app-welcome-test-section>
+  </section>
+</div>

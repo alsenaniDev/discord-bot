@@ -1,98 +1,41 @@
-<div class="page-content">
-  <app-loading-state *ngIf="loading" [message]="'overview.loading' | translate"></app-loading-state>
+<div class="page-content page-workspace">
+  <app-loading-state *ngIf="loading" [message]="'common.loading' | translate" [skeleton]="true"></app-loading-state>
 
-  <app-empty-state
+  <app-error-state
     *ngIf="!loading && error"
-    icon="⚠️"
     [title]="'overview.loadError' | translate"
     [description]="error"
-  >
-    <button type="button" class="btn btn-primary btn-sm" (click)="loadOverview()">{{ 'common.tryAgain' | translate }}</button>
-  </app-empty-state>
+    [retryLabel]="'common.tryAgain' | translate"
+    (retry)="loadOverview()"
+  ></app-error-state>
 
-  <ng-container *ngIf="!loading && !error && overview">
-    <section class="overview-header card slide-up">
-      <div class="overview-header-main">
-        <div class="overview-avatar" [class.has-image]="overview.iconUrl">
-          <img *ngIf="overview.iconUrl" [src]="overview.iconUrl" [alt]="overview.name" />
-          <span *ngIf="!overview.iconUrl">{{ overview.name.charAt(0) }}</span>
-        </div>
-        <div>
-          <h2>{{ overview.name }}</h2>
-          <p class="muted small">{{ 'overview.subtitle' | translate }}</p>
-        </div>
-      </div>
+  <div class="overview-shell" *ngIf="!loading && !error && overview && experience">
+    <div class="overview-primary" [class.is-drawer-open]="contextDrawerOpen">
+      <app-page-workspace-hero
+        class="overview-workspace-hero slide-up"
+        [ariaLabel]="'workspaceHero.overview.ariaLabel' | translate"
+        [icon]="workspaceHeroIcon"
+        [title]="workspaceHeroTitle"
+        [description]="workspaceHeroDescription"
+        [stats]="workspaceHeroStats"
+        [footerMessage]="workspaceHeroFooter"
+        [primaryAction]="workspaceHeroPrimaryAction"
+        [dismissible]="!!missionCard?.dismissible && !missionCard?.error"
+        [loading]="!!missionCard?.loading"
+        (primaryActionClick)="missionCard?.error ? onMissionRetry() : onMissionCta()"
+        (dismissClick)="onMissionDismiss()"
+      ></app-page-workspace-hero>
 
-      <div class="overview-actions">
-        <button type="button" class="btn btn-primary btn-sm" (click)="goToSettings()">{{ 'common.settings' | translate }}</button>
-        <button type="button" class="btn btn-secondary btn-sm" (click)="goToModules()">{{ 'common.modules' | translate }}</button>
-        <button type="button" class="btn btn-secondary btn-sm" (click)="goToSubscription()">{{ 'common.subscription' | translate }}</button>
-        <button type="button" class="btn btn-secondary btn-sm" (click)="syncDiscordData()" [disabled]="syncing">
-          <span class="spinner inline" *ngIf="syncing"></span>
-          {{ (syncing ? 'overview.syncing' : 'overview.syncDiscord') | translate }}
-        </button>
-      </div>
-    </section>
+      <app-activity-timeline class="overview-activity-timeline slide-up" [model]="activityTimeline"
+        (rowClick)="onActivityRowClick($event)" (viewAllClick)="onActivityViewAll()"
+        (retryClick)="onActivityRetry()"></app-activity-timeline>
 
-    <app-onboarding-checklist
-      *ngIf="overview.onboarding && overview.onboarding.progressPercent < 100"
-      [checklist]="overview.onboarding"
-      [guildId]="guildId"
-    ></app-onboarding-checklist>
-
-    <p class="muted small stats-hint">{{ 'overview.statsHint' | translate }}</p>
-
-    <section class="stats-grid">
-      <article class="stat-card">
-        <span class="stat-label">{{ 'overview.botStatus' | translate }}</span>
-        <strong class="stat-value" [class.status-on]="overview.isActive" [class.status-off]="!overview.isActive">
-          {{ (overview.isActive ? 'common.active' : 'common.inactive') | translate }}
-        </strong>
-      </article>
-      <article class="stat-card">
-        <span class="stat-label">{{ 'overview.channels' | translate }}</span>
-        <strong class="stat-value">{{ overview.totalChannels }}</strong>
-      </article>
-      <article class="stat-card">
-        <span class="stat-label">{{ 'overview.roles' | translate }}</span>
-        <strong class="stat-value">{{ overview.totalRoles }}</strong>
-      </article>
-      <article class="stat-card">
-        <span class="stat-label">{{ 'overview.totalTickets' | translate }}</span>
-        <strong class="stat-value">{{ overview.totalTickets }}</strong>
-      </article>
-      <article class="stat-card">
-        <span class="stat-label">{{ 'overview.openTickets' | translate }}</span>
-        <strong class="stat-value">{{ overview.openTickets }}</strong>
-      </article>
-      <article class="stat-card">
-        <span class="stat-label">{{ 'overview.lastSync' | translate }}</span>
-        <strong class="stat-value stat-value-sm">{{ overview.resourcesSyncedAt ? formatLastSync(overview.resourcesSyncedAt) : ('overview.neverSynced' | translate) }}</strong>
-      </article>
-      <article class="stat-card">
-        <span class="stat-label">{{ 'overview.welcome' | translate }}</span>
-        <strong class="stat-value" [ngClass]="featureClass(moduleEnabled('welcome'))">
-          {{ featureStatus(moduleEnabled('welcome')) | translate }}
-        </strong>
-      </article>
-      <article class="stat-card">
-        <span class="stat-label">{{ 'overview.autoRole' | translate }}</span>
-        <strong class="stat-value" [ngClass]="featureClass(moduleEnabled('auto-role'))">
-          {{ featureStatus(moduleEnabled('auto-role')) | translate }}
-        </strong>
-      </article>
-      <article class="stat-card">
-        <span class="stat-label">{{ 'overview.logs' | translate }}</span>
-        <strong class="stat-value" [ngClass]="featureClass(moduleEnabled('logs'))">
-          {{ featureStatus(moduleEnabled('logs')) | translate }}
-        </strong>
-      </article>
-      <article class="stat-card">
-        <span class="stat-label">{{ 'overview.ticketsModule' | translate }}</span>
-        <strong class="stat-value" [ngClass]="featureClass(moduleEnabled('tickets'))">
-          {{ featureStatus(moduleEnabled('tickets')) | translate }}
-        </strong>
-      </article>
-    </section>
-  </ng-container>
+      <app-context-drawer
+        class="overview-context-drawer slide-up"
+        [model]="contextDrawer"
+        (navigate)="onDrawerNavigate($event)"
+        (openChange)="contextDrawerOpen = $event"
+      ></app-context-drawer>
+    </div>
+  </div>
 </div>

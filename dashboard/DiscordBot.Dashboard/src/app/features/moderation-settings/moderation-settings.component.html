@@ -1,4 +1,4 @@
-<div class="page-content">
+<div class="page-content page-workspace">
   <app-loading-state *ngIf="loading" [message]="'moderationSettings.loading' | translate"></app-loading-state>
 
   <app-empty-state
@@ -11,6 +11,21 @@
   </app-empty-state>
 
   <ng-container *ngIf="!loading && !error">
+    <div class="moderation-settings-layout">
+      <header class="moderation-settings-atf">
+        <app-page-workspace-hero
+          class="moderation-settings-workspace-hero"
+          [ariaLabel]="'workspaceHero.moderationSettings.ariaLabel' | translate"
+          icon="shield"
+          [title]="'titles.moderationSettings' | translate"
+          [description]="'titles.moderationSettingsSubtitle' | translate"
+          [stats]="workspaceHeroStats"
+          [footerMessage]="workspaceHeroFooter"
+          [primaryAction]="workspaceHeroPrimaryAction"
+          (primaryActionClick)="onHeroPrimaryAction()"
+        ></app-page-workspace-hero>
+      </header>
+
     <section class="card add-role-card">
       <h2>{{ formTitleKey | translate }}</h2>
       <p class="muted">{{ 'moderationSettings.hint' | translate }}</p>
@@ -80,5 +95,6 @@
         </table>
       </div>
     </section>
+    </div>
   </ng-container>
 </div>

@@ -1,0 +1,45 @@
+<section class="welcome-test ws-panel-pad" [attr.aria-label]="'welcome.workspace.test.ariaLabel' | translate">
+  <app-section-header
+    [title]="'welcome.workspace.test.title' | translate"
+    [lead]="'welcome.workspace.test.lead' | translate"
+  ></app-section-header>
+
+  <div class="welcome-test-grid">
+    <label class="form-field">
+      <span class="type-label">{{ 'welcome.workspace.test.channel' | translate }}</span>
+      <input
+        class="input"
+        type="text"
+        [value]="channelLabel || ('welcome.workspace.test.noChannel' | translate)"
+        readonly
+        tabindex="-1"
+      />
+    </label>
+
+    <label class="form-field">
+      <span class="type-label">{{ 'welcome.workspace.test.member' | translate }}</span>
+      <input
+        class="input"
+        type="text"
+        [value]="'welcome.workspace.test.memberPlaceholder' | translate"
+        readonly
+        tabindex="-1"
+      />
+    </label>
+  </div>
+
+  <div class="welcome-test-actions">
+    <button type="button" class="btn btn-secondary" disabled [attr.aria-describedby]="'welcome-test-hint'">
+      {{ 'welcome.workspace.test.send' | translate }}
+    </button>
+    <p class="hint" id="welcome-test-hint">{{ 'welcome.workspace.test.hint' | translate }}</p>
+  </div>
+
+  <app-empty-state
+    *ngIf="!previewReady"
+    [nested]="true"
+    icon="🧪"
+    [title]="'welcome.workspace.test.notReadyTitle' | translate"
+    [description]="'welcome.workspace.test.notReadyBody' | translate"
+  ></app-empty-state>
+</section>

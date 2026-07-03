@@ -105,18 +105,26 @@ public class AdminController : ControllerBase
             return Unauthorized(new { message = "Missing user identity in token." });
         }
 
-        var result = await _planUpgradeRequestService.ApproveAsync(
-            id,
-            userId.Value,
-            request.AdminNote,
-            cancellationToken);
-
-        if (result is null)
+        try
         {
-            return NotFound(new { message = "Upgrade request not found or already reviewed." });
-        }
+            var result = await _planUpgradeRequestService.ApproveAsync(
+                id,
+                userId.Value,
+                request.AdminNote,
+                request.AdminOverrideReason,
+                cancellationToken);
 
-        return Ok(result);
+            if (result is null)
+            {
+                return NotFound(new { message = "Upgrade request not found or already reviewed." });
+            }
+
+            return Ok(result);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
     }
 
     [HttpPost("upgrade-requests/{id:guid}/reject")]
@@ -131,18 +139,58 @@ public class AdminController : ControllerBase
             return Unauthorized(new { message = "Missing user identity in token." });
         }
 
-        var result = await _planUpgradeRequestService.RejectAsync(
-            id,
-            userId.Value,
-            request.AdminNote,
-            cancellationToken);
-
-        if (result is null)
+        try
         {
-            return NotFound(new { message = "Upgrade request not found or already reviewed." });
+            var result = await _planUpgradeRequestService.RejectAsync(
+                id,
+                userId.Value,
+                request.AdminNote,
+                cancellationToken);
+
+            if (result is null)
+            {
+                return NotFound(new { message = "Upgrade request not found or already reviewed." });
+            }
+
+            return Ok(result);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
+    }
+
+    [HttpPost("upgrade-requests/{id:guid}/cancel")]
+    public async Task<ActionResult<AdminPlanUpgradeRequestDto>> CancelUpgradeRequest(
+        Guid id,
+        [FromBody] ReviewPlanUpgradeRequest request,
+        CancellationToken cancellationToken)
+    {
+        var userId = User.GetUserId();
+        if (userId is null)
+        {
+            return Unauthorized(new { message = "Missing user identity in token." });
         }
 
-        return Ok(result);
+        try
+        {
+            var result = await _planUpgradeRequestService.CancelRequestAsAdminAsync(
+                id,
+                userId.Value,
+                request.AdminNote,
+                cancellationToken);
+
+            if (result is null)
+            {
+                return NotFound(new { message = "Upgrade request not found." });
+            }
+
+            return Ok(result);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return BadRequest(new { message = ex.Message });
+        }
     }
 
     [HttpPost("guilds/{id:guid}/subscription/extend")]

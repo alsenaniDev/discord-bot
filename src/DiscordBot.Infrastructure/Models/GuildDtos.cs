@@ -79,4 +79,6 @@ public sealed class GuildOverviewDto
     public bool LogsEnabled { get; init; }
     public bool TicketsEnabled { get; init; }
     public OnboardingChecklistDto? Onboarding { get; init; }
+
+    public GuildOverviewExperienceDto? Experience { get; init; }
 }

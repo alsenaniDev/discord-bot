@@ -1,0 +1,48 @@
+<article
+  class="rr-panel-card"
+  [class.is-selected]="selected"
+  [attr.aria-current]="selected ? 'true' : null"
+  [attr.aria-label]="'reactionRoles.workspace.selectPanel' | translate:{ title: title }"
+>
+  <button type="button" class="rr-panel-card-main ws-feed-card" [class.is-selected]="selected" (click)="select.emit()">
+    <span class="ws-feed-card-icon ws-icon-well" [attr.data-tone]="active ? 'success' : 'neutral'" aria-hidden="true">
+      <app-ui-icon name="roles" size="sm"></app-ui-icon>
+    </span>
+
+    <span class="ws-feed-card-body">
+      <span class="ws-feed-card-head">
+        <span class="ws-feed-card-title">{{ title }}</span>
+        <app-status-badge
+          [label]="(active ? 'common.active' : 'common.inactive') | translate"
+          [tone]="active ? 'success' : 'neutral'"
+        ></app-status-badge>
+      </span>
+
+      <span class="ws-feed-card-preview muted" *ngIf="description">{{ description }}</span>
+
+      <span class="ws-feed-card-meta muted small">
+        <span>{{ 'reactionRoles.channel' | translate }}: {{ channelLabel }}</span>
+        <span class="ws-feed-card-meta-sep" aria-hidden="true">·</span>
+        <span>{{ messageStatusLabel }}</span>
+        <span class="ws-feed-card-meta-sep" aria-hidden="true">·</span>
+        <span>{{ 'reactionRoles.workspace.roleCount' | translate:{ count: 1 } }}</span>
+      </span>
+
+      <span class="ws-feed-card-meta muted small">
+        <span>{{ 'reactionRoles.role' | translate }}: {{ roleLabel }}</span>
+      </span>
+    </span>
+  </button>
+
+  <div class="rr-panel-card-actions">
+    <button type="button" class="btn btn-secondary btn-sm" (click)="configure.emit()">
+      {{ 'reactionRoles.workspace.configure' | translate }}
+    </button>
+    <button type="button" class="btn btn-ghost btn-sm" *ngIf="canCopy" (click)="copy.emit()">
+      {{ 'reactionRoles.workspace.copyLink' | translate }}
+    </button>
+    <button type="button" class="btn btn-ghost btn-sm" *ngIf="canOpen" (click)="open.emit()">
+      {{ 'reactionRoles.workspace.openDiscord' | translate }}
+    </button>
+  </div>
+</article>
