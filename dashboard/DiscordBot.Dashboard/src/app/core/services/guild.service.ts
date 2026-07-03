@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, map, switchMap } from 'rxjs';
+import { Observable, catchError, map, shareReplay, switchMap, throwError } from 'rxjs';
 import { environment } from '../../../environments/environment';
 import { GuildSettings, GuildSummary, DiscordChannel, DiscordRole, GuildOverview, RequestResourceSyncResponse, UpdateGuildSettings, GuildProfile, UpdateGuildProfile, ModerationPermissionRole, CreateModerationPermissionRole, UpdateModerationPermissionRole } from '../models/guild.models';
 import { GuildMember } from '../models/guild-member.models';
@@ -37,11 +37,32 @@ import {
 @Injectable({ providedIn: 'root' })
 export class GuildService {
   private readonly baseUrl = environment.apiUrl;
+  private guildsRequest$?: Observable<GuildSummary[]>;
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient) { }
 
-  getGuilds(): Observable<GuildSummary[]> {
-    return this.http.get<GuildSummary[]>(`${this.baseUrl}/api/guilds`);
+  // getGuilds(): Observable<GuildSummary[]> {
+  //   return this.http.get<GuildSummary[]>(`${this.baseUrl}/api/guilds`);
+  // }
+
+  getGuilds(forceRefresh = false): Observable<GuildSummary[]> {
+    if (!this.guildsRequest$ || forceRefresh) {
+      this.guildsRequest$ = this.http
+        .get<GuildSummary[]>(`${this.baseUrl}/api/guilds`)
+        .pipe(
+          shareReplay(1),
+          catchError(error => {
+            this.guildsRequest$ = undefined;
+            return throwError(() => error);
+          })
+        );
+    }
+
+    return this.guildsRequest$;
+  }
+
+  clearGuildsCache(): void {
+    this.guildsRequest$ = undefined;
   }
 
   getOverview(guildId: string): Observable<GuildOverview> {

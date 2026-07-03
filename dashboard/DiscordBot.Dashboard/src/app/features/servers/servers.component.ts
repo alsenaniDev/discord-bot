@@ -31,7 +31,7 @@ export class ServersComponent implements OnInit {
     private toast: ToastService,
     private router: Router,
     private translate: TranslateService
-  ) {}
+  ) { }
 
   get showOnboarding(): boolean {
     return !this.loading && !this.error && this.guilds.length === 0;
@@ -50,12 +50,12 @@ export class ServersComponent implements OnInit {
     this.loadData();
   }
 
-  loadData(): void {
+  loadData(forceRefresh = false): void {
     this.loading = true;
     this.error = '';
 
     forkJoin({
-      guilds: this.guildService.getGuilds(),
+      guilds: this.guildService.getGuilds(forceRefresh),
       onboarding: this.onboardingService.getStatus()
     }).subscribe({
       next: ({ guilds, onboarding }) => {
@@ -80,7 +80,7 @@ export class ServersComponent implements OnInit {
 
   refreshOnboarding(): void {
     this.refreshing = true;
-    this.loadData();
+    this.loadData(true);
   }
 
   checklistForGuild(guildId: string) {

@@ -48,7 +48,7 @@ export class DashboardLayoutComponent implements OnInit, OnDestroy {
     private guildContext: GuildContextService,
     private guildAccessService: GuildAccessService,
     private missionControlHeaderService: MissionControlHeaderService
-  ) {}
+  ) { }
 
   get showMissionControlStatus(): boolean {
     return this.missionControlHeader.visible;
