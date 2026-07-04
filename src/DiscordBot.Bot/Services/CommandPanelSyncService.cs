@@ -39,6 +39,9 @@ public class CommandPanelSyncService
 
         foreach (var item in pending)
         {
+            _logger.LogInformation(
+                "Processing panel {PanelId}: guild {GuildId}, channel {ChannelId}, existing message {MessageId}.",
+                item.PanelId, item.DiscordGuildId, item.ChannelDiscordId, item.MessageDiscordId ?? "none");
             try
             {
                 await ProcessRefreshAsync(client, item, cancellationToken);
@@ -47,8 +50,12 @@ public class CommandPanelSyncService
             {
                 _logger.LogError(
                     ex,
-                    "Failed to refresh command panel for guild {GuildId}.",
-                    item.DiscordGuildId);
+                    "Failed to publish panel {PanelId} in guild {GuildId}, channel {ChannelId}.",
+                    item.PanelId,
+                    item.DiscordGuildId,
+                    item.ChannelDiscordId);
+                await _apiClient.AckCommandPanelAsync(item.PanelId,
+                    new AckCommandPanelApiRequest { Success = false, FailureReason = ex.Message }, cancellationToken);
             }
         }
     }
@@ -58,48 +65,52 @@ public class CommandPanelSyncService
         CommandPanelRefreshApiResponse item,
         CancellationToken cancellationToken)
     {
-        if (!item.Config.Enabled)
-        {
-            await _apiClient.AckCommandPanelAsync(
-                item.DiscordGuildId,
-                new AckCommandPanelApiRequest(),
-                cancellationToken);
-            return;
-        }
-
         if (!ulong.TryParse(item.DiscordGuildId, out var guildId)
-            || !ulong.TryParse(item.Config.ChannelId, out var channelId))
+            || !ulong.TryParse(item.ChannelDiscordId, out var channelId))
         {
             _logger.LogWarning(
                 "Command panel refresh skipped for guild {GuildId}: invalid guild or channel id.",
                 item.DiscordGuildId);
-            return;
+            throw new InvalidOperationException("Invalid Discord guild or channel ID.");
         }
 
-        var guild = client.GetGuild(guildId);
-        var channel = guild?.GetTextChannel(channelId);
-        if (channel is null)
+        if (item.PanelId == Guid.Empty)
+            throw new InvalidOperationException("The pending panel response did not contain a valid panel ID.");
+
+        var guild = client.GetGuild(guildId)
+            ?? throw new InvalidOperationException("The bot could not find the configured Discord guild.");
+        var resolvedChannel = guild.GetChannel(channelId);
+        if (resolvedChannel is not SocketTextChannel channel)
         {
             _logger.LogWarning(
-                "Command panel channel {ChannelId} not found in guild {GuildId}.",
+                "Panel {PanelId} channel {ChannelId} was not found or is not a text channel in guild {GuildId}.",
+                item.PanelId,
                 channelId,
                 guildId);
-            return;
+            throw new InvalidOperationException("Configured Discord channel was not found or is not a text channel.");
         }
 
-        if (!string.IsNullOrWhiteSpace(item.Config.ImageUrl)
-            && !IsValidPanelImageUrl(item.Config.ImageUrl))
+        var permissions = guild.CurrentUser.GetPermissions(channel);
+        if (!permissions.ViewChannel || !permissions.SendMessages || !permissions.EmbedLinks)
+        {
+            throw new InvalidOperationException("The bot needs View Channel, Send Messages, and Embed Links permissions in the configured channel.");
+        }
+
+        var imageUrl = item.ImageUrl;
+        if (!string.IsNullOrWhiteSpace(imageUrl)
+            && !IsValidPanelImageUrl(imageUrl))
         {
             _logger.LogWarning(
                 "Command panel image URL is invalid for guild {GuildId}; embed will be posted without an image.",
                 item.DiscordGuildId);
+            imageUrl = null;
         }
 
         var embed = _embeds.BuildCommandPanel(
-            item.Config.Title,
-            item.Config.Description,
-            item.Config.ImageUrl);
-        var components = _components.BuildCommandPanelComponents(item.Config.Buttons);
+            item.Title,
+            item.Description,
+            imageUrl);
+        var components = _components.BuildCommandPanelComponents(item.PanelId, item.Buttons);
         if (components.Components.Count == 0)
         {
             _logger.LogWarning(
@@ -108,10 +119,17 @@ public class CommandPanelSyncService
         }
 
         IUserMessage? message = null;
-        if (!string.IsNullOrWhiteSpace(item.Config.MessageId)
-            && ulong.TryParse(item.Config.MessageId, out var messageId))
+        if (!string.IsNullOrWhiteSpace(item.MessageDiscordId)
+            && ulong.TryParse(item.MessageDiscordId, out var messageId))
         {
-            message = await channel.GetMessageAsync(messageId) as IUserMessage;
+            try
+            {
+                message = await channel.GetMessageAsync(messageId) as IUserMessage;
+            }
+            catch (Discord.Net.HttpException ex) when (ex.HttpCode == System.Net.HttpStatusCode.NotFound)
+            {
+                _logger.LogInformation("Panel {PanelId} message {MessageId} no longer exists; creating a replacement.", item.PanelId, messageId);
+            }
         }
 
         if (message is null)
@@ -130,14 +148,16 @@ public class CommandPanelSyncService
         }
 
         await _apiClient.AckCommandPanelAsync(
-            item.DiscordGuildId,
-            new AckCommandPanelApiRequest { MessageId = message.Id.ToString() },
+            item.PanelId,
+            new AckCommandPanelApiRequest { MessageDiscordId = message.Id.ToString(), Success = true },
             cancellationToken);
 
         _logger.LogInformation(
-            "Updated command panel in guild {GuildId}, channel {ChannelId}.",
+            "Published panel {PanelId} in guild {GuildId}, channel {ChannelId}, message {MessageId}.",
+            item.PanelId,
             guildId,
-            channelId);
+            channelId,
+            message.Id);
     }
 
     private static bool IsValidPanelImageUrl(string url) =>

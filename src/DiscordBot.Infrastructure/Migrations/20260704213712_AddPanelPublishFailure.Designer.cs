@@ -3,6 +3,7 @@ using System;
 using DiscordBot.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace DiscordBot.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260704213712_AddPanelPublishFailure")]
+    partial class AddPanelPublishFailure
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -332,13 +335,7 @@ namespace DiscordBot.Infrastructure.Migrations
                     b.Property<bool>("IsPublished")
                         .HasColumnType("boolean");
 
-                    b.Property<DateTimeOffset?>("LastPublishAttemptedAtUtc")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<bool>("LastPublishFailed")
-                        .HasColumnType("boolean");
-
-                    b.Property<string>("LastPublishFailureReason")
+                    b.Property<string>("LastPublishError")
                         .HasMaxLength(1000)
                         .HasColumnType("character varying(1000)");
 

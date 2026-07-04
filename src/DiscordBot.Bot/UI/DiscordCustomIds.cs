@@ -28,6 +28,17 @@ public static class DiscordCustomIds
     public static string PanelButton(string action, string buttonId) =>
         $"{PanelPrefix}{action}:{buttonId}";
 
+    public static string PanelButton(Guid panelId, Guid buttonId) =>
+        $"panel:{panelId:D}:button:{buttonId:D}";
+
+    public static bool TryParsePanelButton(string customId, out Guid panelId, out Guid buttonId)
+    {
+        panelId = Guid.Empty; buttonId = Guid.Empty;
+        var parts = customId.Split(':');
+        return parts.Length == 4 && parts[0] == "panel" && parts[2] == "button"
+            && Guid.TryParse(parts[1], out panelId) && Guid.TryParse(parts[3], out buttonId);
+    }
+
     public static bool TryParsePanelAction(string customId, out string action)
     {
         action = string.Empty;

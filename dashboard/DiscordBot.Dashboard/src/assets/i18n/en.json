@@ -55,6 +55,7 @@
     "moderation": "Moderation",
     "logs": "Logs",
     "reactionRoles": "Reaction Roles",
+    "panels": "Member panels",
     "staff": "Roles & permissions",
     "profile": "Server profile",
     "moderationSettings": "Moderation permissions",
@@ -2085,6 +2086,68 @@
         "emptyBody": "Select permissions below to preview the access this role will receive."
       }
     }
+  },
+  "panels": {
+    "loading": "Loading member panels…",
+    "title": "Member panels",
+    "subtitle": "Build reusable Discord panels with ticket, link, message, and role actions.",
+    "notice": "Publishing is handled by the bot. Saved changes update the existing Discord message whenever one is already linked.",
+    "hero": { "ariaLabel": "Member panels workspace", "footer": "Create focused entry points for support and community actions." },
+    "stats": { "total": "Panels", "published": "Published", "pending": "Publish requested" },
+    "tabs": { "ariaLabel": "Panel workspace views", "list": "Panels", "create": "Create panel", "edit": "Edit panel" },
+    "actions": {
+      "create": "Create panel", "publish": "Publish", "publishing": "Publishing…", "duplicate": "Duplicate",
+      "delete": "Delete", "back": "Back to panels", "addButton": "Add button", "moveUp": "Move button up",
+      "moveDown": "Move button down", "saving": "Saving…", "saveAndPublish": "Save and publish to Discord"
+    },
+    "list": { "title": "Configured panels", "lead": "Manage content, destinations, actions, and publishing state.", "buttons": "Buttons", "lastPublished": "Last published" },
+    "empty": { "title": "No panels yet", "description": "Create your first panel to give members a clear way to open tickets or use server actions." },
+    "editor": {
+      "createTitle": "Create panel", "editTitle": "Edit panel", "lead": "Configure the Discord message and up to 25 buttons.",
+      "detailsTitle": "Panel details", "detailsLead": "Choose where the panel lives and what members will see."
+    },
+    "fields": {
+      "name": "Internal panel name", "channel": "Discord channel", "selectChannel": "Select a channel",
+      "channelHint": "A channel is optional while drafting and required when publishing.", "title": "Embed title",
+      "description": "Embed description", "imageUrl": "Image HTTPS URL", "enabled": "Panel enabled",
+      "buttonLabel": "Button label", "emoji": "Emoji", "emojiPlaceholder": "Example: 🎫", "actionType": "Action",
+      "style": "Discord style", "defaultTicketFlow": "This project currently uses the default ticket flow; no ticket type is required.",
+      "url": "Destination HTTPS URL", "responseMessage": "Ephemeral response message",
+      "ephemeralHint": "Only the member who clicks the button will see this response.", "role": "Discord role",
+      "selectRole": "Select a role", "roleIdFallback": "Discord role ID — advanced fallback",
+      "roleFallbackHint": "No synced assignable roles were found. Sync server resources, or enter an ID only if necessary.",
+      "noAssignableRolesTitle": "No assignable roles", "noAssignableRolesBody": "All synced roles are managed by Discord. Create or sync a role the bot can manage.",
+      "buttonEnabled": "Render this button in Discord"
+    },
+    "buttons": {
+      "title": "Panel buttons", "lead": "{{count}} of 25 buttons configured; Discord displays at most five per row.",
+      "emptyTitle": "No buttons configured", "emptyDescription": "Add a button to create a member action.", "buttonNumber": "Button {{number}}"
+    },
+    "status": {
+      "failed": "Publish failed", "requested": "Publish requested", "published": "Published", "notPublished": "Not published",
+      "never": "Never", "failureDetail": "Last publish error"
+    },
+    "preview": {
+      "ariaLabel": "Discord panel preview", "title": "Discord preview", "brand": "Discord", "lead": "Approximate message layout and button rows.",
+      "noTitle": "Panel title", "noDescription": "No description", "imageAlt": "Panel preview image", "buttonFallback": "Button"
+    },
+    "actionTypes": { "CreateTicket": "Create ticket", "OpenUrl": "Open URL", "SendMessage": "Send message", "AssignRole": "Toggle role" },
+    "styles": { "Primary": "Primary", "Secondary": "Secondary", "Success": "Success", "Danger": "Danger", "Link": "Link" },
+    "actionHelp": { "CreateTicket": "Creates a ticket using the server's default ticket configuration." },
+    "validation": {
+      "fixErrors": "Review the highlighted fields before saving.", "nameRequired": "Panel name is required.",
+      "titleOrDescription": "Enter a title or description.", "channelForPublish": "Select a channel before publishing.",
+      "enableBeforePublish": "Enable the panel before publishing.", "buttonLabelRequired": "Button label is required.",
+      "httpsUrl": "Enter a valid HTTPS URL.", "messageRequired": "A response message is required.", "roleRequired": "Select a role."
+    },
+    "messages": {
+      "loadError": "Could not load member panels.", "saved": "Panel saved.", "saveError": "Could not save the panel.",
+      "publishRequested": "Publishing has been requested.", "savedAndPublishRequested": "Panel saved and publishing requested.",
+      "publishError": "Could not request publishing.", "deleted": "Panel deleted.", "deleteError": "Could not delete the panel."
+    },
+    "defaults": { "title": "How can we help?", "description": "Choose one of the actions below." },
+    "duplicateName": "{{name}} — copy",
+    "dialogs": { "deleteConfirm": "Delete panel “{{name}}”? This cannot be undone." }
   },
   "toast": {
     "dismiss": "Dismiss notification"

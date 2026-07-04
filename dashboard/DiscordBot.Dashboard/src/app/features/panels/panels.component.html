@@ -1,0 +1,155 @@
+<div class="page-content page-workspace panels-page">
+  <app-loading-state *ngIf="loading" [message]="'panels.loading' | translate"></app-loading-state>
+
+  <app-error-state *ngIf="!loading && error" [title]="'panels.messages.loadError' | translate"
+    [description]="error" [retryLabel]="'common.tryAgain' | translate" (retry)="load()"></app-error-state>
+
+  <div class="settings-stack settings-stack--welcome" *ngIf="!loading && !error">
+    <header class="settings-atf settings-atf--welcome">
+      <app-page-workspace-hero
+        class="settings-workspace-hero"
+        [ariaLabel]="'panels.hero.ariaLabel' | translate" icon="tickets"
+        [title]="'panels.title' | translate" [description]="'panels.subtitle' | translate"
+        [stats]="workspaceHeroStats" [footerMessage]="'panels.hero.footer' | translate"
+        [primaryAction]="workspaceHeroPrimaryAction" (primaryActionClick)="onHeroAction()">
+      </app-page-workspace-hero>
+    </header>
+
+    <nav class="settings-tabs" [attr.aria-label]="'panels.tabs.ariaLabel' | translate">
+      <button type="button" class="settings-tab" [class.active]="!showEditor" (click)="cancel()">{{ 'panels.tabs.list' | translate }}</button>
+      <button type="button" class="settings-tab" [class.active]="showEditor" (click)="create()">{{ (editingId && showEditor ? 'panels.tabs.edit' : 'panels.tabs.create') | translate }}</button>
+    </nav>
+
+    <main class="panels-list" *ngIf="!showEditor">
+      <app-page-notice>{{ 'panels.notice' | translate }}</app-page-notice>
+      <app-section-header [title]="'panels.list.title' | translate" [lead]="'panels.list.lead' | translate" [compact]="true"></app-section-header>
+
+      <app-empty-state *ngIf="panels.length === 0" icon="🧩" [title]="'panels.empty.title' | translate"
+        [description]="'panels.empty.description' | translate">
+        <button type="button" class="btn btn-primary" (click)="create()">{{ 'panels.actions.create' | translate }}</button>
+      </app-empty-state>
+
+      <div class="panels-grid" *ngIf="panels.length > 0" role="list">
+        <article class="card panel-card" *ngFor="let panel of panels" role="listitem">
+          <div class="panel-card-head">
+            <div class="panel-card-identity"><h2>{{ panel.name }}</h2><span class="muted small">{{ channelName(panel.channelDiscordId) }}</span></div>
+            <app-status-badge [label]="statusKey(panel) | translate" [tone]="statusTone(panel)"></app-status-badge>
+          </div>
+          <div class="panel-card-copy">
+            <h3 *ngIf="panel.title">{{ panel.title }}</h3>
+            <p class="muted">{{ panel.description || ('panels.preview.noDescription' | translate) }}</p>
+          </div>
+          <dl class="panel-card-meta">
+            <div><dt>{{ 'panels.list.buttons' | translate }}</dt><dd>{{ panel.buttons.length }}</dd></div>
+            <div><dt>{{ 'panels.list.lastPublished' | translate }}</dt><dd>{{ panel.lastPublishedAtUtc ? (panel.lastPublishedAtUtc | date:'medium') : ('panels.status.never' | translate) }}</dd></div>
+          </dl>
+          <p class="panel-publish-error" *ngIf="panel.publishStatus === 'Failed' && panel.lastPublishFailureReason">{{ 'panels.status.failureDetail' | translate }}: {{ panel.lastPublishFailureReason }}</p>
+          <footer class="panel-card-actions">
+            <button type="button" class="btn btn-primary btn-sm" (click)="publish(panel)" [disabled]="publishingId === panel.id || panel.publishStatus === 'PendingPublish' || !panel.isEnabled">
+              {{ (publishingId === panel.id || panel.publishStatus === 'PendingPublish' ? 'panels.actions.publishing' : 'panels.actions.publish') | translate }}
+            </button>
+            <button type="button" class="btn btn-secondary btn-sm" (click)="edit(panel)">{{ 'common.edit' | translate }}</button>
+            <button type="button" class="btn btn-secondary btn-sm" (click)="duplicate(panel)">{{ 'panels.actions.duplicate' | translate }}</button>
+            <button type="button" class="btn btn-danger btn-sm" (click)="remove(panel)">{{ 'panels.actions.delete' | translate }}</button>
+          </footer>
+        </article>
+      </div>
+    </main>
+
+    <form *ngIf="showEditor" [formGroup]="form" (ngSubmit)="save()" class="welcome-workspace panel-editor">
+      <div class="welcome-workspace-head">
+        <app-page-notice>{{ 'panels.editor.lead' | translate }}</app-page-notice>
+        <div class="welcome-toolbar ws-toolbar">
+          <div class="welcome-toolbar-status">
+            <app-status-badge [label]="(form.controls.isEnabled.value ? 'common.enabled' : 'common.disabled') | translate"
+              [tone]="form.controls.isEnabled.value ? 'success' : 'neutral'"></app-status-badge>
+            <span class="welcome-toolbar-channel muted small">{{ channelName(form.controls.channelDiscordId.value || '') || ('panels.fields.selectChannel' | translate) }}</span>
+          </div>
+          <p class="welcome-toolbar-hint muted small">{{ (editingId ? 'panels.editor.editTitle' : 'panels.editor.createTitle') | translate }}</p>
+        </div>
+      </div>
+
+      <div class="welcome-workspace-split">
+        <div class="welcome-workspace-editor">
+          <div class="welcome-studio-editor ws-panel-pad panels-studio-editor">
+          <section class="panels-editor-section">
+            <div class="card-section-header"><div><h2>{{ 'panels.editor.detailsTitle' | translate }}</h2><p class="muted small">{{ 'panels.editor.detailsLead' | translate }}</p></div></div>
+            <div class="form-grid">
+              <label class="form-field"><span>{{ 'panels.fields.name' | translate }}</span><input type="text" formControlName="name" maxlength="100"><span class="field-error" *ngIf="form.controls.name.touched && form.controls.name.invalid">{{ 'panels.validation.nameRequired' | translate }}</span></label>
+              <label class="form-field"><span>{{ 'panels.fields.channel' | translate }}</span><select formControlName="channelDiscordId"><option value="">{{ 'panels.fields.selectChannel' | translate }}</option><option *ngFor="let channel of textChannels" [value]="channel.discordChannelId">#{{ channel.name }}</option></select><span class="hint">{{ 'panels.fields.channelHint' | translate }}</span><span class="field-error" *ngIf="form.controls.channelDiscordId.hasError('requiredForPublish')">{{ 'panels.validation.channelForPublish' | translate }}</span></label>
+              <label class="form-field form-field-wide"><span>{{ 'panels.fields.title' | translate }}</span><input type="text" formControlName="title" maxlength="256"></label>
+              <label class="form-field form-field-wide"><span>{{ 'panels.fields.description' | translate }}</span><textarea formControlName="description" rows="4" maxlength="2000"></textarea><span class="field-error" *ngIf="form.touched && form.hasError('titleOrDescription')">{{ 'panels.validation.titleOrDescription' | translate }}</span></label>
+              <label class="form-field form-field-wide"><span>{{ 'panels.fields.imageUrl' | translate }}</span><input type="url" formControlName="imageUrl" placeholder="https://"><span class="field-error" *ngIf="form.controls.imageUrl.touched && form.controls.imageUrl.invalid">{{ 'panels.validation.httpsUrl' | translate }}</span></label>
+              <label class="checkbox form-field-wide"><input type="checkbox" formControlName="isEnabled"><span>{{ 'panels.fields.enabled' | translate }}</span></label>
+              <span class="field-error form-field-wide" *ngIf="form.controls.isEnabled.hasError('requiredForPublish')">{{ 'panels.validation.enableBeforePublish' | translate }}</span>
+            </div>
+          </section>
+
+          <section class="panels-editor-section">
+            <div class="card-section-header">
+              <div><h2>{{ 'panels.buttons.title' | translate }}</h2><p class="muted small">{{ 'panels.buttons.lead' | translate:{ count: buttons.length } }}</p></div>
+              <button type="button" class="btn btn-secondary btn-sm" (click)="addButton()" [disabled]="buttons.length >= 25">{{ 'panels.actions.addButton' | translate }}</button>
+            </div>
+            <app-empty-state *ngIf="buttons.length === 0" [nested]="true" icon="🔘" [title]="'panels.buttons.emptyTitle' | translate" [description]="'panels.buttons.emptyDescription' | translate"></app-empty-state>
+
+            <div formArrayName="buttons" class="button-editor-list">
+              <article class="button-editor" *ngFor="let button of buttons.controls; let i=index" [formGroupName]="i">
+                <header class="button-editor-head">
+                  <strong>{{ 'panels.buttons.buttonNumber' | translate:{ number: i + 1 } }}</strong>
+                  <div class="button-editor-actions">
+                    <button type="button" class="btn btn-ghost btn-sm" (click)="move(i,-1)" [disabled]="i === 0" [attr.aria-label]="'panels.actions.moveUp' | translate">↑</button>
+                    <button type="button" class="btn btn-ghost btn-sm" (click)="move(i,1)" [disabled]="i === buttons.length - 1" [attr.aria-label]="'panels.actions.moveDown' | translate">↓</button>
+                    <button type="button" class="btn btn-danger btn-sm" (click)="removeButton(i)">{{ 'common.remove' | translate }}</button>
+                  </div>
+                </header>
+                <div class="form-grid">
+                  <label class="form-field"><span>{{ 'panels.fields.buttonLabel' | translate }}</span><input type="text" formControlName="label" maxlength="80"><span class="field-error" *ngIf="button.controls['label'].touched && button.controls['label'].invalid">{{ 'panels.validation.buttonLabelRequired' | translate }}</span></label>
+                  <label class="form-field"><span>{{ 'panels.fields.emoji' | translate }}</span><input type="text" formControlName="emoji" [placeholder]="'panels.fields.emojiPlaceholder' | translate"></label>
+                  <label class="form-field"><span>{{ 'panels.fields.actionType' | translate }}</span><select formControlName="actionType" (change)="actionChanged(button)"><option *ngFor="let action of actions" [value]="action">{{ actionLabel(action) }}</option></select></label>
+                  <label class="form-field"><span>{{ 'panels.fields.style' | translate }}</span><select formControlName="style" [attr.disabled]="button.value.actionType === 'OpenUrl' ? true : null"><option *ngFor="let style of styles" [value]="style" [disabled]="style === 'Link' && button.value.actionType !== 'OpenUrl'">{{ styleLabel(style) }}</option></select></label>
+
+                  <div class="form-field form-field-wide action-config" *ngIf="button.value.actionType === 'CreateTicket'"><span>{{ 'panels.actionHelp.CreateTicket' | translate }}</span><small class="hint">{{ 'panels.fields.defaultTicketFlow' | translate }}</small></div>
+                  <label class="form-field form-field-wide" *ngIf="button.value.actionType === 'OpenUrl'"><span>{{ 'panels.fields.url' | translate }}</span><input type="url" formControlName="url" placeholder="https://"><span class="field-error" *ngIf="button.controls['url'].touched && button.controls['url'].invalid">{{ 'panels.validation.httpsUrl' | translate }}</span></label>
+                  <label class="form-field form-field-wide" *ngIf="button.value.actionType === 'SendMessage'"><span>{{ 'panels.fields.responseMessage' | translate }}</span><textarea formControlName="responseMessage" rows="3" maxlength="2000"></textarea><span class="hint">{{ 'panels.fields.ephemeralHint' | translate }}</span><span class="field-error" *ngIf="button.controls['responseMessage'].touched && button.controls['responseMessage'].invalid">{{ 'panels.validation.messageRequired' | translate }}</span></label>
+                  <label class="form-field form-field-wide" *ngIf="button.value.actionType === 'AssignRole' && assignableRoles.length"><span>{{ 'panels.fields.role' | translate }}</span><select formControlName="roleDiscordId"><option value="">{{ 'panels.fields.selectRole' | translate }}</option><option *ngFor="let role of assignableRoles" [value]="role.discordRoleId">{{ role.name }}</option></select><span class="field-error" *ngIf="button.controls['roleDiscordId'].touched && button.controls['roleDiscordId'].invalid">{{ 'panels.validation.roleRequired' | translate }}</span></label>
+                  <label class="form-field form-field-wide" *ngIf="button.value.actionType === 'AssignRole' && roles.length === 0"><span>{{ 'panels.fields.roleIdFallback' | translate }}</span><input type="text" formControlName="roleDiscordId"><span class="hint">{{ 'panels.fields.roleFallbackHint' | translate }}</span><span class="field-error" *ngIf="button.controls['roleDiscordId'].touched && button.controls['roleDiscordId'].invalid">{{ 'panels.validation.roleRequired' | translate }}</span></label>
+                  <app-empty-state class="form-field-wide" *ngIf="button.value.actionType === 'AssignRole' && roles.length > 0 && assignableRoles.length === 0" [nested]="true" icon="🔒" [title]="'panels.fields.noAssignableRolesTitle' | translate" [description]="'panels.fields.noAssignableRolesBody' | translate"></app-empty-state>
+                  <label class="checkbox form-field-wide"><input type="checkbox" formControlName="isEnabled"><span>{{ 'panels.fields.buttonEnabled' | translate }}</span></label>
+                </div>
+              </article>
+            </div>
+          </section>
+          </div>
+        </div>
+
+        <aside class="welcome-workspace-rail" [attr.aria-label]="'panels.preview.ariaLabel' | translate">
+          <div class="welcome-workspace-rail-sticky">
+          <div class="welcome-workspace-rail-shell discord-preview">
+          <div class="preview-heading"><div><h2>{{ 'panels.preview.title' | translate }}</h2><p class="muted small">{{ 'panels.preview.lead' | translate }}</p></div><span class="preview-discord-mark">{{ 'panels.preview.brand' | translate }}</span></div>
+          <div class="discord-message">
+            <div class="discord-embed">
+              <h3>{{ form.value.title || ('panels.preview.noTitle' | translate) }}</h3>
+              <p>{{ form.value.description || ('panels.preview.noDescription' | translate) }}</p>
+              <img *ngIf="form.value.imageUrl" [src]="form.value.imageUrl" [alt]="'panels.preview.imageAlt' | translate">
+            </div>
+            <div class="discord-buttons">
+              <button type="button" *ngFor="let button of buttons.controls" class="discord-button"
+                [attr.data-style]="button.value.style" [class.discord-button-disabled]="!button.value.isEnabled">
+                <span>{{ button.value.emoji }}</span>{{ button.value.label || ('panels.preview.buttonFallback' | translate) }}<span *ngIf="button.value.actionType === 'OpenUrl'">↗</span>
+                <small>{{ actionLabel(button.value.actionType) }}<ng-container *ngIf="button.value.actionType === 'AssignRole' && button.value.roleDiscordId"> · {{ roleName(button.value.roleDiscordId) }}</ng-container></small>
+              </button>
+            </div>
+          </div>
+          </div>
+          </div>
+        </aside>
+      </div>
+
+      <div class="form-actions editor-actions">
+        <button type="button" class="btn btn-secondary" (click)="cancel()">{{ 'common.cancel' | translate }}</button>
+        <button type="submit" class="btn btn-secondary" [disabled]="saving">{{ (saving ? 'panels.actions.saving' : 'common.save') | translate }}</button>
+        <button type="button" class="btn btn-primary" [disabled]="saving" (click)="save(true)">{{ 'panels.actions.saveAndPublish' | translate }}</button>
+      </div>
+    </form>
+  </div>
+</div>

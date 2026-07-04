@@ -605,10 +605,13 @@ public class BotApiClient
 
             if (!response.IsSuccessStatusCode)
             {
+                _logger.LogWarning("Pending command panel request failed with status {Status}.", response.StatusCode);
                 return [];
             }
 
-            return await response.Content.ReadFromJsonAsync<List<CommandPanelRefreshApiResponse>>(JsonOptions, cancellationToken) ?? [];
+            var panels = await response.Content.ReadFromJsonAsync<List<CommandPanelRefreshApiResponse>>(JsonOptions, cancellationToken) ?? [];
+            _logger.LogInformation("Received {Count} pending command panel(s) from the API.", panels.Count);
+            return panels;
         }
         catch (Exception ex)
         {
@@ -618,14 +621,14 @@ public class BotApiClient
     }
 
     public async Task AckCommandPanelAsync(
-        string discordGuildId,
+        Guid panelId,
         AckCommandPanelApiRequest request,
         CancellationToken cancellationToken = default)
     {
         try
         {
             var response = await _httpClient.PostAsJsonAsync(
-                $"api/bot/command-panels/{discordGuildId}/ack",
+                $"api/bot/command-panels/{panelId:D}/ack",
                 request,
                 JsonOptions,
                 cancellationToken);
@@ -633,14 +636,30 @@ public class BotApiClient
             if (!response.IsSuccessStatusCode)
             {
                 _logger.LogWarning(
-                    "Failed to acknowledge command panel refresh for guild {GuildId}. Status: {Status}",
-                    discordGuildId,
+                    "Failed to acknowledge command panel refresh for panel {PanelId}. Status: {Status}",
+                    panelId,
                     response.StatusCode);
             }
         }
         catch (Exception ex)
         {
-            _logger.LogError(ex, "Error acknowledging command panel refresh for guild {GuildId}", discordGuildId);
+            _logger.LogError(ex, "Error acknowledging command panel refresh for panel {PanelId}", panelId);
+        }
+    }
+
+    public async Task<PanelButtonActionApiResponse?> GetPanelButtonActionAsync(Guid panelId, Guid buttonId)
+    {
+        try
+        {
+            var response = await _httpClient.GetAsync($"api/bot/command-panels/{panelId:D}/buttons/{buttonId:D}");
+            return response.IsSuccessStatusCode
+                ? await response.Content.ReadFromJsonAsync<PanelButtonActionApiResponse>(JsonOptions)
+                : null;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error resolving button {ButtonId} for panel {PanelId}", buttonId, panelId);
+            return null;
         }
     }
 

@@ -38,6 +38,12 @@ const routes: Routes = [
         data: { guildAccess: 'owner' }
       },
       {
+        path: 'guilds/:id/panels',
+        loadChildren: () => import('./features/panels/panels.module').then(m => m.PanelsModule),
+        canActivate: [GuildAccessGuard],
+        data: { guildAccess: 'owner' }
+      },
+      {
         path: 'guilds/:id/tickets/:ticketId/transcript',
         loadChildren: () =>
           import('./features/tickets/ticket-transcript.module').then(m => m.TicketTranscriptModule),

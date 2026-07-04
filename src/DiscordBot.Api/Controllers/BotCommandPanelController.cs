@@ -27,22 +27,30 @@ public class BotCommandPanelController : ControllerBase
         return Ok(pending);
     }
 
-    [HttpPost("{discordGuildId}/ack")]
+    [HttpPost("{panelId:guid}/ack")]
     public async Task<IActionResult> Acknowledge(
-        string discordGuildId,
+        Guid panelId,
         [FromBody] AckCommandPanelRequest request,
         CancellationToken cancellationToken)
     {
         var success = await _commandPanelService.AcknowledgeRefreshAsync(
-            discordGuildId,
+            panelId,
             request,
             cancellationToken);
 
         if (!success)
         {
-            return NotFound(new { message = "Guild not found." });
+            return NotFound(new { message = "Panel not found." });
         }
 
         return Ok(new { message = "Command panel refresh acknowledged." });
+    }
+
+    [HttpGet("{panelId:guid}/buttons/{buttonId:guid}")]
+    public async Task<ActionResult<PanelButtonActionDto>> GetButtonAction(
+        Guid panelId, Guid buttonId, CancellationToken cancellationToken)
+    {
+        var action = await _commandPanelService.GetButtonActionAsync(panelId, buttonId, cancellationToken);
+        return action is null ? NotFound(new { message = "Panel button not found or disabled." }) : Ok(action);
     }
 }

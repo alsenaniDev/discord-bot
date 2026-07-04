@@ -34,7 +34,7 @@ public class GuildSettings : BaseEntity
     public string TicketClosedFromDashboardMessage { get; set; } = TicketMessageDefaults.ClosedFromDashboardMessage;
     public string TicketStaffReplyPrefix { get; set; } = TicketMessageDefaults.StaffReplyPrefix;
 
-    // Member command panel (button-based UX)
+    // Legacy member command panel. TODO: Remove these columns in a cleanup migration after GuildPanels is stable.
     public bool CommandPanelEnabled { get; set; }
     public string? CommandPanelChannelId { get; set; }
     public string? CommandPanelMessageId { get; set; }
