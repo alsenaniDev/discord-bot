@@ -42,3 +42,24 @@ export const DEFAULT_COMMAND_PANEL_BUTTONS: CommandPanelButton[] = [
     order: 1
   }
 ];
+
+export type PanelButtonStyle = 'Primary' | 'Secondary' | 'Success' | 'Danger' | 'Link';
+export type PanelButtonActionType = 'CreateTicket' | 'OpenUrl' | 'SendMessage' | 'AssignRole';
+export type PanelPublishStatus = 'NotPublished' | 'PendingPublish' | 'Published' | 'Failed';
+
+export interface GuildPanelButton {
+  id?: string; label: string; emoji?: string | null; style: PanelButtonStyle;
+  actionType: PanelButtonActionType; ticketTypeId?: string | null; url?: string | null;
+  responseMessage?: string | null; roleDiscordId?: string | null; sortOrder: number; isEnabled: boolean;
+}
+
+export interface GuildPanel {
+  id: string; guildId: string; name: string; title: string; description: string; imageUrl?: string | null;
+  channelDiscordId: string; messageDiscordId?: string | null; isEnabled: boolean; isPublished: boolean;
+  refreshRequested: boolean; lastPublishedAtUtc?: string | null; createdAtUtc: string; updatedAtUtc: string;
+  publishStatus: PanelPublishStatus; lastPublishFailed: boolean; lastPublishFailureReason?: string | null;
+  lastPublishAttemptedAtUtc?: string | null;
+  buttons: GuildPanelButton[];
+}
+
+export type SaveGuildPanel = Pick<GuildPanel, 'name' | 'title' | 'description' | 'imageUrl' | 'channelDiscordId' | 'isEnabled' | 'buttons'>;

@@ -63,6 +63,11 @@
           <app-ui-icon name="settings" size="sm"></app-ui-icon>
           {{ 'common.settings' | translate }}
         </a>
+        <a *ngIf="canManageGuild" [routerLink]="['/guilds', selectedGuild!.id, 'panels']" routerLinkActive="active"
+          (click)="closeSidebar()">
+          <app-ui-icon name="tickets" size="sm"></app-ui-icon>
+          {{ 'nav.panels' | translate }}
+        </a>
         <a *ngIf="canAccessModeration" [routerLink]="['/guilds', selectedGuild!.id, 'tickets']"
           routerLinkActive="active" (click)="closeSidebar()">
           <app-ui-icon name="tickets" size="sm"></app-ui-icon>

@@ -55,6 +55,7 @@
     "moderation": "الإشراف",
     "logs": "السجلات",
     "reactionRoles": "أدوار التفاعل",
+    "panels": "لوحات الأعضاء",
     "staff": "الطاقم",
     "profile": "ملف السيرفر",
     "moderationSettings": "صلاحيات الإشراف",
@@ -2096,6 +2097,68 @@
         "emptyBody": "حدد الصلاحيات أدناه لمعاينة الوصول الذي سيتلقاه هذا الدور."
       }
     }
+  },
+  "panels": {
+    "loading": "جارٍ تحميل لوحات الأعضاء…",
+    "title": "لوحات الأعضاء",
+    "subtitle": "أنشئ لوحات Discord قابلة لإعادة الاستخدام للتذاكر والروابط والرسائل والأدوار.",
+    "notice": "يتولى البوت عملية النشر، وتُحدّث التغييرات المحفوظة رسالة Discord الحالية عند ارتباطها مسبقًا.",
+    "hero": { "ariaLabel": "مساحة عمل لوحات الأعضاء", "footer": "أنشئ نقاط دخول واضحة للدعم وإجراءات المجتمع." },
+    "stats": { "total": "اللوحات", "published": "المنشورة", "pending": "بانتظار النشر" },
+    "tabs": { "ariaLabel": "طرق عرض مساحة اللوحات", "list": "اللوحات", "create": "إنشاء لوحة", "edit": "تعديل اللوحة" },
+    "actions": {
+      "create": "إنشاء لوحة", "publish": "نشر", "publishing": "جارٍ النشر…", "duplicate": "نسخ",
+      "delete": "حذف", "back": "العودة إلى اللوحات", "addButton": "إضافة زر", "moveUp": "تحريك الزر لأعلى",
+      "moveDown": "تحريك الزر لأسفل", "saving": "جارٍ الحفظ…", "saveAndPublish": "حفظ ونشر في Discord"
+    },
+    "list": { "title": "اللوحات المُعدّة", "lead": "أدر المحتوى والوجهات والإجراءات وحالة النشر.", "buttons": "الأزرار", "lastPublished": "آخر نشر" },
+    "empty": { "title": "لا توجد لوحات بعد", "description": "أنشئ أول لوحة لتمنح الأعضاء طريقة واضحة لفتح التذاكر أو استخدام إجراءات السيرفر." },
+    "editor": {
+      "createTitle": "إنشاء لوحة", "editTitle": "تعديل اللوحة", "lead": "أعدّ رسالة Discord وما يصل إلى 25 زرًا.",
+      "detailsTitle": "تفاصيل اللوحة", "detailsLead": "اختر مكان اللوحة والمحتوى الذي سيراه الأعضاء."
+    },
+    "fields": {
+      "name": "اسم اللوحة الداخلي", "channel": "قناة Discord", "selectChannel": "اختر قناة",
+      "channelHint": "القناة اختيارية أثناء إعداد المسودة ومطلوبة عند النشر.", "title": "عنوان التضمين",
+      "description": "وصف التضمين", "imageUrl": "رابط HTTPS للصورة", "enabled": "اللوحة مفعّلة",
+      "buttonLabel": "نص الزر", "emoji": "الرمز التعبيري", "emojiPlaceholder": "مثال: 🎫", "actionType": "الإجراء",
+      "style": "نمط Discord", "defaultTicketFlow": "يستخدم المشروع حاليًا مسار التذاكر الافتراضي؛ لا يلزم اختيار نوع تذكرة.",
+      "url": "رابط HTTPS للوجهة", "responseMessage": "رسالة الاستجابة الخاصة",
+      "ephemeralHint": "لن يرى هذه الاستجابة سوى العضو الذي ضغط الزر.", "role": "دور Discord",
+      "selectRole": "اختر دورًا", "roleIdFallback": "معرّف دور Discord — خيار متقدم",
+      "roleFallbackHint": "لم يتم العثور على أدوار متزامنة قابلة للإسناد. زامن موارد السيرفر أو أدخل المعرّف عند الضرورة فقط.",
+      "noAssignableRolesTitle": "لا توجد أدوار قابلة للإسناد", "noAssignableRolesBody": "جميع الأدوار المتزامنة مُدارة بواسطة Discord. أنشئ أو زامن دورًا يستطيع البوت إدارته.",
+      "buttonEnabled": "إظهار هذا الزر في Discord"
+    },
+    "buttons": {
+      "title": "أزرار اللوحة", "lead": "تم إعداد {{count}} من 25 زرًا؛ يعرض Discord خمسة أزرار كحد أقصى في كل صف.",
+      "emptyTitle": "لا توجد أزرار مُعدّة", "emptyDescription": "أضف زرًا لإنشاء إجراء للأعضاء.", "buttonNumber": "الزر {{number}}"
+    },
+    "status": {
+      "failed": "فشل النشر", "requested": "تم طلب النشر", "published": "منشورة", "notPublished": "غير منشورة",
+      "never": "لم تُنشر", "failureDetail": "آخر خطأ في النشر"
+    },
+    "preview": {
+      "ariaLabel": "معاينة لوحة Discord", "title": "معاينة Discord", "brand": "Discord", "lead": "تصور تقريبي لتخطيط الرسالة وصفوف الأزرار.",
+      "noTitle": "عنوان اللوحة", "noDescription": "لا يوجد وصف", "imageAlt": "صورة معاينة اللوحة", "buttonFallback": "زر"
+    },
+    "actionTypes": { "CreateTicket": "إنشاء تذكرة", "OpenUrl": "فتح رابط", "SendMessage": "إرسال رسالة", "AssignRole": "تبديل دور" },
+    "styles": { "Primary": "أساسي", "Secondary": "ثانوي", "Success": "نجاح", "Danger": "خطر", "Link": "رابط" },
+    "actionHelp": { "CreateTicket": "ينشئ تذكرة باستخدام إعداد التذاكر الافتراضي للسيرفر." },
+    "validation": {
+      "fixErrors": "راجع الحقول المحددة قبل الحفظ.", "nameRequired": "اسم اللوحة مطلوب.",
+      "titleOrDescription": "أدخل عنوانًا أو وصفًا.", "channelForPublish": "اختر قناة قبل النشر.",
+      "enableBeforePublish": "فعّل اللوحة قبل النشر.", "buttonLabelRequired": "نص الزر مطلوب.",
+      "httpsUrl": "أدخل رابط HTTPS صالحًا.", "messageRequired": "رسالة الاستجابة مطلوبة.", "roleRequired": "اختر دورًا."
+    },
+    "messages": {
+      "loadError": "تعذر تحميل لوحات الأعضاء.", "saved": "تم حفظ اللوحة.", "saveError": "تعذر حفظ اللوحة.",
+      "publishRequested": "تم إرسال طلب النشر.", "savedAndPublishRequested": "تم حفظ اللوحة وإرسال طلب النشر.",
+      "publishError": "تعذر إرسال طلب النشر.", "deleted": "تم حذف اللوحة.", "deleteError": "تعذر حذف اللوحة."
+    },
+    "defaults": { "title": "كيف يمكننا مساعدتك؟", "description": "اختر أحد الإجراءات أدناه." },
+    "duplicateName": "{{name}} — نسخة",
+    "dialogs": { "deleteConfirm": "هل تريد حذف اللوحة «{{name}}»؟ لا يمكن التراجع عن ذلك." }
   },
   "toast": {
     "dismiss": "إغلاق الإشعار"

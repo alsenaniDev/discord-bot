@@ -57,6 +57,11 @@ public class GuildConfiguration : IEntityTypeConfiguration<Guild>
             .HasForeignKey(x => x.GuildId)
             .OnDelete(DeleteBehavior.Cascade);
 
+        builder.HasMany(x => x.Panels)
+            .WithOne(x => x.Guild)
+            .HasForeignKey(x => x.GuildId)
+            .OnDelete(DeleteBehavior.Cascade);
+
         builder.HasOne(x => x.Subscription)
             .WithOne(x => x.Guild)
             .HasForeignKey<GuildSubscription>(x => x.GuildId)

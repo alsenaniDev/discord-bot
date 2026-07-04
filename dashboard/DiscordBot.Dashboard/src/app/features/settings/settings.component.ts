@@ -87,8 +87,7 @@ export class SettingsComponent implements OnInit, OnDestroy {
     { id: 'autoRole', labelKey: 'settings.tabs.autoRole' },
     { id: 'logs', labelKey: 'settings.tabs.logs' },
     { id: 'tickets', labelKey: 'settings.tabs.tickets', requiresTickets: true },
-    { id: 'autoReplies', labelKey: 'settings.tabs.autoReplies' },
-    { id: 'panel', labelKey: 'settings.tabs.panel' }
+    { id: 'autoReplies', labelKey: 'settings.tabs.autoReplies' }
   ];
 
   channelLabel = channelLabel;

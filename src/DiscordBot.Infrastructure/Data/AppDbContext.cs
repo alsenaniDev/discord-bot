@@ -30,6 +30,8 @@ public class AppDbContext : DbContext
     public DbSet<AutoReplyRule> AutoReplyRules => Set<AutoReplyRule>();
     public DbSet<TicketOutboundMessage> TicketOutboundMessages => Set<TicketOutboundMessage>();
     public DbSet<TicketTimelineEvent> TicketTimelineEvents => Set<TicketTimelineEvent>();
+    public DbSet<GuildPanel> GuildPanels => Set<GuildPanel>();
+    public DbSet<GuildPanelButton> GuildPanelButtons => Set<GuildPanelButton>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

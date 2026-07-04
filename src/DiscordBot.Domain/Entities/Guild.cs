@@ -40,5 +40,6 @@ public class Guild : BaseEntity
     public ICollection<ModerationCase> ModerationCases { get; set; } = [];
     public ICollection<GuildModule> GuildModules { get; set; } = [];
     public ICollection<ReactionRole> ReactionRoles { get; set; } = [];
+    public ICollection<GuildPanel> Panels { get; set; } = [];
     public GuildSubscription? Subscription { get; set; }
 }

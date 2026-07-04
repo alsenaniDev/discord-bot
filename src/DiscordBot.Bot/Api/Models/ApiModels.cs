@@ -195,15 +195,10 @@ public sealed class ReactionRoleApiResponse
 
 public sealed class CommandPanelRefreshApiResponse
 {
+    public Guid PanelId { get; set; }
     public string DiscordGuildId { get; set; } = string.Empty;
-    public CommandPanelConfigApiResponse Config { get; set; } = new();
-}
-
-public sealed class CommandPanelConfigApiResponse
-{
-    public bool Enabled { get; set; }
-    public string? ChannelId { get; set; }
-    public string? MessageId { get; set; }
+    public string ChannelDiscordId { get; set; } = string.Empty;
+    public string? MessageDiscordId { get; set; }
     public string Title { get; set; } = string.Empty;
     public string Description { get; set; } = string.Empty;
     public string? ImageUrl { get; set; }
@@ -212,17 +207,36 @@ public sealed class CommandPanelConfigApiResponse
 
 public sealed class CommandPanelButtonApiResponse
 {
-    public string Id { get; set; } = string.Empty;
-    public string Action { get; set; } = string.Empty;
+    public Guid Id { get; set; }
     public string Label { get; set; } = string.Empty;
+    public string? Emoji { get; set; }
     public string Style { get; set; } = "Secondary";
-    public bool Enabled { get; set; } = true;
-    public int Order { get; set; }
+    public string ActionType { get; set; } = "CreateTicket";
+    public Guid? TicketTypeId { get; set; }
+    public string? Url { get; set; }
+    public string? ResponseMessage { get; set; }
+    public string? RoleDiscordId { get; set; }
+    public int SortOrder { get; set; }
+    public bool IsEnabled { get; set; } = true;
 }
 
 public sealed class AckCommandPanelApiRequest
 {
-    public string? MessageId { get; set; }
+    public string? MessageDiscordId { get; set; }
+    public bool Success { get; set; }
+    public string? FailureReason { get; set; }
+}
+
+public sealed class PanelButtonActionApiResponse
+{
+    public string DiscordGuildId { get; set; } = string.Empty;
+    public Guid PanelId { get; set; }
+    public Guid ButtonId { get; set; }
+    public string ActionType { get; set; } = string.Empty;
+    public Guid? TicketTypeId { get; set; }
+    public string? Url { get; set; }
+    public string? ResponseMessage { get; set; }
+    public string? RoleDiscordId { get; set; }
 }
 
 public sealed class TicketCleanupApiResponse

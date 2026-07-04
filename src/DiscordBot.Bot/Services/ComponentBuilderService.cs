@@ -58,13 +58,13 @@ public class ComponentBuilderService
                 customId: customId)
             .Build();
 
-    public MessageComponent BuildCommandPanelComponents(IEnumerable<CommandPanelButtonApiResponse> buttons)
+    public MessageComponent BuildCommandPanelComponents(Guid panelId, IEnumerable<CommandPanelButtonApiResponse> buttons)
     {
         var builder = new ComponentBuilder();
         var row = 0;
         var buttonsInRow = 0;
 
-        foreach (var button in buttons.Where(b => b.Enabled).OrderBy(b => b.Order))
+        foreach (var button in buttons.Where(b => b.IsEnabled).OrderBy(b => b.SortOrder))
         {
             if (buttonsInRow == 5)
             {
@@ -72,11 +72,11 @@ public class ComponentBuilderService
                 buttonsInRow = 0;
             }
 
-            builder.WithButton(
-                label: button.Label,
-                style: MapButtonStyle(button.Style),
-                customId: DiscordCustomIds.PanelButton(button.Action, button.Id),
-                row: row);
+            var item = new ButtonBuilder().WithLabel(button.Label).WithStyle(MapButtonStyle(button.Style));
+            if (!string.IsNullOrWhiteSpace(button.Emoji)) item.WithEmote(Emote.TryParse(button.Emoji, out var emote) ? emote : new Emoji(button.Emoji));
+            if (item.Style == ButtonStyle.Link) item.WithUrl(button.Url);
+            else item.WithCustomId(DiscordCustomIds.PanelButton(panelId, button.Id));
+            builder.WithButton(item, row);
             buttonsInRow++;
         }
 
@@ -89,6 +89,7 @@ public class ComponentBuilderService
             "Primary" => ButtonStyle.Primary,
             "Success" => ButtonStyle.Success,
             "Danger" => ButtonStyle.Danger,
+            "Link" => ButtonStyle.Link,
             _ => ButtonStyle.Secondary
         };
 

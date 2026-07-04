@@ -17,6 +17,7 @@ import { GuildModule, UpdateGuildModuleRequest } from '../models/module.models';
 import { LogEntry, LogFilters } from '../models/log.models';
 import { ReactionRolePanel } from '../models/reaction-role.models';
 import { GuildSubscription, SubscriptionPlan } from '../models/subscription.models';
+import { GuildPanel, SaveGuildPanel } from '../models/command-panel.models';
 import {
   PlanUpgradeRequest,
   CreatePlanUpgradeRequest,
@@ -78,6 +79,26 @@ export class GuildService {
       `${this.baseUrl}/api/guilds/${guildId}/settings`,
       settings
     );
+  }
+
+  getPanels(guildId: string): Observable<GuildPanel[]> {
+    return this.http.get<GuildPanel[]>(`${this.baseUrl}/api/guilds/${guildId}/panels`);
+  }
+
+  createPanel(guildId: string, panel: SaveGuildPanel): Observable<GuildPanel> {
+    return this.http.post<GuildPanel>(`${this.baseUrl}/api/guilds/${guildId}/panels`, panel);
+  }
+
+  updatePanel(guildId: string, panelId: string, panel: SaveGuildPanel): Observable<GuildPanel> {
+    return this.http.put<GuildPanel>(`${this.baseUrl}/api/guilds/${guildId}/panels/${panelId}`, panel);
+  }
+
+  deletePanel(guildId: string, panelId: string): Observable<void> {
+    return this.http.delete<void>(`${this.baseUrl}/api/guilds/${guildId}/panels/${panelId}`);
+  }
+
+  publishPanel(guildId: string, panelId: string): Observable<unknown> {
+    return this.http.post(`${this.baseUrl}/api/guilds/${guildId}/panels/${panelId}/publish`, {});
   }
 
   getTicketSummaries(
