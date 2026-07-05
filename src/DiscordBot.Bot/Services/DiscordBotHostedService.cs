@@ -38,6 +38,7 @@ public class DiscordBotHostedService : IHostedService
     private readonly TicketTimelineMessageService _ticketTimelineMessageService;
     private readonly WorkflowConversationService _workflowConversations;
     private readonly IMusicService _music;
+    private readonly GamesHubInteractionService _games;
     private readonly BotOptions _botOptions;
     private readonly ILogger<DiscordBotHostedService> _logger;
 
@@ -60,6 +61,7 @@ public class DiscordBotHostedService : IHostedService
         TicketTimelineMessageService ticketTimelineMessageService,
         WorkflowConversationService workflowConversations,
         IMusicService music,
+        GamesHubInteractionService games,
         IOptions<BotOptions> botOptions,
         ILogger<DiscordBotHostedService> logger)
     {
@@ -81,6 +83,7 @@ public class DiscordBotHostedService : IHostedService
         _ticketTimelineMessageService = ticketTimelineMessageService;
         _workflowConversations = workflowConversations;
         _music = music;
+        _games = games;
         _botOptions = botOptions.Value;
         _logger = logger;
     }
@@ -239,6 +242,9 @@ public class DiscordBotHostedService : IHostedService
             case "music":
                 await HandleMusicCommandAsync(interaction, command);
                 break;
+            case "games":
+                await _games.ShowHubAsync(interaction);
+                break;
             default:
                 await InteractionResponseHelper.RespondErrorAsync(
                     interaction,
@@ -252,6 +258,12 @@ public class DiscordBotHostedService : IHostedService
     private async Task HandleComponentAsync(SocketMessageComponent component)
     {
         var customId = component.Data.CustomId;
+
+        if (customId.StartsWith(GamesHubInteractionService.ComponentPrefix, StringComparison.Ordinal))
+        {
+            await _games.HandleButtonAsync(component);
+            return;
+        }
 
         if (customId.StartsWith(DiscordCustomIds.MusicPrefix, StringComparison.Ordinal))
         {

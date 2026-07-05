@@ -197,6 +197,221 @@ namespace DiscordBot.Infrastructure.Migrations
                     b.ToTable("DiscordRoles", (string)null);
                 });
 
+            modelBuilder.Entity("DiscordBot.Domain.Entities.GameContent", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("DataJson")
+                        .IsRequired()
+                        .HasColumnType("jsonb");
+
+                    b.Property<Guid?>("GuildId")
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("IsEnabled")
+                        .HasColumnType("boolean");
+
+                    b.Property<Guid>("PlatformGameDefinitionId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("Title")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("GuildId");
+
+                    b.HasIndex("PlatformGameDefinitionId", "GuildId", "IsEnabled");
+
+                    b.ToTable("GameContent", (string)null);
+                });
+
+            modelBuilder.Entity("DiscordBot.Domain.Entities.GamePlayer", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("BestStreak")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("CurrentStreak")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("GamesPlayed")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid>("GuildId")
+                        .HasColumnType("uuid");
+
+                    b.Property<DateTimeOffset?>("LastPlayedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("Losses")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("TotalPoints")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("UserDiscordId")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<string>("Username")
+                        .IsRequired()
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<int>("Wins")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("GuildId", "TotalPoints");
+
+                    b.HasIndex("GuildId", "UserDiscordId")
+                        .IsUnique();
+
+                    b.ToTable("GamePlayers", (string)null);
+                });
+
+            modelBuilder.Entity("DiscordBot.Domain.Entities.GameResultPublishAction", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ChannelDiscordId")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("ErrorMessage")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.Property<Guid>("GameSessionId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("GuildId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("PayloadJson")
+                        .IsRequired()
+                        .HasColumnType("jsonb");
+
+                    b.Property<DateTimeOffset?>("ProcessedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(24)
+                        .HasColumnType("character varying(24)");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("GameSessionId");
+
+                    b.HasIndex("GuildId");
+
+                    b.HasIndex("Status");
+
+                    b.ToTable("GameResultPublishActions", (string)null);
+                });
+
+            modelBuilder.Entity("DiscordBot.Domain.Entities.GameSession", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ChannelDiscordId")
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<DateTimeOffset?>("CompletedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTimeOffset>("ExpiresAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("GuildId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("PlatformGameDefinitionId")
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("PointsAwarded")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("Score")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTimeOffset>("StartedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(24)
+                        .HasColumnType("character varying(24)");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("UserDiscordId")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<string>("Username")
+                        .HasMaxLength(256)
+                        .HasColumnType("character varying(256)");
+
+                    b.Property<bool?>("Won")
+                        .HasColumnType("boolean");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PlatformGameDefinitionId");
+
+                    b.HasIndex("Status");
+
+                    b.HasIndex("GuildId", "UserDiscordId", "StartedAt");
+
+                    b.ToTable("GameSessions", (string)null);
+                });
+
             modelBuilder.Entity("DiscordBot.Domain.Entities.Guild", b =>
                 {
                     b.Property<Guid>("Id")
@@ -267,6 +482,95 @@ namespace DiscordBot.Infrastructure.Migrations
                         .IsUnique();
 
                     b.ToTable("Guilds", (string)null);
+                });
+
+            modelBuilder.Entity("DiscordBot.Domain.Entities.GuildGameSetting", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<int>("CooldownSeconds")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<Guid>("GuildId")
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("IsEnabledForGuild")
+                        .HasColumnType("boolean");
+
+                    b.Property<int>("MaxPlaysPerDay")
+                        .HasColumnType("integer");
+
+                    b.Property<Guid>("PlatformGameDefinitionId")
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("PointsEnabled")
+                        .HasColumnType("boolean");
+
+                    b.Property<int>("PointsPerWin")
+                        .HasColumnType("integer");
+
+                    b.Property<bool>("PublishLeaderboardAfterGame")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("PublishOnlyWins")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("PublishResultAfterGame")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("PlatformGameDefinitionId");
+
+                    b.HasIndex("GuildId", "PlatformGameDefinitionId")
+                        .IsUnique();
+
+                    b.ToTable("GuildGameSettings", (string)null);
+                });
+
+            modelBuilder.Entity("DiscordBot.Domain.Entities.GuildGamesSettings", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("AutoPostPanel")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("GamesChannelDiscordId")
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<string>("GamesPanelMessageDiscordId")
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<Guid>("GuildId")
+                        .HasColumnType("uuid");
+
+                    b.Property<bool>("IsEnabled")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("GuildId")
+                        .IsUnique();
+
+                    b.ToTable("GuildGamesSettings", (string)null);
                 });
 
             modelBuilder.Entity("DiscordBot.Domain.Entities.GuildModule", b =>
@@ -1028,6 +1332,95 @@ namespace DiscordBot.Infrastructure.Migrations
                     b.ToTable("PlatformAdmins", (string)null);
                 });
 
+            modelBuilder.Entity("DiscordBot.Domain.Entities.PlatformGameDefinition", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("ActivityRoute")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("character varying(300)");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("DefaultCooldownSeconds")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("DefaultMaxPlaysPerDay")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("DefaultPointsPerWin")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.Property<string>("IconUrl")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<bool>("IsEnabledGlobally")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Key")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("character varying(150)");
+
+                    b.Property<string>("RequiredPlan")
+                        .IsRequired()
+                        .HasMaxLength(32)
+                        .HasColumnType("character varying(32)");
+
+                    b.Property<bool>("SupportsLeaderboard")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("SupportsResultPublishing")
+                        .HasColumnType("boolean");
+
+                    b.Property<bool>("SupportsScores")
+                        .HasColumnType("boolean");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Key")
+                        .IsUnique();
+
+                    b.ToTable("PlatformGameDefinitions", (string)null);
+
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("8f763e4f-d09e-48f5-b77b-406ecef81f98"),
+                            ActivityRoute = "/games/quiz",
+                            CreatedAt = new DateTimeOffset(new DateTime(2026, 7, 6, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
+                            DefaultCooldownSeconds = 30,
+                            DefaultMaxPlaysPerDay = 10,
+                            DefaultPointsPerWin = 10,
+                            Description = "جاوب على الأسئلة واكسب نقاط.",
+                            IsEnabledGlobally = true,
+                            Key = "quiz",
+                            Name = "تحدي الأسئلة",
+                            RequiredPlan = "free",
+                            SupportsLeaderboard = true,
+                            SupportsResultPublishing = true,
+                            SupportsScores = true,
+                            UpdatedAt = new DateTimeOffset(new DateTime(2026, 7, 6, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0))
+                        });
+                });
+
             modelBuilder.Entity("DiscordBot.Domain.Entities.ReactionRole", b =>
                 {
                     b.Property<Guid>("Id")
@@ -1672,6 +2065,103 @@ namespace DiscordBot.Infrastructure.Migrations
                     b.Navigation("Guild");
                 });
 
+            modelBuilder.Entity("DiscordBot.Domain.Entities.GameContent", b =>
+                {
+                    b.HasOne("DiscordBot.Domain.Entities.Guild", "Guild")
+                        .WithMany("GameContent")
+                        .HasForeignKey("GuildId")
+                        .OnDelete(DeleteBehavior.Cascade);
+
+                    b.HasOne("DiscordBot.Domain.Entities.PlatformGameDefinition", "PlatformGameDefinition")
+                        .WithMany("Content")
+                        .HasForeignKey("PlatformGameDefinitionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Guild");
+
+                    b.Navigation("PlatformGameDefinition");
+                });
+
+            modelBuilder.Entity("DiscordBot.Domain.Entities.GamePlayer", b =>
+                {
+                    b.HasOne("DiscordBot.Domain.Entities.Guild", "Guild")
+                        .WithMany("GamePlayers")
+                        .HasForeignKey("GuildId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Guild");
+                });
+
+            modelBuilder.Entity("DiscordBot.Domain.Entities.GameResultPublishAction", b =>
+                {
+                    b.HasOne("DiscordBot.Domain.Entities.GameSession", "GameSession")
+                        .WithMany("PublishActions")
+                        .HasForeignKey("GameSessionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("DiscordBot.Domain.Entities.Guild", "Guild")
+                        .WithMany("GameResultPublishActions")
+                        .HasForeignKey("GuildId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("GameSession");
+
+                    b.Navigation("Guild");
+                });
+
+            modelBuilder.Entity("DiscordBot.Domain.Entities.GameSession", b =>
+                {
+                    b.HasOne("DiscordBot.Domain.Entities.Guild", "Guild")
+                        .WithMany("GameSessions")
+                        .HasForeignKey("GuildId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("DiscordBot.Domain.Entities.PlatformGameDefinition", "PlatformGameDefinition")
+                        .WithMany("Sessions")
+                        .HasForeignKey("PlatformGameDefinitionId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Guild");
+
+                    b.Navigation("PlatformGameDefinition");
+                });
+
+            modelBuilder.Entity("DiscordBot.Domain.Entities.GuildGameSetting", b =>
+                {
+                    b.HasOne("DiscordBot.Domain.Entities.Guild", "Guild")
+                        .WithMany("GameSettings")
+                        .HasForeignKey("GuildId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("DiscordBot.Domain.Entities.PlatformGameDefinition", "PlatformGameDefinition")
+                        .WithMany("GuildSettings")
+                        .HasForeignKey("PlatformGameDefinitionId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Guild");
+
+                    b.Navigation("PlatformGameDefinition");
+                });
+
+            modelBuilder.Entity("DiscordBot.Domain.Entities.GuildGamesSettings", b =>
+                {
+                    b.HasOne("DiscordBot.Domain.Entities.Guild", "Guild")
+                        .WithOne("GamesSettings")
+                        .HasForeignKey("DiscordBot.Domain.Entities.GuildGamesSettings", "GuildId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Guild");
+                });
+
             modelBuilder.Entity("DiscordBot.Domain.Entities.GuildModule", b =>
                 {
                     b.HasOne("DiscordBot.Domain.Entities.Guild", "Guild")
@@ -1990,9 +2480,26 @@ namespace DiscordBot.Infrastructure.Migrations
                     b.Navigation("Workflow");
                 });
 
+            modelBuilder.Entity("DiscordBot.Domain.Entities.GameSession", b =>
+                {
+                    b.Navigation("PublishActions");
+                });
+
             modelBuilder.Entity("DiscordBot.Domain.Entities.Guild", b =>
                 {
                     b.Navigation("Channels");
+
+                    b.Navigation("GameContent");
+
+                    b.Navigation("GamePlayers");
+
+                    b.Navigation("GameResultPublishActions");
+
+                    b.Navigation("GameSessions");
+
+                    b.Navigation("GameSettings");
+
+                    b.Navigation("GamesSettings");
 
                     b.Navigation("GuildModules");
 
@@ -2040,6 +2547,15 @@ namespace DiscordBot.Infrastructure.Migrations
             modelBuilder.Entity("DiscordBot.Domain.Entities.Module", b =>
                 {
                     b.Navigation("GuildModules");
+                });
+
+            modelBuilder.Entity("DiscordBot.Domain.Entities.PlatformGameDefinition", b =>
+                {
+                    b.Navigation("Content");
+
+                    b.Navigation("GuildSettings");
+
+                    b.Navigation("Sessions");
                 });
 
             modelBuilder.Entity("DiscordBot.Domain.Entities.SubscriptionPlan", b =>

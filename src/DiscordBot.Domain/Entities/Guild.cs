@@ -33,6 +33,7 @@ public class Guild : BaseEntity
 
     public GuildSettings? Settings { get; set; }
     public GuildMusicSettings? MusicSettings { get; set; }
+    public GuildGamesSettings? GamesSettings { get; set; }
     public ICollection<LogEntry> Logs { get; set; } = [];
     public ICollection<Ticket> Tickets { get; set; } = [];
     public ICollection<DiscordChannel> Channels { get; set; } = [];
@@ -45,5 +46,10 @@ public class Guild : BaseEntity
     public ICollection<GuildWorkflow> Workflows { get; set; } = [];
     public ICollection<WorkflowSubmission> WorkflowSubmissions { get; set; } = [];
     public ICollection<WorkflowPendingAction> WorkflowPendingActions { get; set; } = [];
+    public ICollection<GuildGameSetting> GameSettings { get; set; } = [];
+    public ICollection<GameSession> GameSessions { get; set; } = [];
+    public ICollection<GamePlayer> GamePlayers { get; set; } = [];
+    public ICollection<GameContent> GameContent { get; set; } = [];
+    public ICollection<GameResultPublishAction> GameResultPublishActions { get; set; } = [];
     public GuildSubscription? Subscription { get; set; }
 }

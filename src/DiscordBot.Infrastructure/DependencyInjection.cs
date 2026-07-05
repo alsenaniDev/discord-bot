@@ -25,6 +25,7 @@ public static class DependencyInjection
 
         services.AddMemoryCache();
         services.AddHttpClient<IDiscordOAuthService, DiscordOAuthService>();
+        services.AddHttpClient<IDiscordActivityAuthService, DiscordActivityAuthService>();
 
         services.AddScoped<IJwtTokenService, JwtTokenService>();
         services.AddScoped<IAuthCodeService, AuthCodeService>();
@@ -34,6 +35,7 @@ public static class DependencyInjection
         services.AddScoped<ICommandPanelService, CommandPanelService>();
         services.AddScoped<IWorkflowService, WorkflowService>();
         services.AddScoped<IMusicSettingsService, MusicSettingsService>();
+        services.AddScoped<IGameHubService, GameHubService>();
         services.AddScoped<ITicketService, TicketService>();
         services.AddScoped<ITicketTimelineService, TicketTimelineService>();
         services.AddScoped<ITicketReadService, TicketReadService>();

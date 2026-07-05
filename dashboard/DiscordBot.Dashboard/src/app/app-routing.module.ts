@@ -54,6 +54,11 @@ const routes: Routes = [
         canActivate: [GuildAccessGuard], data: { guildAccess: 'owner' }
       },
       {
+        path: 'guilds/:id/games',
+        loadChildren: () => import('./features/games/games.module').then(m => m.GamesModule),
+        canActivate: [GuildAccessGuard], data: { guildAccess: 'owner' }
+      },
+      {
         path: 'guilds/:id/tickets/:ticketId/transcript',
         loadChildren: () =>
           import('./features/tickets/ticket-transcript.module').then(m => m.TicketTranscriptModule),

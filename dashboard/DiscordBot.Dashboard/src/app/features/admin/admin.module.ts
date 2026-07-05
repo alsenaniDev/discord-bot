@@ -4,6 +4,7 @@ import { AdminGuildsComponent } from './admin-guilds/admin-guilds.component';
 import { AdminUsersComponent } from './admin-users/admin-users.component';
 import { AdminUpgradeRequestsComponent } from './admin-upgrade-requests/admin-upgrade-requests.component';
 import { AdminPlansComponent } from './admin-plans/admin-plans.component';
+import { AdminGamesComponent } from './admin-games/admin-games.component';
 import { AdminRoutingModule } from './admin-routing.module';
 import { SharedUiModule } from '../../shared/shared-ui.module';
 
@@ -13,7 +14,8 @@ import { SharedUiModule } from '../../shared/shared-ui.module';
     AdminGuildsComponent,
     AdminUsersComponent,
     AdminUpgradeRequestsComponent,
-    AdminPlansComponent
+    AdminPlansComponent,
+    AdminGamesComponent
   ],
   imports: [
     SharedUiModule,

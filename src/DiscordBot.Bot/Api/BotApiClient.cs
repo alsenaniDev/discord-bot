@@ -944,6 +944,41 @@ public class BotApiClient
         try { var response = await _httpClient.PostAsJsonAsync($"api/bot/workflows/pending-actions/{actionId:D}/ack", request, JsonOptions, ct); if (!response.IsSuccessStatusCode) _logger.LogWarning("Workflow action {ActionId} ack failed: {Status}.", actionId, response.StatusCode); }
         catch (Exception ex) { _logger.LogError(ex, "Could not ack workflow action {ActionId}.", actionId); }
     }
+
+    public async Task<BotGamesContextApiResponse?> GetGamesContextAsync(string discordGuildId, CancellationToken ct = default)
+    {
+        try { var response = await _httpClient.GetAsync($"api/bot/games/context/{discordGuildId}", ct); return response.IsSuccessStatusCode ? await response.Content.ReadFromJsonAsync<BotGamesContextApiResponse>(JsonOptions, ct) : null; }
+        catch (Exception ex) { _logger.LogError(ex, "Could not load games context for guild {GuildId}.", discordGuildId); return null; }
+    }
+
+    public async Task<(StartGameSessionApiResponse? Value, string? Error)> StartGameSessionAsync(StartGameSessionApiRequest request, CancellationToken ct = default)
+    {
+        try
+        {
+            var response = await _httpClient.PostAsJsonAsync("api/games/runtime/start-session", request, JsonOptions, ct);
+            if (response.IsSuccessStatusCode) return (await response.Content.ReadFromJsonAsync<StartGameSessionApiResponse>(JsonOptions, ct), null);
+            return (null, (await response.Content.ReadFromJsonAsync<ApiErrorResponse>(JsonOptions, ct))?.Message ?? "تعذر بدء اللعبة الآن.");
+        }
+        catch (Exception ex) { _logger.LogError(ex, "Could not start game {GameKey} in guild {GuildId}.", request.GameKey, request.GuildDiscordId); return (null, "تعذر التواصل مع منصة الألعاب الآن. حاول مرة ثانية بعد قليل."); }
+    }
+
+    public async Task<IReadOnlyList<GameLeaderboardEntryApiResponse>?> GetGameLeaderboardAsync(string discordGuildId, CancellationToken ct = default)
+    {
+        try { var response = await _httpClient.GetAsync($"api/bot/games/leaderboard/{discordGuildId}?limit=10", ct); return response.IsSuccessStatusCode ? await response.Content.ReadFromJsonAsync<List<GameLeaderboardEntryApiResponse>>(JsonOptions, ct) ?? [] : null; }
+        catch (Exception ex) { _logger.LogError(ex, "Could not load game leaderboard for guild {GuildId}.", discordGuildId); return null; }
+    }
+
+    public async Task<IReadOnlyList<PendingGamePublishActionApiResponse>> GetPendingGamePublishActionsAsync(CancellationToken ct = default)
+    {
+        try { return await _httpClient.GetFromJsonAsync<List<PendingGamePublishActionApiResponse>>("api/bot/games/publish-actions/pending", JsonOptions, ct) ?? []; }
+        catch (Exception ex) { _logger.LogError(ex, "Could not load pending game publish actions."); return []; }
+    }
+
+    public async Task AckGamePublishActionAsync(Guid id, AckGamePublishActionApiRequest request, CancellationToken ct = default)
+    {
+        try { var response = await _httpClient.PostAsJsonAsync($"api/bot/games/publish-actions/{id:D}/ack", request, JsonOptions, ct); if (!response.IsSuccessStatusCode) _logger.LogWarning("Game publish action {ActionId} ack failed: {Status}.", id, response.StatusCode); }
+        catch (Exception ex) { _logger.LogError(ex, "Could not ack game publish action {ActionId}.", id); }
+    }
 }
 
 public sealed class ApiErrorResponse

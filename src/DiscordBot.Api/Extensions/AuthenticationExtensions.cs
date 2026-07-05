@@ -53,6 +53,12 @@ public static class AuthenticationExtensions
             .Distinct(StringComparer.OrdinalIgnoreCase)
             .ToHashSet(StringComparer.OrdinalIgnoreCase);
 
+        foreach (var origin in discordOptions.ActivityUrl.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+        {
+            var normalized = NormalizeOrigin(origin);
+            if (!string.IsNullOrWhiteSpace(normalized)) allowedOrigins.Add(normalized);
+        }
+
         if (allowedOrigins.Count == 0)
         {
             allowedOrigins.Add(NormalizeOrigin("http://localhost:4200"));
