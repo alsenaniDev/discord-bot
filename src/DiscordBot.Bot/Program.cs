@@ -5,6 +5,8 @@ using DiscordBot.Bot.Extensions;
 using DiscordBot.Bot.Services;
 using Discord;
 using Discord.WebSocket;
+using DiscordBot.Bot.Music;
+using Lavalink4NET.Extensions;
 
 var builder = Host.CreateApplicationBuilder(args);
 
@@ -17,6 +19,7 @@ builder.Configuration.AddJsonFile(
 builder.Services.Configure<BotOptions>(builder.Configuration.GetSection(BotOptions.SectionName));
 builder.Services.Configure<ApiOptions>(builder.Configuration.GetSection(ApiOptions.SectionName));
 builder.Services.Configure<PlatformOptions>(builder.Configuration.GetSection(PlatformOptions.SectionName));
+builder.Services.Configure<LavalinkOptions>(builder.Configuration.GetSection(LavalinkOptions.SectionName));
 
 builder.Services.AddSingleton<DiscordSocketClient>(_ =>
 {
@@ -24,12 +27,22 @@ builder.Services.AddSingleton<DiscordSocketClient>(_ =>
     {
         GatewayIntents = GatewayIntents.Guilds
             | GatewayIntents.GuildMembers
+            | GatewayIntents.GuildVoiceStates
             | GatewayIntents.GuildMessages
             | GatewayIntents.DirectMessages
             | GatewayIntents.MessageContent
     };
 
     return new DiscordSocketClient(config);
+});
+
+var lavalink = builder.Configuration.GetSection(LavalinkOptions.SectionName).Get<LavalinkOptions>() ?? new LavalinkOptions();
+builder.Services.ConfigureLavalink(x =>
+{
+    var scheme = lavalink.Secure ? "https" : "http";
+    x.BaseAddress = new Uri($"{scheme}://{lavalink.Host}:{lavalink.Port}");
+    x.Passphrase = lavalink.Password;
+    x.ReadyTimeout = TimeSpan.FromSeconds(10);
 });
 
 builder.Services.AddHttpClient<BotApiClient>();
@@ -41,6 +54,9 @@ builder.Services.AddSingleton<TicketInteractionHandlers>();
 builder.Services.AddSingleton<PanelInteractionHandlers>();
 builder.Services.AddSingleton<WorkflowConversationService>();
 builder.Services.AddSingleton<WorkflowActionSyncService>();
+builder.Services.AddSingleton<MusicSessionManager>();
+builder.Services.AddSingleton<IAudioSearchService, LavalinkAudioSearchService>();
+builder.Services.AddSingleton<IMusicService, MusicService>();
 builder.Services.AddSingleton<ModerationCommandHandlers>();
 builder.Services.AddSingleton<ReactionRoleCommandHandlers>();
 builder.Services.AddSingleton<ReactionRoleInteractionHandlers>();
@@ -51,6 +67,8 @@ builder.Services.AddSingleton<BotLogWriter>();
 builder.Services.AddSingleton<WelcomeMessageService>();
 builder.Services.AddSingleton<ResourceSyncService>();
 builder.Services.AddHostedService<DiscordBotHostedService>();
+builder.Services.AddLavalink();
+builder.Services.AddHostedService<MusicPlaybackCoordinator>();
 builder.Services.AddSingleton<CommandPanelSyncService>();
 builder.Services.AddSingleton<TicketChannelCleanupService>();
 builder.Services.AddSingleton<TicketOutboundMessageService>();

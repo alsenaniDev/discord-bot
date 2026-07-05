@@ -415,7 +415,7 @@ public class EmbedBuilderService
         new Discord.EmbedBuilder()
             .WithTitle(title)
             .WithDescription(description)
-            .WithColor(role.Color != Color.Default ? role.Color : BotColors.Info)
+            .WithColor(role.Colors.PrimaryColor != Color.Default ? role.Colors.PrimaryColor : BotColors.Info)
             .AddField("Role", role.Mention, inline: true)
             .AddField("How it works", "Click the button below to toggle this role on or off.", inline: false)
             .WithFooter(FooterText)

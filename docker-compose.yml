@@ -16,5 +16,17 @@ services:
       timeout: 5s
       retries: 5
 
+  lavalink:
+    image: ghcr.io/lavalink-devs/lavalink:4.2.1
+    container_name: discordbot-lavalink
+    environment:
+      LAVALINK_SERVER_PASSWORD: ${LAVALINK_PASSWORD:-youshallnotpass}
+      _JAVA_OPTIONS: "-Xms256M -Xmx512M"
+    ports:
+      - "2333:2333"
+    volumes:
+      - ./deploy/lavalink/application.yml:/opt/Lavalink/application.yml:ro
+    restart: unless-stopped
+
 volumes:
   postgres_data:

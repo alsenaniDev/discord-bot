@@ -57,6 +57,7 @@
     "reactionRoles": "Reaction Roles",
     "panels": "Member panels",
     "workflows": "Application workflows",
+    "music": "Music",
     "staff": "Roles & permissions",
     "profile": "Server profile",
     "moderationSettings": "Moderation permissions",
@@ -2163,6 +2164,13 @@
     "questionNumber":"Question {{number}}","actionNumber":"Action {{number}}","preview":{"untitled":"Untitled workflow","actions":"approval actions"},"submissions":{"title":"Workflow submissions","lead":"Select a submission to review its answers.","empty":"No submissions yet."},"statuses":{"Pending":"Pending","Approved":"Approved","Rejected":"Rejected","Cancelled":"Cancelled"},
     "review":{"notePrompt":"Optional review note"},"defaults":{"confirm":"Continue","cancel":"Cancel"},"duplicateName":"{{name}} — copy","validation":{"fix":"Review required workflow fields."},"dialogs":{"delete":"Delete workflow “{{name}}”?"},
     "messages":{"loadError":"Could not load workflows.","saved":"Workflow saved.","saveError":"Could not save workflow.","deleteError":"Could not delete workflow.","approved":"Submission approved; actions were queued for the bot.","rejected":"Submission rejected.","reviewError":"Could not review submission."}
+  },
+  "music": {
+    "loading":"Loading music settings…","title":"Music settings","subtitle":"Configure one shared voice playback room for this server.","notice":"Use /music play in Discord after enabling the feature. One voice channel can be active at a time.",
+    "hero":{"aria":"Music settings workspace","footer":"Lavalink-powered playback with one safe queue per server."},"stats":{"status":"Status","queue":"Queue limit","volume":"Default volume"},
+    "sections":{"access":"Access and permissions","accessLead":"Choose who can queue and control playback.","limits":"Playback limits","limitsLead":"Keep the shared queue predictable and server-friendly."},
+    "fields":{"enabled":"Enable Music","djRole":"DJ role","noDjRole":"No DJ role — use voice-channel permissions","djRoleHint":"Administrators always retain control.","allowEveryone":"Allow members in the active voice channel to queue tracks when no DJ role is configured","maxQueue":"Maximum queue size","maxDuration":"Maximum track duration (seconds)","volume":"Default volume (1–100)"},
+    "messages":{"loadError":"Could not load music settings.","saveError":"Could not save music settings.","saved":"Music settings saved.","validation":"Review the music limits before saving."}
   },
   "toast": {
     "dismiss": "Dismiss notification"

@@ -44,7 +44,7 @@ public static class ResourceCollector
             {
                 DiscordRoleId = r.Id.ToString(),
                 Name = r.Name,
-                Color = r.Color.RawValue == 0 ? null : (int?)r.Color.RawValue,
+                Color = r.Colors.PrimaryColor.RawValue == 0 ? null : (int?)r.Colors.PrimaryColor.RawValue,
                 Position = r.Position,
                 IsManaged = r.IsManaged
             })

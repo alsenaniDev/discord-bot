@@ -11,6 +11,7 @@ using DiscordBot.Bot.UI;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using DiscordBot.Bot.Music;
 
 namespace DiscordBot.Bot.Services;
 
@@ -36,6 +37,7 @@ public class DiscordBotHostedService : IHostedService
     private readonly AutoReplyMessageService _autoReplyMessageService;
     private readonly TicketTimelineMessageService _ticketTimelineMessageService;
     private readonly WorkflowConversationService _workflowConversations;
+    private readonly IMusicService _music;
     private readonly BotOptions _botOptions;
     private readonly ILogger<DiscordBotHostedService> _logger;
 
@@ -57,6 +59,7 @@ public class DiscordBotHostedService : IHostedService
         AutoReplyMessageService autoReplyMessageService,
         TicketTimelineMessageService ticketTimelineMessageService,
         WorkflowConversationService workflowConversations,
+        IMusicService music,
         IOptions<BotOptions> botOptions,
         ILogger<DiscordBotHostedService> logger)
     {
@@ -77,6 +80,7 @@ public class DiscordBotHostedService : IHostedService
         _autoReplyMessageService = autoReplyMessageService;
         _ticketTimelineMessageService = ticketTimelineMessageService;
         _workflowConversations = workflowConversations;
+        _music = music;
         _botOptions = botOptions.Value;
         _logger = logger;
     }
@@ -163,7 +167,16 @@ public class DiscordBotHostedService : IHostedService
             guild.Name);
     }
 
-    private async Task OnInteractionCreatedAsync(SocketInteraction interaction)
+    private Task OnInteractionCreatedAsync(SocketInteraction interaction)
+    {
+        // Discord.Net invokes this callback on its gateway dispatch loop. Lavalink joins
+        // require that same loop to process the resulting voice state/server events.
+        // Dispatch the complete interaction pipeline so a command can never block them.
+        _ = Task.Run(() => ProcessInteractionAsync(interaction));
+        return Task.CompletedTask;
+    }
+
+    private async Task ProcessInteractionAsync(SocketInteraction interaction)
     {
         try
         {
@@ -184,7 +197,8 @@ public class DiscordBotHostedService : IHostedService
         {
             _logger.LogError(ex, "Error handling interaction {Type}", interaction.Type);
 
-            await InteractionResponseHelper.RespondUnexpectedErrorAsync(interaction, _embeds);
+            try { await InteractionResponseHelper.RespondUnexpectedErrorAsync(interaction, _embeds); }
+            catch (Exception responseError) { _logger.LogWarning(responseError, "Could not send the unexpected-error interaction response."); }
         }
     }
 
@@ -222,6 +236,9 @@ public class DiscordBotHostedService : IHostedService
             case "reaction-role":
                 await HandleReactionRoleCommandAsync(interaction, command);
                 break;
+            case "music":
+                await HandleMusicCommandAsync(interaction, command);
+                break;
             default:
                 await InteractionResponseHelper.RespondErrorAsync(
                     interaction,
@@ -235,6 +252,12 @@ public class DiscordBotHostedService : IHostedService
     private async Task HandleComponentAsync(SocketMessageComponent component)
     {
         var customId = component.Data.CustomId;
+
+        if (customId.StartsWith(DiscordCustomIds.MusicPrefix, StringComparison.Ordinal))
+        {
+            await _music.HandleButtonAsync(component, customId[DiscordCustomIds.MusicPrefix.Length..]);
+            return;
+        }
 
         if (DiscordCustomIds.TryParseWorkflowQuestionAnswer(customId, out var answerWorkflowId, out var answerConversationToken, out var answerQuestionToken, out var answer))
         {
@@ -294,6 +317,22 @@ public class DiscordBotHostedService : IHostedService
                     "Unknown subcommand",
                     "Use `/reaction-role create`.");
                 break;
+        }
+    }
+
+    private async Task HandleMusicCommandAsync(SocketInteraction interaction, SocketSlashCommand command)
+    {
+        var subcommand = command.Data.Options.FirstOrDefault();
+        switch (subcommand?.Name)
+        {
+            case "play": await _music.PlayAsync(interaction, subcommand.Options.First(x => x.Name == "query").Value?.ToString() ?? string.Empty); break;
+            case "skip": await _music.SkipAsync(interaction); break;
+            case "stop": await _music.StopAsync(interaction); break;
+            case "pause": await _music.PauseAsync(interaction); break;
+            case "resume": await _music.ResumeAsync(interaction); break;
+            case "queue": await _music.ShowQueueAsync(interaction); break;
+            case "nowplaying": await _music.ShowNowPlayingAsync(interaction); break;
+            default: await InteractionResponseHelper.RespondErrorAsync(interaction, _embeds, "Unknown subcommand", "Use a `/music` subcommand."); break;
         }
     }
 
