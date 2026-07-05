@@ -9,4 +9,8 @@ public sealed class DiscordProfile
     public required string Username { get; init; }
     public string? GlobalName { get; init; }
     public string? AvatarUrl { get; init; }
+    public string DiscordAccessToken { get; set; } = null!;
+    public string DiscordRefreshToken { get; set; } = null!;
+    public DateTime DiscordTokenExpiresAtUtc { get; set; }
+    public string DiscordTokenScope { get; set; } = null!;
 }

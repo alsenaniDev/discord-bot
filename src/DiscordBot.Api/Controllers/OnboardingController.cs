@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using DiscordBot.Api.Extensions;
 using DiscordBot.Infrastructure.Models;
 using DiscordBot.Infrastructure.Services;
@@ -16,6 +17,21 @@ public class OnboardingController : ControllerBase
     public OnboardingController(IOnboardingService onboardingService)
     {
         _onboardingService = onboardingService;
+    }
+
+    [HttpGet("discord-guilds")]
+    public async Task<ActionResult<IReadOnlyList<DiscordGuildOnboardingDto>>> GetDiscordGuilds(CancellationToken cancellationToken)
+    {
+        var userIdClaim = User.FindFirstValue(ClaimTypes.NameIdentifier)
+            ?? User.FindFirstValue("sub");
+
+        if (!Guid.TryParse(userIdClaim, out var userId))
+        {
+            return Unauthorized(new { message = "Missing user identity in token." });
+        }
+
+        var guilds = await _onboardingService.GetMyDiscordGuildsAsync(userId, cancellationToken);
+        return Ok(guilds);
     }
 
     [HttpGet("status")]

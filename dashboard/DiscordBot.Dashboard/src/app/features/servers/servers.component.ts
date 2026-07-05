@@ -8,7 +8,7 @@ import { GuildService } from '../../core/services/guild.service';
 import { OnboardingService } from '../../core/services/onboarding.service';
 import { ToastService } from '../../core/services/toast.service';
 import { GuildSummary } from '../../core/models/guild.models';
-import { OnboardingStatus, emptyChecklist } from '../../core/models/onboarding.models';
+import { DiscordGuildOnboarding, OnboardingStatus, emptyChecklist } from '../../core/models/onboarding.models';
 import { getApiErrorMessage } from '../../core/utils/api-error.util';
 
 @Component({
@@ -16,8 +16,10 @@ import { getApiErrorMessage } from '../../core/utils/api-error.util';
   templateUrl: './servers.component.html',
   styleUrls: ['./servers.component.css']
 })
+
 export class ServersComponent implements OnInit {
   guilds: GuildSummary[] = [];
+  discordGuilds: DiscordGuildOnboarding[] = [];
   onboarding: OnboardingStatus | null = null;
   loading = true;
   refreshing = false;
@@ -34,7 +36,7 @@ export class ServersComponent implements OnInit {
   ) { }
 
   get showOnboarding(): boolean {
-    return !this.loading && !this.error && this.guilds.length === 0;
+    return !this.loading && !this.error && this.discordGuilds.length === 0;
   }
 
   get botInviteUrl(): string {
@@ -56,11 +58,13 @@ export class ServersComponent implements OnInit {
 
     forkJoin({
       guilds: this.guildService.getGuilds(forceRefresh),
-      onboarding: this.onboardingService.getStatus()
+      onboarding: this.onboardingService.getStatus(),
+      discordGuilds: this.onboardingService.getDiscordGuilds()
     }).subscribe({
-      next: ({ guilds, onboarding }) => {
+      next: ({ guilds, onboarding, discordGuilds }) => {
         this.guilds = guilds;
         this.onboarding = onboarding;
+        this.discordGuilds = discordGuilds;
         this.loading = false;
         this.refreshing = false;
       },
@@ -76,6 +80,24 @@ export class ServersComponent implements OnInit {
         }
       }
     });
+  }
+
+  openDiscordGuild(guild: DiscordGuildOnboarding): void {
+    if (!guild.botInstalled || !guild.platformGuildId) {
+      return;
+    }
+
+    const installedGuild = this.guilds.find(g => g.id === guild.platformGuildId);
+
+    if (installedGuild) {
+      this.guildContext.selectGuild(installedGuild);
+    }
+
+    this.router.navigate(['/guilds', guild.platformGuildId, 'overview']);
+  }
+
+  discordGuildUrl(guild: DiscordGuildOnboarding): string {
+    return `https://discord.com/channels/${guild.discordGuildId}`;
   }
 
   refreshOnboarding(): void {

@@ -53,6 +53,10 @@ public class AuthService : IAuthService
                 Username = profile.Username,
                 GlobalName = profile.GlobalName,
                 AvatarUrl = profile.AvatarUrl,
+                DiscordAccessToken = profile.DiscordAccessToken,
+                DiscordRefreshToken = profile.DiscordRefreshToken,
+                DiscordTokenExpiresAtUtc = profile.DiscordTokenExpiresAtUtc,
+                DiscordTokenScope = profile.DiscordTokenScope,
                 LastLoginAt = DateTimeOffset.UtcNow
             };
 
@@ -63,6 +67,10 @@ public class AuthService : IAuthService
             user.Username = profile.Username;
             user.GlobalName = profile.GlobalName;
             user.AvatarUrl = profile.AvatarUrl;
+            user.DiscordAccessToken = profile.DiscordAccessToken;
+            user.DiscordRefreshToken = profile.DiscordRefreshToken;
+            user.DiscordTokenExpiresAtUtc = profile.DiscordTokenExpiresAtUtc;
+            user.DiscordTokenScope = profile.DiscordTokenScope;
             user.LastLoginAt = DateTimeOffset.UtcNow;
         }
 

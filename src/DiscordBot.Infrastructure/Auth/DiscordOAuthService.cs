@@ -11,7 +11,7 @@ public class DiscordOAuthService : IDiscordOAuthService
     private const string AuthorizeEndpoint = "https://discord.com/api/oauth2/authorize";
     private const string TokenEndpoint = "https://discord.com/api/oauth2/token";
     private const string UserEndpoint = "https://discord.com/api/users/@me";
-    private const string OAuthScope = "identify";
+    private const string OAuthScope = "identify guilds";
     private const string StateCachePrefix = "oauth-state:";
 
     private readonly HttpClient _httpClient;
@@ -46,10 +46,7 @@ public class DiscordOAuthService : IDiscordOAuthService
         return (authorizeUrl, state);
     }
 
-    public async Task<DiscordProfile> ExchangeCodeAsync(
-        string code,
-        string state,
-        CancellationToken cancellationToken = default)
+    public async Task<DiscordProfile> ExchangeCodeAsync(string code, string state, CancellationToken cancellationToken = default)
     {
         ValidateConfiguration();
 
@@ -68,7 +65,11 @@ public class DiscordOAuthService : IDiscordOAuthService
             DiscordUserId = discordUser.Id,
             Username = discordUser.Username,
             GlobalName = discordUser.GlobalName,
-            AvatarUrl = BuildAvatarUrl(discordUser.Id, discordUser.Avatar)
+            AvatarUrl = BuildAvatarUrl(discordUser.Id, discordUser.Avatar),
+            DiscordAccessToken = tokenResponse.AccessToken,
+            DiscordRefreshToken = tokenResponse.RefreshToken,
+            DiscordTokenExpiresAtUtc = DateTime.UtcNow.AddSeconds(tokenResponse.ExpiresIn),
+            DiscordTokenScope = tokenResponse.Scope
         };
     }
 

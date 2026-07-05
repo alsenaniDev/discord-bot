@@ -261,7 +261,8 @@
     "stepConfigure": "افتح قائمة الإعداد في لوحة التحكم لاختيار الخطة وتفعيل الوحدات وتهيئة الترحيب/التذاكر.",
     "setupProgress": "اكتمال الإعداد {{percent}}%",
     "openSettings": "الإعدادات",
-    "openInDiscord": "فتح في Discord"
+    "openInDiscord": "فتح في Discord",
+    "botNotInstalled": "البوت غير مضاف في هذا السيرفر"
   },
   "onboarding": {
     "checklistTitle": "قائمة الإعداد",
@@ -2105,83 +2106,337 @@
     "title": "لوحات الأعضاء",
     "subtitle": "أنشئ لوحات Discord قابلة لإعادة الاستخدام للتذاكر والروابط والرسائل والأدوار.",
     "notice": "يتولى البوت عملية النشر، وتُحدّث التغييرات المحفوظة رسالة Discord الحالية عند ارتباطها مسبقًا.",
-    "hero": { "ariaLabel": "مساحة عمل لوحات الأعضاء", "footer": "أنشئ نقاط دخول واضحة للدعم وإجراءات المجتمع." },
-    "stats": { "total": "اللوحات", "published": "المنشورة", "pending": "بانتظار النشر" },
-    "tabs": { "ariaLabel": "طرق عرض مساحة اللوحات", "list": "اللوحات", "create": "إنشاء لوحة", "edit": "تعديل اللوحة" },
-    "actions": {
-      "create": "إنشاء لوحة", "publish": "نشر", "publishing": "جارٍ النشر…", "duplicate": "نسخ",
-      "delete": "حذف", "back": "العودة إلى اللوحات", "addButton": "إضافة زر", "moveUp": "تحريك الزر لأعلى",
-      "moveDown": "تحريك الزر لأسفل", "saving": "جارٍ الحفظ…", "saveAndPublish": "حفظ ونشر في Discord"
+    "hero": {
+      "ariaLabel": "مساحة عمل لوحات الأعضاء",
+      "footer": "أنشئ نقاط دخول واضحة للدعم وإجراءات المجتمع."
     },
-    "list": { "title": "اللوحات المُعدّة", "lead": "أدر المحتوى والوجهات والإجراءات وحالة النشر.", "buttons": "الأزرار", "lastPublished": "آخر نشر" },
-    "empty": { "title": "لا توجد لوحات بعد", "description": "أنشئ أول لوحة لتمنح الأعضاء طريقة واضحة لفتح التذاكر أو استخدام إجراءات السيرفر." },
+    "stats": {
+      "total": "اللوحات",
+      "published": "المنشورة",
+      "pending": "بانتظار النشر"
+    },
+    "tabs": {
+      "ariaLabel": "طرق عرض مساحة اللوحات",
+      "list": "اللوحات",
+      "create": "إنشاء لوحة",
+      "edit": "تعديل اللوحة"
+    },
+    "actions": {
+      "create": "إنشاء لوحة",
+      "publish": "نشر",
+      "publishing": "جارٍ النشر…",
+      "duplicate": "نسخ",
+      "delete": "حذف",
+      "back": "العودة إلى اللوحات",
+      "addButton": "إضافة زر",
+      "moveUp": "تحريك الزر لأعلى",
+      "moveDown": "تحريك الزر لأسفل",
+      "saving": "جارٍ الحفظ…",
+      "saveAndPublish": "حفظ ونشر في Discord"
+    },
+    "list": {
+      "title": "اللوحات المُعدّة",
+      "lead": "أدر المحتوى والوجهات والإجراءات وحالة النشر.",
+      "buttons": "الأزرار",
+      "lastPublished": "آخر نشر"
+    },
+    "empty": {
+      "title": "لا توجد لوحات بعد",
+      "description": "أنشئ أول لوحة لتمنح الأعضاء طريقة واضحة لفتح التذاكر أو استخدام إجراءات السيرفر."
+    },
     "editor": {
-      "createTitle": "إنشاء لوحة", "editTitle": "تعديل اللوحة", "lead": "أعدّ رسالة Discord وما يصل إلى 25 زرًا.",
-      "detailsTitle": "تفاصيل اللوحة", "detailsLead": "اختر مكان اللوحة والمحتوى الذي سيراه الأعضاء."
+      "createTitle": "إنشاء لوحة",
+      "editTitle": "تعديل اللوحة",
+      "lead": "أعدّ رسالة Discord وما يصل إلى 25 زرًا.",
+      "detailsTitle": "تفاصيل اللوحة",
+      "detailsLead": "اختر مكان اللوحة والمحتوى الذي سيراه الأعضاء."
     },
     "fields": {
-      "name": "اسم اللوحة الداخلي", "channel": "قناة Discord", "selectChannel": "اختر قناة",
-      "channelHint": "القناة اختيارية أثناء إعداد المسودة ومطلوبة عند النشر.", "title": "عنوان التضمين",
-      "description": "وصف التضمين", "imageUrl": "رابط HTTPS للصورة", "enabled": "اللوحة مفعّلة",
-      "buttonLabel": "نص الزر", "emoji": "الرمز التعبيري", "emojiPlaceholder": "مثال: 🎫", "actionType": "الإجراء",
-      "style": "نمط Discord", "defaultTicketFlow": "يستخدم المشروع حاليًا مسار التذاكر الافتراضي؛ لا يلزم اختيار نوع تذكرة.",
-      "url": "رابط HTTPS للوجهة", "responseMessage": "رسالة الاستجابة الخاصة",
-      "ephemeralHint": "لن يرى هذه الاستجابة سوى العضو الذي ضغط الزر.", "role": "دور Discord",
-      "selectRole": "اختر دورًا", "roleIdFallback": "معرّف دور Discord — خيار متقدم",
+      "name": "اسم اللوحة الداخلي",
+      "channel": "قناة Discord",
+      "selectChannel": "اختر قناة",
+      "channelHint": "القناة اختيارية أثناء إعداد المسودة ومطلوبة عند النشر.",
+      "title": "عنوان التضمين",
+      "description": "وصف التضمين",
+      "imageUrl": "رابط HTTPS للصورة",
+      "enabled": "اللوحة مفعّلة",
+      "buttonLabel": "نص الزر",
+      "emoji": "الرمز التعبيري",
+      "emojiPlaceholder": "مثال: 🎫",
+      "actionType": "الإجراء",
+      "style": "نمط Discord",
+      "defaultTicketFlow": "يستخدم المشروع حاليًا مسار التذاكر الافتراضي؛ لا يلزم اختيار نوع تذكرة.",
+      "url": "رابط HTTPS للوجهة",
+      "responseMessage": "رسالة الاستجابة الخاصة",
+      "ephemeralHint": "لن يرى هذه الاستجابة سوى العضو الذي ضغط الزر.",
+      "role": "دور Discord",
+      "selectRole": "اختر دورًا",
+      "roleIdFallback": "معرّف دور Discord — خيار متقدم",
       "roleFallbackHint": "لم يتم العثور على أدوار متزامنة قابلة للإسناد. زامن موارد السيرفر أو أدخل المعرّف عند الضرورة فقط.",
-      "noAssignableRolesTitle": "لا توجد أدوار قابلة للإسناد", "noAssignableRolesBody": "جميع الأدوار المتزامنة مُدارة بواسطة Discord. أنشئ أو زامن دورًا يستطيع البوت إدارته.",
-      "buttonEnabled": "إظهار هذا الزر في Discord"
-      ,"workflow": "نموذج الطلب", "selectWorkflow": "اختر نموذجًا"
+      "noAssignableRolesTitle": "لا توجد أدوار قابلة للإسناد",
+      "noAssignableRolesBody": "جميع الأدوار المتزامنة مُدارة بواسطة Discord. أنشئ أو زامن دورًا يستطيع البوت إدارته.",
+      "buttonEnabled": "إظهار هذا الزر في Discord",
+      "workflow": "نموذج الطلب",
+      "selectWorkflow": "اختر نموذجًا"
     },
     "buttons": {
-      "title": "أزرار اللوحة", "lead": "تم إعداد {{count}} من 25 زرًا؛ يعرض Discord خمسة أزرار كحد أقصى في كل صف.",
-      "emptyTitle": "لا توجد أزرار مُعدّة", "emptyDescription": "أضف زرًا لإنشاء إجراء للأعضاء.", "buttonNumber": "الزر {{number}}"
+      "title": "أزرار اللوحة",
+      "lead": "تم إعداد {{count}} من 25 زرًا؛ يعرض Discord خمسة أزرار كحد أقصى في كل صف.",
+      "emptyTitle": "لا توجد أزرار مُعدّة",
+      "emptyDescription": "أضف زرًا لإنشاء إجراء للأعضاء.",
+      "buttonNumber": "الزر {{number}}"
     },
     "status": {
-      "failed": "فشل النشر", "requested": "تم طلب النشر", "published": "منشورة", "notPublished": "غير منشورة",
-      "never": "لم تُنشر", "failureDetail": "آخر خطأ في النشر"
+      "failed": "فشل النشر",
+      "requested": "تم طلب النشر",
+      "published": "منشورة",
+      "notPublished": "غير منشورة",
+      "never": "لم تُنشر",
+      "failureDetail": "آخر خطأ في النشر"
     },
     "preview": {
-      "ariaLabel": "معاينة لوحة Discord", "title": "معاينة Discord", "brand": "Discord", "lead": "تصور تقريبي لتخطيط الرسالة وصفوف الأزرار.",
-      "noTitle": "عنوان اللوحة", "noDescription": "لا يوجد وصف", "imageAlt": "صورة معاينة اللوحة", "buttonFallback": "زر"
+      "ariaLabel": "معاينة لوحة Discord",
+      "title": "معاينة Discord",
+      "brand": "Discord",
+      "lead": "تصور تقريبي لتخطيط الرسالة وصفوف الأزرار.",
+      "noTitle": "عنوان اللوحة",
+      "noDescription": "لا يوجد وصف",
+      "imageAlt": "صورة معاينة اللوحة",
+      "buttonFallback": "زر"
     },
-    "actionTypes": { "CreateTicket": "إنشاء تذكرة", "OpenUrl": "فتح رابط", "SendMessage": "إرسال رسالة", "AssignRole": "تبديل دور", "StartWorkflow": "بدء نموذج" },
-    "styles": { "Primary": "أساسي", "Secondary": "ثانوي", "Success": "نجاح", "Danger": "خطر", "Link": "رابط" },
-    "actionHelp": { "CreateTicket": "ينشئ تذكرة باستخدام إعداد التذاكر الافتراضي للسيرفر." },
+    "actionTypes": {
+      "CreateTicket": "إنشاء تذكرة",
+      "OpenUrl": "فتح رابط",
+      "SendMessage": "إرسال رسالة",
+      "AssignRole": "تبديل دور",
+      "StartWorkflow": "بدء نموذج"
+    },
+    "styles": {
+      "Primary": "أساسي",
+      "Secondary": "ثانوي",
+      "Success": "نجاح",
+      "Danger": "خطر",
+      "Link": "رابط"
+    },
+    "actionHelp": {
+      "CreateTicket": "ينشئ تذكرة باستخدام إعداد التذاكر الافتراضي للسيرفر."
+    },
     "validation": {
-      "fixErrors": "راجع الحقول المحددة قبل الحفظ.", "nameRequired": "اسم اللوحة مطلوب.",
-      "titleOrDescription": "أدخل عنوانًا أو وصفًا.", "channelForPublish": "اختر قناة قبل النشر.",
-      "enableBeforePublish": "فعّل اللوحة قبل النشر.", "buttonLabelRequired": "نص الزر مطلوب.",
-      "httpsUrl": "أدخل رابط HTTPS صالحًا.", "messageRequired": "رسالة الاستجابة مطلوبة.", "roleRequired": "اختر دورًا.", "workflowRequired": "اختر نموذجًا."
+      "fixErrors": "راجع الحقول المحددة قبل الحفظ.",
+      "nameRequired": "اسم اللوحة مطلوب.",
+      "titleOrDescription": "أدخل عنوانًا أو وصفًا.",
+      "channelForPublish": "اختر قناة قبل النشر.",
+      "enableBeforePublish": "فعّل اللوحة قبل النشر.",
+      "buttonLabelRequired": "نص الزر مطلوب.",
+      "httpsUrl": "أدخل رابط HTTPS صالحًا.",
+      "messageRequired": "رسالة الاستجابة مطلوبة.",
+      "roleRequired": "اختر دورًا.",
+      "workflowRequired": "اختر نموذجًا."
     },
     "messages": {
-      "loadError": "تعذر تحميل لوحات الأعضاء.", "saved": "تم حفظ اللوحة.", "saveError": "تعذر حفظ اللوحة.",
-      "publishRequested": "تم إرسال طلب النشر.", "savedAndPublishRequested": "تم حفظ اللوحة وإرسال طلب النشر.",
-      "publishError": "تعذر إرسال طلب النشر.", "deleted": "تم حذف اللوحة.", "deleteError": "تعذر حذف اللوحة."
+      "loadError": "تعذر تحميل لوحات الأعضاء.",
+      "saved": "تم حفظ اللوحة.",
+      "saveError": "تعذر حفظ اللوحة.",
+      "publishRequested": "تم إرسال طلب النشر.",
+      "savedAndPublishRequested": "تم حفظ اللوحة وإرسال طلب النشر.",
+      "publishError": "تعذر إرسال طلب النشر.",
+      "deleted": "تم حذف اللوحة.",
+      "deleteError": "تعذر حذف اللوحة."
     },
-    "defaults": { "title": "كيف يمكننا مساعدتك؟", "description": "اختر أحد الإجراءات أدناه." },
+    "defaults": {
+      "title": "كيف يمكننا مساعدتك؟",
+      "description": "اختر أحد الإجراءات أدناه."
+    },
     "duplicateName": "{{name}} — نسخة",
-    "dialogs": { "deleteConfirm": "هل تريد حذف اللوحة «{{name}}»؟ لا يمكن التراجع عن ذلك." }
+    "dialogs": {
+      "deleteConfirm": "هل تريد حذف اللوحة «{{name}}»؟ لا يمكن التراجع عن ذلك."
+    }
   },
   "workflows": {
-    "loading":"جارٍ تحميل النماذج…","title":"نماذج الطلبات","subtitle":"اجمع الطلبات الخاصة وراجعها مع إجراءات Discord آمنة.","notice":"اربط النماذج المفعّلة بأزرار اللوحات لبدء طلبات خاصة عبر الرسائل.",
-    "hero":{"aria":"مساحة عمل النماذج","footer":"طلبات منظمة وإجابات خاصة وإجراءات موافقة قابلة للتتبع."},"stats":{"total":"النماذج","enabled":"المفعّلة","pending":"الطلبات المعلقة"},
-    "tabs":{"workflows":"النماذج","editor":"محرر النموذج","submissions":"الطلبات"},"types":{"Application":"طلب","Survey":"استبيان","Report":"بلاغ","Custom":"مخصص"},
-    "actions":{"create":"إنشاء نموذج","back":"العودة للنماذج","duplicate":"نسخ","delete":"حذف","addQuestion":"إضافة سؤال","addOption":"إضافة خيار","addAction":"إضافة إجراء","approve":"موافقة","reject":"رفض"},
-    "empty":{"title":"لا توجد نماذج بعد","body":"أنشئ نموذجًا وأضف الأسئلة ثم اربطه بزر في لوحة."},"editor":{"notice":"تدعم نماذج الرسائل الخاصة 10 أسئلة و10 إجراءات موافقة في المرحلة الأولى."},
-    "sections":{"basic":"المعلومات الأساسية","basicLead":"سمِّ النموذج وفعّله.","confirmation":"تأكيد البدء","confirmationLead":"أكد اختياريًا قبل فتح الرسائل الخاصة.","questions":"الأسئلة","questionsLead":"يجيب الأعضاء عنها بالتتابع في الخاص.","duplicates":"منع التكرار","duplicatesLead":"تحكم في تكرار الطلبات.","actions":"إجراءات الموافقة","actionsLead":"تُجدول الإجراءات للبوت بعد الموافقة."},
-    "fields":{"name":"اسم النموذج","description":"الوصف","type":"النوع","enabled":"النموذج مفعّل","requireConfirmation":"طلب تأكيد","confirmTitle":"عنوان التأكيد","confirmMessage":"رسالة التأكيد","confirmButton":"نص زر التأكيد","cancelButton":"نص زر الإلغاء","questions":"الأسئلة","label":"نص السؤال","questionType":"نوع السؤال","required":"مطلوب","helpText":"نص مساعد","minLength":"الحد الأدنى","maxLength":"الحد الأقصى","options":"خيارات الإجابة","optionsHelp":"أضف من خيارين إلى 5 خيارات ليختار العضو زرًا واحدًا.","optionLabel":"نص الزر","optionValue":"القيمة المحفوظة","policy":"سياسة التكرار","cooldown":"ساعات الانتظار","maxSubmissions":"الحد الأقصى لطلبات المستخدم","actionType":"نوع الإجراء","role":"دور Discord","message":"رسالة خاصة","successMessage":"رسالة نجاح الإرسال","rejectionMessage":"رسالة الرفض الخاصة"},
-    "questionTypes":{"ShortText":"نص قصير","LongText":"نص طويل","Number":"رقم","YesNo":"نعم / لا","SingleChoice":"اختيار واحد"},"answers":{"yes":"نعم","no":"لا"},"policies":{"AllowMultiple":"السماح بالتكرار","BlockWhilePending":"المنع أثناء الانتظار","BlockAfterApproved":"المنع بعد الموافقة","CooldownAfterRejected":"انتظار بعد الرفض","OneSubmissionEver":"طلب واحد فقط"},"actionTypes":{"AddRole":"إضافة دور","RemoveRole":"إزالة دور","SendDirectMessage":"إرسال رسالة خاصة"},
-    "questionNumber":"السؤال {{number}}","actionNumber":"الإجراء {{number}}","preview":{"untitled":"نموذج بلا عنوان","actions":"إجراءات موافقة"},"submissions":{"title":"طلبات النماذج","lead":"اختر طلبًا لمراجعة إجاباته.","empty":"لا توجد طلبات بعد."},"statuses":{"Pending":"معلق","Approved":"مقبول","Rejected":"مرفوض","Cancelled":"ملغي"},
-    "review":{"notePrompt":"ملاحظة مراجعة اختيارية"},"defaults":{"confirm":"متابعة","cancel":"إلغاء"},"duplicateName":"{{name}} — نسخة","validation":{"fix":"راجع حقول النموذج المطلوبة."},"dialogs":{"delete":"هل تريد حذف النموذج «{{name}}»؟"},
-    "messages":{"loadError":"تعذر تحميل النماذج.","saved":"تم حفظ النموذج.","saveError":"تعذر حفظ النموذج.","deleteError":"تعذر حذف النموذج.","approved":"تمت الموافقة وجدولة الإجراءات للبوت.","rejected":"تم رفض الطلب.","reviewError":"تعذرت مراجعة الطلب."}
+    "loading": "جارٍ تحميل النماذج…",
+    "title": "نماذج الطلبات",
+    "subtitle": "اجمع الطلبات الخاصة وراجعها مع إجراءات Discord آمنة.",
+    "notice": "اربط النماذج المفعّلة بأزرار اللوحات لبدء طلبات خاصة عبر الرسائل.",
+    "hero": {
+      "aria": "مساحة عمل النماذج",
+      "footer": "طلبات منظمة وإجابات خاصة وإجراءات موافقة قابلة للتتبع."
+    },
+    "stats": {
+      "total": "النماذج",
+      "enabled": "المفعّلة",
+      "pending": "الطلبات المعلقة"
+    },
+    "tabs": {
+      "workflows": "النماذج",
+      "editor": "محرر النموذج",
+      "submissions": "الطلبات"
+    },
+    "types": {
+      "Application": "طلب",
+      "Survey": "استبيان",
+      "Report": "بلاغ",
+      "Custom": "مخصص"
+    },
+    "actions": {
+      "create": "إنشاء نموذج",
+      "back": "العودة للنماذج",
+      "duplicate": "نسخ",
+      "delete": "حذف",
+      "addQuestion": "إضافة سؤال",
+      "addOption": "إضافة خيار",
+      "addAction": "إضافة إجراء",
+      "approve": "موافقة",
+      "reject": "رفض"
+    },
+    "empty": {
+      "title": "لا توجد نماذج بعد",
+      "body": "أنشئ نموذجًا وأضف الأسئلة ثم اربطه بزر في لوحة."
+    },
+    "editor": {
+      "notice": "تدعم نماذج الرسائل الخاصة 10 أسئلة و10 إجراءات موافقة في المرحلة الأولى."
+    },
+    "sections": {
+      "basic": "المعلومات الأساسية",
+      "basicLead": "سمِّ النموذج وفعّله.",
+      "confirmation": "تأكيد البدء",
+      "confirmationLead": "أكد اختياريًا قبل فتح الرسائل الخاصة.",
+      "questions": "الأسئلة",
+      "questionsLead": "يجيب الأعضاء عنها بالتتابع في الخاص.",
+      "duplicates": "منع التكرار",
+      "duplicatesLead": "تحكم في تكرار الطلبات.",
+      "actions": "إجراءات الموافقة",
+      "actionsLead": "تُجدول الإجراءات للبوت بعد الموافقة."
+    },
+    "fields": {
+      "name": "اسم النموذج",
+      "description": "الوصف",
+      "type": "النوع",
+      "enabled": "النموذج مفعّل",
+      "requireConfirmation": "طلب تأكيد",
+      "confirmTitle": "عنوان التأكيد",
+      "confirmMessage": "رسالة التأكيد",
+      "confirmButton": "نص زر التأكيد",
+      "cancelButton": "نص زر الإلغاء",
+      "questions": "الأسئلة",
+      "label": "نص السؤال",
+      "questionType": "نوع السؤال",
+      "required": "مطلوب",
+      "helpText": "نص مساعد",
+      "minLength": "الحد الأدنى",
+      "maxLength": "الحد الأقصى",
+      "options": "خيارات الإجابة",
+      "optionsHelp": "أضف من خيارين إلى 5 خيارات ليختار العضو زرًا واحدًا.",
+      "optionLabel": "نص الزر",
+      "optionValue": "القيمة المحفوظة",
+      "policy": "سياسة التكرار",
+      "cooldown": "ساعات الانتظار",
+      "maxSubmissions": "الحد الأقصى لطلبات المستخدم",
+      "actionType": "نوع الإجراء",
+      "role": "دور Discord",
+      "message": "رسالة خاصة",
+      "successMessage": "رسالة نجاح الإرسال",
+      "rejectionMessage": "رسالة الرفض الخاصة"
+    },
+    "questionTypes": {
+      "ShortText": "نص قصير",
+      "LongText": "نص طويل",
+      "Number": "رقم",
+      "YesNo": "نعم / لا",
+      "SingleChoice": "اختيار واحد"
+    },
+    "answers": {
+      "yes": "نعم",
+      "no": "لا"
+    },
+    "policies": {
+      "AllowMultiple": "السماح بالتكرار",
+      "BlockWhilePending": "المنع أثناء الانتظار",
+      "BlockAfterApproved": "المنع بعد الموافقة",
+      "CooldownAfterRejected": "انتظار بعد الرفض",
+      "OneSubmissionEver": "طلب واحد فقط"
+    },
+    "actionTypes": {
+      "AddRole": "إضافة دور",
+      "RemoveRole": "إزالة دور",
+      "SendDirectMessage": "إرسال رسالة خاصة"
+    },
+    "questionNumber": "السؤال {{number}}",
+    "actionNumber": "الإجراء {{number}}",
+    "preview": {
+      "untitled": "نموذج بلا عنوان",
+      "actions": "إجراءات موافقة"
+    },
+    "submissions": {
+      "title": "طلبات النماذج",
+      "lead": "اختر طلبًا لمراجعة إجاباته.",
+      "empty": "لا توجد طلبات بعد."
+    },
+    "statuses": {
+      "Pending": "معلق",
+      "Approved": "مقبول",
+      "Rejected": "مرفوض",
+      "Cancelled": "ملغي"
+    },
+    "review": {
+      "notePrompt": "ملاحظة مراجعة اختيارية"
+    },
+    "defaults": {
+      "confirm": "متابعة",
+      "cancel": "إلغاء"
+    },
+    "duplicateName": "{{name}} — نسخة",
+    "validation": {
+      "fix": "راجع حقول النموذج المطلوبة."
+    },
+    "dialogs": {
+      "delete": "هل تريد حذف النموذج «{{name}}»؟"
+    },
+    "messages": {
+      "loadError": "تعذر تحميل النماذج.",
+      "saved": "تم حفظ النموذج.",
+      "saveError": "تعذر حفظ النموذج.",
+      "deleteError": "تعذر حذف النموذج.",
+      "approved": "تمت الموافقة وجدولة الإجراءات للبوت.",
+      "rejected": "تم رفض الطلب.",
+      "reviewError": "تعذرت مراجعة الطلب."
+    }
   },
   "music": {
-    "loading":"جارٍ تحميل إعدادات الموسيقى…","title":"إعدادات الموسيقى","subtitle":"اضبط غرفة تشغيل صوتي مشتركة واحدة لهذا السيرفر.","notice":"استخدم /music play في Discord بعد تفعيل الميزة. يمكن تشغيل قناة صوتية واحدة فقط في الوقت نفسه.",
-    "hero":{"aria":"مساحة إعدادات الموسيقى","footer":"تشغيل عبر Lavalink مع قائمة انتظار آمنة واحدة لكل سيرفر."},"stats":{"status":"الحالة","queue":"حد القائمة","volume":"الصوت الافتراضي"},
-    "sections":{"access":"الوصول والصلاحيات","accessLead":"حدد من يمكنه إضافة المقاطع والتحكم بالتشغيل.","limits":"حدود التشغيل","limitsLead":"حافظ على قائمة الانتظار منظمة ومناسبة للسيرفر."},
-    "fields":{"enabled":"تفعيل الموسيقى","djRole":"دور DJ","noDjRole":"بدون دور DJ — استخدام صلاحيات القناة الصوتية","djRoleHint":"يمتلك المسؤولون التحكم دائمًا.","allowEveryone":"السماح لأعضاء القناة الصوتية النشطة بإضافة المقاطع عند عدم تحديد دور DJ","maxQueue":"الحد الأقصى لقائمة الانتظار","maxDuration":"الحد الأقصى لمدة المقطع (بالثواني)","volume":"مستوى الصوت الافتراضي (1–100)"},
-    "messages":{"loadError":"تعذر تحميل إعدادات الموسيقى.","saveError":"تعذر حفظ إعدادات الموسيقى.","saved":"تم حفظ إعدادات الموسيقى.","validation":"راجع حدود الموسيقى قبل الحفظ."}
+    "loading": "جارٍ تحميل إعدادات الموسيقى…",
+    "title": "إعدادات الموسيقى",
+    "subtitle": "اضبط غرفة تشغيل صوتي مشتركة واحدة لهذا السيرفر.",
+    "notice": "استخدم /music play في Discord بعد تفعيل الميزة. يمكن تشغيل قناة صوتية واحدة فقط في الوقت نفسه.",
+    "hero": {
+      "aria": "مساحة إعدادات الموسيقى",
+      "footer": "تشغيل عبر Lavalink مع قائمة انتظار آمنة واحدة لكل سيرفر."
+    },
+    "stats": {
+      "status": "الحالة",
+      "queue": "حد القائمة",
+      "volume": "الصوت الافتراضي"
+    },
+    "sections": {
+      "access": "الوصول والصلاحيات",
+      "accessLead": "حدد من يمكنه إضافة المقاطع والتحكم بالتشغيل.",
+      "limits": "حدود التشغيل",
+      "limitsLead": "حافظ على قائمة الانتظار منظمة ومناسبة للسيرفر."
+    },
+    "fields": {
+      "enabled": "تفعيل الموسيقى",
+      "djRole": "دور DJ",
+      "noDjRole": "بدون دور DJ — استخدام صلاحيات القناة الصوتية",
+      "djRoleHint": "يمتلك المسؤولون التحكم دائمًا.",
+      "allowEveryone": "السماح لأعضاء القناة الصوتية النشطة بإضافة المقاطع عند عدم تحديد دور DJ",
+      "maxQueue": "الحد الأقصى لقائمة الانتظار",
+      "maxDuration": "الحد الأقصى لمدة المقطع (بالثواني)",
+      "volume": "مستوى الصوت الافتراضي (1–100)"
+    },
+    "messages": {
+      "loadError": "تعذر تحميل إعدادات الموسيقى.",
+      "saveError": "تعذر حفظ إعدادات الموسيقى.",
+      "saved": "تم حفظ إعدادات الموسيقى.",
+      "validation": "راجع حدود الموسيقى قبل الحفظ."
+    }
   },
   "toast": {
     "dismiss": "إغلاق الإشعار"
