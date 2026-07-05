@@ -16,7 +16,7 @@
 
    اكتب Target من دون `https://`. ضع المسار الأطول `/api` قبل `/` حتى لا يلتقط مسار الواجهة طلبات API.
 5. تأكد أن التطبيق يملك أمر Entry Point الافتراضي وأن البوت مثبت بصلاحية `applications.commands`.
-6. بعد نشر الواجهة واختبار URL Mappings فقط، غيّر متغير البوت إلى `Activity__Enabled=true`. اتركه `false` قبل ذلك ليستخدم `/games` تدفق الأزرار الآمن.
+6. تأكد أن متغير البوت `Activity__Enabled=true`. استخدم `false` مؤقتًا فقط إذا أردت إجبار `/games` على الوضع الاحتياطي.
 
 Discord يشغّل Activities داخل iframe معزول ويمرر الطلبات الخارجية عبر proxy؛ لذلك URL Mappings ضرورية للإنتاج والتطوير عبر tunnel.
 
