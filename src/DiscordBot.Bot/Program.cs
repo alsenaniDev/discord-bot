@@ -25,6 +25,7 @@ builder.Services.AddSingleton<DiscordSocketClient>(_ =>
         GatewayIntents = GatewayIntents.Guilds
             | GatewayIntents.GuildMembers
             | GatewayIntents.GuildMessages
+            | GatewayIntents.DirectMessages
             | GatewayIntents.MessageContent
     };
 
@@ -38,6 +39,8 @@ builder.Services.AddSingleton<SlashCommandHandlers>();
 builder.Services.AddSingleton<TicketCommandHandlers>();
 builder.Services.AddSingleton<TicketInteractionHandlers>();
 builder.Services.AddSingleton<PanelInteractionHandlers>();
+builder.Services.AddSingleton<WorkflowConversationService>();
+builder.Services.AddSingleton<WorkflowActionSyncService>();
 builder.Services.AddSingleton<ModerationCommandHandlers>();
 builder.Services.AddSingleton<ReactionRoleCommandHandlers>();
 builder.Services.AddSingleton<ReactionRoleInteractionHandlers>();

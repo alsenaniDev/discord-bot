@@ -9,6 +9,7 @@ import { DiscordChannel, DiscordRole, isTextChannel } from '../../core/models/gu
 import { GuildPanel, GuildPanelButton, PanelButtonActionType, PanelButtonStyle, SaveGuildPanel } from '../../core/models/command-panel.models';
 import { getApiErrorMessage } from '../../core/utils/api-error.util';
 import { PageWorkspaceHeroAction, PageWorkspaceHeroStat } from '../../shared/ui/page-workspace-hero/page-workspace-hero.models';
+import { GuildWorkflow } from '../../core/models/workflow.models';
 
 const httpsUrlValidator: ValidatorFn = (control: AbstractControl): ValidationErrors | null => {
   const value = String(control.value ?? '').trim();
@@ -33,6 +34,7 @@ export class PanelsComponent implements OnInit, OnDestroy {
   panels: GuildPanel[] = [];
   channels: DiscordChannel[] = [];
   roles: DiscordRole[] = [];
+  workflows: GuildWorkflow[] = [];
   loading = true;
   saving = false;
   publishingId = '';
@@ -41,7 +43,7 @@ export class PanelsComponent implements OnInit, OnDestroy {
   showEditor = false;
 
   readonly styles: PanelButtonStyle[] = ['Primary', 'Secondary', 'Success', 'Danger', 'Link'];
-  readonly actions: PanelButtonActionType[] = ['CreateTicket', 'OpenUrl', 'SendMessage', 'AssignRole'];
+  readonly actions: PanelButtonActionType[] = ['CreateTicket', 'OpenUrl', 'SendMessage', 'AssignRole', 'StartWorkflow'];
   private readonly publishPolls = new Map<string, Subscription>();
   form = this.fb.group({
     name: ['', [Validators.required, Validators.maxLength(100)]],
@@ -82,9 +84,9 @@ export class PanelsComponent implements OnInit, OnDestroy {
   load(): void {
     this.loading = true;
     this.error = '';
-    forkJoin({ panels: this.api.getPanels(this.guildId), channels: this.api.getChannels(this.guildId), roles: this.api.getRoles(this.guildId) })
+    forkJoin({ panels: this.api.getPanels(this.guildId), channels: this.api.getChannels(this.guildId), roles: this.api.getRoles(this.guildId), workflows: this.api.getWorkflows(this.guildId) })
       .subscribe({
-        next: data => { this.panels = data.panels; this.channels = data.channels; this.roles = data.roles; this.loading = false; },
+        next: data => { this.panels = data.panels; this.channels = data.channels; this.roles = data.roles; this.workflows = data.workflows; this.loading = false; },
         error: err => { this.loading = false; this.error = getApiErrorMessage(err, this.translate.instant('panels.messages.loadError')); }
       });
   }
@@ -113,6 +115,7 @@ export class PanelsComponent implements OnInit, OnDestroy {
       id: [value?.id], label: [value?.label ?? '', [Validators.required, Validators.maxLength(80)]],
       emoji: [value?.emoji ?? ''], style: [value?.style ?? 'Success', Validators.required],
       actionType: [value?.actionType ?? 'CreateTicket', Validators.required], ticketTypeId: [value?.ticketTypeId],
+      workflowId: [value?.workflowId],
       url: [value?.url ?? ''], responseMessage: [value?.responseMessage ?? ''], roleDiscordId: [value?.roleDiscordId ?? ''],
       isEnabled: [value?.isEnabled ?? true]
     });
@@ -205,7 +208,8 @@ export class PanelsComponent implements OnInit, OnDestroy {
     group.controls['url'].setValidators(action === 'OpenUrl' ? [Validators.required, httpsUrlValidator] : []);
     group.controls['responseMessage'].setValidators(action === 'SendMessage' ? [Validators.required, Validators.maxLength(2000)] : []);
     group.controls['roleDiscordId'].setValidators(action === 'AssignRole' ? [Validators.required] : []);
-    ['url', 'responseMessage', 'roleDiscordId'].forEach(name => group.controls[name].updateValueAndValidity({ emitEvent: false }));
+    group.controls['workflowId'].setValidators(action === 'StartWorkflow' ? [Validators.required] : []);
+    ['url', 'responseMessage', 'roleDiscordId', 'workflowId'].forEach(name => group.controls[name].updateValueAndValidity({ emitEvent: false }));
   }
 
   private publishSaved(panel: GuildPanel): void {

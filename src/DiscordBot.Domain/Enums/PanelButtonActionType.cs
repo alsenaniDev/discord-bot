@@ -5,5 +5,6 @@ public enum PanelButtonActionType
     CreateTicket,
     OpenUrl,
     SendMessage,
-    AssignRole
+    AssignRole,
+    StartWorkflow
 }

@@ -896,6 +896,39 @@ public class BotApiClient
             _logger.LogError(ex, "Error recording archive timeline event for ticket {TicketId}", ticketId);
         }
     }
+
+    public async Task<WorkflowStartContextApiResponse?> GetWorkflowStartContextAsync(Guid workflowId, string guildId, string userId)
+    {
+        try
+        {
+            var response = await _httpClient.GetAsync($"api/bot/workflows/{workflowId:D}/start-context?discordGuildId={Uri.EscapeDataString(guildId)}&discordUserId={Uri.EscapeDataString(userId)}");
+            return response.IsSuccessStatusCode ? await response.Content.ReadFromJsonAsync<WorkflowStartContextApiResponse>(JsonOptions) : null;
+        }
+        catch (Exception ex) { _logger.LogError(ex, "Could not load workflow {WorkflowId} start context.", workflowId); return null; }
+    }
+
+    public async Task<(CreateWorkflowSubmissionApiResponse? Value, string? Error)> CreateWorkflowSubmissionAsync(Guid workflowId, CreateWorkflowSubmissionApiRequest request)
+    {
+        try
+        {
+            var response = await _httpClient.PostAsJsonAsync($"api/bot/workflows/{workflowId:D}/submissions", request, JsonOptions);
+            if (response.IsSuccessStatusCode) return (await response.Content.ReadFromJsonAsync<CreateWorkflowSubmissionApiResponse>(JsonOptions), null);
+            var error = await response.Content.ReadFromJsonAsync<ApiErrorResponse>(JsonOptions); return (null, error?.Message ?? "Could not submit the workflow.");
+        }
+        catch (Exception ex) { _logger.LogError(ex, "Could not submit workflow {WorkflowId}.", workflowId); return (null, "Could not submit the workflow."); }
+    }
+
+    public async Task<IReadOnlyList<WorkflowPendingActionApiResponse>> GetPendingWorkflowActionsAsync(CancellationToken ct = default)
+    {
+        try { return await _httpClient.GetFromJsonAsync<List<WorkflowPendingActionApiResponse>>("api/bot/workflows/pending-actions", JsonOptions, ct) ?? []; }
+        catch (Exception ex) { _logger.LogError(ex, "Could not load pending workflow actions."); return []; }
+    }
+
+    public async Task AckWorkflowActionAsync(Guid actionId, AckWorkflowPendingActionApiRequest request, CancellationToken ct = default)
+    {
+        try { var response = await _httpClient.PostAsJsonAsync($"api/bot/workflows/pending-actions/{actionId:D}/ack", request, JsonOptions, ct); if (!response.IsSuccessStatusCode) _logger.LogWarning("Workflow action {ActionId} ack failed: {Status}.", actionId, response.StatusCode); }
+        catch (Exception ex) { _logger.LogError(ex, "Could not ack workflow action {ActionId}.", actionId); }
+    }
 }
 
 public sealed class ApiErrorResponse

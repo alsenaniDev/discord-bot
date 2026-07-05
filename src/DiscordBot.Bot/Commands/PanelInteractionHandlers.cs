@@ -20,6 +20,7 @@ public class PanelInteractionHandlers
     private readonly BotApiClient _apiClient;
     private readonly BotLogWriter _logWriter;
     private readonly ILogger<PanelInteractionHandlers> _logger;
+    private readonly WorkflowConversationService _workflowConversations;
 
     public PanelInteractionHandlers(
         TicketInteractionHandlers ticketInteractionHandlers,
@@ -28,7 +29,8 @@ public class PanelInteractionHandlers
         IOptions<PlatformOptions> platformOptions,
         BotApiClient apiClient,
         BotLogWriter logWriter,
-        ILogger<PanelInteractionHandlers> logger)
+        ILogger<PanelInteractionHandlers> logger,
+        WorkflowConversationService workflowConversations)
     {
         _ticketInteractionHandlers = ticketInteractionHandlers;
         _slashCommandHandlers = slashCommandHandlers;
@@ -37,6 +39,7 @@ public class PanelInteractionHandlers
         _apiClient = apiClient;
         _logWriter = logWriter;
         _logger = logger;
+        _workflowConversations = workflowConversations;
     }
 
     public async Task HandleButtonAsync(SocketMessageComponent component)
@@ -66,6 +69,11 @@ public class PanelInteractionHandlers
             if (button.ActionType == "AssignRole")
             {
                 await HandleAssignRoleAsync(component, button.RoleDiscordId, panelId);
+                return;
+            }
+            if (button.ActionType == "StartWorkflow" && button.WorkflowId.HasValue)
+            {
+                await _workflowConversations.StartFromPanelAsync(component, button.WorkflowId.Value);
                 return;
             }
 
@@ -107,6 +115,9 @@ public class PanelInteractionHandlers
                 break;
         }
     }
+
+    public Task HandleWorkflowControlAsync(SocketMessageComponent component, bool confirm, Guid workflowId, ulong guildId) =>
+        _workflowConversations.HandleControlAsync(component, confirm, workflowId, guildId);
 
     private async Task HandleAssignRoleAsync(SocketMessageComponent component, string? roleDiscordId, Guid panelId)
     {

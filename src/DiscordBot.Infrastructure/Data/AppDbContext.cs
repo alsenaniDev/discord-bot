@@ -32,6 +32,11 @@ public class AppDbContext : DbContext
     public DbSet<TicketTimelineEvent> TicketTimelineEvents => Set<TicketTimelineEvent>();
     public DbSet<GuildPanel> GuildPanels => Set<GuildPanel>();
     public DbSet<GuildPanelButton> GuildPanelButtons => Set<GuildPanelButton>();
+    public DbSet<GuildWorkflow> GuildWorkflows => Set<GuildWorkflow>();
+    public DbSet<WorkflowQuestion> WorkflowQuestions => Set<WorkflowQuestion>();
+    public DbSet<WorkflowSubmission> WorkflowSubmissions => Set<WorkflowSubmission>();
+    public DbSet<WorkflowApprovalAction> WorkflowApprovalActions => Set<WorkflowApprovalAction>();
+    public DbSet<WorkflowPendingAction> WorkflowPendingActions => Set<WorkflowPendingAction>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

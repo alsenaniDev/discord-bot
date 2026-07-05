@@ -213,6 +213,7 @@ public sealed class CommandPanelButtonApiResponse
     public string Style { get; set; } = "Secondary";
     public string ActionType { get; set; } = "CreateTicket";
     public Guid? TicketTypeId { get; set; }
+    public Guid? WorkflowId { get; set; }
     public string? Url { get; set; }
     public string? ResponseMessage { get; set; }
     public string? RoleDiscordId { get; set; }
@@ -234,10 +235,45 @@ public sealed class PanelButtonActionApiResponse
     public Guid ButtonId { get; set; }
     public string ActionType { get; set; } = string.Empty;
     public Guid? TicketTypeId { get; set; }
+    public Guid? WorkflowId { get; set; }
     public string? Url { get; set; }
     public string? ResponseMessage { get; set; }
     public string? RoleDiscordId { get; set; }
 }
+
+public sealed class WorkflowQuestionApiResponse
+{
+    public Guid Id { get; set; }
+    public int SortOrder { get; set; }
+    public string Label { get; set; } = string.Empty;
+    public string? HelpText { get; set; }
+    public string Type { get; set; } = "ShortText";
+    public bool IsRequired { get; set; }
+    public int? MinLength { get; set; }
+    public int? MaxLength { get; set; }
+    public string? Placeholder { get; set; }
+    public List<WorkflowQuestionOptionApiResponse> Options { get; set; } = [];
+}
+public sealed class WorkflowQuestionOptionApiResponse { public string Label { get; set; } = string.Empty; public string Value { get; set; } = string.Empty; public int SortOrder { get; set; } }
+public sealed class WorkflowStartContextApiResponse
+{
+    public bool CanStart { get; set; }
+    public string? BlockReason { get; set; }
+    public Guid WorkflowId { get; set; }
+    public string Name { get; set; } = string.Empty;
+    public bool RequireConfirmation { get; set; }
+    public string? ConfirmationTitle { get; set; }
+    public string? ConfirmationMessage { get; set; }
+    public string ConfirmButtonText { get; set; } = "Continue";
+    public string CancelButtonText { get; set; } = "Cancel";
+    public List<WorkflowQuestionApiResponse> Questions { get; set; } = [];
+    public string? SuccessMessage { get; set; }
+}
+public sealed class WorkflowAnswerApiRequest { public Guid QuestionId { get; set; } public string Label { get; set; } = string.Empty; public string Value { get; set; } = string.Empty; }
+public sealed class CreateWorkflowSubmissionApiRequest { public string DiscordGuildId { get; set; } = string.Empty; public string UserDiscordId { get; set; } = string.Empty; public string? UserDisplayName { get; set; } public List<WorkflowAnswerApiRequest> Answers { get; set; } = []; }
+public sealed class CreateWorkflowSubmissionApiResponse { public Guid SubmissionId { get; set; } public string Status { get; set; } = string.Empty; public string Message { get; set; } = string.Empty; }
+public sealed class WorkflowPendingActionApiResponse { public Guid Id { get; set; } public Guid SubmissionId { get; set; } public string DiscordGuildId { get; set; } = string.Empty; public string UserDiscordId { get; set; } = string.Empty; public string ActionType { get; set; } = string.Empty; public string? RoleDiscordId { get; set; } public string? MessageText { get; set; } }
+public sealed class AckWorkflowPendingActionApiRequest { public bool Success { get; set; } public string? FailureReason { get; set; } }
 
 public sealed class TicketCleanupApiResponse
 {

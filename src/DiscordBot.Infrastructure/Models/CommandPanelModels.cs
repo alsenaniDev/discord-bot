@@ -73,6 +73,7 @@ public sealed class GuildPanelButtonDto
     public PanelButtonStyle Style { get; init; }
     public PanelButtonActionType ActionType { get; init; }
     public Guid? TicketTypeId { get; init; }
+    public Guid? WorkflowId { get; init; }
     public string? Url { get; init; }
     public string? ResponseMessage { get; init; }
     public string? RoleDiscordId { get; init; }
@@ -99,6 +100,7 @@ public sealed class SaveGuildPanelButtonRequest
     public PanelButtonStyle Style { get; set; }
     public PanelButtonActionType ActionType { get; set; }
     public Guid? TicketTypeId { get; set; }
+    public Guid? WorkflowId { get; set; }
     public string? Url { get; set; }
     public string? ResponseMessage { get; set; }
     public string? RoleDiscordId { get; set; }
@@ -113,6 +115,7 @@ public sealed class PanelButtonActionDto
     public Guid ButtonId { get; init; }
     public PanelButtonActionType ActionType { get; init; }
     public Guid? TicketTypeId { get; init; }
+    public Guid? WorkflowId { get; init; }
     public string? Url { get; init; }
     public string? ResponseMessage { get; init; }
     public string? RoleDiscordId { get; init; }

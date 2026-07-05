@@ -35,6 +35,7 @@ public class DiscordBotHostedService : IHostedService
     private readonly BotLogWriter _logWriter;
     private readonly AutoReplyMessageService _autoReplyMessageService;
     private readonly TicketTimelineMessageService _ticketTimelineMessageService;
+    private readonly WorkflowConversationService _workflowConversations;
     private readonly BotOptions _botOptions;
     private readonly ILogger<DiscordBotHostedService> _logger;
 
@@ -55,6 +56,7 @@ public class DiscordBotHostedService : IHostedService
         BotLogWriter logWriter,
         AutoReplyMessageService autoReplyMessageService,
         TicketTimelineMessageService ticketTimelineMessageService,
+        WorkflowConversationService workflowConversations,
         IOptions<BotOptions> botOptions,
         ILogger<DiscordBotHostedService> logger)
     {
@@ -74,6 +76,7 @@ public class DiscordBotHostedService : IHostedService
         _logWriter = logWriter;
         _autoReplyMessageService = autoReplyMessageService;
         _ticketTimelineMessageService = ticketTimelineMessageService;
+        _workflowConversations = workflowConversations;
         _botOptions = botOptions.Value;
         _logger = logger;
     }
@@ -233,6 +236,18 @@ public class DiscordBotHostedService : IHostedService
     {
         var customId = component.Data.CustomId;
 
+        if (DiscordCustomIds.TryParseWorkflowQuestionAnswer(customId, out var answerWorkflowId, out var answerConversationToken, out var answerQuestionToken, out var answer))
+        {
+            await _workflowConversations.AnswerFromButtonAsync(component, answerWorkflowId, answerConversationToken, answerQuestionToken, answer);
+            return;
+        }
+
+        if (DiscordCustomIds.TryParseWorkflowConversationCancel(customId, out var cancelWorkflowId, out var conversationId))
+        {
+            await _workflowConversations.CancelFromButtonAsync(component, cancelWorkflowId, conversationId);
+            return;
+        }
+
         if (customId == DiscordCustomIds.TicketCreate
             || customId.StartsWith(DiscordCustomIds.TicketClosePrefix, StringComparison.Ordinal))
         {
@@ -243,6 +258,12 @@ public class DiscordBotHostedService : IHostedService
         if (customId.StartsWith(DiscordCustomIds.PanelPrefix, StringComparison.Ordinal))
         {
             await _panelInteractionHandlers.HandleButtonAsync(component);
+            return;
+        }
+
+        if (DiscordCustomIds.TryParseWorkflowControl(customId, out var confirm, out var workflowId, out var guildId))
+        {
+            await _panelInteractionHandlers.HandleWorkflowControlAsync(component, confirm, workflowId, guildId);
             return;
         }
 
@@ -426,6 +447,7 @@ public class DiscordBotHostedService : IHostedService
 
     private async Task OnMessageReceivedAsync(SocketMessage message)
     {
+        if (await _workflowConversations.HandleDmMessageAsync(message)) return;
         try
         {
             await _autoReplyMessageService.HandleMessageAsync(message);

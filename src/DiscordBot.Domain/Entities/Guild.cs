@@ -41,5 +41,8 @@ public class Guild : BaseEntity
     public ICollection<GuildModule> GuildModules { get; set; } = [];
     public ICollection<ReactionRole> ReactionRoles { get; set; } = [];
     public ICollection<GuildPanel> Panels { get; set; } = [];
+    public ICollection<GuildWorkflow> Workflows { get; set; } = [];
+    public ICollection<WorkflowSubmission> WorkflowSubmissions { get; set; } = [];
+    public ICollection<WorkflowPendingAction> WorkflowPendingActions { get; set; } = [];
     public GuildSubscription? Subscription { get; set; }
 }
