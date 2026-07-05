@@ -20,6 +20,7 @@ builder.Services.Configure<BotOptions>(builder.Configuration.GetSection(BotOptio
 builder.Services.Configure<ApiOptions>(builder.Configuration.GetSection(ApiOptions.SectionName));
 builder.Services.Configure<PlatformOptions>(builder.Configuration.GetSection(PlatformOptions.SectionName));
 builder.Services.Configure<LavalinkOptions>(builder.Configuration.GetSection(LavalinkOptions.SectionName));
+builder.Services.Configure<DiscordActivityOptions>(builder.Configuration.GetSection(DiscordActivityOptions.SectionName));
 
 builder.Services.AddSingleton<DiscordSocketClient>(_ =>
 {

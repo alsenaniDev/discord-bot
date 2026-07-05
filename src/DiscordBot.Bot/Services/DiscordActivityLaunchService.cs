@@ -21,7 +21,8 @@ public sealed class DiscordActivityLaunchService(ILogger<DiscordActivityLaunchSe
                 logger.LogInformation("Discord Activity launched for interaction {InteractionId}, guild {GuildId}, channel {ChannelId}.", interaction.Id, interaction.GuildId, interaction.Channel.Id);
                 return ActivityLaunchResult.Launched;
             }
-            logger.LogWarning("Discord Activity launch failed for interaction {InteractionId} with status {StatusCode}.", interaction.Id, (int)response.StatusCode);
+            var error = await response.Content.ReadFromJsonAsync<DiscordCallbackError>(cancellationToken: ct).ConfigureAwait(false);
+            logger.LogWarning("Discord Activity launch failed for interaction {InteractionId} with status {StatusCode}, Discord code {DiscordCode}: {DiscordMessage}.", interaction.Id, (int)response.StatusCode, error?.Code, error?.Message);
             return ActivityLaunchResult.Rejected;
         }
         catch (OperationCanceledException ex)
@@ -37,6 +38,8 @@ public sealed class DiscordActivityLaunchService(ILogger<DiscordActivityLaunchSe
     }
 
     public void Dispose() => _http.Dispose();
+
+    private sealed class DiscordCallbackError { public int? Code { get; set; } public string? Message { get; set; } }
 }
 
 public enum ActivityLaunchResult { Launched, Rejected, Unknown }
