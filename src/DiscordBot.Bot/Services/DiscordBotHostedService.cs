@@ -39,6 +39,7 @@ public class DiscordBotHostedService : IHostedService
     private readonly WorkflowConversationService _workflowConversations;
     private readonly IMusicService _music;
     private readonly GamesHubInteractionService _games;
+    private readonly GamesContextCache _gamesContextCache;
     private readonly BotOptions _botOptions;
     private readonly ILogger<DiscordBotHostedService> _logger;
 
@@ -62,6 +63,7 @@ public class DiscordBotHostedService : IHostedService
         WorkflowConversationService workflowConversations,
         IMusicService music,
         GamesHubInteractionService games,
+        GamesContextCache gamesContextCache,
         IOptions<BotOptions> botOptions,
         ILogger<DiscordBotHostedService> logger)
     {
@@ -84,6 +86,7 @@ public class DiscordBotHostedService : IHostedService
         _workflowConversations = workflowConversations;
         _music = music;
         _games = games;
+        _gamesContextCache = gamesContextCache;
         _botOptions = botOptions.Value;
         _logger = logger;
     }
@@ -163,6 +166,7 @@ public class DiscordBotHostedService : IHostedService
 
         await RegisterGuildWithApiAsync(guild);
         await SlashCommandRegistration.RegisterGuildCommandsAsync(guild);
+        await _gamesContextCache.RefreshAsync(guild.Id);
 
         _logger.LogInformation(
             "Guild {GuildId} ({GuildName}) synced on startup.",
@@ -198,6 +202,13 @@ public class DiscordBotHostedService : IHostedService
         }
         catch (Exception ex)
         {
+            if (ex is Discord.Net.HttpException httpException
+                && httpException.DiscordCode.HasValue
+                && (int)httpException.DiscordCode.Value is 10062 or 40060)
+            {
+                _logger.LogWarning("Interaction {InteractionId} was expired or already acknowledged; skipping a second response.", interaction.Id);
+                return;
+            }
             _logger.LogError(ex, "Error handling interaction {Type}", interaction.Type);
 
             try { await InteractionResponseHelper.RespondUnexpectedErrorAsync(interaction, _embeds); }
@@ -387,6 +398,7 @@ public class DiscordBotHostedService : IHostedService
 
         await RegisterGuildWithApiAsync(guild);
         await SlashCommandRegistration.RegisterGuildCommandsAsync(guild);
+        await _gamesContextCache.RefreshAsync(guild.Id);
     }
 
     private async Task OnUserJoinedAsync(SocketGuildUser user)

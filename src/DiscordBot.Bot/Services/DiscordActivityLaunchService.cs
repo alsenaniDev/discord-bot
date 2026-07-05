@@ -10,7 +10,7 @@ public sealed class DiscordActivityLaunchService(ILogger<DiscordActivityLaunchSe
     // interaction token embedded in Discord's callback URL.
     private readonly HttpClient _http = new() { BaseAddress = new Uri("https://discord.com/api/v10/"), Timeout = TimeSpan.FromMilliseconds(1200) };
 
-    public async Task<bool> TryLaunchAsync(SocketInteraction interaction, CancellationToken ct = default)
+    public async Task<ActivityLaunchResult> TryLaunchAsync(SocketInteraction interaction, CancellationToken ct = default)
     {
         try
         {
@@ -19,17 +19,24 @@ public sealed class DiscordActivityLaunchService(ILogger<DiscordActivityLaunchSe
             if (response.IsSuccessStatusCode)
             {
                 logger.LogInformation("Discord Activity launched for interaction {InteractionId}, guild {GuildId}, channel {ChannelId}.", interaction.Id, interaction.GuildId, interaction.Channel.Id);
-                return true;
+                return ActivityLaunchResult.Launched;
             }
             logger.LogWarning("Discord Activity launch failed for interaction {InteractionId} with status {StatusCode}.", interaction.Id, (int)response.StatusCode);
-            return false;
+            return ActivityLaunchResult.Rejected;
+        }
+        catch (OperationCanceledException ex)
+        {
+            logger.LogWarning(ex, "Discord Activity launch outcome is unknown for interaction {InteractionId}; no second initial response will be attempted.", interaction.Id);
+            return ActivityLaunchResult.Unknown;
         }
         catch (Exception ex)
         {
-            logger.LogWarning(ex, "Discord Activity launch request failed for interaction {InteractionId}.", interaction.Id);
-            return false;
+            logger.LogWarning(ex, "Discord Activity launch outcome is unknown for interaction {InteractionId}; no second initial response will be attempted.", interaction.Id);
+            return ActivityLaunchResult.Unknown;
         }
     }
 
     public void Dispose() => _http.Dispose();
 }
+
+public enum ActivityLaunchResult { Launched, Rejected, Unknown }
