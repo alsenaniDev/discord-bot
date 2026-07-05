@@ -225,25 +225,26 @@ public class WorkflowConversationService
         public Guid ConversationId { get; } = Guid.NewGuid(); public WorkflowStartContextApiResponse Context { get; } = context;
         public string ConversationToken => ConversationId.ToString("N")[..8]; public SemaphoreSlim Gate { get; } = new(1, 1);
         public Guid WorkflowId => Context.WorkflowId; public string DiscordGuildId { get; } = guildId.ToString(); public string UserDiscordId { get; } = userId.ToString();
-        public int Index { get; set; } public DateTimeOffset LastActivity { get; set; } = DateTimeOffset.UtcNow; public List<WorkflowAnswerApiRequest> Answers { get; } = [];
+        public int Index { get; set; }
+        public DateTimeOffset LastActivity { get; set; } = DateTimeOffset.UtcNow; public List<WorkflowAnswerApiRequest> Answers { get; } = [];
     }
 }
 
 internal static class WorkflowBotMessages
 {
-    public const string Intro = "Answer each question in this DM. Use the Cancel button to stop; typing `cancel` also works as a fallback.";
-    public const string CheckDm = "I sent you a private message to continue the workflow.";
-    public const string DmClosed = "I could not send you a DM. Open this server's Privacy Settings, enable Direct Messages, then try again. No application was started.";
-    public const string Cancelled = "The workflow was cancelled.";
-    public const string Expired = "This workflow expired after 15 minutes of inactivity. Start it again from the server.";
-    public const string Required = "This question requires an answer.";
-    public const string NumberRequired = "Please enter a valid number.";
-    public const string YesNoRequired = "Please answer نعم / Yes or لا / No.";
-    public const string ChoiceRequired = "Please select one of the available options.";
-    public const string YesButton = "نعم / Yes";
-    public const string NoButton = "لا / No";
-    public const string Selected = "Selected";
-    public const string SubmitFailed = "Your submission could not be saved. Please try again.";
-    public const string CancelButton = "Cancel application";
-    public const string NoLongerActive = "This workflow conversation is no longer active.";
+    public const string Intro = "أجب على كل سؤال في هذه المحادثة الخاصة. استخدم زر الإلغاء لإيقاف الطلب، ويمكنك أيضًا كتابة `cancel` كخيار احتياطي.";
+    public const string CheckDm = "أرسلت لك رسالة خاصة لإكمال الطلب.";
+    public const string DmClosed = "لم أتمكن من إرسال رسالة خاصة لك. افتح إعدادات الخصوصية في هذا السيرفر، ثم فعّل الرسائل الخاصة، وبعدها حاول مرة أخرى. لم يتم بدء أي طلب.";
+    public const string Cancelled = "تم إلغاء الطلب.";
+    public const string Expired = "انتهت صلاحية هذا الطلب بعد 15 دقيقة من عدم التفاعل. ابدأ الطلب مرة أخرى من السيرفر.";
+    public const string Required = "هذا السؤال يتطلب إجابة.";
+    public const string NumberRequired = "يرجى إدخال رقم صحيح.";
+    public const string YesNoRequired = "يرجى الإجابة بـ نعم أو لا.";
+    public const string ChoiceRequired = "يرجى اختيار أحد الخيارات المتاحة.";
+    public const string YesButton = "نعم";
+    public const string NoButton = "لا";
+    public const string Selected = "تم الاختيار";
+    public const string SubmitFailed = "تعذر حفظ طلبك. يرجى المحاولة مرة أخرى.";
+    public const string CancelButton = "إلغاء الطلب";
+    public const string NoLongerActive = "هذه المحادثة لم تعد نشطة.";
 }
