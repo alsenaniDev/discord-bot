@@ -2,11 +2,13 @@ using Discord;
 using Discord.WebSocket;
 using DiscordBot.Bot.Api;
 using DiscordBot.Bot.Api.Models;
+using DiscordBot.Bot.Configuration;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 namespace DiscordBot.Bot.Services;
 
-public class GamesHubInteractionService(BotApiClient api, GamesContextCache contextCache, DiscordActivityLaunchService activityLauncher, ILogger<GamesHubInteractionService> logger)
+public class GamesHubInteractionService(BotApiClient api, GamesContextCache contextCache, DiscordActivityLaunchService activityLauncher, IOptions<DiscordActivityOptions> activityOptions, ILogger<GamesHubInteractionService> logger)
 {
     public const string ComponentPrefix = "games:";
 
@@ -23,13 +25,22 @@ public class GamesHubInteractionService(BotApiClient api, GamesContextCache cont
         if (!context.IsEnabled) { await ReplyAsync(interaction, "الألعاب غير مفعّلة في هذا السيرفر."); return; }
         if (string.IsNullOrWhiteSpace(context.GamesChannelDiscordId)) { await ReplyAsync(interaction, "لم يتم تحديد روم الألعاب بعد."); return; }
         if (interaction.Channel.Id.ToString() != context.GamesChannelDiscordId) { await ReplyAsync(interaction, $"🎮 الألعاب متاحة فقط في روم <#{context.GamesChannelDiscordId}>."); return; }
-        var launchResult = await activityLauncher.TryLaunchAsync(interaction);
-        if (launchResult is ActivityLaunchResult.Launched or ActivityLaunchResult.Unknown) return;
-        logger.LogWarning("Falling back to the button Games Hub for guild {GuildId}, channel {ChannelId}.", guildId, interaction.Channel.Id);
+        if (activityOptions.Value.Enabled)
+        {
+            // An interaction callback is single-use even when Discord rejects type 12.
+            // Never attempt a second initial response after sending the launch callback.
+            await activityLauncher.TryLaunchAsync(interaction);
+            return;
+        }
+        await SendButtonHubAsync(interaction, context);
+    }
+
+    private async Task SendButtonHubAsync(SocketInteraction interaction, BotGamesContextApiResponse context)
+    {
         var components = new ComponentBuilder();
         foreach (var game in context.Games.Take(20)) components.WithButton(game.Name, $"{ComponentPrefix}play:{game.Key}", ButtonStyle.Primary, new Emoji("🎮"));
         components.WithButton("الترتيب", $"{ComponentPrefix}leaderboard", ButtonStyle.Secondary, new Emoji("🏆"));
-        var embed = new EmbedBuilder().WithTitle("🎮 مركز الألعاب").WithDescription(context.Games.Count == 0 ? "تعذر فتح واجهة الألعاب الآن، ولا توجد ألعاب مفعّلة للاستخدام البديل." : "تعذر فتح واجهة الألعاب الآن. تقدر تستخدم الأزرار مؤقتًا أو تحاول مرة أخرى لاحقًا.").WithColor(new Color(88, 101, 242)).Build();
+        var embed = new EmbedBuilder().WithTitle("🎮 مركز الألعاب").WithDescription(context.Games.Count == 0 ? "لا توجد ألعاب مفعّلة حاليًا. يقدر مسؤول السيرفر يفعّلها من لوحة التحكم." : "اختر لعبة وابدأ التحدي مع أعضاء السيرفر.").WithColor(new Color(88, 101, 242)).Build();
         try { await interaction.RespondAsync(embed: embed, components: components.Build(), ephemeral: true); }
         catch (Exception ex) { logger.LogWarning(ex, "Could not send Games Hub fallback for interaction {InteractionId}.", interaction.Id); }
     }

@@ -16,6 +16,7 @@
 
    اكتب Target من دون `https://`. ضع المسار الأطول `/api` قبل `/` حتى لا يلتقط مسار الواجهة طلبات API.
 5. تأكد أن التطبيق يملك أمر Entry Point الافتراضي وأن البوت مثبت بصلاحية `applications.commands`.
+6. بعد نشر الواجهة واختبار URL Mappings فقط، غيّر متغير البوت إلى `Activity__Enabled=true`. اتركه `false` قبل ذلك ليستخدم `/games` تدفق الأزرار الآمن.
 
 Discord يشغّل Activities داخل iframe معزول ويمرر الطلبات الخارجية عبر proxy؛ لذلك URL Mappings ضرورية للإنتاج والتطوير عبر tunnel.
 
@@ -38,6 +39,12 @@ API:
 Discord__ClientId=YOUR_DISCORD_CLIENT_ID
 Discord__ClientSecret=YOUR_DISCORD_CLIENT_SECRET
 Discord__ActivityUrl=https://YOUR_DISCORD_CLIENT_ID.discordsays.com
+```
+
+Bot worker:
+
+```env
+Activity__Enabled=true
 ```
 
 يبقى `Discord__ClientSecret` في خدمة API فقط. لا يوضع في Vite أو Vercel كمتغير يبدأ بـ `VITE_`.
