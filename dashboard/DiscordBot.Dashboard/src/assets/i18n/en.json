@@ -261,7 +261,8 @@
     "stepConfigure": "Open the dashboard checklist to choose a plan, enable modules, and configure welcome/tickets.",
     "setupProgress": "Setup {{percent}}% complete",
     "openSettings": "Settings",
-    "openInDiscord": "Open in Discord"
+    "openInDiscord": "Open in Discord",
+    "botNotInstalled": "Bot is not installed in this server"
   },
   "onboarding": {
     "checklistTitle": "Setup checklist",
@@ -2094,83 +2095,337 @@
     "title": "Member panels",
     "subtitle": "Build reusable Discord panels with ticket, link, message, and role actions.",
     "notice": "Publishing is handled by the bot. Saved changes update the existing Discord message whenever one is already linked.",
-    "hero": { "ariaLabel": "Member panels workspace", "footer": "Create focused entry points for support and community actions." },
-    "stats": { "total": "Panels", "published": "Published", "pending": "Publish requested" },
-    "tabs": { "ariaLabel": "Panel workspace views", "list": "Panels", "create": "Create panel", "edit": "Edit panel" },
-    "actions": {
-      "create": "Create panel", "publish": "Publish", "publishing": "Publishing…", "duplicate": "Duplicate",
-      "delete": "Delete", "back": "Back to panels", "addButton": "Add button", "moveUp": "Move button up",
-      "moveDown": "Move button down", "saving": "Saving…", "saveAndPublish": "Save and publish to Discord"
+    "hero": {
+      "ariaLabel": "Member panels workspace",
+      "footer": "Create focused entry points for support and community actions."
     },
-    "list": { "title": "Configured panels", "lead": "Manage content, destinations, actions, and publishing state.", "buttons": "Buttons", "lastPublished": "Last published" },
-    "empty": { "title": "No panels yet", "description": "Create your first panel to give members a clear way to open tickets or use server actions." },
+    "stats": {
+      "total": "Panels",
+      "published": "Published",
+      "pending": "Publish requested"
+    },
+    "tabs": {
+      "ariaLabel": "Panel workspace views",
+      "list": "Panels",
+      "create": "Create panel",
+      "edit": "Edit panel"
+    },
+    "actions": {
+      "create": "Create panel",
+      "publish": "Publish",
+      "publishing": "Publishing…",
+      "duplicate": "Duplicate",
+      "delete": "Delete",
+      "back": "Back to panels",
+      "addButton": "Add button",
+      "moveUp": "Move button up",
+      "moveDown": "Move button down",
+      "saving": "Saving…",
+      "saveAndPublish": "Save and publish to Discord"
+    },
+    "list": {
+      "title": "Configured panels",
+      "lead": "Manage content, destinations, actions, and publishing state.",
+      "buttons": "Buttons",
+      "lastPublished": "Last published"
+    },
+    "empty": {
+      "title": "No panels yet",
+      "description": "Create your first panel to give members a clear way to open tickets or use server actions."
+    },
     "editor": {
-      "createTitle": "Create panel", "editTitle": "Edit panel", "lead": "Configure the Discord message and up to 25 buttons.",
-      "detailsTitle": "Panel details", "detailsLead": "Choose where the panel lives and what members will see."
+      "createTitle": "Create panel",
+      "editTitle": "Edit panel",
+      "lead": "Configure the Discord message and up to 25 buttons.",
+      "detailsTitle": "Panel details",
+      "detailsLead": "Choose where the panel lives and what members will see."
     },
     "fields": {
-      "name": "Internal panel name", "channel": "Discord channel", "selectChannel": "Select a channel",
-      "channelHint": "A channel is optional while drafting and required when publishing.", "title": "Embed title",
-      "description": "Embed description", "imageUrl": "Image HTTPS URL", "enabled": "Panel enabled",
-      "buttonLabel": "Button label", "emoji": "Emoji", "emojiPlaceholder": "Example: 🎫", "actionType": "Action",
-      "style": "Discord style", "defaultTicketFlow": "This project currently uses the default ticket flow; no ticket type is required.",
-      "url": "Destination HTTPS URL", "responseMessage": "Ephemeral response message",
-      "ephemeralHint": "Only the member who clicks the button will see this response.", "role": "Discord role",
-      "selectRole": "Select a role", "roleIdFallback": "Discord role ID — advanced fallback",
+      "name": "Internal panel name",
+      "channel": "Discord channel",
+      "selectChannel": "Select a channel",
+      "channelHint": "A channel is optional while drafting and required when publishing.",
+      "title": "Embed title",
+      "description": "Embed description",
+      "imageUrl": "Image HTTPS URL",
+      "enabled": "Panel enabled",
+      "buttonLabel": "Button label",
+      "emoji": "Emoji",
+      "emojiPlaceholder": "Example: 🎫",
+      "actionType": "Action",
+      "style": "Discord style",
+      "defaultTicketFlow": "This project currently uses the default ticket flow; no ticket type is required.",
+      "url": "Destination HTTPS URL",
+      "responseMessage": "Ephemeral response message",
+      "ephemeralHint": "Only the member who clicks the button will see this response.",
+      "role": "Discord role",
+      "selectRole": "Select a role",
+      "roleIdFallback": "Discord role ID — advanced fallback",
       "roleFallbackHint": "No synced assignable roles were found. Sync server resources, or enter an ID only if necessary.",
-      "noAssignableRolesTitle": "No assignable roles", "noAssignableRolesBody": "All synced roles are managed by Discord. Create or sync a role the bot can manage.",
-      "buttonEnabled": "Render this button in Discord"
-      ,"workflow": "Application workflow", "selectWorkflow": "Select a workflow"
+      "noAssignableRolesTitle": "No assignable roles",
+      "noAssignableRolesBody": "All synced roles are managed by Discord. Create or sync a role the bot can manage.",
+      "buttonEnabled": "Render this button in Discord",
+      "workflow": "Application workflow",
+      "selectWorkflow": "Select a workflow"
     },
     "buttons": {
-      "title": "Panel buttons", "lead": "{{count}} of 25 buttons configured; Discord displays at most five per row.",
-      "emptyTitle": "No buttons configured", "emptyDescription": "Add a button to create a member action.", "buttonNumber": "Button {{number}}"
+      "title": "Panel buttons",
+      "lead": "{{count}} of 25 buttons configured; Discord displays at most five per row.",
+      "emptyTitle": "No buttons configured",
+      "emptyDescription": "Add a button to create a member action.",
+      "buttonNumber": "Button {{number}}"
     },
     "status": {
-      "failed": "Publish failed", "requested": "Publish requested", "published": "Published", "notPublished": "Not published",
-      "never": "Never", "failureDetail": "Last publish error"
+      "failed": "Publish failed",
+      "requested": "Publish requested",
+      "published": "Published",
+      "notPublished": "Not published",
+      "never": "Never",
+      "failureDetail": "Last publish error"
     },
     "preview": {
-      "ariaLabel": "Discord panel preview", "title": "Discord preview", "brand": "Discord", "lead": "Approximate message layout and button rows.",
-      "noTitle": "Panel title", "noDescription": "No description", "imageAlt": "Panel preview image", "buttonFallback": "Button"
+      "ariaLabel": "Discord panel preview",
+      "title": "Discord preview",
+      "brand": "Discord",
+      "lead": "Approximate message layout and button rows.",
+      "noTitle": "Panel title",
+      "noDescription": "No description",
+      "imageAlt": "Panel preview image",
+      "buttonFallback": "Button"
     },
-    "actionTypes": { "CreateTicket": "Create ticket", "OpenUrl": "Open URL", "SendMessage": "Send message", "AssignRole": "Toggle role", "StartWorkflow": "Start workflow" },
-    "styles": { "Primary": "Primary", "Secondary": "Secondary", "Success": "Success", "Danger": "Danger", "Link": "Link" },
-    "actionHelp": { "CreateTicket": "Creates a ticket using the server's default ticket configuration." },
+    "actionTypes": {
+      "CreateTicket": "Create ticket",
+      "OpenUrl": "Open URL",
+      "SendMessage": "Send message",
+      "AssignRole": "Toggle role",
+      "StartWorkflow": "Start workflow"
+    },
+    "styles": {
+      "Primary": "Primary",
+      "Secondary": "Secondary",
+      "Success": "Success",
+      "Danger": "Danger",
+      "Link": "Link"
+    },
+    "actionHelp": {
+      "CreateTicket": "Creates a ticket using the server's default ticket configuration."
+    },
     "validation": {
-      "fixErrors": "Review the highlighted fields before saving.", "nameRequired": "Panel name is required.",
-      "titleOrDescription": "Enter a title or description.", "channelForPublish": "Select a channel before publishing.",
-      "enableBeforePublish": "Enable the panel before publishing.", "buttonLabelRequired": "Button label is required.",
-      "httpsUrl": "Enter a valid HTTPS URL.", "messageRequired": "A response message is required.", "roleRequired": "Select a role.", "workflowRequired": "Select a workflow."
+      "fixErrors": "Review the highlighted fields before saving.",
+      "nameRequired": "Panel name is required.",
+      "titleOrDescription": "Enter a title or description.",
+      "channelForPublish": "Select a channel before publishing.",
+      "enableBeforePublish": "Enable the panel before publishing.",
+      "buttonLabelRequired": "Button label is required.",
+      "httpsUrl": "Enter a valid HTTPS URL.",
+      "messageRequired": "A response message is required.",
+      "roleRequired": "Select a role.",
+      "workflowRequired": "Select a workflow."
     },
     "messages": {
-      "loadError": "Could not load member panels.", "saved": "Panel saved.", "saveError": "Could not save the panel.",
-      "publishRequested": "Publishing has been requested.", "savedAndPublishRequested": "Panel saved and publishing requested.",
-      "publishError": "Could not request publishing.", "deleted": "Panel deleted.", "deleteError": "Could not delete the panel."
+      "loadError": "Could not load member panels.",
+      "saved": "Panel saved.",
+      "saveError": "Could not save the panel.",
+      "publishRequested": "Publishing has been requested.",
+      "savedAndPublishRequested": "Panel saved and publishing requested.",
+      "publishError": "Could not request publishing.",
+      "deleted": "Panel deleted.",
+      "deleteError": "Could not delete the panel."
     },
-    "defaults": { "title": "How can we help?", "description": "Choose one of the actions below." },
+    "defaults": {
+      "title": "How can we help?",
+      "description": "Choose one of the actions below."
+    },
     "duplicateName": "{{name}} — copy",
-    "dialogs": { "deleteConfirm": "Delete panel “{{name}}”? This cannot be undone." }
+    "dialogs": {
+      "deleteConfirm": "Delete panel “{{name}}”? This cannot be undone."
+    }
   },
   "workflows": {
-    "loading":"Loading workflows…","title":"Application workflows","subtitle":"Collect private applications and review them with safe Discord actions.","notice":"Attach enabled workflows to panel buttons to start private DM applications.",
-    "hero":{"aria":"Workflow workspace","footer":"Structured applications, private answers, and auditable approval actions."},"stats":{"total":"Workflows","enabled":"Enabled","pending":"Pending submissions"},
-    "tabs":{"workflows":"Workflows","editor":"Workflow editor","submissions":"Submissions"},"types":{"Application":"Application","Survey":"Survey","Report":"Report","Custom":"Custom"},
-    "actions":{"create":"Create workflow","back":"Back to workflows","duplicate":"Duplicate","delete":"Delete","addQuestion":"Add question","addOption":"Add option","addAction":"Add action","approve":"Approve","reject":"Reject"},
-    "empty":{"title":"No workflows yet","body":"Create a workflow, add questions, then attach it to a panel button."},"editor":{"notice":"Direct-message workflows support up to 10 questions and 10 approval actions in Phase 1."},
-    "sections":{"basic":"Basic information","basicLead":"Name and enable the workflow.","confirmation":"Start confirmation","confirmationLead":"Optionally confirm before opening DMs.","questions":"Questions","questionsLead":"Members answer these one at a time in DMs.","duplicates":"Duplicate prevention","duplicatesLead":"Control repeat submissions.","actions":"Approval actions","actionsLead":"Actions are queued for the bot after approval."},
-    "fields":{"name":"Workflow name","description":"Description","type":"Type","enabled":"Workflow enabled","requireConfirmation":"Require confirmation","confirmTitle":"Confirmation title","confirmMessage":"Confirmation message","confirmButton":"Confirm button text","cancelButton":"Cancel button text","questions":"Questions","label":"Question label","questionType":"Question type","required":"Required","helpText":"Help text","minLength":"Minimum length","maxLength":"Maximum length","options":"Answer options","optionsHelp":"Add 2 to 5 options. Members choose one button.","optionLabel":"Button label","optionValue":"Stored value","policy":"Duplicate policy","cooldown":"Cooldown hours","maxSubmissions":"Maximum submissions per user","actionType":"Action type","role":"Discord role","message":"Direct message","successMessage":"Submission success message","rejectionMessage":"Rejection DM message"},
-    "questionTypes":{"ShortText":"Short text","LongText":"Long text","Number":"Number","YesNo":"Yes / No","SingleChoice":"Single choice"},"answers":{"yes":"Yes","no":"No"},"policies":{"AllowMultiple":"Allow multiple","BlockWhilePending":"Block while pending","BlockAfterApproved":"Block after approval","CooldownAfterRejected":"Cooldown after rejection","OneSubmissionEver":"One submission ever"},"actionTypes":{"AddRole":"Add role","RemoveRole":"Remove role","SendDirectMessage":"Send direct message"},
-    "questionNumber":"Question {{number}}","actionNumber":"Action {{number}}","preview":{"untitled":"Untitled workflow","actions":"approval actions"},"submissions":{"title":"Workflow submissions","lead":"Select a submission to review its answers.","empty":"No submissions yet."},"statuses":{"Pending":"Pending","Approved":"Approved","Rejected":"Rejected","Cancelled":"Cancelled"},
-    "review":{"notePrompt":"Optional review note"},"defaults":{"confirm":"Continue","cancel":"Cancel"},"duplicateName":"{{name}} — copy","validation":{"fix":"Review required workflow fields."},"dialogs":{"delete":"Delete workflow “{{name}}”?"},
-    "messages":{"loadError":"Could not load workflows.","saved":"Workflow saved.","saveError":"Could not save workflow.","deleteError":"Could not delete workflow.","approved":"Submission approved; actions were queued for the bot.","rejected":"Submission rejected.","reviewError":"Could not review submission."}
+    "loading": "Loading workflows…",
+    "title": "Application workflows",
+    "subtitle": "Collect private applications and review them with safe Discord actions.",
+    "notice": "Attach enabled workflows to panel buttons to start private DM applications.",
+    "hero": {
+      "aria": "Workflow workspace",
+      "footer": "Structured applications, private answers, and auditable approval actions."
+    },
+    "stats": {
+      "total": "Workflows",
+      "enabled": "Enabled",
+      "pending": "Pending submissions"
+    },
+    "tabs": {
+      "workflows": "Workflows",
+      "editor": "Workflow editor",
+      "submissions": "Submissions"
+    },
+    "types": {
+      "Application": "Application",
+      "Survey": "Survey",
+      "Report": "Report",
+      "Custom": "Custom"
+    },
+    "actions": {
+      "create": "Create workflow",
+      "back": "Back to workflows",
+      "duplicate": "Duplicate",
+      "delete": "Delete",
+      "addQuestion": "Add question",
+      "addOption": "Add option",
+      "addAction": "Add action",
+      "approve": "Approve",
+      "reject": "Reject"
+    },
+    "empty": {
+      "title": "No workflows yet",
+      "body": "Create a workflow, add questions, then attach it to a panel button."
+    },
+    "editor": {
+      "notice": "Direct-message workflows support up to 10 questions and 10 approval actions in Phase 1."
+    },
+    "sections": {
+      "basic": "Basic information",
+      "basicLead": "Name and enable the workflow.",
+      "confirmation": "Start confirmation",
+      "confirmationLead": "Optionally confirm before opening DMs.",
+      "questions": "Questions",
+      "questionsLead": "Members answer these one at a time in DMs.",
+      "duplicates": "Duplicate prevention",
+      "duplicatesLead": "Control repeat submissions.",
+      "actions": "Approval actions",
+      "actionsLead": "Actions are queued for the bot after approval."
+    },
+    "fields": {
+      "name": "Workflow name",
+      "description": "Description",
+      "type": "Type",
+      "enabled": "Workflow enabled",
+      "requireConfirmation": "Require confirmation",
+      "confirmTitle": "Confirmation title",
+      "confirmMessage": "Confirmation message",
+      "confirmButton": "Confirm button text",
+      "cancelButton": "Cancel button text",
+      "questions": "Questions",
+      "label": "Question label",
+      "questionType": "Question type",
+      "required": "Required",
+      "helpText": "Help text",
+      "minLength": "Minimum length",
+      "maxLength": "Maximum length",
+      "options": "Answer options",
+      "optionsHelp": "Add 2 to 5 options. Members choose one button.",
+      "optionLabel": "Button label",
+      "optionValue": "Stored value",
+      "policy": "Duplicate policy",
+      "cooldown": "Cooldown hours",
+      "maxSubmissions": "Maximum submissions per user",
+      "actionType": "Action type",
+      "role": "Discord role",
+      "message": "Direct message",
+      "successMessage": "Submission success message",
+      "rejectionMessage": "Rejection DM message"
+    },
+    "questionTypes": {
+      "ShortText": "Short text",
+      "LongText": "Long text",
+      "Number": "Number",
+      "YesNo": "Yes / No",
+      "SingleChoice": "Single choice"
+    },
+    "answers": {
+      "yes": "Yes",
+      "no": "No"
+    },
+    "policies": {
+      "AllowMultiple": "Allow multiple",
+      "BlockWhilePending": "Block while pending",
+      "BlockAfterApproved": "Block after approval",
+      "CooldownAfterRejected": "Cooldown after rejection",
+      "OneSubmissionEver": "One submission ever"
+    },
+    "actionTypes": {
+      "AddRole": "Add role",
+      "RemoveRole": "Remove role",
+      "SendDirectMessage": "Send direct message"
+    },
+    "questionNumber": "Question {{number}}",
+    "actionNumber": "Action {{number}}",
+    "preview": {
+      "untitled": "Untitled workflow",
+      "actions": "approval actions"
+    },
+    "submissions": {
+      "title": "Workflow submissions",
+      "lead": "Select a submission to review its answers.",
+      "empty": "No submissions yet."
+    },
+    "statuses": {
+      "Pending": "Pending",
+      "Approved": "Approved",
+      "Rejected": "Rejected",
+      "Cancelled": "Cancelled"
+    },
+    "review": {
+      "notePrompt": "Optional review note"
+    },
+    "defaults": {
+      "confirm": "Continue",
+      "cancel": "Cancel"
+    },
+    "duplicateName": "{{name}} — copy",
+    "validation": {
+      "fix": "Review required workflow fields."
+    },
+    "dialogs": {
+      "delete": "Delete workflow “{{name}}”?"
+    },
+    "messages": {
+      "loadError": "Could not load workflows.",
+      "saved": "Workflow saved.",
+      "saveError": "Could not save workflow.",
+      "deleteError": "Could not delete workflow.",
+      "approved": "Submission approved; actions were queued for the bot.",
+      "rejected": "Submission rejected.",
+      "reviewError": "Could not review submission."
+    }
   },
   "music": {
-    "loading":"Loading music settings…","title":"Music settings","subtitle":"Configure one shared voice playback room for this server.","notice":"Use /music play in Discord after enabling the feature. One voice channel can be active at a time.",
-    "hero":{"aria":"Music settings workspace","footer":"Lavalink-powered playback with one safe queue per server."},"stats":{"status":"Status","queue":"Queue limit","volume":"Default volume"},
-    "sections":{"access":"Access and permissions","accessLead":"Choose who can queue and control playback.","limits":"Playback limits","limitsLead":"Keep the shared queue predictable and server-friendly."},
-    "fields":{"enabled":"Enable Music","djRole":"DJ role","noDjRole":"No DJ role — use voice-channel permissions","djRoleHint":"Administrators always retain control.","allowEveryone":"Allow members in the active voice channel to queue tracks when no DJ role is configured","maxQueue":"Maximum queue size","maxDuration":"Maximum track duration (seconds)","volume":"Default volume (1–100)"},
-    "messages":{"loadError":"Could not load music settings.","saveError":"Could not save music settings.","saved":"Music settings saved.","validation":"Review the music limits before saving."}
+    "loading": "Loading music settings…",
+    "title": "Music settings",
+    "subtitle": "Configure one shared voice playback room for this server.",
+    "notice": "Use /music play in Discord after enabling the feature. One voice channel can be active at a time.",
+    "hero": {
+      "aria": "Music settings workspace",
+      "footer": "Lavalink-powered playback with one safe queue per server."
+    },
+    "stats": {
+      "status": "Status",
+      "queue": "Queue limit",
+      "volume": "Default volume"
+    },
+    "sections": {
+      "access": "Access and permissions",
+      "accessLead": "Choose who can queue and control playback.",
+      "limits": "Playback limits",
+      "limitsLead": "Keep the shared queue predictable and server-friendly."
+    },
+    "fields": {
+      "enabled": "Enable Music",
+      "djRole": "DJ role",
+      "noDjRole": "No DJ role — use voice-channel permissions",
+      "djRoleHint": "Administrators always retain control.",
+      "allowEveryone": "Allow members in the active voice channel to queue tracks when no DJ role is configured",
+      "maxQueue": "Maximum queue size",
+      "maxDuration": "Maximum track duration (seconds)",
+      "volume": "Default volume (1–100)"
+    },
+    "messages": {
+      "loadError": "Could not load music settings.",
+      "saveError": "Could not save music settings.",
+      "saved": "Music settings saved.",
+      "validation": "Review the music limits before saving."
+    }
   },
   "toast": {
     "dismiss": "Dismiss notification"

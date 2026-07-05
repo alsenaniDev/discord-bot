@@ -17,6 +17,21 @@ export interface GuildOnboarding {
   checklist: OnboardingChecklist;
 }
 
+export interface DiscordGuildOnboarding {
+  discordGuildId: string;
+  name: string;
+  iconUrl?: string | null;
+
+  isOwner: boolean;
+  canManage: boolean;
+
+  botInstalled: boolean;
+  platformGuildId?: string | null;
+
+  action: 'manage' | 'add_bot';
+  inviteUrl?: string | null;
+}
+
 export interface OnboardingStatus {
   hasGuilds: boolean;
   botInviteUrl: string;
