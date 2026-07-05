@@ -20,6 +20,7 @@ public class GuildMaintenanceWorker : BackgroundService
     private readonly WorkflowActionSyncService _workflowActions;
     private readonly GameResultPublishService _gameResults;
     private readonly GamesContextCache _gamesContextCache;
+    private readonly DiscordActivityLaunchService _activityLauncher;
 
     public GuildMaintenanceWorker(
         DiscordSocketClient client,
@@ -29,7 +30,8 @@ public class GuildMaintenanceWorker : BackgroundService
         ILogger<GuildMaintenanceWorker> logger,
         WorkflowActionSyncService workflowActions,
         GameResultPublishService gameResults,
-        GamesContextCache gamesContextCache)
+        GamesContextCache gamesContextCache,
+        DiscordActivityLaunchService activityLauncher)
     {
         _client = client;
         _commandPanelSyncService = commandPanelSyncService;
@@ -39,6 +41,7 @@ public class GuildMaintenanceWorker : BackgroundService
         _workflowActions = workflowActions;
         _gameResults = gameResults;
         _gamesContextCache = gamesContextCache;
+        _activityLauncher = activityLauncher;
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -55,6 +58,7 @@ public class GuildMaintenanceWorker : BackgroundService
                     await _workflowActions.ProcessAsync(_client, stoppingToken);
                     await _gameResults.ProcessAsync(_client, stoppingToken);
                     foreach (var guild in _client.Guilds) await _gamesContextCache.RefreshAsync(guild.Id, stoppingToken);
+                    await _activityLauncher.RefreshAvailabilityAsync();
                 }
             }
             catch (Exception ex)

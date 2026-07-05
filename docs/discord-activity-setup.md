@@ -18,6 +18,8 @@
 5. تأكد أن التطبيق يملك أمر Entry Point الافتراضي وأن البوت مثبت بصلاحية `applications.commands`.
 6. تأكد أن متغير البوت `Activity__Enabled=true`. استخدم `false` مؤقتًا فقط إذا أردت إجبار `/games` على الوضع الاحتياطي.
 
+بعد الحفظ، راقب سجل البوت حتى تظهر `Embedded flag: True`. إذا بقيت `False` فلن يرسل البوت callback type 12، وسيعرض الوضع الاحتياطي بأمان بدل رسالة `This interaction failed`.
+
 Discord يشغّل Activities داخل iframe معزول ويمرر الطلبات الخارجية عبر proxy؛ لذلك URL Mappings ضرورية للإنتاج والتطوير عبر tunnel.
 
 المراجع الرسمية: [بدء بناء Activity](https://docs.discord.com/developers/activities/building-an-activity)، [URL Mappings والتطوير المحلي](https://docs.discord.com/developers/activities/development-guides/local-development)، و[إطلاق Activity من interaction](https://docs.discord.com/developers/activities/how-activities-work).

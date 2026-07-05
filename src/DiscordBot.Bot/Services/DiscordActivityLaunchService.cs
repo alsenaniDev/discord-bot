@@ -1,3 +1,4 @@
+using Discord;
 using System.Net.Http.Json;
 using System.Text.Json;
 using Discord.WebSocket;
@@ -5,14 +6,43 @@ using Microsoft.Extensions.Logging;
 
 namespace DiscordBot.Bot.Services;
 
-public sealed class DiscordActivityLaunchService(ILogger<DiscordActivityLaunchService> logger) : IDisposable
+public sealed class DiscordActivityLaunchService(DiscordSocketClient discordClient, ILogger<DiscordActivityLaunchService> logger) : IDisposable
 {
     // Kept outside IHttpClientFactory so standard HTTP logging never records the
     // interaction token embedded in Discord's callback URL.
     private readonly HttpClient _http = new() { BaseAddress = new Uri("https://discord.com/api/v10/"), Timeout = TimeSpan.FromMilliseconds(1200) };
+    private volatile bool _availabilityLoaded;
+    private volatile bool _isEmbedded;
+
+    public async Task RefreshAvailabilityAsync()
+    {
+        try
+        {
+            var application = await discordClient.GetApplicationInfoAsync();
+            _isEmbedded = application.Flags.HasFlag(ApplicationFlags.Embedded);
+            _availabilityLoaded = true;
+            logger.LogInformation(
+                "Discord Activity availability checked for application {ApplicationId}. Embedded flag: {Embedded}; flags: {ApplicationFlags}.",
+                application.Id,
+                _isEmbedded,
+                application.Flags);
+        }
+        catch (Exception ex)
+        {
+            logger.LogWarning(ex, "Could not check whether the Discord application has the EMBEDDED flag.");
+        }
+    }
 
     public async Task<ActivityLaunchAttempt> TryLaunchAsync(SocketInteraction interaction, CancellationToken ct = default)
     {
+        if (!_availabilityLoaded || !_isEmbedded)
+        {
+            logger.LogWarning(
+                "Discord Activity launch failed before initial response. Application EMBEDDED flag is unavailable or disabled; showing fallback is safe.");
+            _ = RefreshAvailabilityAsync();
+            return ActivityLaunchAttempt.SafeFallback;
+        }
+
         if (interaction.Id == 0 || string.IsNullOrWhiteSpace(interaction.Token))
         {
             logger.LogError("Discord Activity launch failed before initial response because interaction ID or token is missing.");

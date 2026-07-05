@@ -40,6 +40,7 @@ public class DiscordBotHostedService : IHostedService
     private readonly IMusicService _music;
     private readonly GamesHubInteractionService _games;
     private readonly GamesContextCache _gamesContextCache;
+    private readonly DiscordActivityLaunchService _activityLauncher;
     private readonly BotOptions _botOptions;
     private readonly ILogger<DiscordBotHostedService> _logger;
 
@@ -64,6 +65,7 @@ public class DiscordBotHostedService : IHostedService
         IMusicService music,
         GamesHubInteractionService games,
         GamesContextCache gamesContextCache,
+        DiscordActivityLaunchService activityLauncher,
         IOptions<BotOptions> botOptions,
         ILogger<DiscordBotHostedService> logger)
     {
@@ -87,6 +89,7 @@ public class DiscordBotHostedService : IHostedService
         _music = music;
         _games = games;
         _gamesContextCache = gamesContextCache;
+        _activityLauncher = activityLauncher;
         _botOptions = botOptions.Value;
         _logger = logger;
     }
@@ -139,6 +142,7 @@ public class DiscordBotHostedService : IHostedService
 
         await SlashCommandRegistration.RegisterGlobalCommandsAsync(_client);
         _logger.LogInformation("Global slash commands registered.");
+        await _activityLauncher.RefreshAvailabilityAsync();
 
         var guilds = _client.Guilds;
         _logger.LogInformation("Syncing {GuildCount} guild(s) with the API on startup.", guilds.Count);
