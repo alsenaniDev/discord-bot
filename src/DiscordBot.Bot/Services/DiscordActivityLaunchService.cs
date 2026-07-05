@@ -1,4 +1,5 @@
 using System.Net.Http.Json;
+using System.Text.Json;
 using Discord.WebSocket;
 using Microsoft.Extensions.Logging;
 
@@ -10,36 +11,79 @@ public sealed class DiscordActivityLaunchService(ILogger<DiscordActivityLaunchSe
     // interaction token embedded in Discord's callback URL.
     private readonly HttpClient _http = new() { BaseAddress = new Uri("https://discord.com/api/v10/"), Timeout = TimeSpan.FromMilliseconds(1200) };
 
-    public async Task<ActivityLaunchResult> TryLaunchAsync(SocketInteraction interaction, CancellationToken ct = default)
+    public async Task<ActivityLaunchAttempt> TryLaunchAsync(SocketInteraction interaction, CancellationToken ct = default)
     {
+        if (interaction.Id == 0 || string.IsNullOrWhiteSpace(interaction.Token))
+        {
+            logger.LogError("Discord Activity launch failed before initial response because interaction ID or token is missing.");
+            return ActivityLaunchAttempt.SafeFallback;
+        }
+
+        logger.LogInformation(
+            "Attempting to launch Discord Activity for interaction {InteractionId}, guild {GuildId}, channel {ChannelId}",
+            interaction.Id,
+            interaction.GuildId,
+            interaction.Channel.Id);
+        logger.LogInformation(
+            "Sending LAUNCH_ACTIVITY callback to /interactions/{InteractionId}/{InteractionToken}/callback",
+            interaction.Id,
+            "{InteractionToken}");
+
+        var callbackStarted = false;
         try
         {
             var path = $"interactions/{interaction.Id}/{Uri.EscapeDataString(interaction.Token)}/callback";
+            callbackStarted = true;
+            // Discord interaction callback payload must be exactly: { "type": 12 }.
             using var response = await _http.PostAsJsonAsync(path, new { type = 12 }, ct);
+            var responseBody = await response.Content.ReadAsStringAsync(ct);
             if (response.IsSuccessStatusCode)
             {
-                logger.LogInformation("Discord Activity launched for interaction {InteractionId}, guild {GuildId}, channel {ChannelId}.", interaction.Id, interaction.GuildId, interaction.Channel.Id);
-                return ActivityLaunchResult.Launched;
+                logger.LogInformation("Discord Activity launch callback accepted.");
+                return ActivityLaunchAttempt.Accepted;
             }
-            var error = await response.Content.ReadFromJsonAsync<DiscordCallbackError>(cancellationToken: ct).ConfigureAwait(false);
-            logger.LogWarning("Discord Activity launch failed for interaction {InteractionId} with status {StatusCode}, Discord code {DiscordCode}: {DiscordMessage}.", interaction.Id, (int)response.StatusCode, error?.Code, error?.Message);
-            return ActivityLaunchResult.Rejected;
+            var safeBody = Sanitize(responseBody, interaction.Token);
+            logger.LogWarning(
+                "Discord rejected LAUNCH_ACTIVITY. Status {StatusCode}, Discord error code {DiscordCode}, response body: {ResponseBody}",
+                (int)response.StatusCode,
+                ReadDiscordCode(responseBody),
+                safeBody);
+            return ActivityLaunchAttempt.UnsafeFailure;
         }
         catch (OperationCanceledException ex)
         {
-            logger.LogWarning(ex, "Discord Activity launch outcome is unknown for interaction {InteractionId}; no second initial response will be attempted.", interaction.Id);
-            return ActivityLaunchResult.Unknown;
+            logger.LogWarning(ex, "Discord Activity launch timed out for interaction {InteractionId}.", interaction.Id);
+            return callbackStarted ? ActivityLaunchAttempt.UnsafeFailure : ActivityLaunchAttempt.SafeFallback;
         }
         catch (Exception ex)
         {
-            logger.LogWarning(ex, "Discord Activity launch outcome is unknown for interaction {InteractionId}; no second initial response will be attempted.", interaction.Id);
-            return ActivityLaunchResult.Unknown;
+            logger.LogWarning(ex, "Discord Activity launch request failed for interaction {InteractionId}.", interaction.Id);
+            return callbackStarted ? ActivityLaunchAttempt.UnsafeFailure : ActivityLaunchAttempt.SafeFallback;
         }
     }
 
     public void Dispose() => _http.Dispose();
 
-    private sealed class DiscordCallbackError { public int? Code { get; set; } public string? Message { get; set; } }
+    private static int? ReadDiscordCode(string body)
+    {
+        try
+        {
+            using var json = JsonDocument.Parse(body);
+            return json.RootElement.TryGetProperty("code", out var code) && code.TryGetInt32(out var value) ? value : null;
+        }
+        catch (JsonException) { return null; }
+    }
+
+    private static string Sanitize(string body, string token)
+    {
+        var safe = body.Replace(token, "[REDACTED]", StringComparison.Ordinal);
+        return safe.Length <= 4000 ? safe : safe[..4000] + "…";
+    }
 }
 
-public enum ActivityLaunchResult { Launched, Rejected, Unknown }
+public readonly record struct ActivityLaunchAttempt(bool WasAccepted, bool CanFallback)
+{
+    public static ActivityLaunchAttempt Accepted => new(true, false);
+    public static ActivityLaunchAttempt SafeFallback => new(false, true);
+    public static ActivityLaunchAttempt UnsafeFailure => new(false, false);
+}

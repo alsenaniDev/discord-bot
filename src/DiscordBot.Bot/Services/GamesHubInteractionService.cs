@@ -29,18 +29,31 @@ public class GamesHubInteractionService(BotApiClient api, GamesContextCache cont
         {
             // An interaction callback is single-use even when Discord rejects type 12.
             // Never attempt a second initial response after sending the launch callback.
-            await activityLauncher.TryLaunchAsync(interaction);
+            var launch = await activityLauncher.TryLaunchAsync(interaction);
+            if (launch.WasAccepted) return;
+            if (!launch.CanFallback)
+            {
+                logger.LogWarning("Discord Activity launch failed after initial response. Cannot fallback.");
+                return;
+            }
+            logger.LogWarning("Discord Activity launch failed before initial response. Showing fallback hub.");
+            await SendButtonHubAsync(interaction, context);
             return;
         }
+        logger.LogWarning("Discord Activity launch failed before initial response. Showing fallback hub. Activity launch is disabled by configuration.");
         await SendButtonHubAsync(interaction, context);
     }
 
     private async Task SendButtonHubAsync(SocketInteraction interaction, BotGamesContextApiResponse context)
     {
         var components = new ComponentBuilder();
-        foreach (var game in context.Games.Take(20)) components.WithButton(game.Name, $"{ComponentPrefix}play:{game.Key}", ButtonStyle.Primary, new Emoji("🎮"));
+        foreach (var game in context.Games.Take(20))
+        {
+            var label = game.Key.Equals("quiz", StringComparison.OrdinalIgnoreCase) ? "لعبة الأسئلة - احتياطي" : $"{game.Name} - احتياطي";
+            components.WithButton(label, $"{ComponentPrefix}play:{game.Key}", ButtonStyle.Primary, new Emoji("🎮"));
+        }
         components.WithButton("الترتيب", $"{ComponentPrefix}leaderboard", ButtonStyle.Secondary, new Emoji("🏆"));
-        var embed = new EmbedBuilder().WithTitle("🎮 مركز الألعاب").WithDescription(context.Games.Count == 0 ? "لا توجد ألعاب مفعّلة حاليًا. يقدر مسؤول السيرفر يفعّلها من لوحة التحكم." : "اختر لعبة وابدأ التحدي مع أعضاء السيرفر.").WithColor(new Color(88, 101, 242)).Build();
+        var embed = new EmbedBuilder().WithTitle("🎮 مركز الألعاب - الوضع الاحتياطي").WithDescription("تعذر فتح واجهة الألعاب داخل Discord، لذلك تم عرض الوضع الاحتياطي.").WithColor(new Color(88, 101, 242)).Build();
         try { await interaction.RespondAsync(embed: embed, components: components.Build(), ephemeral: true); }
         catch (Exception ex) { logger.LogWarning(ex, "Could not send Games Hub fallback for interaction {InteractionId}.", interaction.Id); }
     }
@@ -52,10 +65,11 @@ public class GamesHubInteractionService(BotApiClient api, GamesContextCache cont
         if (action == "leaderboard") { await ShowLeaderboardAsync(component, guildId); return; }
         if (!action.StartsWith("play:", StringComparison.Ordinal)) { await ReplyAsync(component, "هذا الزر غير صالح."); return; }
         var gameKey = action[5..];
+        await component.DeferAsync(ephemeral: true);
         var result = await api.StartGameSessionAsync(new StartGameSessionApiRequest { GuildDiscordId = guildId.ToString(), ChannelDiscordId = component.Channel.Id.ToString(), UserDiscordId = component.User.Id.ToString(), Username = component.User.GlobalName ?? component.User.Username, GameKey = gameKey });
-        if (result.Value is null) { await ReplyAsync(component, result.Error ?? "تعذر بدء اللعبة الآن."); return; }
+        if (result.Value is null) { await component.ModifyOriginalResponseAsync(x => x.Content = result.Error ?? "تعذر بدء اللعبة الآن."); return; }
         logger.LogInformation("Game session {SessionId} started from Discord for game {GameKey}, guild {GuildId}, user {UserId}.", result.Value.SessionId, result.Value.GameKey, guildId, component.User.Id);
-        await component.RespondAsync($"بدأت جلسة لعبة **{result.Value.GameName}**. سيتم ربط واجهة الألعاب لاحقًا.", ephemeral: true);
+        await component.ModifyOriginalResponseAsync(x => x.Content = $"بدأت جلسة احتياطية للعبة **{result.Value.GameName}**. واجهة Discord Activity لم تُفتح في هذه المحاولة.");
     }
 
     private async Task ShowLeaderboardAsync(SocketMessageComponent component, ulong guildId)
