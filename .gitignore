@@ -24,6 +24,8 @@ node_modules/
 # Angular
 dashboard/DiscordBot.Dashboard/node_modules/
 dashboard/DiscordBot.Dashboard/dist/
+activity/DiscordBot.Activity/dist/
+activity/DiscordBot.Activity/*.tsbuildinfo
 dashboard/DiscordBot.Dashboard/.angular/
 dashboard/DiscordBot.Dashboard/src/environments/environment.local.ts
 

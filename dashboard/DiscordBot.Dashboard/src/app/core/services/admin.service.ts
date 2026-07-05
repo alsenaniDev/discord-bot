@@ -13,6 +13,7 @@ import {
 } from '../models/admin.models';
 import { GuildSubscription } from '../models/subscription.models';
 import { AdminPlanUpgradeRequest, ReviewPlanUpgradeRequest } from '../models/upgrade-request.models';
+import { PlatformGameDefinition, SavePlatformGameDefinition } from '../models/games.models';
 
 @Injectable({ providedIn: 'root' })
 export class AdminService {
@@ -95,4 +96,10 @@ export class AdminService {
   deletePlan(planId: string): Observable<void> {
     return this.http.delete<void>(`${this.baseUrl}/plans/${planId}`);
   }
+
+  getGames(): Observable<PlatformGameDefinition[]> { return this.http.get<PlatformGameDefinition[]>(`${this.baseUrl}/games`); }
+  createGame(value: SavePlatformGameDefinition): Observable<PlatformGameDefinition> { return this.http.post<PlatformGameDefinition>(`${this.baseUrl}/games`, value); }
+  updateGame(id: string, value: SavePlatformGameDefinition): Observable<PlatformGameDefinition> { return this.http.put<PlatformGameDefinition>(`${this.baseUrl}/games/${id}`, value); }
+  toggleGame(id: string): Observable<PlatformGameDefinition> { return this.http.patch<PlatformGameDefinition>(`${this.baseUrl}/games/${id}/toggle`, {}); }
+  disableGame(id: string): Observable<void> { return this.http.delete<void>(`${this.baseUrl}/games/${id}`); }
 }

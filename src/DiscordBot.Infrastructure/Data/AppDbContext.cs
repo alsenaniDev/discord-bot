@@ -38,6 +38,13 @@ public class AppDbContext : DbContext
     public DbSet<WorkflowSubmission> WorkflowSubmissions => Set<WorkflowSubmission>();
     public DbSet<WorkflowApprovalAction> WorkflowApprovalActions => Set<WorkflowApprovalAction>();
     public DbSet<WorkflowPendingAction> WorkflowPendingActions => Set<WorkflowPendingAction>();
+    public DbSet<PlatformGameDefinition> PlatformGameDefinitions => Set<PlatformGameDefinition>();
+    public DbSet<GuildGamesSettings> GuildGamesSettings => Set<GuildGamesSettings>();
+    public DbSet<GuildGameSetting> GuildGameSettings => Set<GuildGameSetting>();
+    public DbSet<GameSession> GameSessions => Set<GameSession>();
+    public DbSet<GamePlayer> GamePlayers => Set<GamePlayer>();
+    public DbSet<GameContent> GameContent => Set<GameContent>();
+    public DbSet<GameResultPublishAction> GameResultPublishActions => Set<GameResultPublishAction>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

@@ -44,6 +44,10 @@
           <app-ui-icon name="subscription" size="sm"></app-ui-icon>
           {{ 'nav.adminPlans' | translate }}
         </a>
+        <a routerLink="/admin/games" routerLinkActive="active" (click)="closeSidebar()">
+          <app-ui-icon name="modules" size="sm"></app-ui-icon>
+          {{ 'nav.gamesCatalog' | translate }}
+        </a>
       </ng-container>
 
       <ng-container *ngIf="showGuildNav">
@@ -75,6 +79,10 @@
         <a *ngIf="canManageGuild" [routerLink]="['/guilds', selectedGuild!.id, 'music']" routerLinkActive="active"
           (click)="closeSidebar()">
           <app-ui-icon name="modules" size="sm"></app-ui-icon>{{ 'nav.music' | translate }}
+        </a>
+        <a *ngIf="canManageGuild" [routerLink]="['/guilds', selectedGuild!.id, 'games']" routerLinkActive="active"
+          (click)="closeSidebar()">
+          <app-ui-icon name="modules" size="sm"></app-ui-icon>{{ 'nav.games' | translate }}
         </a>
         <a *ngIf="canAccessModeration" [routerLink]="['/guilds', selectedGuild!.id, 'tickets']"
           routerLinkActive="active" (click)="closeSidebar()">

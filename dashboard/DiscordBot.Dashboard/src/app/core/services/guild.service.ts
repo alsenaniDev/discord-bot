@@ -20,6 +20,7 @@ import { GuildSubscription, SubscriptionPlan } from '../models/subscription.mode
 import { GuildPanel, SaveGuildPanel } from '../models/command-panel.models';
 import { GuildWorkflow, SaveWorkflow, WorkflowSubmission, WorkflowSubmissionStatus } from '../models/workflow.models';
 import { GuildMusicSettings, UpdateGuildMusicSettings } from '../models/music.models';
+import { GameLeaderboardEntry, GuildGame, GuildGamesSettings, UpdateGuildGameSetting, UpdateGuildGamesSettings } from '../models/games.models';
 import {
   PlanUpgradeRequest,
   CreatePlanUpgradeRequest,
@@ -113,6 +114,11 @@ export class GuildService {
 
   getMusicSettings(guildId: string): Observable<GuildMusicSettings> { return this.http.get<GuildMusicSettings>(`${this.baseUrl}/api/dashboard/guilds/${guildId}/music-settings`); }
   updateMusicSettings(guildId: string, value: UpdateGuildMusicSettings): Observable<GuildMusicSettings> { return this.http.put<GuildMusicSettings>(`${this.baseUrl}/api/dashboard/guilds/${guildId}/music-settings`, value); }
+  getGamesSettings(guildId: string): Observable<GuildGamesSettings> { return this.http.get<GuildGamesSettings>(`${this.baseUrl}/api/guilds/${guildId}/games/settings`); }
+  updateGamesSettings(guildId: string, value: UpdateGuildGamesSettings): Observable<GuildGamesSettings> { return this.http.put<GuildGamesSettings>(`${this.baseUrl}/api/guilds/${guildId}/games/settings`, value); }
+  getGuildGames(guildId: string): Observable<GuildGame[]> { return this.http.get<GuildGame[]>(`${this.baseUrl}/api/guilds/${guildId}/games`); }
+  updateGuildGame(guildId: string, gameId: string, value: UpdateGuildGameSetting): Observable<GuildGame> { return this.http.put<GuildGame>(`${this.baseUrl}/api/guilds/${guildId}/games/${gameId}/settings`, value); }
+  getGamesLeaderboard(guildId: string, gameId?: string): Observable<GameLeaderboardEntry[]> { const query = gameId ? `?gameId=${encodeURIComponent(gameId)}` : ''; return this.http.get<GameLeaderboardEntry[]>(`${this.baseUrl}/api/guilds/${guildId}/games/leaderboard${query}`); }
 
   getTicketSummaries(
     guildId: string,

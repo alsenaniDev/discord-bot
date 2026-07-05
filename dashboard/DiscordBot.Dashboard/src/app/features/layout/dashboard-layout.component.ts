@@ -170,6 +170,10 @@ export class DashboardLayoutComponent implements OnInit, OnDestroy {
       this.setGuildPage('music.title', 'music.subtitle', guildName, guildId, 'nav.music');
       return;
     }
+    if (url.includes('/games') && url.startsWith('/guilds/')) {
+      this.setGuildPage('titles.games', 'titles.gamesSubtitle', guildName, guildId, 'nav.games');
+      return;
+    }
     if (url.includes('/profile')) {
       this.setGuildPage('titles.profile', 'titles.profileSubtitle', guildName, guildId, 'nav.profile');
       return;
@@ -213,6 +217,13 @@ export class DashboardLayoutComponent implements OnInit, OnDestroy {
       this.setPage('titles.adminPlans', 'titles.adminPlansSubtitle', '', [
         { label: 'nav.platformAdmin', link: '/admin' },
         { label: 'nav.adminPlans' }
+      ]);
+      return;
+    }
+    if (url.startsWith('/admin/games')) {
+      this.setPage('titles.adminGames', 'titles.adminGamesSubtitle', '', [
+        { label: 'nav.platformAdmin', link: '/admin' },
+        { label: 'nav.gamesCatalog' }
       ]);
       return;
     }

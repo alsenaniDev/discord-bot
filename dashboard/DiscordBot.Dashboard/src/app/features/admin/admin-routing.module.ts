@@ -5,13 +5,15 @@ import { AdminGuildsComponent } from './admin-guilds/admin-guilds.component';
 import { AdminUsersComponent } from './admin-users/admin-users.component';
 import { AdminUpgradeRequestsComponent } from './admin-upgrade-requests/admin-upgrade-requests.component';
 import { AdminPlansComponent } from './admin-plans/admin-plans.component';
+import { AdminGamesComponent } from './admin-games/admin-games.component';
 
 const routes: Routes = [
   { path: '', component: AdminHomeComponent },
   { path: 'guilds', component: AdminGuildsComponent },
   { path: 'users', component: AdminUsersComponent },
   { path: 'upgrade-requests', component: AdminUpgradeRequestsComponent },
-  { path: 'plans', component: AdminPlansComponent }
+  { path: 'plans', component: AdminPlansComponent },
+  { path: 'games', component: AdminGamesComponent }
 ];
 
 @NgModule({

@@ -79,6 +79,10 @@ public static class SlashCommandRegistration
             .AddOption("nowplaying", ApplicationCommandOptionType.SubCommand, "Show the current track")
             .Build(),
         new SlashCommandBuilder()
+            .WithName("games")
+            .WithDescription("افتح مركز الألعاب والتحديات")
+            .Build(),
+        new SlashCommandBuilder()
             .WithName("reaction-role")
             .WithDescription("Create button-based role panels")
             .AddOption(new SlashCommandOptionBuilder()
