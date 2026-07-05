@@ -44,12 +44,13 @@ export const DEFAULT_COMMAND_PANEL_BUTTONS: CommandPanelButton[] = [
 ];
 
 export type PanelButtonStyle = 'Primary' | 'Secondary' | 'Success' | 'Danger' | 'Link';
-export type PanelButtonActionType = 'CreateTicket' | 'OpenUrl' | 'SendMessage' | 'AssignRole';
+export type PanelButtonActionType = 'CreateTicket' | 'OpenUrl' | 'SendMessage' | 'AssignRole' | 'StartWorkflow';
 export type PanelPublishStatus = 'NotPublished' | 'PendingPublish' | 'Published' | 'Failed';
 
 export interface GuildPanelButton {
   id?: string; label: string; emoji?: string | null; style: PanelButtonStyle;
   actionType: PanelButtonActionType; ticketTypeId?: string | null; url?: string | null;
+  workflowId?: string | null;
   responseMessage?: string | null; roleDiscordId?: string | null; sortOrder: number; isEnabled: boolean;
 }
 

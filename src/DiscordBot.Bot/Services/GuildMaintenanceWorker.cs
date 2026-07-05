@@ -17,19 +17,22 @@ public class GuildMaintenanceWorker : BackgroundService
     private readonly TicketChannelCleanupService _ticketCleanupService;
     private readonly TicketOutboundMessageService _ticketOutboundMessageService;
     private readonly ILogger<GuildMaintenanceWorker> _logger;
+    private readonly WorkflowActionSyncService _workflowActions;
 
     public GuildMaintenanceWorker(
         DiscordSocketClient client,
         CommandPanelSyncService commandPanelSyncService,
         TicketChannelCleanupService ticketCleanupService,
         TicketOutboundMessageService ticketOutboundMessageService,
-        ILogger<GuildMaintenanceWorker> logger)
+        ILogger<GuildMaintenanceWorker> logger,
+        WorkflowActionSyncService workflowActions)
     {
         _client = client;
         _commandPanelSyncService = commandPanelSyncService;
         _ticketCleanupService = ticketCleanupService;
         _ticketOutboundMessageService = ticketOutboundMessageService;
         _logger = logger;
+        _workflowActions = workflowActions;
     }
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
@@ -43,6 +46,7 @@ public class GuildMaintenanceWorker : BackgroundService
                     await _commandPanelSyncService.ProcessPendingRefreshesAsync(_client, stoppingToken);
                     await _ticketCleanupService.ProcessPendingCleanupsAsync(_client, stoppingToken);
                     await _ticketOutboundMessageService.ProcessPendingMessagesAsync(_client, stoppingToken);
+                    await _workflowActions.ProcessAsync(_client, stoppingToken);
                 }
             }
             catch (Exception ex)

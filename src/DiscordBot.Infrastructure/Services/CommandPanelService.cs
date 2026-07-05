@@ -173,7 +173,7 @@ public class CommandPanelService : ICommandPanelService
     public async Task<PanelButtonActionDto?> GetButtonActionAsync(Guid panelId, Guid buttonId, CancellationToken cancellationToken = default) =>
         await _dbContext.GuildPanelButtons.AsNoTracking()
             .Where(x => x.PanelId == panelId && x.Id == buttonId && x.IsEnabled && x.Panel.IsEnabled)
-            .Select(x => new PanelButtonActionDto { DiscordGuildId = x.Panel.Guild.DiscordGuildId, PanelId = panelId, ButtonId = buttonId, ActionType = x.ActionType, TicketTypeId = x.TicketTypeId, Url = x.Url, ResponseMessage = x.ResponseMessage, RoleDiscordId = x.RoleDiscordId })
+            .Select(x => new PanelButtonActionDto { DiscordGuildId = x.Panel.Guild.DiscordGuildId, PanelId = panelId, ButtonId = buttonId, ActionType = x.ActionType, TicketTypeId = x.TicketTypeId, WorkflowId = x.WorkflowId, Url = x.Url, ResponseMessage = x.ResponseMessage, RoleDiscordId = x.RoleDiscordId })
             .FirstOrDefaultAsync(cancellationToken);
 
     private async Task<string?> ValidateAsync(Guid guildId, SaveGuildPanelRequest request, CancellationToken cancellationToken)
@@ -214,6 +214,12 @@ public class CommandPanelService : ICommandPanelService
                 if (!guildHasSyncedRoles && (!ulong.TryParse(button.RoleDiscordId, out var roleId) || roleId == 0))
                     return "The fallback Discord role ID is invalid.";
             }
+            if (button.ActionType == PanelButtonActionType.StartWorkflow)
+            {
+                if (!button.WorkflowId.HasValue) return "Start Workflow buttons require a workflow.";
+                if (!await _dbContext.GuildWorkflows.AsNoTracking().AnyAsync(x => x.Id == button.WorkflowId && x.GuildId == guildId && x.IsEnabled, cancellationToken))
+                    return "The selected workflow is unavailable or disabled.";
+            }
         }
         return null;
     }
@@ -229,7 +235,7 @@ public class CommandPanelService : ICommandPanelService
             var button = item.Id.HasValue ? panel.Buttons.FirstOrDefault(x => x.Id == item.Id.Value) : null;
             if (button is null) { button = new GuildPanelButton(); panel.Buttons.Add(button); }
             button.Label = item.Label.Trim(); button.Emoji = NullIfWhiteSpace(item.Emoji); button.Style = item.Style;
-            button.ActionType = item.ActionType; button.TicketTypeId = item.TicketTypeId; button.Url = NullIfWhiteSpace(item.Url);
+            button.ActionType = item.ActionType; button.TicketTypeId = item.TicketTypeId; button.WorkflowId = item.WorkflowId; button.Url = NullIfWhiteSpace(item.Url);
             button.ResponseMessage = NullIfWhiteSpace(item.ResponseMessage); button.RoleDiscordId = NullIfWhiteSpace(item.RoleDiscordId);
             button.SortOrder = item.SortOrder; button.IsEnabled = item.IsEnabled;
         }
@@ -247,7 +253,7 @@ public class CommandPanelService : ICommandPanelService
     };
     private static GuildPanelButtonDto MapButton(GuildPanelButton x) => new()
     {
-        Id = x.Id, Label = x.Label, Emoji = x.Emoji, Style = x.Style, ActionType = x.ActionType, TicketTypeId = x.TicketTypeId,
+        Id = x.Id, Label = x.Label, Emoji = x.Emoji, Style = x.Style, ActionType = x.ActionType, TicketTypeId = x.TicketTypeId, WorkflowId = x.WorkflowId,
         Url = x.Url, ResponseMessage = x.ResponseMessage, RoleDiscordId = x.RoleDiscordId, SortOrder = x.SortOrder, IsEnabled = x.IsEnabled
     };
     private static PanelPublishStatus GetPublishStatus(GuildPanel panel)

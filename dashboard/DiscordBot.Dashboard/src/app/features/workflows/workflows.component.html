@@ -1,0 +1,211 @@
+<div class="page-content page-workspace">
+  <app-loading-state *ngIf="loading" [message]="'workflows.loading'|translate"></app-loading-state>
+  <app-error-state *ngIf="!loading&&error" [title]="'workflows.messages.loadError'|translate" [description]="error"
+    [retryLabel]="'common.tryAgain'|translate" (retry)="load()"></app-error-state>
+  <div class="settings-stack settings-stack--welcome" *ngIf="!loading&&!error">
+    <header class="settings-atf settings-atf--welcome"><app-page-workspace-hero class="settings-workspace-hero"
+        icon="modules" [ariaLabel]="'workflows.hero.aria'|translate" [title]="'workflows.title'|translate"
+        [description]="'workflows.subtitle'|translate" [stats]="stats"
+        [footerMessage]="'workflows.hero.footer'|translate" [primaryAction]="heroAction"
+        (primaryActionClick)="heroClick()"></app-page-workspace-hero></header>
+    <nav class="settings-tabs"><button class="settings-tab" type="button" [class.active]="view==='list'"
+        (click)="showList()">{{'workflows.tabs.workflows'|translate}}</button><button class="settings-tab" type="button"
+        [class.active]="view==='editor'" (click)="create()">{{'workflows.tabs.editor'|translate}}</button><button
+        class="settings-tab" type="button" [class.active]="view==='submissions'"
+        (click)="showSubmissions()">{{'workflows.tabs.submissions'|translate}}</button></nav>
+
+    <section class="workflow-list" *ngIf="view==='list'">
+      <app-page-notice>{{'workflows.notice'|translate}}</app-page-notice>
+      <app-empty-state *ngIf="!workflows.length" icon="📝" [title]="'workflows.empty.title'|translate"
+        [description]="'workflows.empty.body'|translate"><button class="btn btn-primary"
+          (click)="create()">{{'workflows.actions.create'|translate}}</button></app-empty-state>
+      <div class="workflow-grid" *ngIf="workflows.length">
+        <article class="card workflow-card" *ngFor="let w of workflows">
+          <header>
+            <div>
+              <h2>{{w.name}}</h2>
+              <p class="muted small">{{('workflows.types.'+w.type)|translate}}</p>
+            </div><app-status-badge [label]="(w.isEnabled?'common.enabled':'common.disabled')|translate"
+              [tone]="w.isEnabled?'success':'neutral'"></app-status-badge>
+          </header>
+          <p class="muted">{{w.description||('common.emptyValue'|translate)}}</p>
+          <dl>
+            <div>
+              <dt>{{'workflows.fields.questions'|translate}}</dt>
+              <dd>{{w.questions.length}}</dd>
+            </div>
+            <div>
+              <dt>{{'workflows.stats.pending'|translate}}</dt>
+              <dd>{{w.pendingSubmissionsCount}}</dd>
+            </div>
+          </dl>
+          <footer><button class="btn btn-primary btn-sm" (click)="edit(w)">{{'common.edit'|translate}}</button><button
+              class="btn btn-secondary btn-sm"
+              (click)="duplicate(w)">{{'workflows.actions.duplicate'|translate}}</button><button
+              class="btn btn-danger btn-sm" (click)="delete(w)">{{'workflows.actions.delete'|translate}}</button>
+          </footer>
+        </article>
+      </div>
+    </section>
+
+    <form class="welcome-workspace" *ngIf="view==='editor'" [formGroup]="form" (ngSubmit)="save()">
+      <div class="welcome-workspace-head"><app-page-notice>{{'workflows.editor.notice'|translate}}</app-page-notice>
+      </div>
+      <div class="welcome-workspace-split">
+        <div class="welcome-workspace-editor">
+          <div class="welcome-studio-editor ws-panel-pad workflow-studio">
+            <section class="workflow-section"><app-section-header [title]="'workflows.sections.basic'|translate"
+                [lead]="'workflows.sections.basicLead'|translate" [compact]="true"></app-section-header>
+              <div class="form-grid"><label class="form-field"><span>{{'workflows.fields.name'|translate}}</span><input class="input" type="text"
+                    formControlName="name"></label><label
+                  class="form-field"><span>{{'workflows.fields.type'|translate}}</span><select class="input" formControlName="type">
+                    <option *ngFor="let x of types" [value]="x">{{('workflows.types.'+x)|translate}}</option>
+                  </select></label><label
+                  class="form-field wide"><span>{{'workflows.fields.description'|translate}}</span><textarea class="input" rows="3"
+                    formControlName="description"></textarea></label><label class="checkbox"><input type="checkbox"
+                    formControlName="isEnabled">{{'workflows.fields.enabled'|translate}}</label></div>
+            </section>
+            <section class="workflow-section"><app-section-header [title]="'workflows.sections.confirmation'|translate"
+                [lead]="'workflows.sections.confirmationLead'|translate" [compact]="true"></app-section-header><label
+                class="checkbox"><input type="checkbox"
+                  formControlName="requireConfirmation">{{'workflows.fields.requireConfirmation'|translate}}</label>
+              <div class="form-grid" *ngIf="form.value.requireConfirmation"><label
+                  class="form-field"><span>{{'workflows.fields.confirmTitle'|translate}}</span><input class="input" type="text"
+                    formControlName="confirmationTitle"></label><label
+                  class="form-field"><span>{{'workflows.fields.confirmMessage'|translate}}</span><input class="input" type="text"
+                    formControlName="confirmationMessage"></label><label
+                  class="form-field"><span>{{'workflows.fields.confirmButton'|translate}}</span><input class="input" type="text"
+                    formControlName="confirmationConfirmButtonText"></label><label
+                  class="form-field"><span>{{'workflows.fields.cancelButton'|translate}}</span><input class="input" type="text"
+                    formControlName="confirmationCancelButtonText"></label></div>
+            </section>
+            <section class="workflow-section">
+              <div class="section-action"><app-section-header [title]="'workflows.sections.questions'|translate"
+                  [lead]="'workflows.sections.questionsLead'|translate" [compact]="true"></app-section-header><button
+                  type="button" class="btn btn-secondary btn-sm" (click)="addQuestion()"
+                  [disabled]="questions.length>=10">{{'workflows.actions.addQuestion'|translate}}</button></div>
+              <div formArrayName="questions">
+                <article class="builder" *ngFor="let q of questions.controls;let i=index" [formGroupName]="i">
+                  <header><strong>{{'workflows.questionNumber'|translate:{number:i+1} }}</strong>
+                    <div><button type="button" class="btn btn-ghost btn-sm"
+                        (click)="move(questions,i,-1)">↑</button><button type="button" class="btn btn-ghost btn-sm"
+                        (click)="move(questions,i,1)">↓</button><button type="button" class="btn btn-danger btn-sm"
+                        (click)="remove(questions,i)">{{'common.remove'|translate}}</button></div>
+                  </header>
+                  <div class="form-grid"><label
+                      class="form-field wide"><span>{{'workflows.fields.label'|translate}}</span><input class="input" type="text"
+                        formControlName="label"></label><label
+                      class="form-field"><span>{{'workflows.fields.questionType'|translate}}</span><select class="input"
+                        formControlName="type">
+                        <option *ngFor="let x of questionTypes" [value]="x">{{('workflows.questionTypes.'+x)|translate}}
+                        </option>
+                      </select></label><label class="checkbox"><input type="checkbox"
+                        formControlName="isRequired">{{'workflows.fields.required'|translate}}</label><label
+                      class="form-field wide"><span>{{'workflows.fields.helpText'|translate}}</span><input class="input" type="text"
+                        formControlName="helpText"></label><label
+                      class="form-field" *ngIf="q.value.type==='ShortText'||q.value.type==='LongText'"><span>{{'workflows.fields.minLength'|translate}}</span><input class="input" type="number"
+                        formControlName="minLength"></label><label
+                      class="form-field" *ngIf="q.value.type==='ShortText'||q.value.type==='LongText'"><span>{{'workflows.fields.maxLength'|translate}}</span><input class="input" type="number"
+                        formControlName="maxLength"></label></div>
+                  <div class="choice-builder" *ngIf="q.value.type==='SingleChoice'" formArrayName="options">
+                    <div class="section-action"><div><strong>{{'workflows.fields.options'|translate}}</strong><p class="muted small">{{'workflows.fields.optionsHelp'|translate}}</p></div><button
+                      type="button" class="btn btn-secondary btn-sm" (click)="addOption(q)" [disabled]="questionOptions(q).length>=5">{{'workflows.actions.addOption'|translate}}</button></div>
+                    <div class="choice-option" *ngFor="let option of questionOptions(q).controls;let optionIndex=index" [formGroupName]="optionIndex">
+                      <label class="form-field"><span>{{'workflows.fields.optionLabel'|translate}}</span><input class="input" type="text" formControlName="label"></label>
+                      <label class="form-field"><span>{{'workflows.fields.optionValue'|translate}}</span><input class="input" type="text" formControlName="value"></label>
+                      <button type="button" class="btn btn-danger btn-sm" (click)="removeOption(q,optionIndex)" [disabled]="questionOptions(q).length<=2">{{'common.remove'|translate}}</button>
+                    </div>
+                  </div>
+                </article>
+              </div>
+            </section>
+            <section class="workflow-section"><app-section-header [title]="'workflows.sections.duplicates'|translate"
+                [lead]="'workflows.sections.duplicatesLead'|translate" [compact]="true"></app-section-header>
+              <div class="form-grid"><label
+                  class="form-field"><span>{{'workflows.fields.policy'|translate}}</span><select class="input"
+                    formControlName="duplicatePolicy">
+                    <option *ngFor="let x of policies" [value]="x">{{('workflows.policies.'+x)|translate}}</option>
+                  </select></label><label class="form-field"
+                  *ngIf="form.value.duplicatePolicy==='CooldownAfterRejected'"><span>{{'workflows.fields.cooldown'|translate}}</span><input class="input" type="text"
+                    type="number" formControlName="cooldownHours"></label><label
+                  class="form-field"><span>{{'workflows.fields.maxSubmissions'|translate}}</span><input class="input" type="number"
+                    formControlName="maxSubmissionsPerUser"></label></div>
+            </section>
+            <section class="workflow-section">
+              <div class="section-action"><app-section-header [title]="'workflows.sections.actions'|translate"
+                  [lead]="'workflows.sections.actionsLead'|translate" [compact]="true"></app-section-header><button
+                  type="button" class="btn btn-secondary btn-sm"
+                  (click)="addAction()">{{'workflows.actions.addAction'|translate}}</button></div>
+              <div formArrayName="approvalActions">
+                <article class="builder" *ngFor="let a of actions.controls;let i=index" [formGroupName]="i">
+                  <header><strong>{{'workflows.actionNumber'|translate:{number:i+1} }}</strong><button type="button"
+                      class="btn btn-danger btn-sm" (click)="remove(actions,i)">{{'common.remove'|translate}}</button>
+                  </header>
+                  <div class="form-grid"><label
+                      class="form-field"><span>{{'workflows.fields.actionType'|translate}}</span><select class="input"
+                        formControlName="actionType">
+                        <option *ngFor="let x of actionTypes" [value]="x">{{('workflows.actionTypes.'+x)|translate}}
+                        </option>
+                      </select></label><label class="form-field"
+                      *ngIf="a.value.actionType!=='SendDirectMessage'"><span>{{'workflows.fields.role'|translate}}</span><select class="input"
+                        formControlName="roleDiscordId">
+                        <option value="">{{'panels.fields.selectRole'|translate}}</option>
+                        <option *ngFor="let role of roles" [value]="role.discordRoleId" [disabled]="role.isManaged">
+                          {{role.name}}</option>
+                      </select></label><label class="form-field wide"
+                      *ngIf="a.value.actionType==='SendDirectMessage'"><span>{{'workflows.fields.message'|translate}}</span><textarea class="input"
+                        formControlName="messageText"></textarea></label></div>
+                </article>
+              </div>
+              <div class="form-grid messages"><label
+                  class="form-field"><span>{{'workflows.fields.successMessage'|translate}}</span><textarea class="input"
+                    formControlName="successMessage"></textarea></label><label
+                  class="form-field"><span>{{'workflows.fields.rejectionMessage'|translate}}</span><textarea class="input"
+                    formControlName="rejectionMessage"></textarea></label></div>
+            </section>
+          </div>
+        </div>
+        <aside class="welcome-workspace-rail">
+          <div class="welcome-workspace-rail-sticky">
+            <div class="welcome-workspace-rail-shell card preview">
+              <h2>{{form.value.name||('workflows.preview.untitled'|translate)}}</h2>
+              <p class="muted">{{form.value.description}}</p>
+              <h3>{{'workflows.sections.questions'|translate}}</h3>
+              <ol>
+                <li *ngFor="let q of questions.controls">{{label(q)}}</li>
+              </ol>
+              <h3>{{'workflows.sections.actions'|translate}}</h3>
+              <p class="muted">{{actions.length}} {{'workflows.preview.actions'|translate}}</p>
+            </div>
+          </div>
+        </aside>
+      </div>
+      <div class="form-actions"><button type="button" class="btn btn-secondary"
+          (click)="showList()">{{'common.cancel'|translate}}</button><button class="btn btn-primary"
+          [disabled]="saving">{{'common.save'|translate}}</button></div>
+    </form>
+
+    <section class="submission-layout" *ngIf="view==='submissions'">
+      <div class="card submission-list"><app-section-header [title]="'workflows.submissions.title'|translate"
+          [lead]="'workflows.submissions.lead'|translate" [compact]="true"></app-section-header><app-empty-state
+          *ngIf="!submissions.length" [nested]="true" icon="📭"
+          [title]="'workflows.submissions.empty'|translate"></app-empty-state><button type="button"
+          class="submission-row" *ngFor="let s of submissions" (click)="selectSubmission(s)"
+          [class.active]="selected?.id===s.id"><strong>{{s.userDisplayName||s.userDiscordId}}</strong><span>{{s.workflowName}}</span><app-status-badge
+            [label]="('workflows.statuses.'+s.status)|translate"
+            [tone]="s.status==='Pending'?'warning':s.status==='Approved'?'success':s.status==='Rejected'?'danger':'neutral'"></app-status-badge></button>
+      </div>
+      <aside class="card submission-detail" *ngIf="selected">
+        <h2>{{selected.userDisplayName||selected.userDiscordId}}</h2>
+        <p class="muted">{{selected.workflowName}} · {{selected.submittedAtUtc|date:'medium'}}</p>
+        <div class="answer" *ngFor="let answer of selected.answers"><strong>{{answer.label}}</strong>
+          <p>{{answerDisplay(selected,answer)}}</p>
+        </div>
+        <p class="field-error" *ngIf="selected.lastActionError">{{selected.lastActionError}}</p>
+        <footer *ngIf="selected.status==='Pending'"><button class="btn btn-primary"
+            (click)="review(true)">{{'workflows.actions.approve'|translate}}</button><button class="btn btn-danger"
+            (click)="review(false)">{{'workflows.actions.reject'|translate}}</button></footer>
+      </aside>
+    </section>
+  </div>
+</div>

@@ -18,5 +18,6 @@ public class GuildPanelButtonConfiguration : IEntityTypeConfiguration<GuildPanel
         builder.Property(x => x.Url).HasMaxLength(512);
         builder.Property(x => x.ResponseMessage).HasMaxLength(2000);
         builder.Property(x => x.RoleDiscordId).HasMaxLength(32);
+        builder.HasOne<GuildWorkflow>().WithMany().HasForeignKey(x => x.WorkflowId).OnDelete(DeleteBehavior.SetNull);
     }
 }

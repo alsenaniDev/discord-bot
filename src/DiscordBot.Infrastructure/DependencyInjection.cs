@@ -32,6 +32,7 @@ public static class DependencyInjection
         services.AddScoped<IGuildService, GuildService>();
         services.AddScoped<IGuildResourceService, GuildResourceService>();
         services.AddScoped<ICommandPanelService, CommandPanelService>();
+        services.AddScoped<IWorkflowService, WorkflowService>();
         services.AddScoped<ITicketService, TicketService>();
         services.AddScoped<ITicketTimelineService, TicketTimelineService>();
         services.AddScoped<ITicketReadService, TicketReadService>();

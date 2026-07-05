@@ -11,6 +11,7 @@ public class GuildPanelButton : BaseEntity
     public PanelButtonStyle Style { get; set; } = PanelButtonStyle.Secondary;
     public PanelButtonActionType ActionType { get; set; } = PanelButtonActionType.CreateTicket;
     public Guid? TicketTypeId { get; set; }
+    public Guid? WorkflowId { get; set; }
     public string? Url { get; set; }
     public string? ResponseMessage { get; set; }
     public string? RoleDiscordId { get; set; }

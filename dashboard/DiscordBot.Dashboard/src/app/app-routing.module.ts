@@ -44,6 +44,11 @@ const routes: Routes = [
         data: { guildAccess: 'owner' }
       },
       {
+        path: 'guilds/:id/workflows',
+        loadChildren: () => import('./features/workflows/workflows.module').then(m => m.WorkflowsModule),
+        canActivate: [GuildAccessGuard], data: { guildAccess: 'owner' }
+      },
+      {
         path: 'guilds/:id/tickets/:ticketId/transcript',
         loadChildren: () =>
           import('./features/tickets/ticket-transcript.module').then(m => m.TicketTranscriptModule),

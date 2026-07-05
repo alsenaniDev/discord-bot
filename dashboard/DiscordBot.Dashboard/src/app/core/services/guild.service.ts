@@ -18,6 +18,7 @@ import { LogEntry, LogFilters } from '../models/log.models';
 import { ReactionRolePanel } from '../models/reaction-role.models';
 import { GuildSubscription, SubscriptionPlan } from '../models/subscription.models';
 import { GuildPanel, SaveGuildPanel } from '../models/command-panel.models';
+import { GuildWorkflow, SaveWorkflow, WorkflowSubmission, WorkflowSubmissionStatus } from '../models/workflow.models';
 import {
   PlanUpgradeRequest,
   CreatePlanUpgradeRequest,
@@ -100,6 +101,14 @@ export class GuildService {
   publishPanel(guildId: string, panelId: string): Observable<unknown> {
     return this.http.post(`${this.baseUrl}/api/guilds/${guildId}/panels/${panelId}/publish`, {});
   }
+
+  getWorkflows(guildId: string): Observable<GuildWorkflow[]> { return this.http.get<GuildWorkflow[]>(`${this.baseUrl}/api/guilds/${guildId}/workflows`); }
+  createWorkflow(guildId: string, value: SaveWorkflow): Observable<GuildWorkflow> { return this.http.post<GuildWorkflow>(`${this.baseUrl}/api/guilds/${guildId}/workflows`, value); }
+  updateWorkflow(guildId: string, workflowId: string, value: SaveWorkflow): Observable<GuildWorkflow> { return this.http.put<GuildWorkflow>(`${this.baseUrl}/api/guilds/${guildId}/workflows/${workflowId}`, value); }
+  deleteWorkflow(guildId: string, workflowId: string): Observable<void> { return this.http.delete<void>(`${this.baseUrl}/api/guilds/${guildId}/workflows/${workflowId}`); }
+  getWorkflowSubmissions(guildId: string, status?: WorkflowSubmissionStatus, workflowId?: string): Observable<WorkflowSubmission[]> { const params: any = {}; if (status) params.status = status; if (workflowId) params.workflowId = workflowId; return this.http.get<WorkflowSubmission[]>(`${this.baseUrl}/api/guilds/${guildId}/workflow-submissions`, { params }); }
+  approveWorkflowSubmission(guildId: string, id: string, reviewNote?: string): Observable<WorkflowSubmission> { return this.http.post<WorkflowSubmission>(`${this.baseUrl}/api/guilds/${guildId}/workflow-submissions/${id}/approve`, { reviewNote }); }
+  rejectWorkflowSubmission(guildId: string, id: string, reviewNote?: string): Observable<WorkflowSubmission> { return this.http.post<WorkflowSubmission>(`${this.baseUrl}/api/guilds/${guildId}/workflow-submissions/${id}/reject`, { reviewNote }); }
 
   getTicketSummaries(
     guildId: string,

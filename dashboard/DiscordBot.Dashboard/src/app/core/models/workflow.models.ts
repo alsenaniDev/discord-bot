@@ -1,0 +1,12 @@
+export type WorkflowType = 'Application' | 'Survey' | 'Report' | 'Custom';
+export type WorkflowQuestionType = 'ShortText' | 'LongText' | 'Number' | 'YesNo' | 'SingleChoice';
+export type WorkflowDuplicatePolicy = 'AllowMultiple' | 'BlockWhilePending' | 'BlockAfterApproved' | 'CooldownAfterRejected' | 'OneSubmissionEver';
+export type WorkflowApprovalActionType = 'AddRole' | 'RemoveRole' | 'SendDirectMessage';
+export type WorkflowSubmissionStatus = 'Pending' | 'Approved' | 'Rejected' | 'Cancelled';
+export interface WorkflowQuestionOption { label: string; value: string; sortOrder: number; }
+export interface WorkflowQuestion { id?: string; sortOrder: number; label: string; helpText?: string|null; type: WorkflowQuestionType; isRequired: boolean; minLength?: number|null; maxLength?: number|null; placeholder?: string|null; options: WorkflowQuestionOption[]; }
+export interface WorkflowApprovalAction { id?: string; sortOrder: number; actionType: WorkflowApprovalActionType; roleDiscordId?: string|null; messageText?: string|null; isEnabled: boolean; }
+export interface GuildWorkflow { id: string; guildId: string; name: string; description?: string|null; type: WorkflowType; startMode: 'DirectMessage'; isEnabled: boolean; requireConfirmation: boolean; confirmationTitle?: string|null; confirmationMessage?: string|null; confirmationConfirmButtonText?: string|null; confirmationCancelButtonText?: string|null; duplicatePolicy: WorkflowDuplicatePolicy; cooldownHours?: number|null; maxSubmissionsPerUser?: number|null; successMessage?: string|null; rejectionMessage?: string|null; pendingSubmissionsCount: number; createdAtUtc: string; updatedAtUtc: string; questions: WorkflowQuestion[]; approvalActions: WorkflowApprovalAction[]; }
+export type SaveWorkflow = Omit<GuildWorkflow, 'id'|'guildId'|'pendingSubmissionsCount'|'createdAtUtc'|'updatedAtUtc'>;
+export interface WorkflowAnswer { questionId: string; label: string; value: string; displayValue?: string|null; questionType?: WorkflowQuestionType|null; }
+export interface WorkflowSubmission { id: string; workflowId: string; workflowName: string; guildId: string; userDiscordId: string; userDisplayName?: string|null; status: WorkflowSubmissionStatus; answers: WorkflowAnswer[]; submittedAtUtc: string; reviewedByDiscordUserId?: string|null; reviewedByDisplayName?: string|null; reviewedAtUtc?: string|null; reviewNote?: string|null; lastActionError?: string|null; }
