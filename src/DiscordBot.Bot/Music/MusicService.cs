@@ -47,7 +47,7 @@ public sealed class MusicService(
         MusicTrack? track;
         try { track = (await search.SearchAsync(query.Trim(), CancellationToken.None)).FirstOrDefault(); }
         catch (AudioProviderUnavailableException) { await ErrorAsync(interaction, "The music service is unavailable right now. Please try again later."); return; }
-        if (track is null) { await ErrorAsync(interaction, "No playable track was found for that query."); return; }
+        if (track is null) { await ErrorAsync(interaction, "I could not play this YouTube video. Try another YouTube link, a full youtube.com/watch URL, or search by song name."); return; }
         if (track.Duration is { } duration && duration.TotalSeconds > settings.MaxTrackDurationSeconds) { await ErrorAsync(interaction, $"That track is longer than the {settings.MaxTrackDurationSeconds / 60}-minute server limit."); return; }
         track.RequestedByUserId = member.Id; track.RequestedByUsername = member.DisplayName;
 
