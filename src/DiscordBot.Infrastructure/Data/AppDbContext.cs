@@ -12,6 +12,7 @@ public class AppDbContext : DbContext
     public DbSet<User> Users => Set<User>();
     public DbSet<Guild> Guilds => Set<Guild>();
     public DbSet<GuildSettings> GuildSettings => Set<GuildSettings>();
+    public DbSet<GuildMusicSettings> GuildMusicSettings => Set<GuildMusicSettings>();
     public DbSet<LogEntry> LogEntries => Set<LogEntry>();
     public DbSet<Ticket> Tickets => Set<Ticket>();
     public DbSet<DiscordChannel> DiscordChannels => Set<DiscordChannel>();

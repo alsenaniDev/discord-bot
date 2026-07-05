@@ -33,6 +33,7 @@ public static class DependencyInjection
         services.AddScoped<IGuildResourceService, GuildResourceService>();
         services.AddScoped<ICommandPanelService, CommandPanelService>();
         services.AddScoped<IWorkflowService, WorkflowService>();
+        services.AddScoped<IMusicSettingsService, MusicSettingsService>();
         services.AddScoped<ITicketService, TicketService>();
         services.AddScoped<ITicketTimelineService, TicketTimelineService>();
         services.AddScoped<ITicketReadService, TicketReadService>();

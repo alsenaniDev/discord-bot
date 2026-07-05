@@ -32,6 +32,7 @@ public class Guild : BaseEntity
     public DateTimeOffset? ResourcesSyncedAt { get; set; }
 
     public GuildSettings? Settings { get; set; }
+    public GuildMusicSettings? MusicSettings { get; set; }
     public ICollection<LogEntry> Logs { get; set; } = [];
     public ICollection<Ticket> Tickets { get; set; } = [];
     public ICollection<DiscordChannel> Channels { get; set; } = [];
