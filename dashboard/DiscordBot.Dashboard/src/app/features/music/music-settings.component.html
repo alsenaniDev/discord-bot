@@ -1,0 +1,39 @@
+<div class="page-content page-workspace">
+  <app-loading-state *ngIf="loading" [message]="'music.loading'|translate"></app-loading-state>
+  <app-error-state *ngIf="!loading&&error" [title]="'music.messages.loadError'|translate" [description]="error"
+    [retryLabel]="'common.tryAgain'|translate" (retry)="load()"></app-error-state>
+  <div class="settings-stack settings-stack--welcome" *ngIf="!loading&&!error">
+    <header class="settings-atf settings-atf--welcome"><app-page-workspace-hero class="settings-workspace-hero"
+        icon="modules" [ariaLabel]="'music.hero.aria'|translate" [title]="'music.title'|translate"
+        [description]="'music.subtitle'|translate" [stats]="stats" [footerMessage]="'music.hero.footer'|translate"
+        [primaryAction]="action" (primaryActionClick)="save()"></app-page-workspace-hero></header>
+    <app-page-notice>{{'music.notice'|translate}}</app-page-notice>
+    <form class="card music-card" [formGroup]="form" (ngSubmit)="save()">
+      <app-section-header [title]="'music.sections.access'|translate" [lead]="'music.sections.accessLead'|translate"
+        [compact]="true"></app-section-header>
+      <label class="checkbox"><input type="checkbox"
+          formControlName="isEnabled">{{'music.fields.enabled'|translate}}</label>
+      <div class="music-grid">
+        <label class="form-field wide"><span>{{'music.fields.djRole'|translate}}</span><select class="input"
+            formControlName="djRoleDiscordId">
+            <option value="">{{'music.fields.noDjRole'|translate}}</option>
+            <option *ngFor="let role of roles" [value]="role.discordRoleId">{{role.name}}</option>
+          </select><span class="hint">{{'music.fields.djRoleHint'|translate}}</span></label>
+        <label class="checkbox wide"><input type="checkbox"
+            formControlName="allowEveryoneToQueue">{{'music.fields.allowEveryone'|translate}}</label>
+      </div>
+      <app-section-header [title]="'music.sections.limits'|translate" [lead]="'music.sections.limitsLead'|translate"
+        [compact]="true"></app-section-header>
+      <div class="music-grid">
+        <label class="form-field"><span>{{'music.fields.maxQueue'|translate}}</span><input class="input" type="number"
+            min="1" max="200" formControlName="maxQueueSize"></label>
+        <label class="form-field"><span>{{'music.fields.maxDuration'|translate}}</span><input class="input"
+            type="number" min="60" max="7200" formControlName="maxTrackDurationSeconds"></label>
+        <label class="form-field"><span>{{'music.fields.volume'|translate}}</span><input class="input" type="number"
+            min="1" max="100" formControlName="defaultVolume"></label>
+      </div>
+      <div class="form-actions"><button class="btn btn-primary" [disabled]="saving||form.invalid"><span
+            class="spinner inline" *ngIf="saving"></span>{{'common.save'|translate}}</button></div>
+    </form>
+  </div>
+</div>

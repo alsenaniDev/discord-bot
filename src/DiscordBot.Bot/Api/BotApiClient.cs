@@ -95,6 +95,21 @@ public class BotApiClient
         }
     }
 
+    public async Task<GuildMusicSettingsResponse?> GetMusicSettingsAsync(string discordGuildId, CancellationToken cancellationToken = default)
+    {
+        try
+        {
+            var response = await _httpClient.GetAsync($"api/bot/guilds/{discordGuildId}/music-settings", cancellationToken);
+            if (!response.IsSuccessStatusCode) return null;
+            return await response.Content.ReadFromJsonAsync<GuildMusicSettingsResponse>(JsonOptions, cancellationToken);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error fetching music settings for guild {GuildId}", discordGuildId);
+            return null;
+        }
+    }
+
     public async Task<bool> SetupTicketsAsync(
         string discordGuildId,
         string ticketCategoryId,

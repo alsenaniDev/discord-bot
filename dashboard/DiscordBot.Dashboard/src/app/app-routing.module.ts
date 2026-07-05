@@ -49,6 +49,11 @@ const routes: Routes = [
         canActivate: [GuildAccessGuard], data: { guildAccess: 'owner' }
       },
       {
+        path: 'guilds/:id/music',
+        loadChildren: () => import('./features/music/music.module').then(m => m.MusicModule),
+        canActivate: [GuildAccessGuard], data: { guildAccess: 'owner' }
+      },
+      {
         path: 'guilds/:id/tickets/:ticketId/transcript',
         loadChildren: () =>
           import('./features/tickets/ticket-transcript.module').then(m => m.TicketTranscriptModule),

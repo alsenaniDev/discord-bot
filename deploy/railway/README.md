@@ -9,9 +9,10 @@ Deploy the Discord Bot Platform to [Railway](https://railway.app).
 1. Create Railway project → add **PostgreSQL**
 2. Add **API** service → Dockerfile `deploy/railway/Dockerfile.api` → generate domain
 3. Add **Bot** service → Dockerfile `deploy/railway/Dockerfile.bot` → disable public networking
-4. Set variables from `railway.env.example`
-5. Run migrations: `railway run --service api ./deploy/railway/migrate.sh`
-6. Deploy dashboard on Railway (`Dockerfile.dashboard`) or Vercel (`dashboard/DiscordBot.Dashboard/vercel.json`)
+4. Add private **Lavalink** service → Dockerfile `deploy/railway/Dockerfile.lavalink` → disable public networking
+5. Set variables from `railway.env.example`
+6. Run migrations: `railway run --service discord-bot-api ./deploy/railway/migrate.sh`
+7. Deploy the dashboard on Vercel (`dashboard/DiscordBot.Dashboard/vercel.json`)
 
 ## Health check
 
@@ -25,4 +26,8 @@ GET /api/health
 |------------|-------------------|
 | `Dockerfile.api` | Yes |
 | `Dockerfile.bot` | No (worker) |
+| `Dockerfile.lavalink` | No (private service) |
 | `Dockerfile.dashboard` | Yes (optional) |
+
+For the Music production rollout and troubleshooting checklist, see
+[`docs/music-production-deployment.md`](../../docs/music-production-deployment.md).

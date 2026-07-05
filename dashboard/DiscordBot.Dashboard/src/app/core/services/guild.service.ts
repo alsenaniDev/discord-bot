@@ -19,6 +19,7 @@ import { ReactionRolePanel } from '../models/reaction-role.models';
 import { GuildSubscription, SubscriptionPlan } from '../models/subscription.models';
 import { GuildPanel, SaveGuildPanel } from '../models/command-panel.models';
 import { GuildWorkflow, SaveWorkflow, WorkflowSubmission, WorkflowSubmissionStatus } from '../models/workflow.models';
+import { GuildMusicSettings, UpdateGuildMusicSettings } from '../models/music.models';
 import {
   PlanUpgradeRequest,
   CreatePlanUpgradeRequest,
@@ -109,6 +110,9 @@ export class GuildService {
   getWorkflowSubmissions(guildId: string, status?: WorkflowSubmissionStatus, workflowId?: string): Observable<WorkflowSubmission[]> { const params: any = {}; if (status) params.status = status; if (workflowId) params.workflowId = workflowId; return this.http.get<WorkflowSubmission[]>(`${this.baseUrl}/api/guilds/${guildId}/workflow-submissions`, { params }); }
   approveWorkflowSubmission(guildId: string, id: string, reviewNote?: string): Observable<WorkflowSubmission> { return this.http.post<WorkflowSubmission>(`${this.baseUrl}/api/guilds/${guildId}/workflow-submissions/${id}/approve`, { reviewNote }); }
   rejectWorkflowSubmission(guildId: string, id: string, reviewNote?: string): Observable<WorkflowSubmission> { return this.http.post<WorkflowSubmission>(`${this.baseUrl}/api/guilds/${guildId}/workflow-submissions/${id}/reject`, { reviewNote }); }
+
+  getMusicSettings(guildId: string): Observable<GuildMusicSettings> { return this.http.get<GuildMusicSettings>(`${this.baseUrl}/api/dashboard/guilds/${guildId}/music-settings`); }
+  updateMusicSettings(guildId: string, value: UpdateGuildMusicSettings): Observable<GuildMusicSettings> { return this.http.put<GuildMusicSettings>(`${this.baseUrl}/api/dashboard/guilds/${guildId}/music-settings`, value); }
 
   getTicketSummaries(
     guildId: string,

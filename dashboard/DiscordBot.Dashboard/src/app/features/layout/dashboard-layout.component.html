@@ -68,8 +68,13 @@
           <app-ui-icon name="tickets" size="sm"></app-ui-icon>
           {{ 'nav.panels' | translate }}
         </a>
-        <a *ngIf="canManageGuild" [routerLink]="['/guilds', selectedGuild!.id, 'workflows']" routerLinkActive="active" (click)="closeSidebar()">
+        <a *ngIf="canManageGuild" [routerLink]="['/guilds', selectedGuild!.id, 'workflows']" routerLinkActive="active"
+          (click)="closeSidebar()">
           <app-ui-icon name="modules" size="sm"></app-ui-icon>{{ 'nav.workflows' | translate }}
+        </a>
+        <a *ngIf="canManageGuild" [routerLink]="['/guilds', selectedGuild!.id, 'music']" routerLinkActive="active"
+          (click)="closeSidebar()">
+          <app-ui-icon name="modules" size="sm"></app-ui-icon>{{ 'nav.music' | translate }}
         </a>
         <a *ngIf="canAccessModeration" [routerLink]="['/guilds', selectedGuild!.id, 'tickets']"
           routerLinkActive="active" (click)="closeSidebar()">

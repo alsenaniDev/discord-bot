@@ -45,6 +45,17 @@ public sealed class GuildModuleStatusResponse
     public bool AllowedByPlan { get; set; }
 }
 
+public sealed class GuildMusicSettingsResponse
+{
+    public Guid GuildId { get; set; }
+    public bool IsEnabled { get; set; }
+    public string? DjRoleDiscordId { get; set; }
+    public int MaxQueueSize { get; set; } = 50;
+    public int MaxTrackDurationSeconds { get; set; } = 600;
+    public int DefaultVolume { get; set; } = 50;
+    public bool AllowEveryoneToQueue { get; set; } = true;
+}
+
 public sealed class CreateLogApiRequest
 {
     public required string DiscordGuildId { get; set; }

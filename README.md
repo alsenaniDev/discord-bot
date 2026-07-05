@@ -8,7 +8,7 @@ A Discord bot SaaS platform: .NET API, PostgreSQL, Discord.Net bot worker, and A
 |------|---------|
 | .NET SDK | 9.x |
 | Node.js | 18+ |
-| Docker | For PostgreSQL locally |
+| Docker | For PostgreSQL and Lavalink locally |
 | Discord Application | [Developer Portal](https://discord.com/developers/applications) |
 
 ## Quick start (local)
@@ -46,7 +46,7 @@ http://localhost:5217/api/auth/discord/callback
 
 Enable **Server Members Intent** for welcome messages.
 
-### 2. Start PostgreSQL
+### 2. Start PostgreSQL and Lavalink
 
 ```bash
 docker compose up -d
@@ -64,6 +64,30 @@ cd dashboard/DiscordBot.Dashboard && npm install && npm start
 ```
 
 Open http://localhost:4200 → **Login with Discord**.
+
+## Music and Lavalink (MVP)
+
+The Music module uses one Lavalink node and keeps one in-memory music session per Discord server. Start the local node with:
+
+```bash
+docker compose up -d lavalink
+docker compose logs -f lavalink
+```
+
+The committed local defaults are `localhost:2333` with password `youshallnotpass`. Override them for deployed environments:
+
+| Bot setting / environment variable | Purpose |
+|---|---|
+| `Lavalink__Host` | Lavalink hostname |
+| `Lavalink__Port` | Lavalink port (default `2333`) |
+| `Lavalink__Password` | Lavalink password; must match the server |
+| `Lavalink__Secure` | Use HTTPS/WSS for the Lavalink node |
+| `Lavalink__SearchPrefix` | Generic Lavalink search prefix (default `ytsearch`) |
+| `Lavalink__IdleTimeoutSeconds` | Delay before leaving after the queue ends |
+
+For Docker Compose, set `LAVALINK_PASSWORD`; the bot must receive the same value through `Lavalink__Password`. The local Lavalink configuration is in `deploy/lavalink/application.yml` and enables direct HTTP audio plus the official generic search-source plugin. No downloader or scraping process runs in the bot.
+
+After applying migrations, enable Music on the dashboard’s Music page. Discord commands are `/music play`, `skip`, `stop`, `pause`, `resume`, `queue`, and `nowplaying`.
 
 ## Configuration: Development vs Production
 
@@ -88,7 +112,7 @@ appsettings.json
 
 **API:** `ConnectionStrings__DefaultConnection`, `Discord__ClientId`, `Discord__ClientSecret`, `Discord__BotToken`, `Discord__RedirectUri`, `Discord__DashboardUrl`, `Jwt__Secret`, `Jwt__Issuer`, `Jwt__Audience`, `Bot__ApiKey`, `Admin__DiscordUserId`
 
-**Bot:** `Discord__Token`, `Api__BaseUrl`, `Api__ApiKey`, `Platform__DashboardUrl`
+**Bot:** `Discord__Token`, `Api__BaseUrl`, `Api__ApiKey`, `Platform__DashboardUrl`, `Lavalink__Host`, `Lavalink__Port`, `Lavalink__Password`, `Lavalink__Secure`
 
 **Dashboard (Vercel):** Edit `environment.production.ts` → set `apiUrl` to your API URL before `npm run build`.
 
@@ -120,7 +144,7 @@ discord bots/
 │   ├── DiscordBot.Infrastructure/ EF Core, services
 │   └── DiscordBot.Bot/           Discord.Net worker
 ├── dashboard/DiscordBot.Dashboard/  Angular UI
-├── docker-compose.yml            PostgreSQL only
+├── docker-compose.yml            PostgreSQL + Lavalink
 ├── docs/                         Step-by-step guides
 ├── .env.example                  Environment variable reference
 └── DiscordBot.sln
@@ -192,3 +216,4 @@ Create `appsettings.Development.local.json` from the example and fill in Discord
 | API | http://localhost:5217 |
 | Dashboard | http://localhost:4200 |
 | PostgreSQL | localhost:5432 |
+| Lavalink | http://localhost:2333 |

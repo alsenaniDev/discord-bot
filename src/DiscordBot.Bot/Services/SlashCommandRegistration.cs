@@ -68,6 +68,17 @@ public static class SlashCommandRegistration
             .AddOption("reason", ApplicationCommandOptionType.String, "Reason for the kick", isRequired: true)
             .Build(),
         new SlashCommandBuilder()
+            .WithName("music")
+            .WithDescription("Play and control music")
+            .AddOption(new SlashCommandOptionBuilder().WithName("play").WithDescription("Play or queue a track").WithType(ApplicationCommandOptionType.SubCommand).AddOption("query", ApplicationCommandOptionType.String, "Audio URL or search query", isRequired: true))
+            .AddOption("skip", ApplicationCommandOptionType.SubCommand, "Skip the current track")
+            .AddOption("stop", ApplicationCommandOptionType.SubCommand, "Stop playback and clear the queue")
+            .AddOption("pause", ApplicationCommandOptionType.SubCommand, "Pause playback")
+            .AddOption("resume", ApplicationCommandOptionType.SubCommand, "Resume playback")
+            .AddOption("queue", ApplicationCommandOptionType.SubCommand, "Show the music queue")
+            .AddOption("nowplaying", ApplicationCommandOptionType.SubCommand, "Show the current track")
+            .Build(),
+        new SlashCommandBuilder()
             .WithName("reaction-role")
             .WithDescription("Create button-based role panels")
             .AddOption(new SlashCommandOptionBuilder()

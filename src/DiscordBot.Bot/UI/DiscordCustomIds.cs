@@ -14,6 +14,12 @@ public static class DiscordCustomIds
     public const string ReactionRoleTogglePrefix = "reaction-role:toggle:";
     public const string PanelPrefix = "panel:";
     public const string WorkflowPrefix = "workflow:";
+    public const string MusicPrefix = "music:";
+    public const string MusicPause = "music:pause";
+    public const string MusicResume = "music:resume";
+    public const string MusicSkip = "music:skip";
+    public const string MusicStop = "music:stop";
+    public const string MusicQueue = "music:queue";
 
     public const string TicketSelectClose = "close";
     public const string TicketSelectHelp = "help";
