@@ -55,6 +55,7 @@ builder.Services.AddSingleton<PanelInteractionHandlers>();
 builder.Services.AddSingleton<WorkflowConversationService>();
 builder.Services.AddSingleton<WorkflowActionSyncService>();
 builder.Services.AddSingleton<GamesHubInteractionService>();
+builder.Services.AddSingleton<GamesContextCache>();
 builder.Services.AddSingleton<DiscordActivityLaunchService>();
 builder.Services.AddSingleton<GameResultPublishService>();
 builder.Services.AddSingleton<MusicSessionManager>();
