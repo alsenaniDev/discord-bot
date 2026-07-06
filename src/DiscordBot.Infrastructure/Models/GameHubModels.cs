@@ -1,3 +1,5 @@
+using DiscordBot.Domain.Enums;
+
 namespace DiscordBot.Infrastructure.Models;
 
 public class PlatformGameDefinitionDto
@@ -9,6 +11,7 @@ public class PlatformGameDefinitionDto
     public string? IconUrl { get; set; }
     public string ActivityRoute { get; set; } = string.Empty;
     public string RequiredPlan { get; set; } = "free";
+    public GamePlayMode PlayMode { get; set; } = GamePlayMode.Solo;
     public bool IsEnabledGlobally { get; set; }
     public int DefaultPointsPerWin { get; set; }
     public int DefaultCooldownSeconds { get; set; }
@@ -28,6 +31,7 @@ public class SavePlatformGameDefinitionRequest
     public string? IconUrl { get; set; }
     public string ActivityRoute { get; set; } = string.Empty;
     public string RequiredPlan { get; set; } = "free";
+    public GamePlayMode PlayMode { get; set; } = GamePlayMode.Solo;
     public bool IsEnabledGlobally { get; set; } = true;
     public int DefaultPointsPerWin { get; set; } = 10;
     public int DefaultCooldownSeconds { get; set; } = 30;
@@ -134,6 +138,7 @@ public class AvailableGameDto
     public string? Description { get; set; }
     public string? IconUrl { get; set; }
     public string ActivityRoute { get; set; } = string.Empty;
+    public GamePlayMode PlayMode { get; set; } = GamePlayMode.Solo;
     public bool SupportsScores { get; set; }
     public bool SupportsLeaderboard { get; set; }
     [System.Text.Json.Serialization.JsonIgnore]

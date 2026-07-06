@@ -35,11 +35,29 @@ public sealed class DiscordActivityLaunchService(DiscordSocketClient discordClie
 
     public async Task<ActivityLaunchAttempt> TryLaunchAsync(SocketInteraction interaction, CancellationToken ct = default)
     {
-        if (!_availabilityLoaded || !_isEmbedded)
+        // Ready normally primes this value. If /games arrives before that check has
+        // completed, wait for the result instead of incorrectly showing fallback on
+        // the first invocation.
+        if (!_availabilityLoaded)
+        {
+            logger.LogInformation(
+                "Discord Activity availability has not loaded yet; checking application {ApplicationId} before launch.",
+                discordClient.CurrentUser?.Id);
+            await RefreshAvailabilityAsync();
+        }
+
+        if (!_availabilityLoaded)
         {
             logger.LogWarning(
-                "Discord Activity launch failed before initial response. Application EMBEDDED flag is unavailable or disabled; showing fallback is safe.");
-            _ = RefreshAvailabilityAsync();
+                "Discord Activity launch failed before initial response. Application availability could not be loaded; showing fallback is safe.");
+            return ActivityLaunchAttempt.SafeFallback;
+        }
+
+        if (!_isEmbedded)
+        {
+            logger.LogWarning(
+                "Discord Activity launch failed before initial response. Application {ApplicationId} does not have the EMBEDDED flag; showing fallback is safe. Enable Activities for this exact application in Discord Developer Portal.",
+                discordClient.CurrentUser?.Id);
             return ActivityLaunchAttempt.SafeFallback;
         }
 

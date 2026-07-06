@@ -1,6 +1,6 @@
 export interface PlatformGameDefinition {
   id: string; key: string; name: string; description?: string | null; iconUrl?: string | null;
-  activityRoute: string; requiredPlan: string; isEnabledGlobally: boolean;
+  activityRoute: string; requiredPlan: string; playMode: 'Solo' | 'Multiplayer'; isEnabledGlobally: boolean;
   defaultPointsPerWin: number; defaultCooldownSeconds: number; defaultMaxPlaysPerDay: number;
   supportsScores: boolean; supportsLeaderboard: boolean; supportsResultPublishing: boolean;
 }
@@ -14,3 +14,5 @@ export interface GuildGame extends PlatformGameDefinition {
 }
 export interface UpdateGuildGameSetting { isEnabledForGuild: boolean; pointsEnabled: boolean; pointsPerWin: number; cooldownSeconds: number; maxPlaysPerDay: number; publishResultAfterGame: boolean; publishLeaderboardAfterGame: boolean; publishOnlyWins: boolean; }
 export interface GameLeaderboardEntry { rank: number; userDiscordId: string; username: string; totalPoints: number; gamesPlayed: number; wins: number; losses: number; currentStreak: number; bestStreak: number; }
+export interface RouletteGuildSettings { guildId: string; minPlayers: number; maxPlayers: number; winnerCoins: number; secondPlaceCoins: number; participationCoins: number; joinWindowSeconds: number; turnSeconds: number; announceRoomCreated: boolean; announceWinner: boolean; }
+export type UpdateRouletteGuildSettings = Omit<RouletteGuildSettings, 'guildId'>;

@@ -63,12 +63,16 @@ public sealed class BotGamesContextApiResponse
     public string? GamesChannelDiscordId { get; set; }
     public List<AvailableGameApiResponse> Games { get; set; } = [];
 }
-public sealed class AvailableGameApiResponse { public Guid Id { get; set; } public string Key { get; set; } = string.Empty; public string Name { get; set; } = string.Empty; public string? Description { get; set; } public string ActivityRoute { get; set; } = string.Empty; }
+public sealed class AvailableGameApiResponse { public Guid Id { get; set; } public string Key { get; set; } = string.Empty; public string Name { get; set; } = string.Empty; public string? Description { get; set; } public string ActivityRoute { get; set; } = string.Empty; public string PlayMode { get; set; } = "Solo"; }
 public sealed class StartGameSessionApiRequest { public string GuildDiscordId { get; set; } = string.Empty; public string ChannelDiscordId { get; set; } = string.Empty; public string UserDiscordId { get; set; } = string.Empty; public string? Username { get; set; } public string GameKey { get; set; } = string.Empty; }
 public sealed class StartGameSessionApiResponse { public Guid SessionId { get; set; } public string GameKey { get; set; } = string.Empty; public string GameName { get; set; } = string.Empty; public string ActivityRoute { get; set; } = string.Empty; public DateTimeOffset ExpiresAt { get; set; } }
 public sealed class GameLeaderboardEntryApiResponse { public int Rank { get; set; } public string UserDiscordId { get; set; } = string.Empty; public string Username { get; set; } = string.Empty; public int TotalPoints { get; set; } public int GamesPlayed { get; set; } public int Wins { get; set; } public int Losses { get; set; } public int CurrentStreak { get; set; } public int BestStreak { get; set; } }
 public sealed class PendingGamePublishActionApiResponse { public Guid Id { get; set; } public Guid GameSessionId { get; set; } public string DiscordGuildId { get; set; } = string.Empty; public string ChannelDiscordId { get; set; } = string.Empty; public string Type { get; set; } = string.Empty; public string Content { get; set; } = string.Empty; }
 public sealed class AckGamePublishActionApiRequest { public bool Success { get; set; } public string? ErrorMessage { get; set; } }
+public sealed class PrepareRouletteJoinApiRequest { public string GuildDiscordId { get; set; } = string.Empty; public string ChannelDiscordId { get; set; } = string.Empty; public string UserDiscordId { get; set; } = string.Empty; public string Username { get; set; } = string.Empty; }
+public sealed class PrepareRouletteJoinApiResponse { public Guid JoinIntentId { get; set; } public DateTimeOffset ExpiresAt { get; set; } }
+public sealed class PendingRoulettePublishActionApiResponse { public Guid Id { get; set; } public Guid RoomId { get; set; } public string DiscordGuildId { get; set; } = string.Empty; public string ChannelDiscordId { get; set; } = string.Empty; public string Type { get; set; } = string.Empty; public string HostUsername { get; set; } = string.Empty; public string WinnerUsername { get; set; } = string.Empty; public int MinPlayers { get; set; } public int MaxPlayers { get; set; } public int PlayersCount { get; set; } public int JoinWindowSeconds { get; set; } public int WinnerCoins { get; set; } public int CurrentRound { get; set; } }
+public sealed class AckRoulettePublishActionApiRequest { public bool Success { get; set; } public string? MessageDiscordId { get; set; } public string? ErrorMessage { get; set; } }
 
 public sealed class CreateLogApiRequest
 {

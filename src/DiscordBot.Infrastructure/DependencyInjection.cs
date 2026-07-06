@@ -36,6 +36,7 @@ public static class DependencyInjection
         services.AddScoped<IWorkflowService, WorkflowService>();
         services.AddScoped<IMusicSettingsService, MusicSettingsService>();
         services.AddScoped<IGameHubService, GameHubService>();
+        services.AddScoped<IRouletteService, RouletteService>();
         services.AddScoped<ITicketService, TicketService>();
         services.AddScoped<ITicketTimelineService, TicketTimelineService>();
         services.AddScoped<ITicketReadService, TicketReadService>();

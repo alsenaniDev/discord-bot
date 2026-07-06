@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace DiscordBot.Api.Controllers;
 
 [AllowAnonymous, ApiController, Route("api/games/activity")]
-public class ActivityGamesController(IDiscordActivityAuthService auth, IGameHubService games) : ControllerBase
+public class ActivityGamesController(IDiscordActivityAuthService auth, IGameHubService games, IRouletteService roulette) : ControllerBase
 {
     [HttpGet("context")]
     public async Task<IActionResult> Context([FromQuery] string guildDiscordId, [FromQuery] string channelDiscordId, CancellationToken ct)
@@ -35,6 +35,69 @@ public class ActivityGamesController(IDiscordActivityAuthService auth, IGameHubS
     {
         if (await UserAsync(ct) is null) return Unauthorized(new { message = "انتهت صلاحية تسجيل الدخول. افتح مركز الألعاب مرة ثانية." });
         return Result(await games.GetActivityLeaderboardAsync(guildDiscordId, channelDiscordId, gameKey, limit, ct));
+    }
+
+    [HttpGet("wallet")]
+    public async Task<IActionResult> Wallet([FromQuery] string guildDiscordId, CancellationToken ct)
+    {
+        var user = await UserAsync(ct); if (user is null) return Unauthorized(new { message = "انتهت صلاحية تسجيل الدخول. افتح مركز الألعاب مرة ثانية." });
+        return Result(await roulette.GetWalletAsync(guildDiscordId, user.Id, ct));
+    }
+
+    [HttpPost("roulette/rooms")]
+    public async Task<IActionResult> CreateRouletteRoom(CreateRouletteRoomRequest request, CancellationToken ct)
+    {
+        var user = await UserAsync(ct); if (user is null) return Unauthorized(new { message = "انتهت صلاحية تسجيل الدخول. افتح مركز الألعاب مرة ثانية." });
+        return Result(await roulette.CreateRoomAsync(request, user.Id, user.GlobalName ?? user.Username, ct));
+    }
+
+    [HttpGet("roulette/rooms/open")]
+    public async Task<IActionResult> OpenRouletteRooms([FromQuery] string guildDiscordId, [FromQuery] string channelDiscordId, CancellationToken ct)
+    {
+        var user = await UserAsync(ct); if (user is null) return Unauthorized(new { message = "انتهت صلاحية تسجيل الدخول. افتح مركز الألعاب مرة ثانية." });
+        return Result(await roulette.GetOpenRoomsAsync(guildDiscordId, channelDiscordId, user.Id, ct));
+    }
+
+    [HttpGet("roulette/rooms/{roomId:guid}")]
+    public async Task<IActionResult> RouletteRoom(Guid roomId, [FromQuery] string guildDiscordId, [FromQuery] string channelDiscordId, CancellationToken ct)
+    {
+        var user = await UserAsync(ct); if (user is null) return Unauthorized(new { message = "انتهت صلاحية تسجيل الدخول. افتح مركز الألعاب مرة ثانية." });
+        return Result(await roulette.GetRoomAsync(roomId, guildDiscordId, channelDiscordId, user.Id, ct));
+    }
+
+    [HttpPost("roulette/rooms/{roomId:guid}/join")]
+    public async Task<IActionResult> JoinRouletteRoom(Guid roomId, CreateRouletteRoomRequest request, CancellationToken ct)
+    {
+        var user = await UserAsync(ct); if (user is null) return Unauthorized(new { message = "انتهت صلاحية تسجيل الدخول. افتح مركز الألعاب مرة ثانية." });
+        return Result(await roulette.JoinRoomAsync(roomId, request.GuildDiscordId, request.ChannelDiscordId, user.Id, user.GlobalName ?? user.Username, ct));
+    }
+
+    [HttpPost("roulette/rooms/{roomId:guid}/leave")]
+    public async Task<IActionResult> LeaveRouletteRoom(Guid roomId, CreateRouletteRoomRequest request, CancellationToken ct)
+    {
+        var user = await UserAsync(ct); if (user is null) return Unauthorized(new { message = "انتهت صلاحية تسجيل الدخول. افتح مركز الألعاب مرة ثانية." });
+        return Result(await roulette.LeaveRoomAsync(roomId, request.GuildDiscordId, request.ChannelDiscordId, user.Id, ct));
+    }
+
+    [HttpPost("roulette/rooms/{roomId:guid}/start")]
+    public async Task<IActionResult> StartRouletteRoom(Guid roomId, CreateRouletteRoomRequest request, CancellationToken ct)
+    {
+        var user = await UserAsync(ct); if (user is null) return Unauthorized(new { message = "انتهت صلاحية تسجيل الدخول. افتح مركز الألعاب مرة ثانية." });
+        return Result(await roulette.StartRoomAsync(roomId, request.GuildDiscordId, request.ChannelDiscordId, user.Id, ct));
+    }
+
+    [HttpPost("roulette/rooms/{roomId:guid}/spin")]
+    public async Task<IActionResult> SpinRoulette(Guid roomId, CreateRouletteRoomRequest request, CancellationToken ct)
+    {
+        var user = await UserAsync(ct); if (user is null) return Unauthorized(new { message = "انتهت صلاحية تسجيل الدخول. افتح مركز الألعاب مرة ثانية." });
+        return Result(await roulette.SpinAsync(roomId, request.GuildDiscordId, request.ChannelDiscordId, user.Id, ct));
+    }
+
+    [HttpGet("roulette/pending-intent")]
+    public async Task<IActionResult> PendingRouletteIntent([FromQuery] string guildDiscordId, [FromQuery] string channelDiscordId, CancellationToken ct)
+    {
+        var user = await UserAsync(ct); if (user is null) return Unauthorized(new { message = "انتهت صلاحية تسجيل الدخول. افتح مركز الألعاب مرة ثانية." });
+        return Result(await roulette.ConsumePendingIntentAsync(guildDiscordId, channelDiscordId, user.Id, ct));
     }
 
     private async Task<ActivityDiscordUser?> UserAsync(CancellationToken ct)
