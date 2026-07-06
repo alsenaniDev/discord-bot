@@ -10,8 +10,8 @@ async function request<T>(path: string, accessToken?: string, init?: RequestInit
   headers.set('Content-Type', 'application/json');
   if (accessToken) headers.set('Authorization', `Bearer ${accessToken}`);
   const response = await fetch(url(path), { ...init, headers });
-  const body = await response.json().catch(() => null) as { message?: string } | T | null;
-  if (!response.ok) throw new ApiError((body as { message?: string } | null)?.message ?? 'تعذر إكمال الطلب الآن.', response.status);
+  const body = await response.json().catch(() => null) as { message?: string; detail?: string; title?: string } | T | null;
+  if (!response.ok) { const problem = body as { message?: string; detail?: string; title?: string } | null; throw new ApiError(problem?.message ?? problem?.detail ?? problem?.title ?? `تعذر إكمال الطلب الآن. رمز HTTP: ${response.status}`, response.status); }
   return body as T;
 }
 

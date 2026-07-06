@@ -115,7 +115,10 @@ public class RouletteService(AppDbContext db, ILogger<RouletteService> logger) :
 
     public async Task<GameHubResult<RouletteRoomDto>> JoinRoomAsync(Guid roomId, string guildDiscordId, string channelDiscordId, string userDiscordId, string username, CancellationToken ct = default)
     {
-        await using var transaction = await db.Database.BeginTransactionAsync(IsolationLevel.Serializable, ct);
+        // Lock only this room while validating capacity. Serializable transactions can
+        // abort otherwise-valid mobile joins when two Activity clients arrive together.
+        await using var transaction = await db.Database.BeginTransactionAsync(IsolationLevel.ReadCommitted, ct);
+        await db.Database.ExecuteSqlInterpolatedAsync($"SELECT 1 FROM \"RouletteRooms\" WHERE \"Id\" = {roomId} FOR UPDATE", ct);
         var room = await LoadRoomAsync(roomId, ct); var error = ValidateRoomScope(room, guildDiscordId, channelDiscordId);
         if (error is not null) return GameHubResult<RouletteRoomDto>.Fail(error.Value.Message, error.Value.Code);
         if (room!.Status != "Waiting") return GameHubResult<RouletteRoomDto>.Fail("هذه الجولة لم تعد متاحة للانضمام.", 409);
@@ -125,25 +128,33 @@ public class RouletteService(AppDbContext db, ILogger<RouletteService> logger) :
         var player = new RouletteRoomPlayer { RouletteRoomId = room.Id, UserDiscordId = userDiscordId, Username = CleanUsername(username, userDiscordId), Position = room.Players.Count + 1 };
         room.Players.Add(player); room.Actions.Add(Action(room.Id, 0, userDiscordId, null, "PlayerJoined"));
         await db.SaveChangesAsync(ct); await transaction.CommitAsync(ct);
+        logger.LogInformation("User {UserId} joined Roulette room {RoomId}. Players: {PlayerCount}/{MaxPlayers}.", userDiscordId, room.Id, room.Players.Count, room.MaxPlayers);
         return GameHubResult<RouletteRoomDto>.Ok(MapRoom(room, guildDiscordId));
     }
 
     public async Task<GameHubResult<RouletteRoomDto>> LeaveRoomAsync(Guid roomId, string guildDiscordId, string channelDiscordId, string userDiscordId, CancellationToken ct = default)
     {
-        await using var transaction = await db.Database.BeginTransactionAsync(IsolationLevel.Serializable, ct);
         var room = await LoadRoomAsync(roomId, ct); var error = ValidateRoomScope(room, guildDiscordId, channelDiscordId);
         if (error is not null) return GameHubResult<RouletteRoomDto>.Fail(error.Value.Message, error.Value.Code);
         if (room!.Status != "Waiting") return GameHubResult<RouletteRoomDto>.Fail("لا يمكن مغادرة الجولة بعد بدء اللعبة.", 409);
         var player = room.Players.FirstOrDefault(x => x.UserDiscordId == userDiscordId);
         if (player is null) return GameHubResult<RouletteRoomDto>.Fail("أنت غير منضم لهذه الجولة.", 404);
-        room.Actions.Add(Action(room.Id, 0, userDiscordId, null, "PlayerLeft")); db.RouletteRoomPlayers.Remove(player); room.Players.Remove(player);
+        room.Actions.Add(Action(room.Id, 0, userDiscordId, null, "PlayerLeft"));
+        room.Players.Remove(player);
+        db.Entry(player).State = EntityState.Deleted;
         if (player.IsHost)
         {
             var next = room.Players.OrderBy(x => x.JoinedAt).FirstOrDefault();
-            if (next is null) room.Status = "Cancelled";
+            if (next is null)
+            {
+                room.Status = "Cancelled";
+                var pendingActions = await db.RoulettePublishActions.Where(x => x.RouletteRoomId == room.Id && x.Status == "Pending").ToListAsync(ct);
+                foreach (var action in pendingActions) { action.Status = "Cancelled"; action.ProcessedAt = DateTimeOffset.UtcNow; }
+            }
             else { next.IsHost = true; room.HostUserDiscordId = next.UserDiscordId; room.HostUsername = next.Username; }
         }
-        await db.SaveChangesAsync(ct); await transaction.CommitAsync(ct);
+        await db.SaveChangesAsync(ct);
+        logger.LogInformation("User {UserId} left Roulette room {RoomId}. New status: {Status}; new host: {HostUserId}.", userDiscordId, room.Id, room.Status, room.HostUserDiscordId);
         return GameHubResult<RouletteRoomDto>.Ok(MapRoom(room, guildDiscordId));
     }
 
