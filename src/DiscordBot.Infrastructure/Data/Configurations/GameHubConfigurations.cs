@@ -74,8 +74,59 @@ public class RouletteRoomConfiguration : IEntityTypeConfiguration<RouletteRoom>
         b.ToTable("RouletteRooms"); b.HasKey(x => x.Id); b.HasIndex(x => new { x.GuildId, x.ChannelDiscordId, x.Status });
         b.Property(x => x.ChannelDiscordId).HasMaxLength(32).IsRequired(); b.Property(x => x.HostUserDiscordId).HasMaxLength(32).IsRequired();
         b.Property(x => x.HostUsername).HasMaxLength(80).IsRequired(); b.Property(x => x.Status).HasMaxLength(24).IsRequired(); b.Property(x => x.InviteMessageDiscordId).HasMaxLength(32);
+        b.Property(x => x.CurrentTurnUserDiscordId).HasMaxLength(32); b.Property(x => x.PendingTargetUserDiscordId).HasMaxLength(32);
+        b.Property(x => x.PendingActionStatus).HasMaxLength(32); b.Property(x => x.LastSpinResultJson).HasColumnType("jsonb");
         b.HasOne(x => x.Guild).WithMany(x => x.RouletteRooms).HasForeignKey(x => x.GuildId).OnDelete(DeleteBehavior.Restrict);
         b.HasOne(x => x.PlatformGameDefinition).WithMany().HasForeignKey(x => x.PlatformGameDefinitionId).OnDelete(DeleteBehavior.Restrict);
+    }
+}
+
+public class GamePowerUpDefinitionConfiguration : IEntityTypeConfiguration<GamePowerUpDefinition>
+{
+    public static readonly Guid ShieldId = Guid.Parse("15125967-74cc-4809-9397-2c5d30f38bd8");
+    public static readonly Guid ReverseId = Guid.Parse("5bf04af4-0d20-490c-aa9f-a82cc6cb02b7");
+    public static readonly Guid ReSpinId = Guid.Parse("676c428c-fc17-44ee-8bef-a2ad8ed4ad88");
+    public void Configure(EntityTypeBuilder<GamePowerUpDefinition> b)
+    {
+        b.ToTable("GamePowerUpDefinitions"); b.HasKey(x => x.Id); b.HasIndex(x => x.Key).IsUnique();
+        b.Property(x => x.Key).HasMaxLength(32).IsRequired(); b.Property(x => x.Name).HasMaxLength(100).IsRequired(); b.Property(x => x.Description).HasMaxLength(500).IsRequired(); b.Property(x => x.Icon).HasMaxLength(32).IsRequired();
+        var seededAt = new DateTimeOffset(2026, 7, 6, 0, 0, 0, TimeSpan.Zero);
+        b.HasData(
+            new GamePowerUpDefinition { Id = ShieldId, Key = "shield", Name = "الدرع", Description = "يحميك من الإقصاء مرة واحدة.", Icon = "🛡️", DefaultPrice = 100, IsEnabledGlobally = true, CreatedAt = seededAt, UpdatedAt = seededAt },
+            new GamePowerUpDefinition { Id = ReverseId, Key = "reverse", Name = "عكس الهجمة", Description = "يعكس الإقصاء على اللاعب الذي لف العجلة.", Icon = "🔁", DefaultPrice = 150, IsEnabledGlobally = true, CreatedAt = seededAt, UpdatedAt = seededAt },
+            new GamePowerUpDefinition { Id = ReSpinId, Key = "respin", Name = "إعادة اللف", Description = "يعيد تدوير العجلة مرة واحدة.", Icon = "🎡", DefaultPrice = 120, IsEnabledGlobally = true, CreatedAt = seededAt, UpdatedAt = seededAt });
+    }
+}
+
+public class GuildPowerUpSettingConfiguration : IEntityTypeConfiguration<GuildPowerUpSetting>
+{
+    public void Configure(EntityTypeBuilder<GuildPowerUpSetting> b)
+    {
+        b.ToTable("GuildPowerUpSettings"); b.HasKey(x => x.Id); b.HasIndex(x => new { x.GuildId, x.GamePowerUpDefinitionId }).IsUnique();
+        b.HasOne(x => x.Guild).WithMany(x => x.PowerUpSettings).HasForeignKey(x => x.GuildId).OnDelete(DeleteBehavior.Cascade);
+        b.HasOne(x => x.GamePowerUpDefinition).WithMany(x => x.GuildSettings).HasForeignKey(x => x.GamePowerUpDefinitionId).OnDelete(DeleteBehavior.Restrict);
+    }
+}
+
+public class PlayerPowerUpInventoryConfiguration : IEntityTypeConfiguration<PlayerPowerUpInventory>
+{
+    public void Configure(EntityTypeBuilder<PlayerPowerUpInventory> b)
+    {
+        b.ToTable("PlayerPowerUpInventories", table => table.HasCheckConstraint("CK_PlayerPowerUpInventories_Quantity_NonNegative", "\"Quantity\" >= 0")); b.HasKey(x => x.Id);
+        b.HasIndex(x => new { x.GuildId, x.UserDiscordId, x.GamePowerUpDefinitionId }).IsUnique(); b.Property(x => x.UserDiscordId).HasMaxLength(32).IsRequired();
+        b.HasOne(x => x.Guild).WithMany(x => x.PowerUpInventories).HasForeignKey(x => x.GuildId).OnDelete(DeleteBehavior.Cascade);
+        b.HasOne(x => x.GamePowerUpDefinition).WithMany(x => x.Inventories).HasForeignKey(x => x.GamePowerUpDefinitionId).OnDelete(DeleteBehavior.Restrict);
+    }
+}
+
+public class RoulettePowerUpUsageConfiguration : IEntityTypeConfiguration<RoulettePowerUpUsage>
+{
+    public void Configure(EntityTypeBuilder<RoulettePowerUpUsage> b)
+    {
+        b.ToTable("RoulettePowerUpUsages"); b.HasKey(x => x.Id); b.HasIndex(x => new { x.RouletteRoomId, x.UserDiscordId, x.GamePowerUpDefinitionId, x.RoundNumber }).IsUnique();
+        b.Property(x => x.UserDiscordId).HasMaxLength(32).IsRequired(); b.Property(x => x.ResultJson).HasColumnType("jsonb").IsRequired();
+        b.HasOne(x => x.RouletteRoom).WithMany(x => x.PowerUpUsages).HasForeignKey(x => x.RouletteRoomId).OnDelete(DeleteBehavior.Cascade);
+        b.HasOne(x => x.GamePowerUpDefinition).WithMany().HasForeignKey(x => x.GamePowerUpDefinitionId).OnDelete(DeleteBehavior.Restrict);
     }
 }
 

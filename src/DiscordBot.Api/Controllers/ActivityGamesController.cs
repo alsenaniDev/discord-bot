@@ -44,6 +44,28 @@ public class ActivityGamesController(IDiscordActivityAuthService auth, IGameHubS
         return Result(await roulette.GetWalletAsync(guildDiscordId, user.Id, ct));
     }
 
+    [HttpGet("store")]
+    public async Task<IActionResult> Store([FromQuery] string guildDiscordId, CancellationToken ct)
+    {
+        var user = await UserAsync(ct); if (user is null) return Unauthorized(new { message = "انتهت صلاحية تسجيل الدخول. افتح مركز الألعاب مرة ثانية." });
+        return Result(await roulette.GetStoreAsync(guildDiscordId, user.Id, ct));
+    }
+
+    [HttpGet("inventory")]
+    public async Task<IActionResult> Inventory([FromQuery] string guildDiscordId, CancellationToken ct)
+    {
+        var user = await UserAsync(ct); if (user is null) return Unauthorized(new { message = "انتهت صلاحية تسجيل الدخول. افتح مركز الألعاب مرة ثانية." });
+        var result = await roulette.GetStoreAsync(guildDiscordId, user.Id, ct);
+        return StatusCode(result.StatusCode, result.Succeeded ? result.Value?.Items : new { message = result.Error });
+    }
+
+    [HttpPost("store/purchase")]
+    public async Task<IActionResult> Purchase(PurchasePowerUpRequest request, CancellationToken ct)
+    {
+        var user = await UserAsync(ct); if (user is null) return Unauthorized(new { message = "انتهت صلاحية تسجيل الدخول. افتح مركز الألعاب مرة ثانية." });
+        return Result(await roulette.PurchasePowerUpAsync(request, user.Id, ct));
+    }
+
     [HttpPost("roulette/rooms")]
     public async Task<IActionResult> CreateRouletteRoom(CreateRouletteRoomRequest request, CancellationToken ct)
     {
@@ -91,6 +113,20 @@ public class ActivityGamesController(IDiscordActivityAuthService auth, IGameHubS
     {
         var user = await UserAsync(ct); if (user is null) return Unauthorized(new { message = "انتهت صلاحية تسجيل الدخول. افتح مركز الألعاب مرة ثانية." });
         return Result(await roulette.SpinAsync(roomId, request.GuildDiscordId, request.ChannelDiscordId, user.Id, ct));
+    }
+
+    [HttpPost("roulette/rooms/{roomId:guid}/use-power-up")]
+    public async Task<IActionResult> UseRoulettePowerUp(Guid roomId, UsePowerUpRequest request, CancellationToken ct)
+    {
+        var user = await UserAsync(ct); if (user is null) return Unauthorized(new { message = "انتهت صلاحية تسجيل الدخول. افتح مركز الألعاب مرة ثانية." });
+        return Result(await roulette.UsePowerUpAsync(roomId, request, user.Id, ct));
+    }
+
+    [HttpPost("roulette/rooms/{roomId:guid}/resolve-pending-action")]
+    public async Task<IActionResult> ResolveRoulettePendingAction(Guid roomId, CreateRouletteRoomRequest request, CancellationToken ct)
+    {
+        var user = await UserAsync(ct); if (user is null) return Unauthorized(new { message = "انتهت صلاحية تسجيل الدخول. افتح مركز الألعاب مرة ثانية." });
+        return Result(await roulette.ResolvePendingActionAsync(roomId, request, user.Id, ct));
     }
 
     [HttpGet("roulette/pending-intent")]

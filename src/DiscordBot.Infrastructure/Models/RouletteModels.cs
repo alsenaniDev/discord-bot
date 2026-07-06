@@ -12,14 +12,46 @@ public class RouletteSettingsDto
     public int TurnSeconds { get; set; } = 30;
     public bool AnnounceRoomCreated { get; set; } = true;
     public bool AnnounceWinner { get; set; } = true;
+    public List<RoulettePowerUpSettingDto> PowerUps { get; set; } = [];
 }
 
 public class UpdateRouletteSettingsRequest : RouletteSettingsDto { }
 public class CreateRouletteRoomRequest { public string GuildDiscordId { get; set; } = string.Empty; public string ChannelDiscordId { get; set; } = string.Empty; }
+public class PurchasePowerUpRequest { public string GuildDiscordId { get; set; } = string.Empty; public string PowerUpKey { get; set; } = string.Empty; }
+public class UsePowerUpRequest { public string GuildDiscordId { get; set; } = string.Empty; public string ChannelDiscordId { get; set; } = string.Empty; public string PowerUpKey { get; set; } = string.Empty; }
 public class PrepareRouletteJoinRequest { public string GuildDiscordId { get; set; } = string.Empty; public string ChannelDiscordId { get; set; } = string.Empty; public string UserDiscordId { get; set; } = string.Empty; public string Username { get; set; } = string.Empty; }
 public class PrepareRouletteJoinResponse { public Guid JoinIntentId { get; set; } public DateTimeOffset ExpiresAt { get; set; } }
 public class PendingRouletteIntentDto { public Guid RoomId { get; set; } }
 public class GameWalletDto { public int Balance { get; set; } }
+
+public class RoulettePowerUpSettingDto
+{
+    public string Key { get; set; } = string.Empty;
+    public string Name { get; set; } = string.Empty;
+    public string Description { get; set; } = string.Empty;
+    public string Icon { get; set; } = string.Empty;
+    public bool IsEnabledForGuild { get; set; } = true;
+    public int Price { get; set; }
+    public int MaxUsesPerGame { get; set; } = 1;
+}
+
+public class PowerUpStoreDto
+{
+    public int Balance { get; set; }
+    public List<PowerUpStoreItemDto> Items { get; set; } = [];
+}
+
+public class PowerUpStoreItemDto : RoulettePowerUpSettingDto
+{
+    public int OwnedQuantity { get; set; }
+}
+
+public class PurchasePowerUpResponse
+{
+    public int Balance { get; set; }
+    public string PowerUpKey { get; set; } = string.Empty;
+    public int OwnedQuantity { get; set; }
+}
 
 public class RoulettePlayerDto
 {
@@ -51,14 +83,43 @@ public class RouletteRoomDto
     public DateTimeOffset? StartedAt { get; set; }
     public DateTimeOffset? CompletedAt { get; set; }
     public bool CanStart { get; set; }
+    public string? CurrentTurnUserDiscordId { get; set; }
+    public string? CurrentTurnUsername { get; set; }
+    public string? PendingTargetUserDiscordId { get; set; }
+    public string? PendingTargetUsername { get; set; }
+    public string PendingActionStatus { get; set; } = "None";
+    public DateTimeOffset? PendingActionExpiresAt { get; set; }
+    public RouletteSpinResultInfoDto? LastSpinResult { get; set; }
     public List<RoulettePlayerDto> Players { get; set; } = [];
+    public List<RouletteActionDto> Actions { get; set; } = [];
     public RoulettePlayerDto? Winner { get; set; }
 }
 
 public class RouletteSpinResultDto
 {
     public RouletteRoomDto Room { get; set; } = new();
-    public RoulettePlayerDto EliminatedPlayer { get; set; } = new();
+    public RoulettePlayerDto? EliminatedPlayer { get; set; }
+    public RoulettePlayerDto? TargetPlayer { get; set; }
+}
+
+public class RouletteSpinResultInfoDto
+{
+    public string SpinnerUserDiscordId { get; set; } = string.Empty;
+    public string SpinnerUsername { get; set; } = string.Empty;
+    public string TargetUserDiscordId { get; set; } = string.Empty;
+    public string TargetUsername { get; set; } = string.Empty;
+    public string ResultType { get; set; } = "PendingElimination";
+    public DateTimeOffset CreatedAt { get; set; }
+}
+
+public class RouletteActionDto
+{
+    public int RoundNumber { get; set; }
+    public string ActionType { get; set; } = string.Empty;
+    public string ActorUserDiscordId { get; set; } = string.Empty;
+    public string? TargetUserDiscordId { get; set; }
+    public string Message { get; set; } = string.Empty;
+    public DateTimeOffset CreatedAt { get; set; }
 }
 
 public class PendingRoulettePublishActionDto

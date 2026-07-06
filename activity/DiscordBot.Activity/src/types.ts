@@ -5,7 +5,12 @@ export interface StartSessionResponse { sessionId: string; gameKey: string; game
 export interface CompleteSessionResponse { sessionId: string; pointsAwarded: number; player: LeaderboardEntry; }
 export interface ActivityIdentity { accessToken: string; userId: string; username: string; guildId: string; channelId: string; }
 export interface GameWallet { balance: number; }
+export interface PowerUpStoreItem { key: string; name: string; description: string; icon: string; isEnabledForGuild: boolean; price: number; maxUsesPerGame: number; ownedQuantity: number; }
+export interface PowerUpStore { balance: number; items: PowerUpStoreItem[]; }
+export interface PurchasePowerUpResponse { balance: number; powerUpKey: string; ownedQuantity: number; }
 export interface RoulettePlayer { userDiscordId: string; username: string; isHost: boolean; isAlive: boolean; position: number; eliminations: number; joinedAt: string; eliminatedAt?: string | null; }
-export interface RouletteRoom { id: string; guildDiscordId: string; channelDiscordId: string; hostUserDiscordId: string; hostUsername: string; status: 'Waiting' | 'InProgress' | 'Completed' | 'Cancelled' | 'Expired'; minPlayers: number; maxPlayers: number; winnerCoins: number; secondPlaceCoins: number; participationCoins: number; currentRound: number; expiresAt: string; startedAt?: string | null; completedAt?: string | null; canStart: boolean; players: RoulettePlayer[]; winner?: RoulettePlayer | null; }
-export interface RouletteSpinResult { room: RouletteRoom; eliminatedPlayer: RoulettePlayer; }
+export interface RouletteAction { roundNumber: number; actionType: string; actorUserDiscordId: string; targetUserDiscordId?: string | null; message: string; createdAt: string; }
+export interface RouletteSpinInfo { spinnerUserDiscordId: string; spinnerUsername: string; targetUserDiscordId: string; targetUsername: string; resultType: string; createdAt: string; }
+export interface RouletteRoom { id: string; guildDiscordId: string; channelDiscordId: string; hostUserDiscordId: string; hostUsername: string; status: 'Waiting' | 'InProgress' | 'Completed' | 'Cancelled' | 'Expired'; minPlayers: number; maxPlayers: number; winnerCoins: number; secondPlaceCoins: number; participationCoins: number; currentRound: number; expiresAt: string; startedAt?: string | null; completedAt?: string | null; canStart: boolean; currentTurnUserDiscordId?: string | null; currentTurnUsername?: string | null; pendingTargetUserDiscordId?: string | null; pendingTargetUsername?: string | null; pendingActionStatus: 'None' | 'WaitingForPowerUp' | 'Resolved' | string; pendingActionExpiresAt?: string | null; lastSpinResult?: RouletteSpinInfo | null; actions: RouletteAction[]; players: RoulettePlayer[]; winner?: RoulettePlayer | null; }
+export interface RouletteSpinResult { room: RouletteRoom; eliminatedPlayer?: RoulettePlayer | null; targetPlayer?: RoulettePlayer | null; }
 export interface PendingRouletteIntent { roomId: string; }
