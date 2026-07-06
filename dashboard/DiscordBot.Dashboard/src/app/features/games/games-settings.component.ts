@@ -5,13 +5,13 @@ import { forkJoin } from 'rxjs';
 import { GuildService } from '../../core/services/guild.service';
 import { ToastService } from '../../core/services/toast.service';
 import { DiscordChannel } from '../../core/models/guild.models';
-import { GameLeaderboardEntry, GuildGame, UpdateGuildGameSetting } from '../../core/models/games.models';
+import { GameLeaderboardEntry, GuildGame, RoulettePowerUpSetting, UpdateGuildGameSetting } from '../../core/models/games.models';
 import { getApiErrorMessage } from '../../core/utils/api-error.util';
 import { PageWorkspaceHeroAction, PageWorkspaceHeroStat } from '../../shared/ui/page-workspace-hero/page-workspace-hero.models';
 
 @Component({ selector: 'app-games-settings', templateUrl: './games-settings.component.html', styleUrls: ['../settings/settings.component.css', './games-settings.component.css'] })
 export class GamesSettingsComponent implements OnInit {
-  guildId = ''; games: GuildGame[] = []; channels: DiscordChannel[] = []; leaderboard: GameLeaderboardEntry[] = []; loading = true; saving = false; savingRoulette = false; savingGameId: string | null = null; error = '';
+  guildId = ''; games: GuildGame[] = []; channels: DiscordChannel[] = []; leaderboard: GameLeaderboardEntry[] = []; roulettePowerUps: RoulettePowerUpSetting[] = []; loading = true; saving = false; savingRoulette = false; savingGameId: string | null = null; error = '';
   form = this.fb.group({ isEnabled: [false], gamesChannelDiscordId: [''], autoPostPanel: [false] });
   rouletteForm = this.fb.group({ minPlayers: [2, [Validators.required, Validators.min(2), Validators.max(10)]], maxPlayers: [6, [Validators.required, Validators.min(2), Validators.max(10)]], winnerCoins: [100, [Validators.required, Validators.min(0), Validators.max(1000)]], secondPlaceCoins: [50, [Validators.required, Validators.min(0), Validators.max(500)]], participationCoins: [10, [Validators.required, Validators.min(0), Validators.max(100)]], joinWindowSeconds: [120, [Validators.required, Validators.min(30), Validators.max(300)]], turnSeconds: [30, [Validators.required, Validators.min(10), Validators.max(120)]], announceRoomCreated: [true], announceWinner: [true] });
   get stats(): PageWorkspaceHeroStat[] { return [{ label: 'الحالة', value: this.form.value.isEnabled ? 'مفعّلة' : 'غير مفعّلة' }, { label: 'الألعاب المفعّلة', value: String(this.games.filter(x => x.isEnabledForGuild).length) }, { label: 'اللاعبون', value: String(this.leaderboard.length) }]; }
@@ -23,7 +23,7 @@ export class GamesSettingsComponent implements OnInit {
   load(): void {
     this.loading = true; this.error = '';
     forkJoin({ settings: this.api.getGamesSettings(this.guildId), games: this.api.getGuildGames(this.guildId), channels: this.api.getChannels(this.guildId), leaderboard: this.api.getGamesLeaderboard(this.guildId), roulette: this.api.getRouletteSettings(this.guildId) }).subscribe({
-      next: x => { this.form.patchValue({ isEnabled: x.settings.isEnabled, gamesChannelDiscordId: x.settings.gamesChannelDiscordId ?? '', autoPostPanel: x.settings.autoPostPanel }); this.rouletteForm.patchValue(x.roulette); this.games = x.games; this.channels = x.channels.filter(c => c.type === 0 || String(c.type).toLowerCase() === 'text'); this.leaderboard = x.leaderboard; this.loading = false; },
+      next: x => { this.form.patchValue({ isEnabled: x.settings.isEnabled, gamesChannelDiscordId: x.settings.gamesChannelDiscordId ?? '', autoPostPanel: x.settings.autoPostPanel }); this.rouletteForm.patchValue(x.roulette); this.roulettePowerUps = x.roulette.powerUps ?? []; this.games = x.games; this.channels = x.channels.filter(c => c.type === 0 || String(c.type).toLowerCase() === 'text'); this.leaderboard = x.leaderboard; this.loading = false; },
       error: e => { this.loading = false; this.error = getApiErrorMessage(e, 'تعذر تحميل إعدادات الألعاب.'); }
     });
   }
@@ -37,7 +37,7 @@ export class GamesSettingsComponent implements OnInit {
   }
   saveRouletteSettings(): void {
     const x = this.rouletteForm.getRawValue(); if (this.rouletteForm.invalid || Number(x.maxPlayers) < Number(x.minPlayers)) { this.toast.error('راجع حدود إعدادات الروليت.'); return; }
-    this.savingRoulette = true; this.api.updateRouletteSettings(this.guildId, { minPlayers: Number(x.minPlayers), maxPlayers: Number(x.maxPlayers), winnerCoins: Number(x.winnerCoins), secondPlaceCoins: Number(x.secondPlaceCoins), participationCoins: Number(x.participationCoins), joinWindowSeconds: Number(x.joinWindowSeconds), turnSeconds: Number(x.turnSeconds), announceRoomCreated: !!x.announceRoomCreated, announceWinner: !!x.announceWinner }).subscribe({ next: value => { this.savingRoulette = false; this.rouletteForm.patchValue(value); this.toast.success('تم حفظ إعدادات الروليت.'); }, error: e => { this.savingRoulette = false; this.toast.error(getApiErrorMessage(e, 'تعذر حفظ إعدادات الروليت.')); } });
+    this.savingRoulette = true; this.api.updateRouletteSettings(this.guildId, { minPlayers: Number(x.minPlayers), maxPlayers: Number(x.maxPlayers), winnerCoins: Number(x.winnerCoins), secondPlaceCoins: Number(x.secondPlaceCoins), participationCoins: Number(x.participationCoins), joinWindowSeconds: Number(x.joinWindowSeconds), turnSeconds: Number(x.turnSeconds), announceRoomCreated: !!x.announceRoomCreated, announceWinner: !!x.announceWinner, powerUps: this.roulettePowerUps.map(p => ({ ...p, price: Number(p.price), maxUsesPerGame: Number(p.maxUsesPerGame) })) }).subscribe({ next: value => { this.savingRoulette = false; this.rouletteForm.patchValue(value); this.roulettePowerUps = value.powerUps ?? []; this.toast.success('تم حفظ إعدادات الروليت.'); }, error: e => { this.savingRoulette = false; this.toast.error(getApiErrorMessage(e, 'تعذر حفظ إعدادات الروليت.')); } });
   }
   private refreshGames(): void { this.api.getGuildGames(this.guildId).subscribe({ next: x => this.games = x }); }
 }

@@ -40,6 +40,12 @@
 .leader-row { display: grid; grid-template-columns: 2rem minmax(0, 1fr) auto auto; align-items: center; gap: var(--space-3); padding: var(--space-3); border-bottom: 1px solid var(--color-border); }
 .leader-row small { color: var(--color-text-muted); }
 .roulette-settings { border-inline-start: 3px solid #eb459e; }
+.powerup-settings { display: grid; gap: 1rem; margin-top: 1.5rem; padding-top: 1.25rem; border-top: 1px solid var(--border, rgba(148, 163, 184, .22)); }
+.powerup-row { display: grid; grid-template-columns: minmax(14rem, 1fr) auto minmax(8rem, .45fr) minmax(8rem, .45fr); gap: 1rem; align-items: end; padding: 1rem; border: 1px solid var(--border, rgba(148, 163, 184, .22)); border-radius: 1rem; background: rgba(255,255,255,.025); }
+.powerup-title { display: flex; gap: .75rem; align-items: flex-start; }
+.powerup-title > span { width: 2.25rem; height: 2.25rem; display: grid; place-items: center; border-radius: .8rem; background: rgba(235,69,158,.12); }
+.powerup-title h4, .powerup-title p { margin: 0; }
+@media (max-width: 900px) { .powerup-row { grid-template-columns: 1fr; align-items: stretch; } }
 .coin-notice { margin: 0; padding: var(--space-3); border-radius: var(--radius-md); background: var(--color-bg-panel); }
 
 @media(max-width: 700px) {

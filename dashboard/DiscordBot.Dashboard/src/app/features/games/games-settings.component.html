@@ -36,6 +36,15 @@
         <label class="checkbox"><input type="checkbox" formControlName="announceRoomCreated">نشر رسالة عند إنشاء غرفة</label>
         <label class="checkbox"><input type="checkbox" formControlName="announceWinner">نشر الفائز بعد نهاية اللعبة</label>
       </div>
+      <div class="powerup-settings" *ngIf="roulettePowerUps.length">
+        <app-section-header title="🛒 متجر الخصائص" lead="تحكم بالخصائص التي يمكن للاعبين شراؤها بعملات اللعبة الافتراضية." [compact]="true"></app-section-header>
+        <article class="powerup-row" *ngFor="let item of roulettePowerUps">
+          <div class="powerup-title"><span>{{item.icon}}</span><div><h4>{{item.name}}</h4><p class="muted">{{item.description}}</p></div></div>
+          <label class="checkbox"><input type="checkbox" [(ngModel)]="item.isEnabledForGuild" [ngModelOptions]="{standalone:true}">متاحة في المتجر</label>
+          <label class="form-field"><span>السعر</span><input class="input ds-input" type="number" min="0" max="10000" [(ngModel)]="item.price" [ngModelOptions]="{standalone:true}"><span class="hint">عملة افتراضية</span></label>
+          <label class="form-field"><span>الحد في الجولة</span><input class="input ds-input" type="number" min="1" max="10" [(ngModel)]="item.maxUsesPerGame" [ngModelOptions]="{standalone:true}"></label>
+        </article>
+      </div>
       <p class="muted coin-notice">العملات افتراضية داخل اللعبة فقط، ولا يمكن شراؤها أو سحبها أو تحويلها.</p>
       <div class="form-actions"><button class="btn btn-primary" [disabled]="savingRoulette || rouletteForm.invalid">{{savingRoulette ? 'جاري الحفظ...' : 'حفظ إعدادات الروليت'}}</button></div>
     </form>

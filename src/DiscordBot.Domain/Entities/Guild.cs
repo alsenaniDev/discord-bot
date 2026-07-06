@@ -57,5 +57,7 @@ public class Guild : BaseEntity
     public ICollection<RouletteRoom> RouletteRooms { get; set; } = [];
     public ICollection<RouletteJoinIntent> RouletteJoinIntents { get; set; } = [];
     public ICollection<RoulettePublishAction> RoulettePublishActions { get; set; } = [];
+    public ICollection<GuildPowerUpSetting> PowerUpSettings { get; set; } = [];
+    public ICollection<PlayerPowerUpInventory> PowerUpInventories { get; set; } = [];
     public GuildSubscription? Subscription { get; set; }
 }

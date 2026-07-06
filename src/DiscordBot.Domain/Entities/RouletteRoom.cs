@@ -16,6 +16,11 @@ public class RouletteRoom : BaseEntity
     public int SecondPlaceCoins { get; set; }
     public int ParticipationCoins { get; set; }
     public int CurrentRound { get; set; }
+    public string? CurrentTurnUserDiscordId { get; set; }
+    public string? PendingTargetUserDiscordId { get; set; }
+    public string? PendingActionStatus { get; set; }
+    public DateTimeOffset? PendingActionExpiresAt { get; set; }
+    public string? LastSpinResultJson { get; set; }
     public string? InviteMessageDiscordId { get; set; }
     public DateTimeOffset ExpiresAt { get; set; }
     public DateTimeOffset? StartedAt { get; set; }
@@ -24,4 +29,5 @@ public class RouletteRoom : BaseEntity
     public ICollection<RouletteRoundAction> Actions { get; set; } = [];
     public ICollection<RouletteJoinIntent> JoinIntents { get; set; } = [];
     public ICollection<RoulettePublishAction> PublishActions { get; set; } = [];
+    public ICollection<RoulettePowerUpUsage> PowerUpUsages { get; set; } = [];
 }

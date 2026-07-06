@@ -53,6 +53,10 @@ public class AppDbContext : DbContext
     public DbSet<RouletteRoundAction> RouletteRoundActions => Set<RouletteRoundAction>();
     public DbSet<RouletteJoinIntent> RouletteJoinIntents => Set<RouletteJoinIntent>();
     public DbSet<RoulettePublishAction> RoulettePublishActions => Set<RoulettePublishAction>();
+    public DbSet<GamePowerUpDefinition> GamePowerUpDefinitions => Set<GamePowerUpDefinition>();
+    public DbSet<GuildPowerUpSetting> GuildPowerUpSettings => Set<GuildPowerUpSetting>();
+    public DbSet<PlayerPowerUpInventory> PlayerPowerUpInventories => Set<PlayerPowerUpInventory>();
+    public DbSet<RoulettePowerUpUsage> RoulettePowerUpUsages => Set<RoulettePowerUpUsage>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
