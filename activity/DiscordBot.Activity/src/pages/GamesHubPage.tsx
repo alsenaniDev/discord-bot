@@ -16,6 +16,6 @@ export function GamesHubPage() {
   const multiplayerGames = context?.games.filter(game => game.playMode === 'Multiplayer') ?? [];
   return <main className="page"><header className="hero"><div><span className="eyebrow">أهلًا {identity?.username}</span><h1>🎮 مركز الألعاب</h1><p>اختر لعبة وابدأ التحدي مع أعضاء السيرفر.</p></div><button className="button secondary" onClick={() => navigate('/leaderboard')}>عرض الترتيب</button></header>
     <GameGroup title="ألعاب فردية" games={soloGames} emptyMessage="لا توجد ألعاب فردية مفعّلة حاليًا." onPlay={game => navigate(game.activityRoute)} />
-    <GameGroup title="ألعاب جماعية" games={multiplayerGames} emptyMessage="لا توجد ألعاب جماعية مفعّلة حاليًا." onPlay={game => navigate(game.activityRoute)} />
+    <GameGroup title="ألعاب جماعية" games={multiplayerGames} emptyMessage="لا توجد ألعاب جماعية متاحة. تأكد من تفعيل الروليت للسيرفر وأن الباقة Pro أو أعلى." onPlay={game => navigate(game.activityRoute)} />
   </main>;
 }
