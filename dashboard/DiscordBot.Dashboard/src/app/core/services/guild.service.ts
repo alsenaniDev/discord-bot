@@ -20,7 +20,7 @@ import { GuildSubscription, SubscriptionPlan } from '../models/subscription.mode
 import { GuildPanel, SaveGuildPanel } from '../models/command-panel.models';
 import { GuildWorkflow, SaveWorkflow, WorkflowSubmission, WorkflowSubmissionStatus } from '../models/workflow.models';
 import { GuildMusicSettings, UpdateGuildMusicSettings } from '../models/music.models';
-import { GameLeaderboardEntry, GuildGame, GuildGamesSettings, UpdateGuildGameSetting, UpdateGuildGamesSettings } from '../models/games.models';
+import { GameLeaderboardEntry, GuildGame, GuildGamesSettings, RouletteGuildSettings, UpdateGuildGameSetting, UpdateGuildGamesSettings, UpdateRouletteGuildSettings } from '../models/games.models';
 import {
   PlanUpgradeRequest,
   CreatePlanUpgradeRequest,
@@ -119,6 +119,8 @@ export class GuildService {
   getGuildGames(guildId: string): Observable<GuildGame[]> { return this.http.get<GuildGame[]>(`${this.baseUrl}/api/guilds/${guildId}/games`); }
   updateGuildGame(guildId: string, gameId: string, value: UpdateGuildGameSetting): Observable<GuildGame> { return this.http.put<GuildGame>(`${this.baseUrl}/api/guilds/${guildId}/games/${gameId}/settings`, value); }
   getGamesLeaderboard(guildId: string, gameId?: string): Observable<GameLeaderboardEntry[]> { const query = gameId ? `?gameId=${encodeURIComponent(gameId)}` : ''; return this.http.get<GameLeaderboardEntry[]>(`${this.baseUrl}/api/guilds/${guildId}/games/leaderboard${query}`); }
+  getRouletteSettings(guildId: string): Observable<RouletteGuildSettings> { return this.http.get<RouletteGuildSettings>(`${this.baseUrl}/api/guilds/${guildId}/games/roulette/settings`); }
+  updateRouletteSettings(guildId: string, value: UpdateRouletteGuildSettings): Observable<RouletteGuildSettings> { return this.http.put<RouletteGuildSettings>(`${this.baseUrl}/api/guilds/${guildId}/games/roulette/settings`, value); }
 
   getTicketSummaries(
     guildId: string,

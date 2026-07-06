@@ -3,6 +3,7 @@ using System;
 using DiscordBot.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 
@@ -11,9 +12,11 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace DiscordBot.Infrastructure.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260706172649_AddGamePlayMode")]
+    partial class AddGamePlayMode
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -410,88 +413,6 @@ namespace DiscordBot.Infrastructure.Migrations
                     b.HasIndex("GuildId", "UserDiscordId", "StartedAt");
 
                     b.ToTable("GameSessions", (string)null);
-                });
-
-            modelBuilder.Entity("DiscordBot.Domain.Entities.GameWallet", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<int>("Balance")
-                        .HasColumnType("integer");
-
-                    b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid>("GuildId")
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTimeOffset>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("UserDiscordId")
-                        .IsRequired()
-                        .HasMaxLength(32)
-                        .HasColumnType("character varying(32)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("GuildId", "UserDiscordId")
-                        .IsUnique();
-
-                    b.ToTable("GameWallets", null, t =>
-                        {
-                            t.HasCheckConstraint("CK_GameWallets_Balance_NonNegative", "\"Balance\" >= 0");
-                        });
-                });
-
-            modelBuilder.Entity("DiscordBot.Domain.Entities.GameWalletTransaction", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<int>("Amount")
-                        .HasColumnType("integer");
-
-                    b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid>("GuildId")
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("Reason")
-                        .IsRequired()
-                        .HasMaxLength(500)
-                        .HasColumnType("character varying(500)");
-
-                    b.Property<Guid?>("ReferenceId")
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("Type")
-                        .IsRequired()
-                        .HasMaxLength(64)
-                        .HasColumnType("character varying(64)");
-
-                    b.Property<DateTimeOffset>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("UserDiscordId")
-                        .IsRequired()
-                        .HasMaxLength(32)
-                        .HasColumnType("character varying(32)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("ReferenceId");
-
-                    b.HasIndex("GuildId", "UserDiscordId", "CreatedAt");
-
-                    b.HasIndex("ReferenceId", "UserDiscordId", "Type")
-                        .IsUnique();
-
-                    b.ToTable("GameWalletTransactions", (string)null);
                 });
 
             modelBuilder.Entity("DiscordBot.Domain.Entities.Guild", b =>
@@ -1462,8 +1383,8 @@ namespace DiscordBot.Infrastructure.Migrations
                         .IsRequired()
                         .ValueGeneratedOnAdd()
                         .HasMaxLength(24)
-                        .HasColumnType("character varying(24)")
-                        .HasDefaultValue("Solo");
+                        .HasDefaultValue("Solo")
+                        .HasColumnType("character varying(24)");
 
                     b.Property<string>("RequiredPlan")
                         .IsRequired()
@@ -1504,25 +1425,6 @@ namespace DiscordBot.Infrastructure.Migrations
                             Name = "تحدي الأسئلة",
                             PlayMode = "Solo",
                             RequiredPlan = "free",
-                            SupportsLeaderboard = true,
-                            SupportsResultPublishing = true,
-                            SupportsScores = true,
-                            UpdatedAt = new DateTimeOffset(new DateTime(2026, 7, 6, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0))
-                        },
-                        new
-                        {
-                            Id = new Guid("77cfca31-9574-4f30-8ac5-e87d1eb65663"),
-                            ActivityRoute = "/games/roulette",
-                            CreatedAt = new DateTimeOffset(new DateTime(2026, 7, 6, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)),
-                            DefaultCooldownSeconds = 30,
-                            DefaultMaxPlaysPerDay = 10,
-                            DefaultPointsPerWin = 0,
-                            Description = "لعبة جماعية تعتمد على الحظ والتحدي بين الأعضاء.",
-                            IsEnabledGlobally = true,
-                            Key = "roulette",
-                            Name = "الروليت",
-                            PlayMode = "Multiplayer",
-                            RequiredPlan = "pro",
                             SupportsLeaderboard = true,
                             SupportsResultPublishing = true,
                             SupportsScores = true,
@@ -1591,333 +1493,6 @@ namespace DiscordBot.Infrastructure.Migrations
                     b.HasIndex("GuildId", "IsActive", "CreatedAt");
 
                     b.ToTable("ReactionRoles", (string)null);
-                });
-
-            modelBuilder.Entity("DiscordBot.Domain.Entities.RouletteGuildSettings", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<bool>("AnnounceRoomCreated")
-                        .HasColumnType("boolean");
-
-                    b.Property<bool>("AnnounceWinner")
-                        .HasColumnType("boolean");
-
-                    b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid>("GuildId")
-                        .HasColumnType("uuid");
-
-                    b.Property<int>("JoinWindowSeconds")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("MaxPlayers")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("MinPlayers")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("ParticipationCoins")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("SecondPlaceCoins")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("TurnSeconds")
-                        .HasColumnType("integer");
-
-                    b.Property<DateTimeOffset>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<int>("WinnerCoins")
-                        .HasColumnType("integer");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("GuildId")
-                        .IsUnique();
-
-                    b.ToTable("RouletteGuildSettings", (string)null);
-                });
-
-            modelBuilder.Entity("DiscordBot.Domain.Entities.RouletteJoinIntent", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("ChannelDiscordId")
-                        .IsRequired()
-                        .HasMaxLength(32)
-                        .HasColumnType("character varying(32)");
-
-                    b.Property<DateTimeOffset?>("ConsumedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<DateTimeOffset>("ExpiresAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid>("GuildId")
-                        .HasColumnType("uuid");
-
-                    b.Property<Guid>("RouletteRoomId")
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasMaxLength(24)
-                        .HasColumnType("character varying(24)");
-
-                    b.Property<DateTimeOffset>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("UserDiscordId")
-                        .IsRequired()
-                        .HasMaxLength(32)
-                        .HasColumnType("character varying(32)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("GuildId");
-
-                    b.HasIndex("RouletteRoomId");
-
-                    b.HasIndex("UserDiscordId", "Status", "ExpiresAt");
-
-                    b.ToTable("RouletteJoinIntents", (string)null);
-                });
-
-            modelBuilder.Entity("DiscordBot.Domain.Entities.RoulettePublishAction", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("ChannelDiscordId")
-                        .IsRequired()
-                        .HasMaxLength(32)
-                        .HasColumnType("character varying(32)");
-
-                    b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("ErrorMessage")
-                        .HasMaxLength(2000)
-                        .HasColumnType("character varying(2000)");
-
-                    b.Property<Guid>("GuildId")
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("PayloadJson")
-                        .IsRequired()
-                        .HasColumnType("jsonb");
-
-                    b.Property<DateTimeOffset?>("ProcessedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid>("RouletteRoomId")
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasMaxLength(24)
-                        .HasColumnType("character varying(24)");
-
-                    b.Property<string>("Type")
-                        .IsRequired()
-                        .HasMaxLength(32)
-                        .HasColumnType("character varying(32)");
-
-                    b.Property<DateTimeOffset>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("GuildId");
-
-                    b.HasIndex("RouletteRoomId");
-
-                    b.HasIndex("Status", "CreatedAt");
-
-                    b.ToTable("RoulettePublishActions", (string)null);
-                });
-
-            modelBuilder.Entity("DiscordBot.Domain.Entities.RouletteRoom", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("ChannelDiscordId")
-                        .IsRequired()
-                        .HasMaxLength(32)
-                        .HasColumnType("character varying(32)");
-
-                    b.Property<DateTimeOffset?>("CompletedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<int>("CurrentRound")
-                        .HasColumnType("integer");
-
-                    b.Property<DateTimeOffset>("ExpiresAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<Guid>("GuildId")
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("HostUserDiscordId")
-                        .IsRequired()
-                        .HasMaxLength(32)
-                        .HasColumnType("character varying(32)");
-
-                    b.Property<string>("HostUsername")
-                        .IsRequired()
-                        .HasMaxLength(80)
-                        .HasColumnType("character varying(80)");
-
-                    b.Property<string>("InviteMessageDiscordId")
-                        .HasMaxLength(32)
-                        .HasColumnType("character varying(32)");
-
-                    b.Property<int>("MaxPlayers")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("MinPlayers")
-                        .HasColumnType("integer");
-
-                    b.Property<int>("ParticipationCoins")
-                        .HasColumnType("integer");
-
-                    b.Property<Guid>("PlatformGameDefinitionId")
-                        .HasColumnType("uuid");
-
-                    b.Property<int>("SecondPlaceCoins")
-                        .HasColumnType("integer");
-
-                    b.Property<DateTimeOffset?>("StartedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasMaxLength(24)
-                        .HasColumnType("character varying(24)");
-
-                    b.Property<DateTimeOffset>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<int>("WinnerCoins")
-                        .HasColumnType("integer");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("PlatformGameDefinitionId");
-
-                    b.HasIndex("GuildId", "ChannelDiscordId", "Status");
-
-                    b.ToTable("RouletteRooms", (string)null);
-                });
-
-            modelBuilder.Entity("DiscordBot.Domain.Entities.RouletteRoomPlayer", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<DateTimeOffset?>("EliminatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<int>("Eliminations")
-                        .HasColumnType("integer");
-
-                    b.Property<bool>("IsAlive")
-                        .HasColumnType("boolean");
-
-                    b.Property<bool>("IsHost")
-                        .HasColumnType("boolean");
-
-                    b.Property<DateTimeOffset>("JoinedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<int>("Position")
-                        .HasColumnType("integer");
-
-                    b.Property<Guid>("RouletteRoomId")
-                        .HasColumnType("uuid");
-
-                    b.Property<DateTimeOffset>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("UserDiscordId")
-                        .IsRequired()
-                        .HasMaxLength(32)
-                        .HasColumnType("character varying(32)");
-
-                    b.Property<string>("Username")
-                        .IsRequired()
-                        .HasMaxLength(80)
-                        .HasColumnType("character varying(80)");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("RouletteRoomId", "UserDiscordId")
-                        .IsUnique();
-
-                    b.ToTable("RouletteRoomPlayers", (string)null);
-                });
-
-            modelBuilder.Entity("DiscordBot.Domain.Entities.RouletteRoundAction", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("uuid");
-
-                    b.Property<string>("ActionType")
-                        .IsRequired()
-                        .HasMaxLength(32)
-                        .HasColumnType("character varying(32)");
-
-                    b.Property<string>("ActorUserDiscordId")
-                        .IsRequired()
-                        .HasMaxLength(32)
-                        .HasColumnType("character varying(32)");
-
-                    b.Property<DateTimeOffset>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("DataJson")
-                        .IsRequired()
-                        .HasColumnType("jsonb");
-
-                    b.Property<Guid>("RouletteRoomId")
-                        .HasColumnType("uuid");
-
-                    b.Property<int>("RoundNumber")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("TargetUserDiscordId")
-                        .HasMaxLength(32)
-                        .HasColumnType("character varying(32)");
-
-                    b.Property<DateTimeOffset>("UpdatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("RouletteRoomId", "RoundNumber");
-
-                    b.ToTable("RouletteRoundActions", (string)null);
                 });
 
             modelBuilder.Entity("DiscordBot.Domain.Entities.SubscriptionPlan", b =>
@@ -2568,28 +2143,6 @@ namespace DiscordBot.Infrastructure.Migrations
                     b.Navigation("PlatformGameDefinition");
                 });
 
-            modelBuilder.Entity("DiscordBot.Domain.Entities.GameWallet", b =>
-                {
-                    b.HasOne("DiscordBot.Domain.Entities.Guild", "Guild")
-                        .WithMany("GameWallets")
-                        .HasForeignKey("GuildId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Guild");
-                });
-
-            modelBuilder.Entity("DiscordBot.Domain.Entities.GameWalletTransaction", b =>
-                {
-                    b.HasOne("DiscordBot.Domain.Entities.Guild", "Guild")
-                        .WithMany("GameWalletTransactions")
-                        .HasForeignKey("GuildId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Guild");
-                });
-
             modelBuilder.Entity("DiscordBot.Domain.Entities.GuildGameSetting", b =>
                 {
                     b.HasOne("DiscordBot.Domain.Entities.Guild", "Guild")
@@ -2818,96 +2371,6 @@ namespace DiscordBot.Infrastructure.Migrations
                     b.Navigation("Guild");
                 });
 
-            modelBuilder.Entity("DiscordBot.Domain.Entities.RouletteGuildSettings", b =>
-                {
-                    b.HasOne("DiscordBot.Domain.Entities.Guild", "Guild")
-                        .WithOne("RouletteSettings")
-                        .HasForeignKey("DiscordBot.Domain.Entities.RouletteGuildSettings", "GuildId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Guild");
-                });
-
-            modelBuilder.Entity("DiscordBot.Domain.Entities.RouletteJoinIntent", b =>
-                {
-                    b.HasOne("DiscordBot.Domain.Entities.Guild", "Guild")
-                        .WithMany("RouletteJoinIntents")
-                        .HasForeignKey("GuildId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("DiscordBot.Domain.Entities.RouletteRoom", "RouletteRoom")
-                        .WithMany("JoinIntents")
-                        .HasForeignKey("RouletteRoomId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Guild");
-
-                    b.Navigation("RouletteRoom");
-                });
-
-            modelBuilder.Entity("DiscordBot.Domain.Entities.RoulettePublishAction", b =>
-                {
-                    b.HasOne("DiscordBot.Domain.Entities.Guild", "Guild")
-                        .WithMany("RoulettePublishActions")
-                        .HasForeignKey("GuildId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("DiscordBot.Domain.Entities.RouletteRoom", "RouletteRoom")
-                        .WithMany("PublishActions")
-                        .HasForeignKey("RouletteRoomId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Guild");
-
-                    b.Navigation("RouletteRoom");
-                });
-
-            modelBuilder.Entity("DiscordBot.Domain.Entities.RouletteRoom", b =>
-                {
-                    b.HasOne("DiscordBot.Domain.Entities.Guild", "Guild")
-                        .WithMany("RouletteRooms")
-                        .HasForeignKey("GuildId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.HasOne("DiscordBot.Domain.Entities.PlatformGameDefinition", "PlatformGameDefinition")
-                        .WithMany()
-                        .HasForeignKey("PlatformGameDefinitionId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("Guild");
-
-                    b.Navigation("PlatformGameDefinition");
-                });
-
-            modelBuilder.Entity("DiscordBot.Domain.Entities.RouletteRoomPlayer", b =>
-                {
-                    b.HasOne("DiscordBot.Domain.Entities.RouletteRoom", "RouletteRoom")
-                        .WithMany("Players")
-                        .HasForeignKey("RouletteRoomId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("RouletteRoom");
-                });
-
-            modelBuilder.Entity("DiscordBot.Domain.Entities.RouletteRoundAction", b =>
-                {
-                    b.HasOne("DiscordBot.Domain.Entities.RouletteRoom", "RouletteRoom")
-                        .WithMany("Actions")
-                        .HasForeignKey("RouletteRoomId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("RouletteRoom");
-                });
-
             modelBuilder.Entity("DiscordBot.Domain.Entities.Ticket", b =>
                 {
                     b.HasOne("DiscordBot.Domain.Entities.Guild", "Guild")
@@ -3047,10 +2510,6 @@ namespace DiscordBot.Infrastructure.Migrations
 
                     b.Navigation("GameSettings");
 
-                    b.Navigation("GameWalletTransactions");
-
-                    b.Navigation("GameWallets");
-
                     b.Navigation("GamesSettings");
 
                     b.Navigation("GuildModules");
@@ -3066,14 +2525,6 @@ namespace DiscordBot.Infrastructure.Migrations
                     b.Navigation("ReactionRoles");
 
                     b.Navigation("Roles");
-
-                    b.Navigation("RouletteJoinIntents");
-
-                    b.Navigation("RoulettePublishActions");
-
-                    b.Navigation("RouletteRooms");
-
-                    b.Navigation("RouletteSettings");
 
                     b.Navigation("Settings");
 
@@ -3116,17 +2567,6 @@ namespace DiscordBot.Infrastructure.Migrations
                     b.Navigation("GuildSettings");
 
                     b.Navigation("Sessions");
-                });
-
-            modelBuilder.Entity("DiscordBot.Domain.Entities.RouletteRoom", b =>
-                {
-                    b.Navigation("Actions");
-
-                    b.Navigation("JoinIntents");
-
-                    b.Navigation("Players");
-
-                    b.Navigation("PublishActions");
                 });
 
             modelBuilder.Entity("DiscordBot.Domain.Entities.SubscriptionPlan", b =>

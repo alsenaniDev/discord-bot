@@ -1,3 +1,5 @@
+using DiscordBot.Domain.Enums;
+
 namespace DiscordBot.Domain.Entities;
 
 public class PlatformGameDefinition : BaseEntity
@@ -8,6 +10,7 @@ public class PlatformGameDefinition : BaseEntity
     public string? IconUrl { get; set; }
     public string ActivityRoute { get; set; } = string.Empty;
     public string RequiredPlan { get; set; } = "free";
+    public GamePlayMode PlayMode { get; set; } = GamePlayMode.Solo;
     public bool IsEnabledGlobally { get; set; } = true;
     public int DefaultPointsPerWin { get; set; } = 10;
     public int DefaultCooldownSeconds { get; set; } = 30;

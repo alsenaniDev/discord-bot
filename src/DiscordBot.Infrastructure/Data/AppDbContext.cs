@@ -45,6 +45,14 @@ public class AppDbContext : DbContext
     public DbSet<GamePlayer> GamePlayers => Set<GamePlayer>();
     public DbSet<GameContent> GameContent => Set<GameContent>();
     public DbSet<GameResultPublishAction> GameResultPublishActions => Set<GameResultPublishAction>();
+    public DbSet<RouletteGuildSettings> RouletteGuildSettings => Set<RouletteGuildSettings>();
+    public DbSet<GameWallet> GameWallets => Set<GameWallet>();
+    public DbSet<GameWalletTransaction> GameWalletTransactions => Set<GameWalletTransaction>();
+    public DbSet<RouletteRoom> RouletteRooms => Set<RouletteRoom>();
+    public DbSet<RouletteRoomPlayer> RouletteRoomPlayers => Set<RouletteRoomPlayer>();
+    public DbSet<RouletteRoundAction> RouletteRoundActions => Set<RouletteRoundAction>();
+    public DbSet<RouletteJoinIntent> RouletteJoinIntents => Set<RouletteJoinIntent>();
+    public DbSet<RoulettePublishAction> RoulettePublishActions => Set<RoulettePublishAction>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

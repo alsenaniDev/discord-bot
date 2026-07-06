@@ -7,7 +7,7 @@ using Microsoft.AspNetCore.Mvc;
 namespace DiscordBot.Api.Controllers;
 
 [Authorize, ApiController, Route("api/guilds/{guildId:guid}/games")]
-public class GuildGamesController(IGameHubService games, IGuildAccessService access) : ControllerBase
+public class GuildGamesController(IGameHubService games, IRouletteService roulette, IGuildAccessService access) : ControllerBase
 {
     [HttpGet("settings")]
     public async Task<IActionResult> GetSettings(Guid guildId, CancellationToken ct) => !await Allowed(guildId, ct) ? NotFound() : (await games.GetGuildSettingsAsync(guildId, ct)) is { } value ? Ok(value) : NotFound();
@@ -23,6 +23,12 @@ public class GuildGamesController(IGameHubService games, IGuildAccessService acc
 
     [HttpGet("leaderboard")]
     public async Task<IActionResult> Leaderboard(Guid guildId, [FromQuery] Guid? gameId, [FromQuery] int limit = 10, CancellationToken ct = default) => !await Allowed(guildId, ct) ? NotFound() : (await games.GetLeaderboardAsync(guildId, gameId, limit, ct)) is { } value ? Ok(value) : NotFound();
+
+    [HttpGet("roulette/settings")]
+    public async Task<IActionResult> GetRouletteSettings(Guid guildId, CancellationToken ct) => !await Allowed(guildId, ct) ? NotFound() : (await roulette.GetSettingsAsync(guildId, ct)) is { } value ? Ok(value) : NotFound();
+
+    [HttpPut("roulette/settings")]
+    public async Task<IActionResult> UpdateRouletteSettings(Guid guildId, UpdateRouletteSettingsRequest request, CancellationToken ct) => !await Allowed(guildId, ct) ? NotFound() : Result(await roulette.UpdateSettingsAsync(guildId, request, ct));
 
     private async Task<bool> Allowed(Guid guildId, CancellationToken ct)
     {

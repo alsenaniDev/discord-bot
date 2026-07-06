@@ -59,6 +59,7 @@ builder.Services.AddSingleton<GamesHubInteractionService>();
 builder.Services.AddSingleton<GamesContextCache>();
 builder.Services.AddSingleton<DiscordActivityLaunchService>();
 builder.Services.AddSingleton<GameResultPublishService>();
+builder.Services.AddSingleton<RoulettePublishService>();
 builder.Services.AddSingleton<MusicSessionManager>();
 builder.Services.AddSingleton<IAudioSearchService, LavalinkAudioSearchService>();
 builder.Services.AddSingleton<IMusicService, MusicService>();

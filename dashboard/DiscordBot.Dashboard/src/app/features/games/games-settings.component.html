@@ -11,7 +11,37 @@
     </form>
 
     <section class="games-list"><app-section-header title="الألعاب المتاحة" lead="يمكنك تفعيل الألعاب التي نشرها مدير المنصة فقط." [compact]="true"></app-section-header>
-      <article class="card game-card" *ngFor="let game of games" [class.locked]="!game.isAvailableByPlan">
+      <div class="game-mode-group">
+        <app-section-header title="الألعاب الفردية" lead="ألعاب وتحديات يلعبها العضو بشكل فردي." [compact]="true"></app-section-header>
+        <ng-container *ngFor="let game of soloGames"><ng-container *ngTemplateOutlet="gameCard; context: {$implicit: game}"></ng-container></ng-container>
+        <app-empty-state *ngIf="soloGames.length === 0" [nested]="true" title="لا توجد ألعاب فردية" description="لا توجد ألعاب فردية مفعّلة حاليًا."></app-empty-state>
+      </div>
+      <div class="game-mode-group">
+        <app-section-header title="الألعاب الجماعية" lead="ألعاب مهيأة لمشاركة أكثر من لاعب." [compact]="true"></app-section-header>
+        <ng-container *ngFor="let game of multiplayerGames"><ng-container *ngTemplateOutlet="gameCard; context: {$implicit: game}"></ng-container></ng-container>
+        <app-empty-state *ngIf="multiplayerGames.length === 0" [nested]="true" title="لا توجد ألعاب جماعية" description="لا توجد ألعاب جماعية مفعّلة حاليًا."></app-empty-state>
+      </div>
+    </section>
+
+    <form class="card settings-card roulette-settings" [formGroup]="rouletteForm" (ngSubmit)="saveRouletteSettings()">
+      <app-section-header title="🎡 إعدادات الروليت" lead="حدد عدد اللاعبين ومكافآت العملات الافتراضية ومدة انتظار الجولة." [compact]="true"></app-section-header>
+      <div class="settings-grid">
+        <label class="form-field"><span>الحد الأدنى للاعبين</span><input class="input ds-input" type="number" min="2" max="10" formControlName="minPlayers"></label>
+        <label class="form-field"><span>الحد الأعلى للاعبين</span><input class="input ds-input" type="number" min="2" max="10" formControlName="maxPlayers"></label>
+        <label class="form-field"><span>مكافأة الفائز</span><input class="input ds-input" type="number" min="0" max="1000" formControlName="winnerCoins"><span class="hint">عملات افتراضية</span></label>
+        <label class="form-field"><span>مكافأة المركز الثاني</span><input class="input ds-input" type="number" min="0" max="500" formControlName="secondPlaceCoins"><span class="hint">عملات افتراضية</span></label>
+        <label class="form-field"><span>مكافأة المشاركة</span><input class="input ds-input" type="number" min="0" max="100" formControlName="participationCoins"><span class="hint">عملات افتراضية</span></label>
+        <label class="form-field"><span>مدة انتظار الانضمام</span><input class="input ds-input" type="number" min="30" max="300" formControlName="joinWindowSeconds"><span class="hint">بالثواني</span></label>
+        <label class="form-field"><span>مدة الدور</span><input class="input ds-input" type="number" min="10" max="120" formControlName="turnSeconds"><span class="hint">بالثواني</span></label>
+        <label class="checkbox"><input type="checkbox" formControlName="announceRoomCreated">نشر رسالة عند إنشاء غرفة</label>
+        <label class="checkbox"><input type="checkbox" formControlName="announceWinner">نشر الفائز بعد نهاية اللعبة</label>
+      </div>
+      <p class="muted coin-notice">العملات افتراضية داخل اللعبة فقط، ولا يمكن شراؤها أو سحبها أو تحويلها.</p>
+      <div class="form-actions"><button class="btn btn-primary" [disabled]="savingRoulette || rouletteForm.invalid">{{savingRoulette ? 'جاري الحفظ...' : 'حفظ إعدادات الروليت'}}</button></div>
+    </form>
+
+    <ng-template #gameCard let-game>
+      <article class="card game-card" [class.locked]="!game.isAvailableByPlan">
         <div class="game-header"><div><h3>{{game.name}}</h3><p class="muted">{{game.description}}</p></div><span class="badge" [class.badge-success]="game.isAvailableByPlan">{{game.isAvailableByPlan ? 'متاحة في الباقة' : 'مقفلة حسب الباقة'}}</span></div>
         <div class="game-controls"><label class="checkbox wide"><input type="checkbox" [(ngModel)]="game.isEnabledForGuild" [ngModelOptions]="{standalone:true}" [disabled]="!game.isAvailableByPlan || !form.value.isEnabled">تفعيل اللعبة في السيرفر</label>
           <ng-container *ngIf="game.supportsScores"><label class="checkbox"><input type="checkbox" [(ngModel)]="game.pointsEnabled" [ngModelOptions]="{standalone:true}" [disabled]="!game.isAvailableByPlan">تفعيل النقاط</label><label class="form-field"><span>النقاط لكل فوز</span><input class="input ds-input" type="number" min="0" [(ngModel)]="game.pointsPerWin" [ngModelOptions]="{standalone:true}" [disabled]="!game.pointsEnabled || !game.isAvailableByPlan"></label></ng-container>
@@ -19,8 +49,8 @@
         </div>
         <div class="publishing" *ngIf="game.supportsResultPublishing || game.supportsLeaderboard"><h4>نشر النتائج</h4><div class="publishing-options"><label class="checkbox" *ngIf="game.supportsResultPublishing"><input type="checkbox" [(ngModel)]="game.publishResultAfterGame" [ngModelOptions]="{standalone:true}" [disabled]="!game.isAvailableByPlan">نشر النتيجة بعد انتهاء اللعبة</label><label class="checkbox" *ngIf="game.supportsLeaderboard"><input type="checkbox" [(ngModel)]="game.publishLeaderboardAfterGame" [ngModelOptions]="{standalone:true}" [disabled]="!game.isAvailableByPlan">نشر الترتيب بعد انتهاء اللعبة</label><label class="checkbox" *ngIf="game.supportsResultPublishing"><input type="checkbox" [(ngModel)]="game.publishOnlyWins" [ngModelOptions]="{standalone:true}" [disabled]="!game.publishResultAfterGame || !game.isAvailableByPlan">نشر نتائج الفوز فقط</label></div></div>
         <p class="locked-reason" *ngIf="game.lockedReason">{{game.lockedReason}}</p><div class="game-actions"><button class="btn btn-primary btn-sm" (click)="saveGame(game)" [disabled]="!game.isAvailableByPlan || savingGameId === game.id">{{savingGameId === game.id ? 'جاري الحفظ...' : 'حفظ إعدادات اللعبة'}}</button></div>
-      </article><app-empty-state *ngIf="games.length === 0" title="لا توجد ألعاب متاحة" description="سيظهر هنا ما ينشره مدير المنصة من ألعاب."></app-empty-state>
-    </section>
+      </article>
+    </ng-template>
 
     <section class="card leaderboard"><app-section-header title="🏆 الترتيب" lead="أعلى اللاعبين حسب مجموع النقاط في السيرفر." [compact]="true"></app-section-header><div class="leader-row" *ngFor="let player of leaderboard; index as i"><strong>{{i + 1}}</strong><span>{{player.username}}</span><b>{{player.totalPoints}} نقطة</b><small>{{player.wins}} فوز</small></div><app-empty-state *ngIf="leaderboard.length === 0" title="لا توجد نتائج بعد" description="يظهر الترتيب بعد إكمال أول لعبة."></app-empty-state></section>
   </div>

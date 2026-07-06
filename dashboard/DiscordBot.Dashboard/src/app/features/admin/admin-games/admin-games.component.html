@@ -12,6 +12,7 @@
         <label class="form-field"><span>رابط الأيقونة</span><input class="input ds-input" type="url" formControlName="iconUrl" placeholder="https://..."></label>
         <label class="form-field"><span>المسار الداخلي</span><input class="input ds-input" type="text" formControlName="activityRoute" placeholder="/games/quiz"></label>
         <label class="form-field"><span>متاحة في الباقة</span><select class="input ds-select" formControlName="requiredPlan"><option value="free">المجانية</option><option value="basic">الأساسية</option><option value="pro">الاحترافية</option><option value="premium">المميزة</option></select></label>
+        <label class="form-field"><span>نوع اللعبة</span><select class="input ds-select" formControlName="playMode"><option value="Solo">فردية</option><option value="Multiplayer">جماعية</option></select></label>
         <label class="form-field"><span>النقاط لكل فوز</span><input class="input ds-input" type="number" min="0" formControlName="defaultPointsPerWin"></label>
         <label class="form-field"><span>مدة الانتظار بالثواني</span><input class="input ds-input" type="number" min="0" formControlName="defaultCooldownSeconds"></label>
         <label class="form-field"><span>الحد اليومي للعب</span><input class="input ds-input" type="number" min="0" formControlName="defaultMaxPlaysPerDay"></label>
@@ -20,7 +21,7 @@
       <div class="form-actions"><button type="button" class="btn btn-secondary" *ngIf="editingId" (click)="cancel()">إلغاء</button><button class="btn btn-primary" [disabled]="saving || form.invalid">{{saving ? 'جاري الحفظ...' : 'حفظ اللعبة'}}</button></div>
     </form>
     <section class="catalog-list">
-      <article class="card game-row" *ngFor="let game of games"><div class="game-copy"><div class="game-title"><h3>{{game.name}}</h3><span class="badge" [class.badge-success]="game.isEnabledGlobally">{{game.isEnabledGlobally ? 'مفعّلة عالميًا' : 'متوقفة'}}</span></div><p>{{game.description || 'بدون وصف'}}</p><div class="meta"><span>{{game.key}}</span><span>{{game.activityRoute}}</span><span>باقة {{game.requiredPlan}}</span></div></div><div class="row-actions"><button class="btn btn-secondary btn-sm" (click)="edit(game)">تعديل</button><button class="btn btn-ghost btn-sm" (click)="toggle(game)">{{game.isEnabledGlobally ? 'إيقاف' : 'تفعيل'}}</button></div></article>
+      <article class="card game-row" *ngFor="let game of games"><div class="game-copy"><div class="game-title"><h3>{{game.name}}</h3><span class="badge" [class.badge-success]="game.isEnabledGlobally">{{game.isEnabledGlobally ? 'مفعّلة عالميًا' : 'متوقفة'}}</span><span class="badge">{{game.playMode === 'Multiplayer' ? 'جماعية' : 'فردية'}}</span></div><p>{{game.description || 'بدون وصف'}}</p><div class="meta"><span>{{game.key}}</span><span>{{game.activityRoute}}</span><span>باقة {{game.requiredPlan}}</span></div></div><div class="row-actions"><button class="btn btn-secondary btn-sm" (click)="edit(game)">تعديل</button><button class="btn btn-ghost btn-sm" (click)="toggle(game)">{{game.isEnabledGlobally ? 'إيقاف' : 'تفعيل'}}</button></div></article>
       <app-empty-state *ngIf="games.length === 0" title="لا توجد ألعاب" description="أضف أول لعبة إلى كتالوج المنصة."></app-empty-state>
     </section>
   </ng-container>

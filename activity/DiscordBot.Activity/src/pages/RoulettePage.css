@@ -1,0 +1,28 @@
+.danger { background: var(--danger); }
+.roulette-summary { display: flex; align-items: center; gap: 1rem; flex-wrap: wrap; margin-bottom: 2rem; }
+.wallet-card, .room-card, .players-card, .roulette-stage { border: 1px solid var(--border); border-radius: 1.25rem; background: rgba(23, 26, 36, .94); box-shadow: 0 18px 45px rgba(0, 0, 0, .2); }
+.wallet-card { display: grid; padding: .85rem 1.2rem; min-width: 10rem; }
+.wallet-card span { color: var(--muted); font-size: .85rem; }
+.wallet-card strong { font-size: 1.25rem; }
+.room-list { display: grid; gap: 1rem; }
+.room-list .section-head { margin: 0; }
+.room-card { display: flex; justify-content: space-between; align-items: center; gap: 1rem; padding: 1.1rem 1.25rem; }
+.room-card h2, .room-card p { margin: 0; }
+.room-card p { color: var(--muted); margin-top: .25rem; }
+.roulette-room-head, .room-meta { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: 1rem; }
+.status-pill { padding: .45rem .8rem; border-radius: 2rem; background: var(--panel-2); font-size: .85rem; }
+.status-inprogress { background: rgba(88, 101, 242, .25); color: #cbd0ff; }
+.status-completed { background: rgba(59, 165, 93, .2); color: #9ee6b3; }
+.roulette-stage { text-align: center; padding: 2rem; margin-bottom: 1rem; }
+.roulette-wheel { font-size: 5rem; filter: drop-shadow(0 0 1.5rem rgba(235, 69, 158, .35)); }
+.roulette-stage h1 { margin: .5rem 0; }
+.roulette-stage p { margin: .25rem; color: var(--muted); }
+.event-banner { margin: 1rem auto 0; padding: .75rem 1rem; max-width: 24rem; border-radius: .75rem; background: rgba(237, 66, 69, .14); color: #ffb3b5; }
+.players-card { padding: 1.25rem; }
+.room-meta span { color: var(--muted); }
+.room-meta b { color: #fff; margin-inline-start: .35rem; }
+.player-list { display: grid; grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr)); gap: .7rem; }
+.player-chip { display: flex; justify-content: space-between; gap: .5rem; padding: .8rem; border-radius: .75rem; background: var(--panel-2); }
+.player-chip small { color: #b9bffc; }
+.player-chip.eliminated { opacity: .5; text-decoration: line-through; }
+@media (max-width: 600px) { .room-card { align-items: stretch; flex-direction: column; } .room-card .button { width: 100%; } .roulette-summary > * { flex: 1 1 100%; } }

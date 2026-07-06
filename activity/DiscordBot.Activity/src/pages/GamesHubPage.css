@@ -1,0 +1,12 @@
+.game-group {
+  margin-top: 2rem;
+}
+
+.group-title {
+  margin: 0 0 1rem;
+  font-size: 1.25rem;
+}
+
+.game-group > .empty-card {
+  padding: 1.25rem;
+}

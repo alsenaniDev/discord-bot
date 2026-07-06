@@ -979,6 +979,29 @@ public class BotApiClient
         try { var response = await _httpClient.PostAsJsonAsync($"api/bot/games/publish-actions/{id:D}/ack", request, JsonOptions, ct); if (!response.IsSuccessStatusCode) _logger.LogWarning("Game publish action {ActionId} ack failed: {Status}.", id, response.StatusCode); }
         catch (Exception ex) { _logger.LogError(ex, "Could not ack game publish action {ActionId}.", id); }
     }
+
+    public async Task<(PrepareRouletteJoinApiResponse? Value, string? Error)> PrepareRouletteJoinAsync(Guid roomId, PrepareRouletteJoinApiRequest request, CancellationToken ct = default)
+    {
+        try
+        {
+            var response = await _httpClient.PostAsJsonAsync($"api/bot/games/roulette/rooms/{roomId:D}/prepare-join", request, JsonOptions, ct);
+            if (response.IsSuccessStatusCode) return (await response.Content.ReadFromJsonAsync<PrepareRouletteJoinApiResponse>(JsonOptions, ct), null);
+            return (null, (await response.Content.ReadFromJsonAsync<ApiErrorResponse>(JsonOptions, ct))?.Message ?? "تعذر تجهيز الانضمام لهذه الجولة.");
+        }
+        catch (Exception ex) { _logger.LogError(ex, "Could not prepare Roulette join for room {RoomId}, user {UserId}.", roomId, request.UserDiscordId); return (null, "تعذر التواصل مع منصة الألعاب الآن."); }
+    }
+
+    public async Task<IReadOnlyList<PendingRoulettePublishActionApiResponse>> GetPendingRoulettePublishActionsAsync(CancellationToken ct = default)
+    {
+        try { return await _httpClient.GetFromJsonAsync<List<PendingRoulettePublishActionApiResponse>>("api/bot/games/roulette/publish-actions/pending", JsonOptions, ct) ?? []; }
+        catch (Exception ex) { _logger.LogError(ex, "Could not load pending Roulette publish actions."); return []; }
+    }
+
+    public async Task AckRoulettePublishActionAsync(Guid id, AckRoulettePublishActionApiRequest request, CancellationToken ct = default)
+    {
+        try { var response = await _httpClient.PostAsJsonAsync($"api/bot/games/roulette/publish-actions/{id:D}/ack", request, JsonOptions, ct); if (!response.IsSuccessStatusCode) _logger.LogWarning("Roulette publish action {ActionId} ack failed: {Status}.", id, response.StatusCode); }
+        catch (Exception ex) { _logger.LogError(ex, "Could not ack Roulette publish action {ActionId}.", id); }
+    }
 }
 
 public sealed class ApiErrorResponse

@@ -1,4 +1,5 @@
 using DiscordBot.Domain.Entities;
+using DiscordBot.Domain.Enums;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -7,6 +8,7 @@ namespace DiscordBot.Infrastructure.Data.Configurations;
 public class PlatformGameDefinitionConfiguration : IEntityTypeConfiguration<PlatformGameDefinition>
 {
     public static readonly Guid QuizId = Guid.Parse("8f763e4f-d09e-48f5-b77b-406ecef81f98");
+    public static readonly Guid RouletteId = Guid.Parse("77cfca31-9574-4f30-8ac5-e87d1eb65663");
 
     public void Configure(EntityTypeBuilder<PlatformGameDefinition> b)
     {
@@ -14,15 +16,110 @@ public class PlatformGameDefinitionConfiguration : IEntityTypeConfiguration<Plat
         b.Property(x => x.Key).HasMaxLength(64).IsRequired(); b.Property(x => x.Name).HasMaxLength(150).IsRequired();
         b.Property(x => x.Description).HasMaxLength(2000); b.Property(x => x.IconUrl).HasMaxLength(1000);
         b.Property(x => x.ActivityRoute).HasMaxLength(300).IsRequired(); b.Property(x => x.RequiredPlan).HasMaxLength(32).IsRequired();
+        b.Property(x => x.PlayMode).HasConversion<string>().HasMaxLength(24).HasDefaultValue(GamePlayMode.Solo).IsRequired();
         var seededAt = new DateTimeOffset(2026, 7, 6, 0, 0, 0, TimeSpan.Zero);
         b.HasData(new PlatformGameDefinition
         {
             Id = QuizId, Key = "quiz", Name = "تحدي الأسئلة", Description = "جاوب على الأسئلة واكسب نقاط.",
-            ActivityRoute = "/games/quiz", RequiredPlan = "free", IsEnabledGlobally = true,
+            ActivityRoute = "/games/quiz", RequiredPlan = "free", PlayMode = GamePlayMode.Solo, IsEnabledGlobally = true,
             DefaultPointsPerWin = 10, DefaultCooldownSeconds = 30, DefaultMaxPlaysPerDay = 10,
             SupportsScores = true, SupportsLeaderboard = true, SupportsResultPublishing = true,
             CreatedAt = seededAt, UpdatedAt = seededAt
         });
+        b.HasData(new PlatformGameDefinition
+        {
+            Id = RouletteId, Key = "roulette", Name = "الروليت", Description = "لعبة جماعية تعتمد على الحظ والتحدي بين الأعضاء.",
+            ActivityRoute = "/games/roulette", RequiredPlan = "pro", PlayMode = GamePlayMode.Multiplayer, IsEnabledGlobally = true,
+            DefaultPointsPerWin = 0, DefaultCooldownSeconds = 30, DefaultMaxPlaysPerDay = 10,
+            SupportsScores = true, SupportsLeaderboard = true, SupportsResultPublishing = true,
+            CreatedAt = seededAt, UpdatedAt = seededAt
+        });
+    }
+}
+
+public class RouletteGuildSettingsConfiguration : IEntityTypeConfiguration<RouletteGuildSettings>
+{
+    public void Configure(EntityTypeBuilder<RouletteGuildSettings> b)
+    {
+        b.ToTable("RouletteGuildSettings"); b.HasKey(x => x.Id); b.HasIndex(x => x.GuildId).IsUnique();
+        b.HasOne(x => x.Guild).WithOne(x => x.RouletteSettings).HasForeignKey<RouletteGuildSettings>(x => x.GuildId).OnDelete(DeleteBehavior.Cascade);
+    }
+}
+
+public class GameWalletConfiguration : IEntityTypeConfiguration<GameWallet>
+{
+    public void Configure(EntityTypeBuilder<GameWallet> b)
+    {
+        b.ToTable("GameWallets", table => table.HasCheckConstraint("CK_GameWallets_Balance_NonNegative", "\"Balance\" >= 0")); b.HasKey(x => x.Id); b.HasIndex(x => new { x.GuildId, x.UserDiscordId }).IsUnique();
+        b.Property(x => x.UserDiscordId).HasMaxLength(32).IsRequired();
+        b.HasOne(x => x.Guild).WithMany(x => x.GameWallets).HasForeignKey(x => x.GuildId).OnDelete(DeleteBehavior.Cascade);
+    }
+}
+
+public class GameWalletTransactionConfiguration : IEntityTypeConfiguration<GameWalletTransaction>
+{
+    public void Configure(EntityTypeBuilder<GameWalletTransaction> b)
+    {
+        b.ToTable("GameWalletTransactions"); b.HasKey(x => x.Id); b.HasIndex(x => new { x.GuildId, x.UserDiscordId, x.CreatedAt });
+        b.HasIndex(x => x.ReferenceId); b.HasIndex(x => new { x.ReferenceId, x.UserDiscordId, x.Type }).IsUnique(); b.Property(x => x.UserDiscordId).HasMaxLength(32).IsRequired();
+        b.Property(x => x.Type).HasMaxLength(64).IsRequired(); b.Property(x => x.Reason).HasMaxLength(500).IsRequired();
+        b.HasOne(x => x.Guild).WithMany(x => x.GameWalletTransactions).HasForeignKey(x => x.GuildId).OnDelete(DeleteBehavior.Cascade);
+    }
+}
+
+public class RouletteRoomConfiguration : IEntityTypeConfiguration<RouletteRoom>
+{
+    public void Configure(EntityTypeBuilder<RouletteRoom> b)
+    {
+        b.ToTable("RouletteRooms"); b.HasKey(x => x.Id); b.HasIndex(x => new { x.GuildId, x.ChannelDiscordId, x.Status });
+        b.Property(x => x.ChannelDiscordId).HasMaxLength(32).IsRequired(); b.Property(x => x.HostUserDiscordId).HasMaxLength(32).IsRequired();
+        b.Property(x => x.HostUsername).HasMaxLength(80).IsRequired(); b.Property(x => x.Status).HasMaxLength(24).IsRequired(); b.Property(x => x.InviteMessageDiscordId).HasMaxLength(32);
+        b.HasOne(x => x.Guild).WithMany(x => x.RouletteRooms).HasForeignKey(x => x.GuildId).OnDelete(DeleteBehavior.Restrict);
+        b.HasOne(x => x.PlatformGameDefinition).WithMany().HasForeignKey(x => x.PlatformGameDefinitionId).OnDelete(DeleteBehavior.Restrict);
+    }
+}
+
+public class RouletteRoomPlayerConfiguration : IEntityTypeConfiguration<RouletteRoomPlayer>
+{
+    public void Configure(EntityTypeBuilder<RouletteRoomPlayer> b)
+    {
+        b.ToTable("RouletteRoomPlayers"); b.HasKey(x => x.Id); b.HasIndex(x => new { x.RouletteRoomId, x.UserDiscordId }).IsUnique();
+        b.Property(x => x.UserDiscordId).HasMaxLength(32).IsRequired(); b.Property(x => x.Username).HasMaxLength(80).IsRequired();
+        b.HasOne(x => x.RouletteRoom).WithMany(x => x.Players).HasForeignKey(x => x.RouletteRoomId).OnDelete(DeleteBehavior.Cascade);
+    }
+}
+
+public class RouletteRoundActionConfiguration : IEntityTypeConfiguration<RouletteRoundAction>
+{
+    public void Configure(EntityTypeBuilder<RouletteRoundAction> b)
+    {
+        b.ToTable("RouletteRoundActions"); b.HasKey(x => x.Id); b.HasIndex(x => new { x.RouletteRoomId, x.RoundNumber });
+        b.Property(x => x.ActorUserDiscordId).HasMaxLength(32).IsRequired(); b.Property(x => x.TargetUserDiscordId).HasMaxLength(32);
+        b.Property(x => x.ActionType).HasMaxLength(32).IsRequired(); b.Property(x => x.DataJson).HasColumnType("jsonb").IsRequired();
+        b.HasOne(x => x.RouletteRoom).WithMany(x => x.Actions).HasForeignKey(x => x.RouletteRoomId).OnDelete(DeleteBehavior.Cascade);
+    }
+}
+
+public class RouletteJoinIntentConfiguration : IEntityTypeConfiguration<RouletteJoinIntent>
+{
+    public void Configure(EntityTypeBuilder<RouletteJoinIntent> b)
+    {
+        b.ToTable("RouletteJoinIntents"); b.HasKey(x => x.Id); b.HasIndex(x => new { x.UserDiscordId, x.Status, x.ExpiresAt });
+        b.Property(x => x.UserDiscordId).HasMaxLength(32).IsRequired(); b.Property(x => x.ChannelDiscordId).HasMaxLength(32).IsRequired(); b.Property(x => x.Status).HasMaxLength(24).IsRequired();
+        b.HasOne(x => x.Guild).WithMany(x => x.RouletteJoinIntents).HasForeignKey(x => x.GuildId).OnDelete(DeleteBehavior.Cascade);
+        b.HasOne(x => x.RouletteRoom).WithMany(x => x.JoinIntents).HasForeignKey(x => x.RouletteRoomId).OnDelete(DeleteBehavior.Cascade);
+    }
+}
+
+public class RoulettePublishActionConfiguration : IEntityTypeConfiguration<RoulettePublishAction>
+{
+    public void Configure(EntityTypeBuilder<RoulettePublishAction> b)
+    {
+        b.ToTable("RoulettePublishActions"); b.HasKey(x => x.Id); b.HasIndex(x => new { x.Status, x.CreatedAt });
+        b.Property(x => x.ChannelDiscordId).HasMaxLength(32).IsRequired(); b.Property(x => x.Type).HasMaxLength(32).IsRequired(); b.Property(x => x.Status).HasMaxLength(24).IsRequired();
+        b.Property(x => x.PayloadJson).HasColumnType("jsonb").IsRequired(); b.Property(x => x.ErrorMessage).HasMaxLength(2000);
+        b.HasOne(x => x.Guild).WithMany(x => x.RoulettePublishActions).HasForeignKey(x => x.GuildId).OnDelete(DeleteBehavior.Restrict);
+        b.HasOne(x => x.RouletteRoom).WithMany(x => x.PublishActions).HasForeignKey(x => x.RouletteRoomId).OnDelete(DeleteBehavior.Cascade);
     }
 }
 
