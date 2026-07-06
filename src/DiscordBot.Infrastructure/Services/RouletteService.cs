@@ -118,15 +118,19 @@ public class RouletteService(AppDbContext db, ILogger<RouletteService> logger) :
         // Lock only this room while validating capacity. Serializable transactions can
         // abort otherwise-valid mobile joins when two Activity clients arrive together.
         await using var transaction = await db.Database.BeginTransactionAsync(IsolationLevel.ReadCommitted, ct);
-        await db.Database.ExecuteSqlInterpolatedAsync($"SELECT 1 FROM \"RouletteRooms\" WHERE \"Id\" = {roomId} FOR UPDATE", ct);
+        // A no-op UPDATE is an explicit PostgreSQL row lock and is valid through
+        // ExecuteNonQuery on every supported Npgsql version.
+        await db.Database.ExecuteSqlInterpolatedAsync($"UPDATE \"RouletteRooms\" SET \"UpdatedAt\" = \"UpdatedAt\" WHERE \"Id\" = {roomId}", ct);
         var room = await LoadRoomAsync(roomId, ct); var error = ValidateRoomScope(room, guildDiscordId, channelDiscordId);
         if (error is not null) return GameHubResult<RouletteRoomDto>.Fail(error.Value.Message, error.Value.Code);
         if (room!.Status != "Waiting") return GameHubResult<RouletteRoomDto>.Fail("هذه الجولة لم تعد متاحة للانضمام.", 409);
         if (room.ExpiresAt <= DateTimeOffset.UtcNow) { room.Status = "Expired"; await db.SaveChangesAsync(ct); await transaction.CommitAsync(ct); return GameHubResult<RouletteRoomDto>.Fail("انتهت مدة الانضمام لهذه الجولة.", 410); }
         if (room.Players.Any(x => x.UserDiscordId == userDiscordId)) return GameHubResult<RouletteRoomDto>.Fail("أنت منضم لهذه الجولة بالفعل.", 409);
         if (room.Players.Count >= room.MaxPlayers) return GameHubResult<RouletteRoomDto>.Fail("اكتمل عدد اللاعبين في هذه الجولة.", 409);
-        var player = new RouletteRoomPlayer { RouletteRoomId = room.Id, UserDiscordId = userDiscordId, Username = CleanUsername(username, userDiscordId), Position = room.Players.Count + 1 };
-        room.Players.Add(player); room.Actions.Add(Action(room.Id, 0, userDiscordId, null, "PlayerJoined"));
+        var player = new RouletteRoomPlayer { RouletteRoomId = room.Id, RouletteRoom = room, UserDiscordId = userDiscordId, Username = CleanUsername(username, userDiscordId), Position = room.Players.Count + 1 };
+        db.RouletteRoomPlayers.Add(player);
+        if (!room.Players.Contains(player)) room.Players.Add(player);
+        AddAction(room, 0, userDiscordId, null, "PlayerJoined");
         await db.SaveChangesAsync(ct); await transaction.CommitAsync(ct);
         logger.LogInformation("User {UserId} joined Roulette room {RoomId}. Players: {PlayerCount}/{MaxPlayers}.", userDiscordId, room.Id, room.Players.Count, room.MaxPlayers);
         return GameHubResult<RouletteRoomDto>.Ok(MapRoom(room, guildDiscordId));
@@ -134,14 +138,19 @@ public class RouletteService(AppDbContext db, ILogger<RouletteService> logger) :
 
     public async Task<GameHubResult<RouletteRoomDto>> LeaveRoomAsync(Guid roomId, string guildDiscordId, string channelDiscordId, string userDiscordId, CancellationToken ct = default)
     {
+        await using var transaction = await db.Database.BeginTransactionAsync(IsolationLevel.ReadCommitted, ct);
+        await db.Database.ExecuteSqlInterpolatedAsync($"UPDATE \"RouletteRooms\" SET \"UpdatedAt\" = \"UpdatedAt\" WHERE \"Id\" = {roomId}", ct);
         var room = await LoadRoomAsync(roomId, ct); var error = ValidateRoomScope(room, guildDiscordId, channelDiscordId);
         if (error is not null) return GameHubResult<RouletteRoomDto>.Fail(error.Value.Message, error.Value.Code);
         if (room!.Status != "Waiting") return GameHubResult<RouletteRoomDto>.Fail("لا يمكن مغادرة الجولة بعد بدء اللعبة.", 409);
         var player = room.Players.FirstOrDefault(x => x.UserDiscordId == userDiscordId);
         if (player is null) return GameHubResult<RouletteRoomDto>.Fail("أنت غير منضم لهذه الجولة.", 404);
-        room.Actions.Add(Action(room.Id, 0, userDiscordId, null, "PlayerLeft"));
+        AddAction(room, 0, userDiscordId, null, "PlayerLeft");
+        // ExecuteDelete avoids EF relationship/orphan tracking errors when the
+        // tracked player is also removed from the room DTO collection.
+        await db.RouletteRoomPlayers.Where(x => x.Id == player.Id).ExecuteDeleteAsync(ct);
+        db.Entry(player).State = EntityState.Detached;
         room.Players.Remove(player);
-        db.Entry(player).State = EntityState.Deleted;
         if (player.IsHost)
         {
             var next = room.Players.OrderBy(x => x.JoinedAt).FirstOrDefault();
@@ -153,7 +162,7 @@ public class RouletteService(AppDbContext db, ILogger<RouletteService> logger) :
             }
             else { next.IsHost = true; room.HostUserDiscordId = next.UserDiscordId; room.HostUsername = next.Username; }
         }
-        await db.SaveChangesAsync(ct);
+        await db.SaveChangesAsync(ct); await transaction.CommitAsync(ct);
         logger.LogInformation("User {UserId} left Roulette room {RoomId}. New status: {Status}; new host: {HostUserId}.", userDiscordId, room.Id, room.Status, room.HostUserDiscordId);
         return GameHubResult<RouletteRoomDto>.Ok(MapRoom(room, guildDiscordId));
     }
@@ -168,7 +177,7 @@ public class RouletteService(AppDbContext db, ILogger<RouletteService> logger) :
         if (room.ExpiresAt <= DateTimeOffset.UtcNow) { room.Status = "Expired"; await db.SaveChangesAsync(ct); await transaction.CommitAsync(ct); return GameHubResult<RouletteRoomDto>.Fail("انتهت مدة الانضمام لهذه الجولة.", 410); }
         if (room.Players.Count < room.MinPlayers) return GameHubResult<RouletteRoomDto>.Fail($"تحتاج {room.MinPlayers} لاعبين على الأقل لبدء اللعبة.", 409);
         room.Status = "InProgress"; room.StartedAt = DateTimeOffset.UtcNow; room.CurrentRound = 1;
-        room.Actions.Add(Action(room.Id, 1, userDiscordId, null, "GameStarted"));
+        AddAction(room, 1, userDiscordId, null, "GameStarted");
         await db.SaveChangesAsync(ct); await transaction.CommitAsync(ct);
         return GameHubResult<RouletteRoomDto>.Ok(MapRoom(room, guildDiscordId));
     }
@@ -183,20 +192,20 @@ public class RouletteService(AppDbContext db, ILogger<RouletteService> logger) :
         var alive = room.Players.Where(x => x.IsAlive).ToList();
         if (alive.Count <= 1) return GameHubResult<RouletteSpinResultDto>.Fail("انتهت هذه الجولة مسبقًا.", 409);
         var eliminated = alive[Random.Shared.Next(alive.Count)]; var now = DateTimeOffset.UtcNow;
-        room.Actions.Add(Action(room.Id, room.CurrentRound, userDiscordId, null, "Spin"));
+        AddAction(room, room.CurrentRound, userDiscordId, null, "Spin");
         eliminated.IsAlive = false; eliminated.EliminatedAt = now;
-        room.Actions.Add(Action(room.Id, room.CurrentRound, userDiscordId, eliminated.UserDiscordId, "PlayerEliminated", new { eliminated.Username }));
+        AddAction(room, room.CurrentRound, userDiscordId, eliminated.UserDiscordId, "PlayerEliminated", new { eliminated.Username });
         var remaining = alive.Count - 1;
         if (remaining > 1) room.CurrentRound++;
         else
         {
             var winner = room.Players.Single(x => x.IsAlive); room.Status = "Completed"; room.CompletedAt = now;
-            room.Actions.Add(Action(room.Id, room.CurrentRound, userDiscordId, winner.UserDiscordId, "GameCompleted", new { winner.Username }));
+            AddAction(room, room.CurrentRound, userDiscordId, winner.UserDiscordId, "GameCompleted", new { winner.Username });
             await AwardCompletionAsync(room, winner, eliminated, now, ct);
             var settings = await db.RouletteGuildSettings.AsNoTracking().FirstOrDefaultAsync(x => x.GuildId == room.GuildId, ct);
             var gameSetting = await db.GuildGameSettings.AsNoTracking().FirstOrDefaultAsync(x => x.GuildId == room.GuildId && x.PlatformGameDefinitionId == room.PlatformGameDefinitionId, ct);
             if (settings?.AnnounceWinner != false && gameSetting?.PublishResultAfterGame == true)
-                room.PublishActions.Add(Publish(room, room.ChannelDiscordId, "Winner", new PublishPayload { WinnerUsername = winner.Username, WinnerCoins = room.WinnerCoins, PlayersCount = room.Players.Count, CurrentRound = room.CurrentRound }));
+                AddPublishAction(room, room.ChannelDiscordId, "Winner", new PublishPayload { WinnerUsername = winner.Username, WinnerCoins = room.WinnerCoins, PlayersCount = room.Players.Count, CurrentRound = room.CurrentRound });
         }
         await db.SaveChangesAsync(ct); await transaction.CommitAsync(ct);
         logger.LogInformation("Roulette room {RoomId} round {Round} eliminated user {UserId}; status {Status}.", room.Id, room.CurrentRound, eliminated.UserDiscordId, room.Status);
@@ -302,6 +311,18 @@ public class RouletteService(AppDbContext db, ILogger<RouletteService> logger) :
     private static bool IsPlanAllowed(string actual, string required) { var rank = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase) { [PlanKeys.Free] = 0, [PlanKeys.Basic] = 1, [PlanKeys.Pro] = 2, [PlanKeys.Premium] = 3 }; return rank.GetValueOrDefault(actual, -1) >= rank.GetValueOrDefault(required, int.MaxValue); }
     private static RouletteRoundAction Action(Guid roomId, int round, string actor, string? target, string type, object? data = null) => new() { RouletteRoomId = roomId, RoundNumber = round, ActorUserDiscordId = actor, TargetUserDiscordId = target, ActionType = type, DataJson = JsonSerializer.Serialize(data ?? new { }) };
     private static RoulettePublishAction Publish(RouletteRoom room, string channelId, string type, PublishPayload payload) => new() { GuildId = room.GuildId, RouletteRoomId = room.Id, ChannelDiscordId = channelId, Type = type, PayloadJson = JsonSerializer.Serialize(payload) };
+    private void AddAction(RouletteRoom room, int round, string actor, string? target, string type, object? data = null)
+    {
+        var action = Action(room.Id, round, actor, target, type, data); action.RouletteRoom = room;
+        db.RouletteRoundActions.Add(action);
+        if (!room.Actions.Contains(action)) room.Actions.Add(action);
+    }
+    private void AddPublishAction(RouletteRoom room, string channelId, string type, PublishPayload payload)
+    {
+        var action = Publish(room, channelId, type, payload); action.RouletteRoom = room; action.Guild = room.Guild;
+        db.RoulettePublishActions.Add(action);
+        if (!room.PublishActions.Contains(action)) room.PublishActions.Add(action);
+    }
     private static RouletteRoomDto MapRoom(RouletteRoom x, string guildDiscordId) { var players = x.Players.OrderBy(p => p.Position).Select(MapPlayer).ToList(); return new RouletteRoomDto { Id = x.Id, GuildDiscordId = guildDiscordId, ChannelDiscordId = x.ChannelDiscordId, HostUserDiscordId = x.HostUserDiscordId, HostUsername = x.HostUsername, Status = x.Status, MinPlayers = x.MinPlayers, MaxPlayers = x.MaxPlayers, WinnerCoins = x.WinnerCoins, SecondPlaceCoins = x.SecondPlaceCoins, ParticipationCoins = x.ParticipationCoins, CurrentRound = x.CurrentRound, ExpiresAt = x.ExpiresAt, StartedAt = x.StartedAt, CompletedAt = x.CompletedAt, CanStart = x.Status == "Waiting" && x.ExpiresAt > DateTimeOffset.UtcNow && players.Count >= x.MinPlayers, Players = players, Winner = x.Status == "Completed" ? players.FirstOrDefault(p => p.IsAlive) : null }; }
     private static RoulettePlayerDto MapPlayer(RouletteRoomPlayer x) => new() { UserDiscordId = x.UserDiscordId, Username = x.Username, IsHost = x.IsHost, IsAlive = x.IsAlive, Position = x.Position, Eliminations = x.Eliminations, JoinedAt = x.JoinedAt, EliminatedAt = x.EliminatedAt };
     private static RouletteSettingsDto MapSettings(Guid guildId, RouletteGuildSettings? x) => new() { GuildId = guildId, MinPlayers = x?.MinPlayers ?? 2, MaxPlayers = x?.MaxPlayers ?? 6, WinnerCoins = x?.WinnerCoins ?? 100, SecondPlaceCoins = x?.SecondPlaceCoins ?? 50, ParticipationCoins = x?.ParticipationCoins ?? 10, JoinWindowSeconds = x?.JoinWindowSeconds ?? 120, TurnSeconds = x?.TurnSeconds ?? 30, AnnounceRoomCreated = x?.AnnounceRoomCreated ?? true, AnnounceWinner = x?.AnnounceWinner ?? true };

@@ -45,12 +45,13 @@ public class ExceptionHandlingMiddleware
             return;
         }
 
+        var traceId = context.TraceIdentifier;
         var (statusCode, title, detail) = exception switch
         {
             InvalidOperationException op => (HttpStatusCode.BadRequest, "Invalid operation", op.Message),
             UnauthorizedAccessException ua => (HttpStatusCode.Unauthorized, "Unauthorized", ua.Message),
             _ => (HttpStatusCode.InternalServerError, "Server error",
-                _environment.IsDevelopment() ? exception.Message : "An unexpected error occurred.")
+                _environment.IsDevelopment() ? exception.Message : $"حدث خطأ غير متوقع. رقم التتبع: {traceId}")
         };
 
         context.Response.ContentType = "application/problem+json";
@@ -63,6 +64,7 @@ public class ExceptionHandlingMiddleware
             Detail = detail,
             Instance = context.Request.Path
         };
+        problem.Extensions["traceId"] = traceId;
 
         await context.Response.WriteAsync(JsonSerializer.Serialize(problem, JsonOptions));
     }
