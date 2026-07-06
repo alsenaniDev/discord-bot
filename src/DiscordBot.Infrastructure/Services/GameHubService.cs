@@ -232,7 +232,16 @@ public class GameHubService(AppDbContext db, ILogger<GameHubService> logger) : I
             where game.IsEnabledGlobally
             orderby game.Name
             select new AvailableGameDto { Id = game.Id, Key = game.Key, Name = game.Name, Description = game.Description, IconUrl = game.IconUrl, ActivityRoute = game.ActivityRoute, PlayMode = game.PlayMode, SupportsScores = game.SupportsScores, SupportsLeaderboard = game.SupportsLeaderboard, RequiredPlanInternal = game.RequiredPlan }).ToListAsync(ct);
-        result.Games = result.Games.Where(x => IsPlanAllowed(plan, x.RequiredPlanInternal)).ToList();
+        var enabledGames = result.Games;
+        result.Games = enabledGames.Where(x => IsPlanAllowed(plan, x.RequiredPlanInternal)).ToList();
+        var filteredGames = enabledGames.Where(x => !IsPlanAllowed(plan, x.RequiredPlanInternal)).Select(x => $"{x.Key}:{x.RequiredPlanInternal}").ToArray();
+        logger.LogInformation(
+            "Games context for guild {DiscordGuildId}: plan {Plan}; guild-enabled games [{EnabledGames}]; returned games [{ReturnedGames}]; filtered by plan [{FilteredGames}].",
+            discordGuildId,
+            plan,
+            string.Join(", ", enabledGames.Select(x => x.Key)),
+            string.Join(", ", result.Games.Select(x => x.Key)),
+            string.Join(", ", filteredGames));
         return result;
     }
 
