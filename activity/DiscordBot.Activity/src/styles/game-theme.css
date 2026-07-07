@@ -135,6 +135,14 @@
   border: 1px solid rgba(255,255,255,.18);
   box-shadow: 0 0 22px rgba(124,58,237,.28);
   font-weight: 900;
+  overflow: hidden;
+}
+
+.game-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: inherit;
 }
 
 .pulse-turn {

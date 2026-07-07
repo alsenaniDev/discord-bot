@@ -19,10 +19,10 @@ public interface IRouletteService
     Task<GameHubResult<PowerUpStoreDto>> GetStoreAsync(string guildDiscordId, string userDiscordId, CancellationToken ct = default);
     Task<GameHubResult<PurchasePowerUpResponse>> PurchasePowerUpAsync(PurchasePowerUpRequest request, string userDiscordId, CancellationToken ct = default);
     Task<GameHubResult<MyActiveRouletteRoomDto>> GetMyActiveRoomAsync(string guildDiscordId, string channelDiscordId, string userDiscordId, CancellationToken ct = default);
-    Task<GameHubResult<RouletteRoomDto>> CreateRoomAsync(CreateRouletteRoomRequest request, string userDiscordId, string username, CancellationToken ct = default);
+    Task<GameHubResult<RouletteRoomDto>> CreateRoomAsync(CreateRouletteRoomRequest request, string userDiscordId, string username, string? displayName = null, string? avatarUrl = null, CancellationToken ct = default);
     Task<GameHubResult<IReadOnlyList<RouletteRoomDto>>> GetOpenRoomsAsync(string guildDiscordId, string channelDiscordId, string userDiscordId, CancellationToken ct = default);
     Task<GameHubResult<RouletteRoomDto>> GetRoomAsync(Guid roomId, string guildDiscordId, string channelDiscordId, string userDiscordId, CancellationToken ct = default);
-    Task<GameHubResult<RouletteRoomDto>> JoinRoomAsync(Guid roomId, string guildDiscordId, string channelDiscordId, string userDiscordId, string username, CancellationToken ct = default);
+    Task<GameHubResult<RouletteRoomDto>> JoinRoomAsync(Guid roomId, string guildDiscordId, string channelDiscordId, string userDiscordId, string username, string? displayName = null, string? avatarUrl = null, CancellationToken ct = default);
     Task<GameHubResult<RouletteRoomDto>> LeaveRoomAsync(Guid roomId, string guildDiscordId, string channelDiscordId, string userDiscordId, CancellationToken ct = default);
     Task<GameHubResult<RouletteRoomDto>> StartRoomAsync(Guid roomId, string guildDiscordId, string channelDiscordId, string userDiscordId, CancellationToken ct = default);
     Task<GameHubResult<RouletteSpinResultDto>> SpinAsync(Guid roomId, string guildDiscordId, string channelDiscordId, string userDiscordId, CancellationToken ct = default);
@@ -148,7 +148,7 @@ public class RouletteService(AppDbContext db, ILogger<RouletteService> logger) :
             : new MyActiveRouletteRoomDto { HasRoom = true, RoomId = room.Id, Status = room.Status, IsHost = room.HostUserDiscordId == userDiscordId });
     }
 
-    public async Task<GameHubResult<RouletteRoomDto>> CreateRoomAsync(CreateRouletteRoomRequest request, string userDiscordId, string username, CancellationToken ct = default)
+    public async Task<GameHubResult<RouletteRoomDto>> CreateRoomAsync(CreateRouletteRoomRequest request, string userDiscordId, string username, string? displayName = null, string? avatarUrl = null, CancellationToken ct = default)
     {
         var context = await EnabledContextAsync(request.GuildDiscordId, request.ChannelDiscordId, ct);
         if (!context.Succeeded) return GameHubResult<RouletteRoomDto>.Fail(context.Error!, context.StatusCode);
@@ -165,7 +165,7 @@ public class RouletteService(AppDbContext db, ILogger<RouletteService> logger) :
             return GameHubResult<RouletteRoomDto>.Fail("وصلت للحد اليومي للعبة الروليت. ارجع لنا بكرة!", 429);
 
         var settings = await db.RouletteGuildSettings.AsNoTracking().FirstOrDefaultAsync(x => x.GuildId == guild.Id, ct) ?? new RouletteGuildSettings { GuildId = guild.Id };
-        var cleanName = CleanUsername(username, userDiscordId);
+        var cleanName = CleanUsername(displayName ?? username, userDiscordId);
         var room = new RouletteRoom
         {
             GuildId = guild.Id, PlatformGameDefinitionId = game.Id, ChannelDiscordId = request.ChannelDiscordId,
@@ -173,7 +173,7 @@ public class RouletteService(AppDbContext db, ILogger<RouletteService> logger) :
             WinnerCoins = settings.WinnerCoins, SecondPlaceCoins = settings.SecondPlaceCoins, ParticipationCoins = settings.ParticipationCoins,
             ExpiresAt = now.AddSeconds(settings.JoinWindowSeconds)
         };
-        room.Players.Add(new RouletteRoomPlayer { UserDiscordId = userDiscordId, Username = cleanName, IsHost = true, Position = 1, JoinedAt = now });
+        room.Players.Add(new RouletteRoomPlayer { UserDiscordId = userDiscordId, Username = cleanName, DisplayName = cleanName, AvatarUrl = LimitNullable(avatarUrl, 512), IsHost = true, Position = 1, JoinedAt = now });
         room.Actions.Add(Action(room.Id, 0, userDiscordId, null, "RoomCreated"));
         if (settings.AnnounceRoomCreated && !string.IsNullOrWhiteSpace(general.GamesChannelDiscordId))
             room.PublishActions.Add(Publish(room, general.GamesChannelDiscordId, "RoomInvite", new PublishPayload { HostUsername = cleanName, MinPlayers = room.MinPlayers, MaxPlayers = room.MaxPlayers, PlayersCount = 1, JoinWindowSeconds = settings.JoinWindowSeconds }));
@@ -201,7 +201,7 @@ public class RouletteService(AppDbContext db, ILogger<RouletteService> logger) :
         return GameHubResult<RouletteRoomDto>.Ok(MapRoom(room!, guildDiscordId, userDiscordId));
     }
 
-    public async Task<GameHubResult<RouletteRoomDto>> JoinRoomAsync(Guid roomId, string guildDiscordId, string channelDiscordId, string userDiscordId, string username, CancellationToken ct = default)
+    public async Task<GameHubResult<RouletteRoomDto>> JoinRoomAsync(Guid roomId, string guildDiscordId, string channelDiscordId, string userDiscordId, string username, string? displayName = null, string? avatarUrl = null, CancellationToken ct = default)
     {
         // Lock only this room while validating capacity. Serializable transactions can
         // abort otherwise-valid mobile joins when two Activity clients arrive together.
@@ -216,7 +216,8 @@ public class RouletteService(AppDbContext db, ILogger<RouletteService> logger) :
         if (room.Status != "Waiting") return GameHubResult<RouletteRoomDto>.Fail("هذه الجولة لم تعد متاحة للانضمام.", 409);
         if (room.ExpiresAt <= DateTimeOffset.UtcNow) { room.Status = "Expired"; await db.SaveChangesAsync(ct); await transaction.CommitAsync(ct); return GameHubResult<RouletteRoomDto>.Fail("انتهت مدة الانضمام لهذه الجولة.", 410); }
         if (room.Players.Count >= room.MaxPlayers) return GameHubResult<RouletteRoomDto>.Fail("اكتمل عدد اللاعبين في هذه الجولة.", 409);
-        var player = new RouletteRoomPlayer { RouletteRoomId = room.Id, RouletteRoom = room, UserDiscordId = userDiscordId, Username = CleanUsername(username, userDiscordId), Position = room.Players.Count + 1 };
+        var cleanName = CleanUsername(displayName ?? username, userDiscordId);
+        var player = new RouletteRoomPlayer { RouletteRoomId = room.Id, RouletteRoom = room, UserDiscordId = userDiscordId, Username = cleanName, DisplayName = cleanName, AvatarUrl = LimitNullable(avatarUrl, 512), Position = room.Players.Count + 1 };
         db.RouletteRoomPlayers.Add(player);
         if (!room.Players.Contains(player)) room.Players.Add(player);
         AddAction(room, 0, userDiscordId, null, "PlayerJoined");
@@ -279,17 +280,20 @@ public class RouletteService(AppDbContext db, ILogger<RouletteService> logger) :
         var room = await LoadRoomAsync(roomId, ct); var error = ValidateRoomScope(room, guildDiscordId, channelDiscordId);
         if (error is not null) return GameHubResult<RouletteSpinResultDto>.Fail(error.Value.Message, error.Value.Code);
         if (room!.Status != "InProgress") return GameHubResult<RouletteSpinResultDto>.Fail("اللعبة غير جاهزة للتدوير.", 409);
-        if (room.PendingActionStatus == "WaitingForPowerUp") return GameHubResult<RouletteSpinResultDto>.Fail("يوجد إجراء معلق، انتظر حتى ينتهي وقت اللاعب أو يتم استخدام خاصية.", 409);
+        if (room.PendingActionStatus is "WaitingForPowerUp" or "AutoResolved") return GameHubResult<RouletteSpinResultDto>.Fail("يوجد إجراء معلق، انتظر حتى يتم تنفيذ نتيجة العجلة.", 409);
         if (room.CurrentTurnUserDiscordId != userDiscordId) return GameHubResult<RouletteSpinResultDto>.Fail("ليس دورك الآن.", 403);
-        var alive = room.Players.Where(x => x.IsAlive).ToList();
+        var alive = room.Players.Where(x => x.IsAlive).OrderBy(x => x.Position).ToList();
         if (alive.Count <= 1) return GameHubResult<RouletteSpinResultDto>.Fail("انتهت هذه الجولة مسبقًا.", 409);
         var spinner = alive.First(x => x.UserDiscordId == userDiscordId);
         var target = PickTarget(room, userDiscordId);
+        var selectedIndex = alive.FindIndex(x => x.UserDiscordId == target.UserDiscordId);
+        var usablePowerUps = await GetUsablePowerUpsAsync(room.GuildId, room.Id, target.UserDiscordId, room.CurrentRound, ct);
+        var hasUsable = usablePowerUps.Count > 0;
         var settings = await db.RouletteGuildSettings.AsNoTracking().FirstOrDefaultAsync(x => x.GuildId == room.GuildId, ct);
-        SetPending(room, spinner, target, DateTimeOffset.UtcNow, settings?.TurnSeconds ?? 30);
+        SetPending(room, spinner, target, DateTimeOffset.UtcNow, settings?.TurnSeconds ?? 30, selectedIndex, hasUsable);
         await db.SaveChangesAsync(ct); await transaction.CommitAsync(ct);
         logger.LogInformation("Roulette room {RoomId} round {Round} pending target {TargetUserId} by spinner {SpinnerUserId}.", room.Id, room.CurrentRound, target.UserDiscordId, userDiscordId);
-        return GameHubResult<RouletteSpinResultDto>.Ok(new RouletteSpinResultDto { Room = MapRoom(room, guildDiscordId), TargetPlayer = MapPlayer(target) });
+        return GameHubResult<RouletteSpinResultDto>.Ok(new RouletteSpinResultDto { Room = MapRoom(room, guildDiscordId, userDiscordId), TargetPlayer = MapPlayer(target), AlivePlayers = alive.Select(MapPlayer).ToList(), SelectedIndex = selectedIndex, TargetHasUsablePowerUps = hasUsable, UsablePowerUps = usablePowerUps });
     }
 
     public async Task<GameHubResult<RouletteRoomDto>> UsePowerUpAsync(Guid roomId, UsePowerUpRequest request, string userDiscordId, CancellationToken ct = default)
@@ -318,20 +322,23 @@ public class RouletteService(AppDbContext db, ILogger<RouletteService> logger) :
         {
             case "shield":
                 ClearPending(room);
-                AddAction(room, room.CurrentRound, userDiscordId, target.UserDiscordId, "PowerUpShield", new { target.Username, message = $"🛡️ {target.Username} استخدم الدرع ونجا من الإقصاء!" });
+                AddPowerUpAction(room, setting, target, target, "PowerUpShield", $"🛡️ {target.Username} استخدم الدرع ونجا من الإقصاء!");
                 AdvanceTurn(room, spinner.UserDiscordId);
                 break;
             case "reverse":
                 ClearPending(room);
-                AddAction(room, room.CurrentRound, userDiscordId, spinner.UserDiscordId, "PowerUpReverse", new { targetUsername = target.Username, spinnerUsername = spinner.Username, message = $"🔁 {target.Username} استخدم عكس الهجمة! تم عكس الإقصاء على {spinner.Username}." });
+                AddPowerUpAction(room, setting, target, spinner, "PowerUpReverse", $"🔁 {target.Username} استخدم عكس الهجمة! تم عكس الإقصاء على {spinner.Username}.");
                 await EliminateAsync(room, spinner, target.UserDiscordId, ct);
                 break;
             case "respin":
                 ClearPending(room);
-                AddAction(room, room.CurrentRound, userDiscordId, target.UserDiscordId, "PowerUpReSpin", new { target.Username, message = $"🎡 {target.Username} استخدم إعادة اللف! العجلة تدور من جديد." });
+                AddPowerUpAction(room, setting, target, target, "PowerUpReSpin", $"🎡 {target.Username} استخدم إعادة اللف! العجلة تدور من جديد.");
                 var newTarget = PickTarget(room, spinner.UserDiscordId, target.UserDiscordId);
+                var alive = room.Players.Where(x => x.IsAlive).OrderBy(x => x.Position).ToList();
+                var selectedIndex = alive.FindIndex(x => x.UserDiscordId == newTarget.UserDiscordId);
+                var usablePowerUps = await GetUsablePowerUpsAsync(room.GuildId, room.Id, newTarget.UserDiscordId, room.CurrentRound, ct);
                 var settings = await db.RouletteGuildSettings.AsNoTracking().FirstOrDefaultAsync(x => x.GuildId == room.GuildId, ct);
-                SetPending(room, spinner, newTarget, DateTimeOffset.UtcNow, settings?.TurnSeconds ?? 30);
+                SetPending(room, spinner, newTarget, DateTimeOffset.UtcNow, settings?.TurnSeconds ?? 30, selectedIndex, usablePowerUps.Count > 0);
                 break;
             default:
                 return GameHubResult<RouletteRoomDto>.Fail("هذه الخاصية غير مدعومة حاليًا.", 400);
@@ -347,13 +354,13 @@ public class RouletteService(AppDbContext db, ILogger<RouletteService> logger) :
         var room = await LoadRoomAsync(roomId, ct); var error = ValidateRoomScope(room, request.GuildDiscordId, request.ChannelDiscordId);
         if (error is not null) return GameHubResult<RouletteRoomDto>.Fail(error.Value.Message, error.Value.Code);
         if (room!.Status != "InProgress") return GameHubResult<RouletteRoomDto>.Fail("اللعبة غير جارية حاليًا.", 409);
-        if (room.PendingActionStatus != "WaitingForPowerUp" || string.IsNullOrWhiteSpace(room.PendingTargetUserDiscordId)) return GameHubResult<RouletteRoomDto>.Ok(MapRoom(room, request.GuildDiscordId));
-        if (room.PendingActionExpiresAt > DateTimeOffset.UtcNow) return GameHubResult<RouletteRoomDto>.Fail("لا يزال بإمكان اللاعب استخدام خاصية.", 409);
+        if ((room.PendingActionStatus != "WaitingForPowerUp" && room.PendingActionStatus != "AutoResolved") || string.IsNullOrWhiteSpace(room.PendingTargetUserDiscordId)) return GameHubResult<RouletteRoomDto>.Ok(MapRoom(room, request.GuildDiscordId, userDiscordId));
+        if (room.PendingActionStatus == "WaitingForPowerUp" && room.PendingActionExpiresAt > DateTimeOffset.UtcNow) return GameHubResult<RouletteRoomDto>.Fail("لا يزال بإمكان اللاعب استخدام خاصية.", 409);
         var target = room.Players.FirstOrDefault(x => x.UserDiscordId == room.PendingTargetUserDiscordId && x.IsAlive);
-        if (target is null) { ClearPending(room); await db.SaveChangesAsync(ct); await transaction.CommitAsync(ct); return GameHubResult<RouletteRoomDto>.Ok(MapRoom(room, request.GuildDiscordId)); }
+        if (target is null) { ClearPending(room); await db.SaveChangesAsync(ct); await transaction.CommitAsync(ct); return GameHubResult<RouletteRoomDto>.Ok(MapRoom(room, request.GuildDiscordId, userDiscordId)); }
         await EliminateAsync(room, target, room.CurrentTurnUserDiscordId ?? userDiscordId, ct);
         await db.SaveChangesAsync(ct); await transaction.CommitAsync(ct);
-        return GameHubResult<RouletteRoomDto>.Ok(MapRoom(room, request.GuildDiscordId));
+        return GameHubResult<RouletteRoomDto>.Ok(MapRoom(room, request.GuildDiscordId, userDiscordId));
     }
 
     public async Task<GameHubResult<PrepareRouletteJoinResponse>> PrepareJoinAsync(Guid roomId, PrepareRouletteJoinRequest request, CancellationToken ct = default)
@@ -440,21 +447,73 @@ public class RouletteService(AppDbContext db, ILogger<RouletteService> logger) :
         return candidates[Random.Shared.Next(candidates.Count)];
     }
 
-    private void SetPending(RouletteRoom room, RouletteRoomPlayer spinner, RouletteRoomPlayer target, DateTimeOffset now, int turnSeconds)
+    private async Task<List<PowerUpStoreItemDto>> GetUsablePowerUpsAsync(Guid guildId, Guid roomId, string userDiscordId, int roundNumber, CancellationToken ct)
+    {
+        await EnsurePowerUpSettingsAsync(guildId, ct);
+        var inventory = await db.PlayerPowerUpInventories.AsNoTracking()
+            .Where(x => x.GuildId == guildId && x.UserDiscordId == userDiscordId && x.Quantity > 0)
+            .ToDictionaryAsync(x => x.GamePowerUpDefinitionId, x => x.Quantity, ct);
+        if (inventory.Count == 0) return [];
+        var usages = await db.RoulettePowerUpUsages.AsNoTracking()
+            .Where(x => x.RouletteRoomId == roomId && x.UserDiscordId == userDiscordId)
+            .GroupBy(x => x.GamePowerUpDefinitionId)
+            .Select(x => new { DefinitionId = x.Key, Count = x.Count() })
+            .ToDictionaryAsync(x => x.DefinitionId, x => x.Count, ct);
+        var settings = await db.GuildPowerUpSettings.AsNoTracking().Include(x => x.GamePowerUpDefinition)
+            .Where(x => x.GuildId == guildId && x.IsEnabledForGuild && x.GamePowerUpDefinition.IsEnabledGlobally)
+            .ToListAsync(ct);
+        return settings
+            .Where(x => inventory.GetValueOrDefault(x.GamePowerUpDefinitionId) > 0 && usages.GetValueOrDefault(x.GamePowerUpDefinitionId) < x.MaxUsesPerGame)
+            .OrderBy(x => x.GamePowerUpDefinition.Key)
+            .Select(x => new PowerUpStoreItemDto
+            {
+                Key = x.GamePowerUpDefinition.Key,
+                Name = x.GamePowerUpDefinition.Name,
+                Description = x.GamePowerUpDefinition.Description,
+                Icon = x.GamePowerUpDefinition.Icon,
+                IsEnabledForGuild = x.IsEnabledForGuild,
+                Price = x.Price,
+                MaxUsesPerGame = x.MaxUsesPerGame,
+                OwnedQuantity = inventory.GetValueOrDefault(x.GamePowerUpDefinitionId)
+            }).ToList();
+    }
+
+    private void SetPending(RouletteRoom room, RouletteRoomPlayer spinner, RouletteRoomPlayer target, DateTimeOffset now, int turnSeconds, int selectedIndex, bool targetHasUsablePowerUps)
     {
         room.PendingTargetUserDiscordId = target.UserDiscordId;
-        room.PendingActionStatus = "WaitingForPowerUp";
-        room.PendingActionExpiresAt = now.AddSeconds(Math.Clamp(turnSeconds, 10, 120));
+        room.PendingActionStatus = targetHasUsablePowerUps ? "WaitingForPowerUp" : "AutoResolved";
+        room.PendingActionExpiresAt = targetHasUsablePowerUps ? now.AddSeconds(Math.Clamp(turnSeconds, 10, 120)) : now;
         room.LastSpinResultJson = JsonSerializer.Serialize(new RouletteSpinResultInfoDto
         {
             SpinnerUserDiscordId = spinner.UserDiscordId,
             SpinnerUsername = spinner.Username,
+            SpinnerAvatarUrl = spinner.AvatarUrl,
             TargetUserDiscordId = target.UserDiscordId,
             TargetUsername = target.Username,
+            TargetAvatarUrl = target.AvatarUrl,
+            SelectedIndex = selectedIndex,
             ResultType = "PendingElimination",
             CreatedAt = now
         });
-        AddAction(room, room.CurrentRound, spinner.UserDiscordId, target.UserDiscordId, "Spin", new { spinnerUsername = spinner.Username, targetUsername = target.Username, message = $"🎡 العجلة اختارت {target.Username}. لديه فرصة لاستخدام خاصية قبل الإقصاء." });
+        AddAction(room, room.CurrentRound, spinner.UserDiscordId, target.UserDiscordId, "Spin", new { spinnerUsername = spinner.Username, spinnerAvatarUrl = spinner.AvatarUrl, targetUsername = target.Username, targetAvatarUrl = target.AvatarUrl, selectedIndex, targetHasUsablePowerUps, message = targetHasUsablePowerUps ? $"🎡 العجلة اختارت {target.Username}. لديه فرصة لاستخدام خاصية قبل الإقصاء." : $"🎡 العجلة اختارت {target.Username}. لا يملك خصائص متاحة." });
+    }
+
+    private void AddPowerUpAction(RouletteRoom room, GuildPowerUpSetting setting, RouletteRoomPlayer usedBy, RouletteRoomPlayer affected, string actionType, string message)
+    {
+        AddAction(room, room.CurrentRound, usedBy.UserDiscordId, affected.UserDiscordId, actionType, new
+        {
+            powerUpKey = setting.GamePowerUpDefinition.Key,
+            powerUpName = setting.GamePowerUpDefinition.Name,
+            powerUpIcon = setting.GamePowerUpDefinition.Icon,
+            usedByUserDiscordId = usedBy.UserDiscordId,
+            usedByUsername = usedBy.Username,
+            usedByAvatarUrl = usedBy.AvatarUrl,
+            affectedUserDiscordId = affected.UserDiscordId,
+            affectedUsername = affected.Username,
+            affectedAvatarUrl = affected.AvatarUrl,
+            messageArabic = message,
+            message
+        });
     }
 
     private static void ClearPending(RouletteRoom room)
@@ -587,22 +646,35 @@ public class RouletteService(AppDbContext db, ILogger<RouletteService> logger) :
             IsCurrentUserJoined = !string.IsNullOrWhiteSpace(currentUserDiscordId) && players.Any(p => p.UserDiscordId == currentUserDiscordId),
             CurrentTurnUserDiscordId = x.CurrentTurnUserDiscordId,
             CurrentTurnUsername = current?.Username,
+            CurrentTurnPlayer = current,
             PendingTargetUserDiscordId = x.PendingTargetUserDiscordId,
             PendingTargetUsername = pending?.Username,
+            PendingTargetPlayer = pending,
             PendingActionStatus = string.IsNullOrWhiteSpace(x.PendingActionStatus) ? "None" : x.PendingActionStatus,
             PendingActionExpiresAt = x.PendingActionExpiresAt,
             LastSpinResult = DeserializeSpinResult(x.LastSpinResultJson),
             Players = players,
+            AlivePlayers = players.Where(p => p.IsAlive).ToList(),
+            EliminatedPlayers = players.Where(p => !p.IsAlive).ToList(),
             Actions = x.Actions.OrderByDescending(a => a.CreatedAt).Take(20).Select(MapAction).ToList(),
             Winner = x.Status == "Completed" ? players.FirstOrDefault(p => p.IsAlive) : null
         };
     }
-    private static RoulettePlayerDto MapPlayer(RouletteRoomPlayer x) => new() { UserDiscordId = x.UserDiscordId, Username = x.Username, IsHost = x.IsHost, IsAlive = x.IsAlive, Position = x.Position, Eliminations = x.Eliminations, JoinedAt = x.JoinedAt, EliminatedAt = x.EliminatedAt };
+    private static RoulettePlayerDto MapPlayer(RouletteRoomPlayer x) => new() { UserDiscordId = x.UserDiscordId, Username = x.Username, DisplayName = x.DisplayName ?? x.Username, AvatarUrl = x.AvatarUrl, IsHost = x.IsHost, IsAlive = x.IsAlive, Position = x.Position, Eliminations = x.Eliminations, JoinedAt = x.JoinedAt, EliminatedAt = x.EliminatedAt };
     private static RouletteSpinResultInfoDto? DeserializeSpinResult(string? json) { if (string.IsNullOrWhiteSpace(json)) return null; try { return JsonSerializer.Deserialize<RouletteSpinResultInfoDto>(json); } catch { return null; } }
     private static RouletteActionDto MapAction(RouletteRoundAction x)
     {
-        var message = "";
-        try { message = JsonDocument.Parse(x.DataJson).RootElement.TryGetProperty("message", out var node) ? node.GetString() ?? "" : ""; } catch { }
+        var message = ""; string? powerUpKey = null; string? powerUpName = null; string? powerUpIcon = null;
+        try
+        {
+            using var doc = JsonDocument.Parse(x.DataJson);
+            var root = doc.RootElement;
+            message = root.TryGetProperty("messageArabic", out var arabicNode) ? arabicNode.GetString() ?? "" : root.TryGetProperty("message", out var node) ? node.GetString() ?? "" : "";
+            powerUpKey = root.TryGetProperty("powerUpKey", out var keyNode) ? keyNode.GetString() : null;
+            powerUpName = root.TryGetProperty("powerUpName", out var nameNode) ? nameNode.GetString() : null;
+            powerUpIcon = root.TryGetProperty("powerUpIcon", out var iconNode) ? iconNode.GetString() : null;
+        }
+        catch { }
         if (string.IsNullOrWhiteSpace(message))
         {
             message = x.ActionType switch
@@ -620,13 +692,14 @@ public class RouletteService(AppDbContext db, ILogger<RouletteService> logger) :
                 _ => x.ActionType
             };
         }
-        return new RouletteActionDto { RoundNumber = x.RoundNumber, ActionType = x.ActionType, ActorUserDiscordId = x.ActorUserDiscordId, TargetUserDiscordId = x.TargetUserDiscordId, Message = message, CreatedAt = x.CreatedAt };
+        return new RouletteActionDto { RoundNumber = x.RoundNumber, ActionType = x.ActionType, ActorUserDiscordId = x.ActorUserDiscordId, TargetUserDiscordId = x.TargetUserDiscordId, Message = message, PowerUpKey = powerUpKey, PowerUpName = powerUpName, PowerUpIcon = powerUpIcon, CreatedAt = x.CreatedAt };
     }
     private static RouletteSettingsDto MapSettings(Guid guildId, RouletteGuildSettings? x) => new() { GuildId = guildId, MinPlayers = x?.MinPlayers ?? 2, MaxPlayers = x?.MaxPlayers ?? 6, WinnerCoins = x?.WinnerCoins ?? 100, SecondPlaceCoins = x?.SecondPlaceCoins ?? 50, ParticipationCoins = x?.ParticipationCoins ?? 10, JoinWindowSeconds = x?.JoinWindowSeconds ?? 120, TurnSeconds = x?.TurnSeconds ?? 30, AnnounceRoomCreated = x?.AnnounceRoomCreated ?? true, AnnounceWinner = x?.AnnounceWinner ?? true };
     private static string? ValidateSettings(RouletteSettingsDto x) { if (x.MinPlayers is < 2 or > 10) return "الحد الأدنى للاعبين يجب أن يكون بين 2 و10."; if (x.MaxPlayers < x.MinPlayers || x.MaxPlayers > 10) return "الحد الأعلى يجب أن يكون بين الحد الأدنى و10."; if (x.WinnerCoins is < 0 or > 1000) return "مكافأة الفائز يجب أن تكون بين 0 و1000."; if (x.SecondPlaceCoins is < 0 or > 500) return "مكافأة المركز الثاني يجب أن تكون بين 0 و500."; if (x.ParticipationCoins is < 0 or > 100) return "مكافأة المشاركة يجب أن تكون بين 0 و100."; if (x.JoinWindowSeconds is < 30 or > 300) return "مدة انتظار الانضمام يجب أن تكون بين 30 و300 ثانية."; if (x.TurnSeconds is < 10 or > 120) return "مدة الدور يجب أن تكون بين 10 و120 ثانية."; return null; }
     private static bool ValidSnowflake(string value) => ulong.TryParse(value, out _);
     private static string CleanUsername(string value, string fallback) => Limit(string.IsNullOrWhiteSpace(value) ? fallback : value.Trim(), 80);
     private static string Limit(string value, int max) => value[..Math.Min(value.Length, max)];
+    private static string? LimitNullable(string? value, int max) => string.IsNullOrWhiteSpace(value) ? null : Limit(value.Trim(), max);
     private sealed record EnabledContext(Guild Guild, PlatformGameDefinition Game, GuildGamesSettings General, GuildGameSetting GameSetting);
     private sealed class PublishPayload { public string HostUsername { get; set; } = string.Empty; public string WinnerUsername { get; set; } = string.Empty; public int MinPlayers { get; set; } public int MaxPlayers { get; set; } public int PlayersCount { get; set; } public int JoinWindowSeconds { get; set; } public int WinnerCoins { get; set; } public int CurrentRound { get; set; } }
 }

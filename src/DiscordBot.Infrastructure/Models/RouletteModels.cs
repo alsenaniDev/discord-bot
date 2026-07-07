@@ -58,6 +58,8 @@ public class RoulettePlayerDto
 {
     public string UserDiscordId { get; set; } = string.Empty;
     public string Username { get; set; } = string.Empty;
+    public string DisplayName { get; set; } = string.Empty;
+    public string? AvatarUrl { get; set; }
     public bool IsHost { get; set; }
     public bool IsAlive { get; set; }
     public int Position { get; set; }
@@ -87,12 +89,16 @@ public class RouletteRoomDto
     public bool IsCurrentUserJoined { get; set; }
     public string? CurrentTurnUserDiscordId { get; set; }
     public string? CurrentTurnUsername { get; set; }
+    public RoulettePlayerDto? CurrentTurnPlayer { get; set; }
     public string? PendingTargetUserDiscordId { get; set; }
     public string? PendingTargetUsername { get; set; }
+    public RoulettePlayerDto? PendingTargetPlayer { get; set; }
     public string PendingActionStatus { get; set; } = "None";
     public DateTimeOffset? PendingActionExpiresAt { get; set; }
     public RouletteSpinResultInfoDto? LastSpinResult { get; set; }
     public List<RoulettePlayerDto> Players { get; set; } = [];
+    public List<RoulettePlayerDto> AlivePlayers { get; set; } = [];
+    public List<RoulettePlayerDto> EliminatedPlayers { get; set; } = [];
     public List<RouletteActionDto> Actions { get; set; } = [];
     public RoulettePlayerDto? Winner { get; set; }
 }
@@ -102,14 +108,21 @@ public class RouletteSpinResultDto
     public RouletteRoomDto Room { get; set; } = new();
     public RoulettePlayerDto? EliminatedPlayer { get; set; }
     public RoulettePlayerDto? TargetPlayer { get; set; }
+    public List<RoulettePlayerDto> AlivePlayers { get; set; } = [];
+    public int SelectedIndex { get; set; } = -1;
+    public bool TargetHasUsablePowerUps { get; set; }
+    public List<PowerUpStoreItemDto> UsablePowerUps { get; set; } = [];
 }
 
 public class RouletteSpinResultInfoDto
 {
     public string SpinnerUserDiscordId { get; set; } = string.Empty;
     public string SpinnerUsername { get; set; } = string.Empty;
+    public string? SpinnerAvatarUrl { get; set; }
     public string TargetUserDiscordId { get; set; } = string.Empty;
     public string TargetUsername { get; set; } = string.Empty;
+    public string? TargetAvatarUrl { get; set; }
+    public int SelectedIndex { get; set; } = -1;
     public string ResultType { get; set; } = "PendingElimination";
     public DateTimeOffset CreatedAt { get; set; }
 }
@@ -121,6 +134,9 @@ public class RouletteActionDto
     public string ActorUserDiscordId { get; set; } = string.Empty;
     public string? TargetUserDiscordId { get; set; }
     public string Message { get; set; } = string.Empty;
+    public string? PowerUpKey { get; set; }
+    public string? PowerUpName { get; set; }
+    public string? PowerUpIcon { get; set; }
     public DateTimeOffset CreatedAt { get; set; }
 }
 
