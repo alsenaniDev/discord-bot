@@ -12,8 +12,8 @@ public class ActivityGamesController(IDiscordActivityAuthService auth, IGameHubS
     [HttpGet("context")]
     public async Task<IActionResult> Context([FromQuery] string guildDiscordId, [FromQuery] string channelDiscordId, CancellationToken ct)
     {
-        if (await UserAsync(ct) is null) return Unauthorized(new { message = "انتهت صلاحية تسجيل الدخول. افتح مركز الألعاب مرة ثانية." });
-        return Result(await games.GetActivityContextAsync(guildDiscordId, channelDiscordId, ct));
+        var user = await UserAsync(ct); if (user is null) return Unauthorized(new { message = "انتهت صلاحية تسجيل الدخول. افتح مركز الألعاب مرة ثانية." });
+        return Result(await games.GetActivityContextAsync(guildDiscordId, channelDiscordId, user.Id, ct));
     }
 
     [HttpPost("start-session")]

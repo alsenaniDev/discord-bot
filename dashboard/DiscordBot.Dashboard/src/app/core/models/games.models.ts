@@ -5,6 +5,12 @@ export interface PlatformGameDefinition {
   supportsScores: boolean; supportsLeaderboard: boolean; supportsResultPublishing: boolean;
 }
 export type SavePlatformGameDefinition = Omit<PlatformGameDefinition, 'id'>;
+export interface GameSandboxAccess { id: string; gameVersionId: string; guildDiscordId: string; userDiscordId?: string | null; createdAt: string; }
+export interface GameVersion {
+  id: string; gameDefinitionId: string; gameKey: string; gameName: string; version: string; status: 'Draft' | 'Sandbox' | 'InReview' | 'Published' | 'Rejected' | 'Disabled' | string;
+  frontendUrl?: string | null; backendUrl?: string | null; activityRoute?: string | null; manifestJson: string; notes?: string | null; createdAt: string; publishedAt?: string | null; sandboxAccess: GameSandboxAccess[];
+}
+export interface CreateGameVersion { version: string; status: string; frontendUrl?: string | null; backendUrl?: string | null; activityRoute?: string | null; manifestJson: string; notes?: string | null; }
 export interface GuildGamesSettings { guildId: string; isEnabled: boolean; gamesChannelDiscordId?: string | null; autoPostPanel: boolean; gamesPanelMessageDiscordId?: string | null; }
 export interface UpdateGuildGamesSettings { isEnabled: boolean; gamesChannelDiscordId?: string | null; autoPostPanel: boolean; }
 export interface GuildGame extends PlatformGameDefinition {

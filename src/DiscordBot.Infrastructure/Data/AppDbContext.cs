@@ -45,6 +45,11 @@ public class AppDbContext : DbContext
     public DbSet<GamePlayer> GamePlayers => Set<GamePlayer>();
     public DbSet<GameContent> GameContent => Set<GameContent>();
     public DbSet<GameResultPublishAction> GameResultPublishActions => Set<GameResultPublishAction>();
+    public DbSet<GameVersion> GameVersions => Set<GameVersion>();
+    public DbSet<GameSandboxAccess> GameSandboxAccess => Set<GameSandboxAccess>();
+    public DbSet<GameEvent> GameEvents => Set<GameEvent>();
+    public DbSet<GameBotPublishAction> GameBotPublishActions => Set<GameBotPublishAction>();
+    public DbSet<GameRuntimeToken> GameRuntimeTokens => Set<GameRuntimeToken>();
     public DbSet<RouletteGuildSettings> RouletteGuildSettings => Set<RouletteGuildSettings>();
     public DbSet<GameWallet> GameWallets => Set<GameWallet>();
     public DbSet<GameWalletTransaction> GameWalletTransactions => Set<GameWalletTransaction>();

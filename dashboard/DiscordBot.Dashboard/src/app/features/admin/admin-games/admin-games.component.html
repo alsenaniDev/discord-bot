@@ -21,7 +21,21 @@
       <div class="form-actions"><button type="button" class="btn btn-secondary" *ngIf="editingId" (click)="cancel()">إلغاء</button><button class="btn btn-primary" [disabled]="saving || form.invalid">{{saving ? 'جاري الحفظ...' : 'حفظ اللعبة'}}</button></div>
     </form>
     <section class="catalog-list">
-      <article class="card game-row" *ngFor="let game of games"><div class="game-copy"><div class="game-title"><h3>{{game.name}}</h3><span class="badge" [class.badge-success]="game.isEnabledGlobally">{{game.isEnabledGlobally ? 'مفعّلة عالميًا' : 'متوقفة'}}</span><span class="badge">{{game.playMode === 'Multiplayer' ? 'جماعية' : 'فردية'}}</span></div><p>{{game.description || 'بدون وصف'}}</p><div class="meta"><span>{{game.key}}</span><span>{{game.activityRoute}}</span><span>باقة {{game.requiredPlan}}</span></div></div><div class="row-actions"><button class="btn btn-secondary btn-sm" (click)="edit(game)">تعديل</button><button class="btn btn-ghost btn-sm" (click)="toggle(game)">{{game.isEnabledGlobally ? 'إيقاف' : 'تفعيل'}}</button></div></article>
+      <article class="card game-row" *ngFor="let game of games">
+        <div class="game-main-row">
+          <div class="game-copy"><div class="game-title"><h3>{{game.name}}</h3><span class="badge" [class.badge-success]="game.isEnabledGlobally">{{game.isEnabledGlobally ? 'مفعّلة عالميًا' : 'متوقفة'}}</span><span class="badge">{{game.playMode === 'Multiplayer' ? 'جماعية' : 'فردية'}}</span></div><p>{{game.description || 'بدون وصف'}}</p><div class="meta"><span>{{game.key}}</span><span>{{game.activityRoute}}</span><span>باقة {{game.requiredPlan}}</span></div></div>
+          <div class="row-actions"><button class="btn btn-secondary btn-sm" (click)="edit(game)">تعديل</button><button class="btn btn-ghost btn-sm" (click)="toggle(game)">{{game.isEnabledGlobally ? 'إيقاف' : 'تفعيل'}}</button><button class="btn btn-secondary btn-sm" (click)="loadVersions(game)">إصدارات اللعبة</button><button class="btn btn-primary btn-sm" (click)="createSandboxVersion(game)">إنشاء نسخة تجريبية</button></div>
+        </div>
+        <section class="versions-panel" *ngIf="versions[game.id] || loadingVersions[game.id]">
+          <p class="muted" *ngIf="loadingVersions[game.id]">جاري تحميل الإصدارات...</p>
+          <article class="version-card" *ngFor="let version of versions[game.id]">
+            <div class="version-head"><strong>{{version.version}}</strong><span class="badge" [class.badge-success]="version.status === 'Published'">{{statusLabel(version.status)}}</span><span class="muted">{{version.activityRoute || game.activityRoute}}</span></div>
+            <pre>{{version.manifestJson}}</pre>
+            <div class="row-actions"><button class="btn btn-secondary btn-sm" (click)="updateVersionStatus(game, version, 'Sandbox')">تجريبية</button><button class="btn btn-primary btn-sm" (click)="updateVersionStatus(game, version, 'Published')">نشر الإصدار</button><button class="btn btn-ghost btn-sm" (click)="updateVersionStatus(game, version, 'Disabled')">تعطيل الإصدار</button><button class="btn btn-secondary btn-sm" (click)="addSandboxGuild(game, version)">إضافة سيرفر اختبار</button></div>
+            <div class="sandbox-list" *ngIf="version.sandboxAccess.length"><span class="muted">سيرفرات الاختبار</span><button class="chip" *ngFor="let access of version.sandboxAccess" (click)="removeSandboxAccess(game, access.id)">{{access.guildDiscordId}}{{access.userDiscordId ? ' / ' + access.userDiscordId : ''}} ×</button></div>
+          </article>
+        </section>
+      </article>
       <app-empty-state *ngIf="games.length === 0" title="لا توجد ألعاب" description="أضف أول لعبة إلى كتالوج المنصة."></app-empty-state>
     </section>
   </ng-container>

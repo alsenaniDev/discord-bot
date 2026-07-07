@@ -29,7 +29,7 @@ public interface IGameHubService
     Task<GameHubResult<CompleteGameSessionResponse>> CompleteSessionAsync(CompleteGameSessionRequest request, CancellationToken ct = default);
     Task<IReadOnlyList<AvailableGameDto>?> GetAvailableGamesAsync(string discordGuildId, CancellationToken ct = default);
     Task<BotGamesContextDto> GetBotContextAsync(string discordGuildId, CancellationToken ct = default);
-    Task<GameHubResult<ActivityGamesContextDto>> GetActivityContextAsync(string discordGuildId, string channelDiscordId, CancellationToken ct = default);
+    Task<GameHubResult<ActivityGamesContextDto>> GetActivityContextAsync(string discordGuildId, string channelDiscordId, string? userDiscordId = null, CancellationToken ct = default);
     Task<GameHubResult<IReadOnlyList<GameLeaderboardEntryDto>>> GetActivityLeaderboardAsync(string discordGuildId, string channelDiscordId, string? gameKey, int limit, CancellationToken ct = default);
     Task<IReadOnlyList<PendingGamePublishActionDto>> GetPendingPublishActionsAsync(CancellationToken ct = default);
     Task<bool> AckPublishActionAsync(Guid id, AckGamePublishActionRequest request, CancellationToken ct = default);
@@ -232,6 +232,7 @@ public class GameHubService(AppDbContext db, ILogger<GameHubService> logger) : I
             where game.IsEnabledGlobally
             orderby game.Name
             select new AvailableGameDto { Id = game.Id, Key = game.Key, Name = game.Name, Description = game.Description, IconUrl = game.IconUrl, ActivityRoute = game.ActivityRoute, PlayMode = game.PlayMode, SupportsScores = game.SupportsScores, SupportsLeaderboard = game.SupportsLeaderboard, RequiredPlanInternal = game.RequiredPlan }).ToListAsync(ct);
+        await ApplyPublishedVersionMetadataAsync(result.Games, ct);
         var enabledGames = result.Games;
         result.Games = enabledGames.Where(x => IsPlanAllowed(plan, x.RequiredPlanInternal)).ToList();
         var filteredGames = enabledGames.Where(x => !IsPlanAllowed(plan, x.RequiredPlanInternal)).Select(x => $"{x.Key}:{x.RequiredPlanInternal}").ToArray();
@@ -245,7 +246,7 @@ public class GameHubService(AppDbContext db, ILogger<GameHubService> logger) : I
         return result;
     }
 
-    public async Task<GameHubResult<ActivityGamesContextDto>> GetActivityContextAsync(string discordGuildId, string channelDiscordId, CancellationToken ct = default)
+    public async Task<GameHubResult<ActivityGamesContextDto>> GetActivityContextAsync(string discordGuildId, string channelDiscordId, string? userDiscordId = null, CancellationToken ct = default)
     {
         if (!ValidSnowflake(discordGuildId) || !ValidSnowflake(channelDiscordId)) return GameHubResult<ActivityGamesContextDto>.Fail("بيانات السيرفر أو الروم غير صالحة.");
         var guild = await db.Guilds.AsNoTracking().FirstOrDefaultAsync(x => x.DiscordGuildId == discordGuildId && x.IsActive, ct);
@@ -255,13 +256,14 @@ public class GameHubService(AppDbContext db, ILogger<GameHubService> logger) : I
         if (string.IsNullOrWhiteSpace(settings.GamesChannelDiscordId)) return GameHubResult<ActivityGamesContextDto>.Fail("لم يتم تحديد روم الألعاب بعد.", 403);
         if (settings.GamesChannelDiscordId != channelDiscordId) return GameHubResult<ActivityGamesContextDto>.Fail($"🎮 الألعاب متاحة فقط في روم <#{settings.GamesChannelDiscordId}>.", 403);
         var botContext = await GetBotContextAsync(discordGuildId, ct);
+        if (!string.IsNullOrWhiteSpace(userDiscordId)) await ApplySandboxVersionsAsync(botContext.Games, guild.Id, discordGuildId, userDiscordId, ct);
         var leaderboard = await GetLeaderboardAsync(guild.Id, null, 10, ct) ?? [];
         return GameHubResult<ActivityGamesContextDto>.Ok(new ActivityGamesContextDto { GuildDiscordId = discordGuildId, ChannelDiscordId = channelDiscordId, GamesChannelDiscordId = settings.GamesChannelDiscordId, Games = botContext.Games, Leaderboard = leaderboard });
     }
 
     public async Task<GameHubResult<IReadOnlyList<GameLeaderboardEntryDto>>> GetActivityLeaderboardAsync(string discordGuildId, string channelDiscordId, string? gameKey, int limit, CancellationToken ct = default)
     {
-        var context = await GetActivityContextAsync(discordGuildId, channelDiscordId, ct);
+        var context = await GetActivityContextAsync(discordGuildId, channelDiscordId, null, ct);
         if (!context.Succeeded) return GameHubResult<IReadOnlyList<GameLeaderboardEntryDto>>.Fail(context.Error!, context.StatusCode);
         Guid? gameId = null;
         if (!string.IsNullOrWhiteSpace(gameKey))
@@ -273,6 +275,61 @@ public class GameHubService(AppDbContext db, ILogger<GameHubService> logger) : I
         }
         var guildId = await db.Guilds.AsNoTracking().Where(x => x.DiscordGuildId == discordGuildId && x.IsActive).Select(x => x.Id).FirstAsync(ct);
         return GameHubResult<IReadOnlyList<GameLeaderboardEntryDto>>.Ok(await GetLeaderboardAsync(guildId, gameId, limit, ct) ?? []);
+    }
+
+    private async Task ApplyPublishedVersionMetadataAsync(List<AvailableGameDto> games, CancellationToken ct)
+    {
+        if (games.Count == 0) return;
+        var gameIds = games.Select(x => x.Id).ToHashSet();
+        var versions = await db.GameVersions.AsNoTracking()
+            .Where(x => gameIds.Contains(x.GameDefinitionId) && x.Status == "Published")
+            .OrderByDescending(x => x.PublishedAt).ThenByDescending(x => x.CreatedAt)
+            .ToListAsync(ct);
+        foreach (var game in games)
+        {
+            var version = versions.FirstOrDefault(x => x.GameDefinitionId == game.Id);
+            if (version is null) continue;
+            ApplyVersion(game, version, false);
+        }
+    }
+
+    private async Task ApplySandboxVersionsAsync(List<AvailableGameDto> games, Guid guildId, string discordGuildId, string userDiscordId, CancellationToken ct)
+    {
+        if (games.Count == 0) return;
+        var gameIds = games.Select(x => x.Id).ToHashSet();
+        var sandboxVersions = await db.GameVersions.AsNoTracking().Include(x => x.SandboxAccess)
+            .Where(x => gameIds.Contains(x.GameDefinitionId) && x.Status == "Sandbox" && x.SandboxAccess.Any(a => a.GuildDiscordId == discordGuildId && (a.UserDiscordId == null || a.UserDiscordId == userDiscordId)))
+            .OrderByDescending(x => x.CreatedAt).ToListAsync(ct);
+        foreach (var version in sandboxVersions)
+        {
+            var game = games.FirstOrDefault(x => x.Id == version.GameDefinitionId);
+            if (game is null) continue;
+            ApplyVersion(game, version, true);
+        }
+        if (sandboxVersions.Count > 0)
+            logger.LogInformation("Applied {Count} sandbox game versions for guild {GuildId}, user {UserId}.", sandboxVersions.Count, guildId, userDiscordId);
+    }
+
+    private static void ApplyVersion(AvailableGameDto game, GameVersion version, bool sandbox)
+    {
+        game.GameVersionId = version.Id;
+        game.ActivityRoute = string.IsNullOrWhiteSpace(version.ActivityRoute) ? game.ActivityRoute : version.ActivityRoute;
+        game.FrontendUrl = version.FrontendUrl;
+        game.BackendUrl = version.BackendUrl;
+        game.EngineType = ManifestString(version.ManifestJson, "engineType") ?? game.EngineType;
+        game.FrontendMode = ManifestString(version.ManifestJson, "frontendMode") ?? game.FrontendMode;
+        game.IsSandbox = sandbox;
+        game.SandboxWarning = sandbox ? "هذه نسخة تجريبية وقد تحتوي على أخطاء." : null;
+    }
+
+    private static string? ManifestString(string json, string property)
+    {
+        try
+        {
+            using var doc = JsonDocument.Parse(json);
+            return doc.RootElement.TryGetProperty(property, out var node) && node.ValueKind == JsonValueKind.String ? node.GetString() : null;
+        }
+        catch { return null; }
     }
 
     public async Task<IReadOnlyList<PendingGamePublishActionDto>> GetPendingPublishActionsAsync(CancellationToken ct = default)
