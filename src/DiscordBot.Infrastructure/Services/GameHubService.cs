@@ -253,7 +253,7 @@ public class GameHubService(AppDbContext db, ILogger<GameHubService> logger) : I
         var settings = await db.GuildGamesSettings.AsNoTracking().FirstOrDefaultAsync(x => x.GuildId == guild.Id, ct);
         if (settings?.IsEnabled != true) return GameHubResult<ActivityGamesContextDto>.Fail("الألعاب غير مفعّلة في هذا السيرفر.", 403);
         if (string.IsNullOrWhiteSpace(settings.GamesChannelDiscordId)) return GameHubResult<ActivityGamesContextDto>.Fail("لم يتم تحديد روم الألعاب بعد.", 403);
-        if (settings.GamesChannelDiscordId != channelDiscordId) return GameHubResult<ActivityGamesContextDto>.Fail("🎮 الألعاب متاحة فقط في روم الألعاب المحدد.", 403);
+        if (settings.GamesChannelDiscordId != channelDiscordId) return GameHubResult<ActivityGamesContextDto>.Fail($"🎮 الألعاب متاحة فقط في روم <#{settings.GamesChannelDiscordId}>.", 403);
         var botContext = await GetBotContextAsync(discordGuildId, ct);
         var leaderboard = await GetLeaderboardAsync(guild.Id, null, 10, ct) ?? [];
         return GameHubResult<ActivityGamesContextDto>.Ok(new ActivityGamesContextDto { GuildDiscordId = discordGuildId, ChannelDiscordId = channelDiscordId, GamesChannelDiscordId = settings.GamesChannelDiscordId, Games = botContext.Games, Leaderboard = leaderboard });
