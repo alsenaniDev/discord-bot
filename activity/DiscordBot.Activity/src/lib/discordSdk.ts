@@ -14,5 +14,7 @@ export async function initializeDiscordActivity(): Promise<ActivityIdentity> {
   const token = await exchangeActivityCode(code);
   const authentication = await discordSdk.commands.authenticate({ access_token: token.accessToken });
   if (!authentication?.user?.id) throw new Error('تعذر تسجيل الدخول إلى ديسكورد.');
-  return { accessToken: token.accessToken, userId: authentication.user.id, username: authentication.user.global_name ?? authentication.user.username, guildId: discordSdk.guildId, channelId: discordSdk.channelId };
+  const avatarHash = (authentication.user as { avatar?: string | null }).avatar;
+  const avatarUrl = avatarHash ? `https://cdn.discordapp.com/avatars/${authentication.user.id}/${avatarHash}.png` : null;
+  return { accessToken: token.accessToken, userId: authentication.user.id, username: authentication.user.global_name ?? authentication.user.username, avatarUrl, guildId: discordSdk.guildId, channelId: discordSdk.channelId };
 }

@@ -47,11 +47,17 @@ public sealed class DiscordActivityAuthService(HttpClient http, IOptions<Discord
             using var response = await http.SendAsync(request, ct);
             if (response.StatusCode == HttpStatusCode.Unauthorized || !response.IsSuccessStatusCode) return null;
             var user = await response.Content.ReadFromJsonAsync<DiscordUserResponse>(cancellationToken: ct);
-            return user is null || string.IsNullOrWhiteSpace(user.Id) ? null : new ActivityDiscordUser(user.Id, user.Username, user.GlobalName);
+            return user is null || string.IsNullOrWhiteSpace(user.Id) ? null : new ActivityDiscordUser(user.Id, user.Username, user.GlobalName, BuildAvatarUrl(user.Id, user.Avatar));
         }
         catch (HttpRequestException) { return null; }
+    }
+
+    private static string? BuildAvatarUrl(string userId, string? avatarHash)
+    {
+        if (string.IsNullOrWhiteSpace(avatarHash)) return null;
+        return $"https://cdn.discordapp.com/avatars/{userId}/{avatarHash}.png";
     }
 }
 
 public sealed record ActivityTokenResponse(string AccessToken, int ExpiresIn, string TokenType, string Scope);
-public sealed record ActivityDiscordUser(string Id, string Username, string? GlobalName);
+public sealed record ActivityDiscordUser(string Id, string Username, string? GlobalName, string? AvatarUrl);

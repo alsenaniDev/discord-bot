@@ -171,18 +171,30 @@
 .store-card,
 .player-panel,
 .event-log,
-.pending-panel {
+.pending-panel,
+.powerup-banner {
   padding: clamp(1rem, 3vw, 1.4rem);
 }
 
 .turn-banner {
-  display: grid;
+  display: flex;
+  align-items: center;
   gap: .25rem;
   margin-bottom: 1rem;
   padding: .95rem 1rem;
   border-radius: 1.25rem;
   background: linear-gradient(135deg, rgba(245,158,11,.18), rgba(124,58,237,.14));
   border: 1px solid rgba(245,158,11,.24);
+}
+
+.turn-banner > div {
+  display: grid;
+  gap: .2rem;
+  min-width: 0;
+}
+
+.turn-banner .game-avatar {
+  margin-inline-end: .55rem;
 }
 
 .turn-banner span {
@@ -307,12 +319,52 @@
 }
 
 .event-row {
+  display: flex;
+  align-items: center;
+  gap: .45rem;
   margin: 0;
   padding: .65rem .75rem;
   border-radius: .8rem;
   color: #cbd5ef;
   background: rgba(255,255,255,.055);
   animation: event-slide .22s ease-out both;
+}
+
+.event-row.power-event {
+  color: #fff7ed;
+  background: rgba(245,158,11,.12);
+  border: 1px solid rgba(245,158,11,.2);
+}
+
+.powerup-banner {
+  display: flex;
+  align-items: center;
+  gap: .8rem;
+  margin: 1rem 0;
+  border-color: rgba(129,140,248,.38);
+  background: linear-gradient(135deg, rgba(88,101,242,.2), rgba(219,39,119,.12));
+  animation: result-pop .28s ease-out;
+}
+
+.powerup-banner > span {
+  display: grid;
+  place-items: center;
+  width: 3rem;
+  height: 3rem;
+  border-radius: 1rem;
+  background: rgba(255,255,255,.12);
+  font-size: 1.45rem;
+  flex: 0 0 auto;
+}
+
+.powerup-banner strong,
+.powerup-banner p {
+  margin: 0;
+}
+
+.powerup-banner p {
+  color: #dbeafe;
+  font-weight: 800;
 }
 
 .waiting-room {
@@ -475,6 +527,7 @@
   border: .55rem solid rgba(255,255,255,.12);
   box-shadow: 0 0 32px rgba(124,58,237,.34), inset 0 0 44px rgba(0,0,0,.32);
   transition: transform .4s ease;
+  transform: rotate(0deg);
 }
 
 .roulette-wheel-shell.is-spinning .roulette-wheel-game {
@@ -493,9 +546,12 @@
   position: absolute;
   left: 50%;
   top: 50%;
-  width: 5.2rem;
-  margin: -1rem 0 0 -2.6rem;
-  padding: .28rem .45rem;
+  display: inline-flex;
+  align-items: center;
+  gap: .3rem;
+  width: 5.65rem;
+  margin: -1.08rem 0 0 -2.82rem;
+  padding: .22rem .35rem;
   border-radius: 999px;
   color: #fff;
   background: rgba(4,7,17,.58);
@@ -504,6 +560,29 @@
   font-weight: 800;
   text-align: center;
   white-space: nowrap;
+  overflow: hidden;
+}
+
+.wheel-face {
+  display: grid;
+  place-items: center;
+  width: 1.35rem;
+  height: 1.35rem;
+  border-radius: 999px;
+  overflow: hidden;
+  flex: 0 0 auto;
+  background: rgba(255,255,255,.15);
+  font-size: .62rem;
+}
+
+.wheel-face img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.wheel-name-text {
+  min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
 }
@@ -526,6 +605,15 @@
   background: radial-gradient(circle, #1f2937, #080b14);
   border: .35rem solid rgba(255,255,255,.15);
   box-shadow: 0 0 24px rgba(0,0,0,.35);
+  overflow: hidden;
+}
+
+.wheel-center img {
+  width: 3.7rem;
+  height: 3.7rem;
+  object-fit: cover;
+  border-radius: 999px;
+  border: 2px solid rgba(255,255,255,.18);
 }
 
 .wheel-center b {
@@ -552,7 +640,7 @@
 
 @keyframes wheel-spin {
   from { transform: rotate(0); }
-  to { transform: rotate(1620deg); }
+  to { transform: rotate(var(--wheel-rotation, 1620deg)); }
 }
 
 @keyframes pointer-bounce {

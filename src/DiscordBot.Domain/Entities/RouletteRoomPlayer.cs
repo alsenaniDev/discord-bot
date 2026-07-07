@@ -6,6 +6,8 @@ public class RouletteRoomPlayer : BaseEntity
     public RouletteRoom RouletteRoom { get; set; } = null!;
     public string UserDiscordId { get; set; } = string.Empty;
     public string Username { get; set; } = string.Empty;
+    public string? DisplayName { get; set; }
+    public string? AvatarUrl { get; set; }
     public bool IsHost { get; set; }
     public bool IsAlive { get; set; } = true;
     public int Position { get; set; }

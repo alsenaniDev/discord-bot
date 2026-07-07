@@ -136,6 +136,7 @@ public class RouletteRoomPlayerConfiguration : IEntityTypeConfiguration<Roulette
     {
         b.ToTable("RouletteRoomPlayers"); b.HasKey(x => x.Id); b.HasIndex(x => new { x.RouletteRoomId, x.UserDiscordId }).IsUnique();
         b.Property(x => x.UserDiscordId).HasMaxLength(32).IsRequired(); b.Property(x => x.Username).HasMaxLength(80).IsRequired();
+        b.Property(x => x.DisplayName).HasMaxLength(80); b.Property(x => x.AvatarUrl).HasMaxLength(512);
         b.HasOne(x => x.RouletteRoom).WithMany(x => x.Players).HasForeignKey(x => x.RouletteRoomId).OnDelete(DeleteBehavior.Cascade);
     }
 }

@@ -70,7 +70,7 @@ public class ActivityGamesController(IDiscordActivityAuthService auth, IGameHubS
     public async Task<IActionResult> CreateRouletteRoom(CreateRouletteRoomRequest request, CancellationToken ct)
     {
         var user = await UserAsync(ct); if (user is null) return Unauthorized(new { message = "انتهت صلاحية تسجيل الدخول. افتح مركز الألعاب مرة ثانية." });
-        return Result(await roulette.CreateRoomAsync(request, user.Id, user.GlobalName ?? user.Username, ct));
+        return Result(await roulette.CreateRoomAsync(request, user.Id, user.Username, user.GlobalName, user.AvatarUrl, ct));
     }
 
     [HttpGet("roulette/rooms/open")]
@@ -98,7 +98,7 @@ public class ActivityGamesController(IDiscordActivityAuthService auth, IGameHubS
     public async Task<IActionResult> JoinRouletteRoom(Guid roomId, CreateRouletteRoomRequest request, CancellationToken ct)
     {
         var user = await UserAsync(ct); if (user is null) return Unauthorized(new { message = "انتهت صلاحية تسجيل الدخول. افتح مركز الألعاب مرة ثانية." });
-        return Result(await roulette.JoinRoomAsync(roomId, request.GuildDiscordId, request.ChannelDiscordId, user.Id, user.GlobalName ?? user.Username, ct));
+        return Result(await roulette.JoinRoomAsync(roomId, request.GuildDiscordId, request.ChannelDiscordId, user.Id, user.Username, user.GlobalName, user.AvatarUrl, ct));
     }
 
     [HttpPost("roulette/rooms/{roomId:guid}/leave")]
