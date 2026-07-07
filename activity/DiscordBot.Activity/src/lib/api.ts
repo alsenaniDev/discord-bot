@@ -10,9 +10,29 @@ async function request<T>(path: string, accessToken?: string, init?: RequestInit
   headers.set('Content-Type', 'application/json');
   if (accessToken) headers.set('Authorization', `Bearer ${accessToken}`);
   const response = await fetch(url(path), { ...init, headers });
-  const body = await response.json().catch(() => null) as { message?: string; detail?: string; title?: string } | T | null;
-  if (!response.ok) { const problem = body as { message?: string; detail?: string; title?: string } | null; throw new ApiError(problem?.message ?? problem?.detail ?? problem?.title ?? `تعذر إكمال الطلب الآن. رمز HTTP: ${response.status}`, response.status); }
+  const raw = await response.text().catch(() => '');
+  const body = raw ? tryParseJson(raw) as ({ message?: string; detail?: string; title?: string } | T | null) : null;
+  if (!response.ok) {
+    const problem = body as { message?: string; detail?: string; title?: string } | null;
+    throw new ApiError(problem?.message ?? problem?.detail ?? problem?.title ?? plainError(raw) ?? fallbackError(response.status), response.status);
+  }
   return body as T;
+}
+
+function tryParseJson(value: string): unknown {
+  try { return JSON.parse(value); } catch { return null; }
+}
+
+function plainError(value: string): string | null {
+  const clean = value.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+  return clean && clean.length < 240 ? clean : null;
+}
+
+function fallbackError(status: number): string {
+  if (status === 403) return 'لا يمكن فتح مركز الألعاب هنا. تأكد أن الألعاب مفعّلة وأنك داخل روم الألعاب المحدد لهذا السيرفر.';
+  if (status === 401) return 'انتهت صلاحية تسجيل الدخول. افتح مركز الألعاب مرة ثانية.';
+  if (status === 404) return 'هذا السيرفر غير مربوط بمنصة البوت أو لم يتم العثور على الإعدادات.';
+  return `تعذر إكمال الطلب الآن. رمز HTTP: ${status}`;
 }
 
 export const exchangeActivityCode = (code: string) => request<{ accessToken: string; expiresIn: number; tokenType: string; scope: string }>('/api/discord/activity/token', undefined, { method: 'POST', body: JSON.stringify({ code }) });
