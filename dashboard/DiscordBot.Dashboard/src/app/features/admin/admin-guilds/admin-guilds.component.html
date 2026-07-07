@@ -41,9 +41,10 @@
             <td>
               <select
                 class="plan-select input"
-                [value]="guild.planKey"
+                [ngModel]="guild.planKey"
+                [ngModelOptions]="{ standalone: true }"
                 [disabled]="isSaving(guild)"
-                (change)="onPlanChange(guild, $any($event.target).value)"
+                (ngModelChange)="onPlanChange(guild, $event)"
               >
                 <option *ngFor="let plan of plans" [value]="plan.key">
                   {{ plan.name }} ({{ plan.monthlyPrice | currency:'USD':'symbol':'1.2-2' }}/{{ 'subscription.perMonth' | translate }})

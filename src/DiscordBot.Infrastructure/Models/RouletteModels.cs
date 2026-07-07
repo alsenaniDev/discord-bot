@@ -22,6 +22,7 @@ public class UsePowerUpRequest { public string GuildDiscordId { get; set; } = st
 public class PrepareRouletteJoinRequest { public string GuildDiscordId { get; set; } = string.Empty; public string ChannelDiscordId { get; set; } = string.Empty; public string UserDiscordId { get; set; } = string.Empty; public string Username { get; set; } = string.Empty; }
 public class PrepareRouletteJoinResponse { public Guid JoinIntentId { get; set; } public DateTimeOffset ExpiresAt { get; set; } }
 public class PendingRouletteIntentDto { public Guid RoomId { get; set; } }
+public class MyActiveRouletteRoomDto { public bool HasRoom { get; set; } public Guid? RoomId { get; set; } public string? Status { get; set; } public bool IsHost { get; set; } }
 public class GameWalletDto { public int Balance { get; set; } }
 
 public class RoulettePowerUpSettingDto
@@ -83,6 +84,7 @@ public class RouletteRoomDto
     public DateTimeOffset? StartedAt { get; set; }
     public DateTimeOffset? CompletedAt { get; set; }
     public bool CanStart { get; set; }
+    public bool IsCurrentUserJoined { get; set; }
     public string? CurrentTurnUserDiscordId { get; set; }
     public string? CurrentTurnUsername { get; set; }
     public string? PendingTargetUserDiscordId { get; set; }

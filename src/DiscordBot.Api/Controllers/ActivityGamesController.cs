@@ -80,6 +80,13 @@ public class ActivityGamesController(IDiscordActivityAuthService auth, IGameHubS
         return Result(await roulette.GetOpenRoomsAsync(guildDiscordId, channelDiscordId, user.Id, ct));
     }
 
+    [HttpGet("roulette/my-active-room")]
+    public async Task<IActionResult> MyActiveRouletteRoom([FromQuery] string guildDiscordId, [FromQuery] string channelDiscordId, CancellationToken ct)
+    {
+        var user = await UserAsync(ct); if (user is null) return Unauthorized(new { message = "انتهت صلاحية تسجيل الدخول. افتح مركز الألعاب مرة ثانية." });
+        return Result(await roulette.GetMyActiveRoomAsync(guildDiscordId, channelDiscordId, user.Id, ct));
+    }
+
     [HttpGet("roulette/rooms/{roomId:guid}")]
     public async Task<IActionResult> RouletteRoom(Guid roomId, [FromQuery] string guildDiscordId, [FromQuery] string channelDiscordId, CancellationToken ct)
     {

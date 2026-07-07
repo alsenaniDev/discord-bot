@@ -37,8 +37,13 @@ export class AdminGuildsComponent implements OnInit {
       plans: this.adminService.getPlans()
     }).subscribe({
       next: ({ guilds, plans }) => {
-        this.guilds = guilds;
-        this.plans = plans.sort((a, b) => a.monthlyPrice - b.monthlyPrice);
+        this.guilds = guilds.map(guild => ({
+          ...guild,
+          planKey: this.normalizePlanKey(guild.planKey)
+        }));
+        this.plans = plans
+          .map(plan => ({ ...plan, key: this.normalizePlanKey(plan.key) }))
+          .sort((a, b) => a.monthlyPrice - b.monthlyPrice);
         this.loading = false;
       },
       error: err => {
@@ -49,6 +54,7 @@ export class AdminGuildsComponent implements OnInit {
   }
 
   onPlanChange(guild: AdminGuildSummary, planKey: string): void {
+    planKey = this.normalizePlanKey(planKey);
     const previousPlanKey = guild.planKey;
     if (!planKey || planKey === previousPlanKey || this.savingGuildId) {
       return;
@@ -58,7 +64,7 @@ export class AdminGuildsComponent implements OnInit {
 
     this.adminService.updateGuildSubscription(guild.id, { planKey }).subscribe({
       next: subscription => {
-        guild.planKey = subscription.planKey;
+        guild.planKey = this.normalizePlanKey(subscription.planKey);
         guild.planName = subscription.planName;
         this.savingGuildId = null;
         this.toast.success(
@@ -86,5 +92,9 @@ export class AdminGuildsComponent implements OnInit {
 
   isSaving(guild: AdminGuildSummary): boolean {
     return this.savingGuildId === guild.id;
+  }
+
+  private normalizePlanKey(value?: string | null): string {
+    return (value ?? '').trim().toLowerCase();
   }
 }
