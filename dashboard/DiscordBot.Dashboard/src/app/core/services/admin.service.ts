@@ -13,7 +13,7 @@ import {
 } from '../models/admin.models';
 import { GuildSubscription } from '../models/subscription.models';
 import { AdminPlanUpgradeRequest, ReviewPlanUpgradeRequest } from '../models/upgrade-request.models';
-import { PlatformGameDefinition, SavePlatformGameDefinition } from '../models/games.models';
+import { CreateGameVersion, GameSandboxAccess, GameVersion, PlatformGameDefinition, SavePlatformGameDefinition } from '../models/games.models';
 
 @Injectable({ providedIn: 'root' })
 export class AdminService {
@@ -102,4 +102,9 @@ export class AdminService {
   updateGame(id: string, value: SavePlatformGameDefinition): Observable<PlatformGameDefinition> { return this.http.put<PlatformGameDefinition>(`${this.baseUrl}/games/${id}`, value); }
   toggleGame(id: string): Observable<PlatformGameDefinition> { return this.http.patch<PlatformGameDefinition>(`${this.baseUrl}/games/${id}/toggle`, {}); }
   disableGame(id: string): Observable<void> { return this.http.delete<void>(`${this.baseUrl}/games/${id}`); }
+  getGameVersions(gameId: string): Observable<GameVersion[]> { return this.http.get<GameVersion[]>(`${this.baseUrl}/games/${gameId}/versions`); }
+  createGameVersion(gameId: string, value: CreateGameVersion): Observable<GameVersion> { return this.http.post<GameVersion>(`${this.baseUrl}/games/${gameId}/versions`, value); }
+  updateGameVersionStatus(versionId: string, status: string): Observable<GameVersion> { return this.http.patch<GameVersion>(`${this.baseUrl}/games/versions/${versionId}/status`, { status }); }
+  addGameSandboxAccess(versionId: string, guildDiscordId: string, userDiscordId?: string | null): Observable<GameSandboxAccess> { return this.http.post<GameSandboxAccess>(`${this.baseUrl}/games/versions/${versionId}/sandbox-access`, { guildDiscordId, userDiscordId: userDiscordId || null }); }
+  removeGameSandboxAccess(accessId: string): Observable<void> { return this.http.delete<void>(`${this.baseUrl}/games/versions/sandbox-access/${accessId}`); }
 }

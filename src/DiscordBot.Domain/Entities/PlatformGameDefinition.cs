@@ -21,4 +21,5 @@ public class PlatformGameDefinition : BaseEntity
     public ICollection<GuildGameSetting> GuildSettings { get; set; } = [];
     public ICollection<GameSession> Sessions { get; set; } = [];
     public ICollection<GameContent> Content { get; set; } = [];
+    public ICollection<GameVersion> Versions { get; set; } = [];
 }

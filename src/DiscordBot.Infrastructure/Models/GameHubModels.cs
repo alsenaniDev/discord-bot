@@ -133,14 +133,21 @@ public class CompleteGameSessionResponse
 public class AvailableGameDto
 {
     public Guid Id { get; set; }
+    public Guid? GameVersionId { get; set; }
     public string Key { get; set; } = string.Empty;
     public string Name { get; set; } = string.Empty;
     public string? Description { get; set; }
     public string? IconUrl { get; set; }
     public string ActivityRoute { get; set; } = string.Empty;
+    public string? FrontendUrl { get; set; }
+    public string? BackendUrl { get; set; }
+    public string EngineType { get; set; } = "Platform";
+    public string FrontendMode { get; set; } = "InternalRoute";
     public GamePlayMode PlayMode { get; set; } = GamePlayMode.Solo;
     public bool SupportsScores { get; set; }
     public bool SupportsLeaderboard { get; set; }
+    public bool IsSandbox { get; set; }
+    public string? SandboxWarning { get; set; }
     [System.Text.Json.Serialization.JsonIgnore]
     public string RequiredPlanInternal { get; set; } = "free";
 }
