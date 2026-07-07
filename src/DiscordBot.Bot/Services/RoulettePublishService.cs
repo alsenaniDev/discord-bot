@@ -22,19 +22,20 @@ public class RoulettePublishService(BotApiClient api, ILogger<RoulettePublishSer
                 if (action.Type == "RoomInvite")
                 {
                     var embed = new EmbedBuilder().WithTitle("🎡 تحدي الروليت بدأ!")
-                        .WithDescription($"{action.HostUsername} بدأ لعبة الروليت الجماعية.\nاضغط الزر وادخل التحدي.")
+                        .WithDescription($"🔥 {action.HostUsername} فتح تحدي روليت جديد!\nهل تقدر تصمد للنهاية؟ ادخل وتحداه الآن.")
                         .AddField("اللاعبون", $"{action.PlayersCount} / {action.MaxPlayers}", true)
-                        .AddField("الحد الأدنى للبدء", action.MinPlayers, true)
+                        .AddField("الحد الأدنى", action.MinPlayers, true)
+                        .AddField("المكافأة", $"{action.WinnerCoins} عملة", true)
                         .AddField("مدة الانضمام", $"{action.JoinWindowSeconds} ثانية", true)
                         .WithColor(new Color(235, 69, 158)).Build();
-                    var components = new ComponentBuilder().WithButton("انضم للتحدي", $"games:roulette:join:{action.RoomId:D}", ButtonStyle.Primary, new Emoji("🎡")).Build();
+                    var components = new ComponentBuilder().WithButton("ادخل التحدي", $"games:roulette:join:{action.RoomId:D}", ButtonStyle.Primary, new Emoji("🎡")).Build();
                     message = await channel.SendMessageAsync(embed: embed, components: components, allowedMentions: AllowedMentions.None);
                 }
                 else
                 {
-                    var embed = new EmbedBuilder().WithTitle("🏆 انتهت لعبة الروليت").WithDescription($"الفائز: {action.WinnerUsername}")
-                        .AddField("مكافأة الفائز", $"{action.WinnerCoins} عملة", true).AddField("عدد اللاعبين", action.PlayersCount, true)
-                        .AddField("الجولات", action.CurrentRound, true).WithColor(new Color(240, 178, 50)).Build();
+                    var embed = new EmbedBuilder().WithTitle("🏆 بطل الروليت").WithDescription($"فاز {action.WinnerUsername} في تحدي الروليت!")
+                        .AddField("المكافأة", $"{action.WinnerCoins} عملة", true).AddField("عدد اللاعبين", action.PlayersCount, true)
+                        .AddField("عدد الجولات", action.CurrentRound, true).WithColor(new Color(240, 178, 50)).Build();
                     message = await channel.SendMessageAsync(embed: embed, allowedMentions: AllowedMentions.None);
                 }
                 await api.AckRoulettePublishActionAsync(action.Id, new AckRoulettePublishActionApiRequest { Success = true, MessageDiscordId = message.Id.ToString() }, ct);

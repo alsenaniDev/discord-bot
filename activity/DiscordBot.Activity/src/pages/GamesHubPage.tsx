@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useActivity } from '../context/ActivityProvider';
 import type { ActivityGame } from '../types';
-import { consumePendingRouletteIntent, joinRouletteRoom } from '../lib/api';
+import { consumePendingRouletteIntent, getMyActiveRouletteRoom, joinRouletteRoom } from '../lib/api';
 import './GamesHubPage.css';
 
 function GameGroup({ title, games, emptyMessage, onPlay }: { title: string; games: ActivityGame[]; emptyMessage: string; onPlay: (game: ActivityGame) => void }) {
@@ -11,7 +11,7 @@ function GameGroup({ title, games, emptyMessage, onPlay }: { title: string; game
 
 export function GamesHubPage() {
   const { context, identity } = useActivity(); const navigate = useNavigate();
-  useEffect(() => { if (!identity) return; let active = true; consumePendingRouletteIntent(identity.accessToken, identity.guildId, identity.channelId).then(async intent => { if (!active || !intent) return; try { await joinRouletteRoom(identity.accessToken, intent.roomId, identity.guildId, identity.channelId); } catch { /* The room page shows the current state if the user was already joined or the room changed. */ } if (active) navigate(`/games/roulette/room/${intent.roomId}`, { replace: true }); }).catch(() => undefined); return () => { active = false; }; }, [identity, navigate]);
+  useEffect(() => { if (!identity) return; let active = true; (async () => { try { const intent = await consumePendingRouletteIntent(identity.accessToken, identity.guildId, identity.channelId); if (!active) return; if (intent?.roomId) { try { await joinRouletteRoom(identity.accessToken, intent.roomId, identity.guildId, identity.channelId); } catch { /* The room page shows the current state if the user was already joined or the room changed. */ } if (active) navigate(`/games/roulette/room/${intent.roomId}`, { replace: true }); return; } const mine = await getMyActiveRouletteRoom(identity.accessToken, identity.guildId, identity.channelId); if (active && mine.hasRoom && mine.roomId) navigate(`/games/roulette/room/${mine.roomId}`, { replace: true }); } catch { /* Keep hub usable if checking current room fails. */ } })(); return () => { active = false; }; }, [identity, navigate]);
   const soloGames = context?.games.filter(game => game.playMode === 'Solo') ?? [];
   const multiplayerGames = context?.games.filter(game => game.playMode === 'Multiplayer') ?? [];
   return <main className="page"><header className="hero"><div><span className="eyebrow">أهلًا {identity?.username}</span><h1>🎮 مركز الألعاب</h1><p>اختر لعبة وابدأ التحدي مع أعضاء السيرفر.</p></div><button className="button secondary" onClick={() => navigate('/leaderboard')}>عرض الترتيب</button></header>

@@ -18,6 +18,7 @@ public interface IRouletteService
     Task<GameHubResult<GameWalletDto>> GetWalletAsync(string guildDiscordId, string userDiscordId, CancellationToken ct = default);
     Task<GameHubResult<PowerUpStoreDto>> GetStoreAsync(string guildDiscordId, string userDiscordId, CancellationToken ct = default);
     Task<GameHubResult<PurchasePowerUpResponse>> PurchasePowerUpAsync(PurchasePowerUpRequest request, string userDiscordId, CancellationToken ct = default);
+    Task<GameHubResult<MyActiveRouletteRoomDto>> GetMyActiveRoomAsync(string guildDiscordId, string channelDiscordId, string userDiscordId, CancellationToken ct = default);
     Task<GameHubResult<RouletteRoomDto>> CreateRoomAsync(CreateRouletteRoomRequest request, string userDiscordId, string username, CancellationToken ct = default);
     Task<GameHubResult<IReadOnlyList<RouletteRoomDto>>> GetOpenRoomsAsync(string guildDiscordId, string channelDiscordId, string userDiscordId, CancellationToken ct = default);
     Task<GameHubResult<RouletteRoomDto>> GetRoomAsync(Guid roomId, string guildDiscordId, string channelDiscordId, string userDiscordId, CancellationToken ct = default);
@@ -132,6 +133,21 @@ public class RouletteService(AppDbContext db, ILogger<RouletteService> logger) :
         return GameHubResult<PurchasePowerUpResponse>.Ok(new PurchasePowerUpResponse { Balance = wallet.Balance, PowerUpKey = setting.GamePowerUpDefinition.Key, OwnedQuantity = inventory.Quantity });
     }
 
+    public async Task<GameHubResult<MyActiveRouletteRoomDto>> GetMyActiveRoomAsync(string guildDiscordId, string channelDiscordId, string userDiscordId, CancellationToken ct = default)
+    {
+        var context = await EnabledContextAsync(guildDiscordId, channelDiscordId, ct);
+        if (!context.Succeeded) return GameHubResult<MyActiveRouletteRoomDto>.Fail(context.Error!, context.StatusCode);
+        var guild = context.Value!.Guild;
+        var now = DateTimeOffset.UtcNow;
+        var room = await db.RouletteRooms.AsNoTracking().Include(x => x.Players)
+            .Where(x => x.GuildId == guild.Id && x.ChannelDiscordId == channelDiscordId && ((x.Status == "Waiting" && x.ExpiresAt > now) || x.Status == "InProgress") && x.Players.Any(p => p.UserDiscordId == userDiscordId))
+            .OrderByDescending(x => x.UpdatedAt).ThenByDescending(x => x.CreatedAt)
+            .FirstOrDefaultAsync(ct);
+        return GameHubResult<MyActiveRouletteRoomDto>.Ok(room is null
+            ? new MyActiveRouletteRoomDto { HasRoom = false }
+            : new MyActiveRouletteRoomDto { HasRoom = true, RoomId = room.Id, Status = room.Status, IsHost = room.HostUserDiscordId == userDiscordId });
+    }
+
     public async Task<GameHubResult<RouletteRoomDto>> CreateRoomAsync(CreateRouletteRoomRequest request, string userDiscordId, string username, CancellationToken ct = default)
     {
         var context = await EnabledContextAsync(request.GuildDiscordId, request.ChannelDiscordId, ct);
@@ -174,7 +190,7 @@ public class RouletteService(AppDbContext db, ILogger<RouletteService> logger) :
         var rooms = await db.RouletteRooms.AsNoTracking().Include(x => x.Players)
             .Where(x => x.GuildId == guild.Id && x.ChannelDiscordId == channelDiscordId && x.Status == "Waiting" && x.ExpiresAt > now && x.Players.Count < x.MaxPlayers)
             .OrderByDescending(x => x.CreatedAt).Take(30).ToListAsync(ct);
-        return GameHubResult<IReadOnlyList<RouletteRoomDto>>.Ok(rooms.Select(x => MapRoom(x, guildDiscordId)).ToList());
+        return GameHubResult<IReadOnlyList<RouletteRoomDto>>.Ok(rooms.Select(x => MapRoom(x, guildDiscordId, userDiscordId)).ToList());
     }
 
     public async Task<GameHubResult<RouletteRoomDto>> GetRoomAsync(Guid roomId, string guildDiscordId, string channelDiscordId, string userDiscordId, CancellationToken ct = default)
@@ -182,7 +198,7 @@ public class RouletteService(AppDbContext db, ILogger<RouletteService> logger) :
         var room = await LoadRoomAsync(roomId, ct); var error = ValidateRoomScope(room, guildDiscordId, channelDiscordId);
         if (error is not null) return GameHubResult<RouletteRoomDto>.Fail(error.Value.Message, error.Value.Code);
         await ExpireIfNeededAsync(room!, ct);
-        return GameHubResult<RouletteRoomDto>.Ok(MapRoom(room!, guildDiscordId));
+        return GameHubResult<RouletteRoomDto>.Ok(MapRoom(room!, guildDiscordId, userDiscordId));
     }
 
     public async Task<GameHubResult<RouletteRoomDto>> JoinRoomAsync(Guid roomId, string guildDiscordId, string channelDiscordId, string userDiscordId, string username, CancellationToken ct = default)
@@ -195,9 +211,10 @@ public class RouletteService(AppDbContext db, ILogger<RouletteService> logger) :
         await db.Database.ExecuteSqlInterpolatedAsync($"UPDATE \"RouletteRooms\" SET \"UpdatedAt\" = \"UpdatedAt\" WHERE \"Id\" = {roomId}", ct);
         var room = await LoadRoomAsync(roomId, ct); var error = ValidateRoomScope(room, guildDiscordId, channelDiscordId);
         if (error is not null) return GameHubResult<RouletteRoomDto>.Fail(error.Value.Message, error.Value.Code);
-        if (room!.Status != "Waiting") return GameHubResult<RouletteRoomDto>.Fail("هذه الجولة لم تعد متاحة للانضمام.", 409);
+        var alreadyJoined = room!.Players.Any(x => x.UserDiscordId == userDiscordId);
+        if (alreadyJoined && (room.Status == "Waiting" || room.Status == "InProgress")) { await transaction.CommitAsync(ct); return GameHubResult<RouletteRoomDto>.Ok(MapRoom(room, guildDiscordId, userDiscordId)); }
+        if (room.Status != "Waiting") return GameHubResult<RouletteRoomDto>.Fail("هذه الجولة لم تعد متاحة للانضمام.", 409);
         if (room.ExpiresAt <= DateTimeOffset.UtcNow) { room.Status = "Expired"; await db.SaveChangesAsync(ct); await transaction.CommitAsync(ct); return GameHubResult<RouletteRoomDto>.Fail("انتهت مدة الانضمام لهذه الجولة.", 410); }
-        if (room.Players.Any(x => x.UserDiscordId == userDiscordId)) return GameHubResult<RouletteRoomDto>.Fail("أنت منضم لهذه الجولة بالفعل.", 409);
         if (room.Players.Count >= room.MaxPlayers) return GameHubResult<RouletteRoomDto>.Fail("اكتمل عدد اللاعبين في هذه الجولة.", 409);
         var player = new RouletteRoomPlayer { RouletteRoomId = room.Id, RouletteRoom = room, UserDiscordId = userDiscordId, Username = CleanUsername(username, userDiscordId), Position = room.Players.Count + 1 };
         db.RouletteRoomPlayers.Add(player);
@@ -205,7 +222,7 @@ public class RouletteService(AppDbContext db, ILogger<RouletteService> logger) :
         AddAction(room, 0, userDiscordId, null, "PlayerJoined");
         await db.SaveChangesAsync(ct); await transaction.CommitAsync(ct);
         logger.LogInformation("User {UserId} joined Roulette room {RoomId}. Players: {PlayerCount}/{MaxPlayers}.", userDiscordId, room.Id, room.Players.Count, room.MaxPlayers);
-        return GameHubResult<RouletteRoomDto>.Ok(MapRoom(room, guildDiscordId));
+        return GameHubResult<RouletteRoomDto>.Ok(MapRoom(room, guildDiscordId, userDiscordId));
     }
 
     public async Task<GameHubResult<RouletteRoomDto>> LeaveRoomAsync(Guid roomId, string guildDiscordId, string channelDiscordId, string userDiscordId, CancellationToken ct = default)
@@ -544,7 +561,7 @@ public class RouletteService(AppDbContext db, ILogger<RouletteService> logger) :
         db.RoulettePublishActions.Add(action);
         if (!room.PublishActions.Contains(action)) room.PublishActions.Add(action);
     }
-    private static RouletteRoomDto MapRoom(RouletteRoom x, string guildDiscordId)
+    private static RouletteRoomDto MapRoom(RouletteRoom x, string guildDiscordId, string? currentUserDiscordId = null)
     {
         var players = x.Players.OrderBy(p => p.Position).Select(MapPlayer).ToList();
         var current = players.FirstOrDefault(p => p.UserDiscordId == x.CurrentTurnUserDiscordId);
@@ -567,6 +584,7 @@ public class RouletteService(AppDbContext db, ILogger<RouletteService> logger) :
             StartedAt = x.StartedAt,
             CompletedAt = x.CompletedAt,
             CanStart = x.Status == "Waiting" && x.ExpiresAt > DateTimeOffset.UtcNow && players.Count >= x.MinPlayers,
+            IsCurrentUserJoined = !string.IsNullOrWhiteSpace(currentUserDiscordId) && players.Any(p => p.UserDiscordId == currentUserDiscordId),
             CurrentTurnUserDiscordId = x.CurrentTurnUserDiscordId,
             CurrentTurnUsername = current?.Username,
             PendingTargetUserDiscordId = x.PendingTargetUserDiscordId,

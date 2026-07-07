@@ -57,3 +57,21 @@
 - Join/leave rooms before start.
 - Open `/games` on desktop and mobile Discord Activity.
 - Confirm Quiz gameplay is unchanged.
+
+## Navigation and already-joined behavior
+
+- Create a Roulette room.
+- Open the store from inside the room.
+- Buy a power-up.
+- Click `العودة للعبة`.
+  - Expected: returns to the same room.
+- From the room, navigate back to the Roulette main page.
+  - Expected: redirects back to the active room if the room is `Waiting` or `InProgress`.
+- Refresh/reopen the Activity while in an active room.
+  - Expected: returns to the active room.
+- Click join on an open room where the current user is already joined.
+  - Expected: opens the room with no error.
+- Complete the room.
+  - Expected: Roulette main page opens normally and does not redirect to the completed room.
+- Cancel or expire a room.
+  - Expected: Roulette main page opens normally and does not redirect to that room.

@@ -1,4 +1,4 @@
-import type { ActivityContext, CompleteSessionResponse, GameWallet, LeaderboardEntry, PendingRouletteIntent, PowerUpStore, PurchasePowerUpResponse, RouletteRoom, RouletteSpinResult, StartSessionResponse } from '../types';
+import type { ActivityContext, CompleteSessionResponse, GameWallet, LeaderboardEntry, MyActiveRouletteRoom, PendingRouletteIntent, PowerUpStore, PurchasePowerUpResponse, RouletteRoom, RouletteSpinResult, StartSessionResponse } from '../types';
 
 const configuredBase = (import.meta.env.VITE_API_BASE_URL as string | undefined)?.trim().replace(/\/$/, '') ?? '';
 const url = (path: string) => `${configuredBase}${path}`;
@@ -26,6 +26,7 @@ export const getStore = (token: string, guildId: string) => request<PowerUpStore
 export const purchasePowerUp = (token: string, guildDiscordId: string, powerUpKey: string) => request<PurchasePowerUpResponse>('/api/games/activity/store/purchase', token, { method: 'POST', body: JSON.stringify({ guildDiscordId, powerUpKey }) });
 export const createRouletteRoom = (token: string, guildDiscordId: string, channelDiscordId: string) => request<RouletteRoom>('/api/games/activity/roulette/rooms', token, { method: 'POST', body: rouletteScope(guildDiscordId, channelDiscordId) });
 export const getOpenRouletteRooms = (token: string, guildDiscordId: string, channelDiscordId: string) => request<RouletteRoom[]>(`/api/games/activity/roulette/rooms/open?guildDiscordId=${encodeURIComponent(guildDiscordId)}&channelDiscordId=${encodeURIComponent(channelDiscordId)}`, token);
+export const getMyActiveRouletteRoom = (token: string, guildDiscordId: string, channelDiscordId: string) => request<MyActiveRouletteRoom>(`/api/games/activity/roulette/my-active-room?guildDiscordId=${encodeURIComponent(guildDiscordId)}&channelDiscordId=${encodeURIComponent(channelDiscordId)}`, token);
 export const getRouletteRoom = (token: string, roomId: string, guildDiscordId: string, channelDiscordId: string) => request<RouletteRoom>(`/api/games/activity/roulette/rooms/${roomId}?guildDiscordId=${encodeURIComponent(guildDiscordId)}&channelDiscordId=${encodeURIComponent(channelDiscordId)}`, token);
 export const joinRouletteRoom = (token: string, roomId: string, guildDiscordId: string, channelDiscordId: string) => request<RouletteRoom>(`/api/games/activity/roulette/rooms/${roomId}/join`, token, { method: 'POST', body: rouletteScope(guildDiscordId, channelDiscordId) });
 export const leaveRouletteRoom = (token: string, roomId: string, guildDiscordId: string, channelDiscordId: string) => request<RouletteRoom>(`/api/games/activity/roulette/rooms/${roomId}/leave`, token, { method: 'POST', body: rouletteScope(guildDiscordId, channelDiscordId) });
