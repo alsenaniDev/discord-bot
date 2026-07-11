@@ -20,6 +20,7 @@ public class GuildMaintenanceWorker : BackgroundService
     private readonly WorkflowActionSyncService _workflowActions;
     private readonly GameResultPublishService _gameResults;
     private readonly RoulettePublishService _roulettePublish;
+    private readonly ActivitiesRouletteAnnouncementService _activitiesRouletteAnnouncements;
     private readonly GamesContextCache _gamesContextCache;
     private readonly DiscordActivityLaunchService _activityLauncher;
     private DateTimeOffset _lastActivityDiagnosticsLoggedUtc = DateTimeOffset.MinValue;
@@ -33,6 +34,7 @@ public class GuildMaintenanceWorker : BackgroundService
         WorkflowActionSyncService workflowActions,
         GameResultPublishService gameResults,
         RoulettePublishService roulettePublish,
+        ActivitiesRouletteAnnouncementService activitiesRouletteAnnouncements,
         GamesContextCache gamesContextCache,
         DiscordActivityLaunchService activityLauncher)
     {
@@ -44,6 +46,7 @@ public class GuildMaintenanceWorker : BackgroundService
         _workflowActions = workflowActions;
         _gameResults = gameResults;
         _roulettePublish = roulettePublish;
+        _activitiesRouletteAnnouncements = activitiesRouletteAnnouncements;
         _gamesContextCache = gamesContextCache;
         _activityLauncher = activityLauncher;
     }
@@ -62,6 +65,7 @@ public class GuildMaintenanceWorker : BackgroundService
                     await _workflowActions.ProcessAsync(_client, stoppingToken);
                     await _gameResults.ProcessAsync(_client, stoppingToken);
                     await _roulettePublish.ProcessAsync(_client, stoppingToken);
+                    await _activitiesRouletteAnnouncements.ProcessAsync(_client, stoppingToken);
                     foreach (var guild in _client.Guilds) await _gamesContextCache.RefreshAsync(guild.Id, stoppingToken);
                     await _activityLauncher.RefreshAvailabilityAsync(ct: stoppingToken);
                     LogActivityDiagnosticsIfDue();

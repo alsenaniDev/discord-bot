@@ -13,9 +13,14 @@ public class RouletteGameSessionConfiguration : IEntityTypeConfiguration<Roulett
         builder.HasIndex(x => x.GameSessionId).IsUnique();
         builder.HasIndex(x => new { x.Status, x.ExpiresAtUtc });
         builder.HasIndex(x => new { x.HostUserDiscordId, x.Status, x.ExpiresAtUtc });
+        builder.HasIndex(x => new { x.AnnouncementStatus, x.AnnouncementNextAttemptAtUtc });
         builder.Property(x => x.HostUserDiscordId).HasMaxLength(32).IsRequired();
         builder.Property(x => x.HostUsername).HasMaxLength(120).IsRequired();
         builder.Property(x => x.Status).HasMaxLength(24).IsRequired();
+        builder.Property(x => x.DiscordAnnouncementChannelId).HasMaxLength(32);
+        builder.Property(x => x.DiscordAnnouncementMessageId).HasMaxLength(32);
+        builder.Property(x => x.AnnouncementStatus).HasMaxLength(24).HasDefaultValue("NotRequested").IsRequired();
+        builder.Property(x => x.AnnouncementLastError).HasMaxLength(2000);
         builder.Property(x => x.CurrentTurnUserDiscordId).HasMaxLength(32);
         builder.Property(x => x.PendingTargetUserDiscordId).HasMaxLength(32);
         builder.Property(x => x.PendingActionStatus).HasMaxLength(32).IsRequired();

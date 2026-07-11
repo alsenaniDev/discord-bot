@@ -191,7 +191,7 @@ export const useRoulettePowerUp = (token: string, roomId: string, guildDiscordId
   return request<RouletteRoom>(`/api/games/activity/roulette/rooms/${roomId}/use-power-up`, token, { method: 'POST', body: JSON.stringify({ guildDiscordId, channelDiscordId, powerUpKey }) });
 };
 export const resolveRoulettePendingAction = (token: string, roomId: string, guildDiscordId: string, channelDiscordId: string) => rouletteRequest<RouletteRoom>(token, guildDiscordId, `/api/games/activity/roulette/rooms/${roomId}/resolve-pending-action`, `/api/roulette/sessions/${roomId}/resolve-pending-action`, { method: 'POST', body: rouletteScope(guildDiscordId, channelDiscordId) });
-export const consumePendingRouletteIntent = (token: string, guildDiscordId: string, channelDiscordId: string) => request<PendingRouletteIntent | null>(`/api/games/activity/roulette/pending-intent?guildDiscordId=${encodeURIComponent(guildDiscordId)}&channelDiscordId=${encodeURIComponent(channelDiscordId)}`, token);
+export const consumePendingRouletteIntent = (token: string, guildDiscordId: string, channelDiscordId: string) => rouletteRequest<PendingRouletteIntent | null>(token, guildDiscordId, `/api/games/activity/roulette/pending-intent?guildDiscordId=${encodeURIComponent(guildDiscordId)}&channelDiscordId=${encodeURIComponent(channelDiscordId)}`, `/api/roulette/pending-intent?guildDiscordId=${encodeURIComponent(guildDiscordId)}&channelDiscordId=${encodeURIComponent(channelDiscordId)}`);
 export const getRouletteCapabilities = (token: string, guildDiscordId: string) =>
   rouletteRuntime(guildDiscordId) === 'activities'
     ? request<RouletteRuntimeCapabilities>('/api/roulette/capabilities', activitiesAccessToken ?? token, undefined, configuredActivitiesBase)

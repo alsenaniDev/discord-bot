@@ -18,6 +18,14 @@ public class RouletteGameSession : ActivitiesEntity
     public string PendingActionStatus { get; set; } = "None";
     public DateTimeOffset? PendingActionExpiresAtUtc { get; set; }
     public string? LastSpinResultJson { get; set; }
+    public string? DiscordAnnouncementChannelId { get; set; }
+    public string? DiscordAnnouncementMessageId { get; set; }
+    public string AnnouncementStatus { get; set; } = "NotRequested";
+    public DateTimeOffset? AnnouncementRequestedAtUtc { get; set; }
+    public DateTimeOffset? AnnouncementCreatedAtUtc { get; set; }
+    public DateTimeOffset? AnnouncementNextAttemptAtUtc { get; set; }
+    public int AnnouncementAttemptCount { get; set; }
+    public string? AnnouncementLastError { get; set; }
     public DateTimeOffset ExpiresAtUtc { get; set; }
     public DateTimeOffset? StartedAtUtc { get; set; }
     public DateTimeOffset? CompletedAtUtc { get; set; }

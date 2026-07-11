@@ -8,7 +8,7 @@ using Microsoft.Extensions.Options;
 
 namespace DiscordBot.Bot.Services;
 
-public class GamesHubInteractionService(BotApiClient api, GamesContextCache contextCache, DiscordActivityLaunchService activityLauncher, IOptions<DiscordActivityOptions> activityOptions, ILogger<GamesHubInteractionService> logger)
+public class GamesHubInteractionService(BotApiClient api, ActivitiesApiClient activitiesApi, GamesContextCache contextCache, DiscordActivityLaunchService activityLauncher, IOptions<DiscordActivityOptions> activityOptions, ILogger<GamesHubInteractionService> logger)
 {
     public const string ComponentPrefix = "games:";
 
@@ -82,6 +82,11 @@ public class GamesHubInteractionService(BotApiClient api, GamesContextCache cont
             await HandleRouletteJoinAsync(component, guildId, action["roulette:join:".Length..]);
             return;
         }
+        if (action.StartsWith("activities-roulette:join:", StringComparison.Ordinal))
+        {
+            await HandleActivitiesRouletteJoinAsync(component, guildId, action["activities-roulette:join:".Length..]);
+            return;
+        }
         if (action == "leaderboard") { await ShowLeaderboardAsync(component, guildId); return; }
         if (!action.StartsWith("play:", StringComparison.Ordinal)) { await ReplyAsync(component, "هذا الزر غير صالح."); return; }
         var gameKey = action[5..];
@@ -109,6 +114,26 @@ public class GamesHubInteractionService(BotApiClient api, GamesContextCache cont
         if (launch.IsThrottled) { await ReplyAsync(component, launch.UserMessage ?? "يتم فتح واجهة الروليت الآن. حاول مرة ثانية بعد لحظات."); return; }
         if (launch.CanFallback) await ReplyAsync(component, "تعذر فتح واجهة الروليت الآن. حاول مرة أخرى.");
         else logger.LogWarning("Roulette Activity launch failed after initial response for room {RoomId}; cannot send fallback. RateLimited={RateLimited}, Duplicate={Duplicate}.", roomId, launch.IsRateLimited, launch.IsDuplicate);
+    }
+
+    private async Task HandleActivitiesRouletteJoinAsync(SocketMessageComponent component, ulong guildId, string sessionToken)
+    {
+        if (!Guid.TryParse(sessionToken, out var gameSessionId)) { await ReplyAsync(component, "زر الانضمام غير صالح."); return; }
+        if (!activityOptions.Value.Enabled) { await ReplyAsync(component, "تعذر فتح واجهة الروليت الآن. حاول مرة أخرى."); return; }
+        var prepared = await activitiesApi.PrepareRouletteJoinAsync(gameSessionId, new PrepareRouletteJoinApiRequest
+        {
+            GuildDiscordId = guildId.ToString(),
+            ChannelDiscordId = component.Channel.Id.ToString(),
+            UserDiscordId = component.User.Id.ToString(),
+            Username = component.User.GlobalName ?? component.User.Username
+        });
+        if (prepared.Value is null) { await ReplyAsync(component, prepared.Error ?? "تعذر تجهيز الانضمام لهذه الجولة."); return; }
+        logger.LogInformation("Prepared Activities Roulette join intent {JoinIntentId} for session {GameSessionId}, guild {GuildId}, user {UserId}.", prepared.Value.JoinIntentId, gameSessionId, guildId, component.User.Id);
+        var launch = await activityLauncher.TryLaunchAsync(component);
+        if (launch.WasAccepted) return;
+        if (launch.IsThrottled) { await ReplyAsync(component, launch.UserMessage ?? "يتم فتح واجهة الروليت الآن. حاول مرة ثانية بعد لحظات."); return; }
+        if (launch.CanFallback) await ReplyAsync(component, "تعذر فتح واجهة الروليت الآن. حاول مرة أخرى.");
+        else logger.LogWarning("Activities Roulette Activity launch failed after initial response for session {GameSessionId}; cannot send fallback. RateLimited={RateLimited}, Duplicate={Duplicate}.", gameSessionId, launch.IsRateLimited, launch.IsDuplicate);
     }
 
     private async Task ShowLeaderboardAsync(SocketMessageComponent component, ulong guildId)

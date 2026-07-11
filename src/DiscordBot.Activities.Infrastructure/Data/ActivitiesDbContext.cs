@@ -17,6 +17,7 @@ public class ActivitiesDbContext(DbContextOptions<ActivitiesDbContext> options) 
     public DbSet<RouletteRound> RouletteRounds => Set<RouletteRound>();
     public DbSet<RouletteBet> RouletteBets => Set<RouletteBet>();
     public DbSet<RoulettePayout> RoulettePayouts => Set<RoulettePayout>();
+    public DbSet<RouletteJoinIntent> RouletteJoinIntents => Set<RouletteJoinIntent>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
