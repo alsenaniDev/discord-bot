@@ -27,7 +27,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '9.0.x'
+          dotnet-version: "9.0.x"
       - name: Restore local .NET tools
         run: dotnet tool restore
       - name: Verify EF Core tool
@@ -94,7 +94,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: "20"
           cache: npm
           cache-dependency-path: activity/DiscordBot.Activity/package-lock.json
       - name: Install
@@ -106,10 +106,10 @@ jobs:
       - name: Build
         working-directory: activity/DiscordBot.Activity
         env:
-          VITE_DISCORD_CLIENT_ID: "000000000000000000"
-          VITE_API_BASE_URL: "https://platform-api.example.com"
-          VITE_PLATFORM_API_BASE_URL: "https://platform-api.example.com"
-          VITE_ACTIVITIES_API_BASE_URL: "https://activities-api.example.com"
+          VITE_DISCORD_CLIENT_ID: "1521505440003919922"
+          VITE_API_BASE_URL: ""
+          VITE_PLATFORM_API_BASE_URL: ""
+          VITE_ACTIVITIES_API_BASE_URL: "/activities-api"
           VITE_ACTIVITIES_ROULETTE_PILOT_GUILD_IDS: ""
           VITE_ENVIRONMENT: "production"
         run: npm run build
@@ -120,7 +120,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: "20"
           cache: npm
           cache-dependency-path: dashboard/DiscordBot.Dashboard/package-lock.json
       - name: Install

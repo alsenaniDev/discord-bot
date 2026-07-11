@@ -12,9 +12,10 @@
    | Prefix | Target |
    |---|---|
    | `/api` | `YOUR_API_DOMAIN/api` |
+   | `/activities-api` | `YOUR_ACTIVITIES_API_DOMAIN` |
    | `/` | `YOUR_ACTIVITY_FRONTEND_DOMAIN` |
 
-   اكتب Target من دون `https://`. ضع المسار الأطول `/api` قبل `/` حتى لا يلتقط مسار الواجهة طلبات API.
+   اكتب Target من دون `https://`. ضع المسارات الأطول `/activities-api` ثم `/api` قبل `/` حتى لا يلتقط مسار الواجهة طلبات API.
 5. تأكد أن التطبيق يملك أمر Entry Point الافتراضي وأن البوت مثبت بصلاحية `applications.commands`.
 6. تأكد أن متغير البوت `Activity__Enabled=true`. استخدم `false` مؤقتًا فقط إذا أردت إجبار `/games` على الوضع الاحتياطي.
 
@@ -31,9 +32,11 @@ Discord يشغّل Activities داخل iframe معزول ويمرر الطلبا
 ```env
 VITE_DISCORD_CLIENT_ID=YOUR_DISCORD_CLIENT_ID
 VITE_API_BASE_URL=
+VITE_ACTIVITIES_API_BASE_URL=/activities-api
 ```
 
 اترك `VITE_API_BASE_URL` فارغًا عند استخدام mapping `/api`. للتطوير المباشر يمكن وضع رابط API الكامل مثل `https://api-tunnel.example.com`.
+في الإنتاج يفضّل أن تكون `VITE_ACTIVITIES_API_BASE_URL=/activities-api` حتى تمر طلبات Activities API عبر Discord URL Mapping بدل استدعاء دومين خارجي مباشر.
 
 API:
 

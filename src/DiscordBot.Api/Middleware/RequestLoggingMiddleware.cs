@@ -17,6 +17,10 @@ public class RequestLoggingMiddleware
     {
         var method = context.Request.Method;
         var path = context.Request.Path;
+        var correlationId = context.Request.Headers.TryGetValue("X-Correlation-ID", out var header) && !string.IsNullOrWhiteSpace(header)
+            ? header.ToString()
+            : Guid.NewGuid().ToString("N");
+        context.Response.Headers["X-Correlation-ID"] = correlationId;
         var sw = Stopwatch.StartNew();
 
         try
@@ -35,11 +39,14 @@ public class RequestLoggingMiddleware
 
             _logger.Log(
                 level,
-                "{Method} {Path} responded {StatusCode} in {Elapsed}ms",
+                "{Method} {Path} responded {StatusCode} in {Elapsed}ms. CorrelationId={CorrelationId}, Origin={Origin}, UserDiscordId={UserDiscordId}",
                 method,
                 path,
                 statusCode,
-                sw.ElapsedMilliseconds);
+                sw.ElapsedMilliseconds,
+                correlationId,
+                context.Request.Headers.Origin.ToString(),
+                context.User.FindFirst("discord_user_id")?.Value);
         }
     }
 }
