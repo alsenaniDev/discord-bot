@@ -17,7 +17,7 @@ public class GameSessionConfiguration : IEntityTypeConfiguration<GameSession>
         builder.Property(x => x.DiscordChannelId).HasMaxLength(32).IsRequired();
         builder.Property(x => x.Status).HasMaxLength(24).IsRequired();
         builder.Property(x => x.ResultJson).HasColumnType("jsonb");
-        builder.Property(x => x.RowVersion).IsConcurrencyToken();
+        builder.Property(x => x.RowVersion);
         builder.HasOne(x => x.ActivitySession).WithMany().HasForeignKey(x => x.ActivitySessionId).OnDelete(DeleteBehavior.Restrict);
     }
 }

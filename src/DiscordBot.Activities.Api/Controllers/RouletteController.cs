@@ -57,6 +57,16 @@ public class RouletteController(
         return Result(await roulette.GetMyActiveSessionAsync(guildDiscordId, channelDiscordId, userId, ct), guildDiscordId, channelDiscordId, TrustedActivityInstanceId());
     }
 
+    [HttpGet("pending-intent")]
+    public async Task<IActionResult> PendingIntent([FromQuery] string guildDiscordId, [FromQuery] string channelDiscordId, CancellationToken ct)
+    {
+        var userId = DiscordUserId();
+        if (string.IsNullOrWhiteSpace(userId)) return Unauthorized(new { message = "انتهت صلاحية تسجيل الدخول. افتح مركز الألعاب مرة ثانية." });
+        var scope = ValidateTrustedScope(guildDiscordId, channelDiscordId, null, out _);
+        if (scope is not null) return scope;
+        return Result(await roulette.ConsumePendingIntentAsync(guildDiscordId, channelDiscordId, userId, ct), guildDiscordId, channelDiscordId, TrustedActivityInstanceId());
+    }
+
     [HttpGet("sessions/{gameSessionId:guid}")]
     public async Task<IActionResult> Get(Guid gameSessionId, [FromQuery] string guildDiscordId, [FromQuery] string channelDiscordId, CancellationToken ct)
     {
@@ -193,13 +203,13 @@ public class RouletteController(
         if (string.IsNullOrWhiteSpace(trustedGuildId) || string.IsNullOrWhiteSpace(trustedChannelId))
         {
             LogForbiddenDecision(requestedGuildId, requestedChannelId, trustedActivityInstanceId, "missing_trusted_guild_or_channel_claims");
-            return StatusCode(403, new { message = "جلسة Discord Activity غير موثوقة. افتح مركز الألعاب مرة ثانية." });
+            return StatusCode(403, Error("trusted_context_missing", "جلسة Discord Activity غير موثوقة. افتح مركز الألعاب مرة ثانية."));
         }
 
         if (!string.Equals(trustedGuildId, requestedGuildId, StringComparison.Ordinal) || !string.Equals(trustedChannelId, requestedChannelId, StringComparison.Ordinal))
         {
             LogForbiddenDecision(requestedGuildId, requestedChannelId, trustedActivityInstanceId, "trusted_guild_or_channel_mismatch");
-            return StatusCode(403, new { message = "لا يمكن استخدام جلسة الألعاب خارج الروم الذي فُتحت منه." });
+            return StatusCode(403, Error("trusted_context_mismatch", "لا يمكن استخدام جلسة الألعاب خارج الروم الذي فُتحت منه."));
         }
 
         if (string.IsNullOrWhiteSpace(trustedActivityInstanceId))
@@ -219,13 +229,13 @@ public class RouletteController(
             }
 
             LogForbiddenDecision(requestedGuildId, requestedChannelId, trustedActivityInstanceId, "missing_activity_instance_claim");
-            return StatusCode(403, new { message = "جلسة Discord Activity غير مكتملة. افتح مركز الألعاب مرة ثانية." });
+            return StatusCode(403, Error("activity_instance_missing", "جلسة Discord Activity غير مكتملة. افتح مركز الألعاب مرة ثانية."));
         }
 
         if (!string.IsNullOrWhiteSpace(requestedActivityInstanceId) && !string.Equals(trustedActivityInstanceId, requestedActivityInstanceId, StringComparison.Ordinal))
         {
             LogForbiddenDecision(requestedGuildId, requestedChannelId, trustedActivityInstanceId, "activity_instance_mismatch");
-            return StatusCode(403, new { message = "لا يمكن استخدام هذه الجلسة من Activity مختلف." });
+            return StatusCode(403, Error("activity_instance_mismatch", "لا يمكن استخدام هذه الجلسة من Activity مختلف."));
         }
 
         return null;
@@ -238,8 +248,16 @@ public class RouletteController(
             LogForbiddenDecision(guildDiscordId, channelDiscordId, activityInstanceId, result.Code ?? result.Error ?? "operation_forbidden");
         }
 
-        return StatusCode(result.StatusCode, result.Succeeded ? result.Value : new { code = result.Code, message = result.Error, feature = result.Feature });
+        return StatusCode(result.StatusCode, result.Succeeded ? result.Value : Error(result.Code, result.Error, result.Feature));
     }
+
+    private object Error(string? code, string? message, string? feature = null) => new
+    {
+        code,
+        message,
+        feature,
+        correlationId = CorrelationId()
+    };
 
     private void LogForbiddenDecision(string? guildDiscordId, string? channelDiscordId, string? activityInstanceId, string denialReason)
     {

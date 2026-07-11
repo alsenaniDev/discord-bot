@@ -91,7 +91,11 @@ public class RouletteRuntimeService(
             SecondPlaceCoins = Math.Max(0, settings.SecondPlaceCoins),
             ParticipationCoins = Math.Max(0, settings.ParticipationCoins),
             PendingActionStatus = "None",
-            ExpiresAtUtc = now.AddSeconds(Math.Clamp(settings.JoinWindowSeconds, 30, 300))
+            ExpiresAtUtc = now.AddSeconds(Math.Clamp(settings.JoinWindowSeconds, 30, 300)),
+            DiscordAnnouncementChannelId = request.ChannelDiscordId,
+            AnnouncementStatus = "Pending",
+            AnnouncementRequestedAtUtc = now,
+            AnnouncementNextAttemptAtUtc = now
         };
         roulette.Players.Add(new RoulettePlayer
         {
@@ -113,7 +117,7 @@ public class RouletteRuntimeService(
 
         var dto = Map(roulette, user.DiscordUserId);
         await PublishAsync(dto.GameSessionId, "RouletteSessionUpdated", dto, ct);
-        logger.LogInformation("Activities Roulette session {GameSessionId} created for guild {GuildId}, channel {ChannelId}, user {UserId}.", dto.GameSessionId, request.GuildDiscordId, request.ChannelDiscordId, user.DiscordUserId);
+        logger.LogInformation("Activities Roulette session {GameSessionId} created for guild {GuildId}, channel {ChannelId}, user {UserId}. AnnouncementStatus={AnnouncementStatus}.", dto.GameSessionId, request.GuildDiscordId, request.ChannelDiscordId, user.DiscordUserId, roulette.AnnouncementStatus);
         return OperationResult<RouletteSessionDto>.Ok(dto);
     }
 
@@ -153,6 +157,38 @@ public class RouletteRuntimeService(
         return OperationResult<MyActiveRouletteSessionDto>.Ok(session is null
             ? new MyActiveRouletteSessionDto { HasRoom = false }
             : new MyActiveRouletteSessionDto { HasRoom = true, RoomId = session.GameSessionId, GameSessionId = session.GameSessionId, Status = session.Status, IsHost = session.HostUserDiscordId == userDiscordId });
+    }
+
+    public async Task<OperationResult<PendingRouletteIntentDto?>> ConsumePendingIntentAsync(string guildDiscordId, string channelDiscordId, string userDiscordId, CancellationToken ct = default)
+    {
+        if (!ValidSnowflake(guildDiscordId) || !ValidSnowflake(channelDiscordId) || !ValidSnowflake(userDiscordId))
+            return OperationResult<PendingRouletteIntentDto?>.Fail("بيانات Discord غير صالحة.");
+
+        var now = DateTimeOffset.UtcNow;
+        var intent = await db.RouletteJoinIntents
+            .Include(x => x.GameSession).ThenInclude(x => x.Roulette)
+            .Where(x => x.DiscordGuildId == guildDiscordId
+                && x.DiscordChannelId == channelDiscordId
+                && x.UserDiscordId == userDiscordId
+                && x.Status == "Pending")
+            .OrderByDescending(x => x.CreatedAtUtc)
+            .FirstOrDefaultAsync(ct);
+
+        if (intent is null) return OperationResult<PendingRouletteIntentDto?>.Ok(null);
+        if (intent.ExpiresAtUtc <= now
+            || intent.GameSession.Roulette is null
+            || !RouletteRuntimeStates.IsOpenForJoin(intent.GameSession.Roulette.Status)
+            || intent.GameSession.Roulette.ExpiresAtUtc <= now)
+        {
+            intent.Status = "Expired";
+            await db.SaveChangesAsync(ct);
+            return OperationResult<PendingRouletteIntentDto?>.Ok(null);
+        }
+
+        intent.Status = "Consumed";
+        intent.ConsumedAtUtc = now;
+        await db.SaveChangesAsync(ct);
+        return OperationResult<PendingRouletteIntentDto?>.Ok(new PendingRouletteIntentDto { RoomId = intent.GameSessionId, GameSessionId = intent.GameSessionId });
     }
 
     public async Task<OperationResult<RouletteSessionDto>> GetSessionAsync(Guid gameSessionId, string guildDiscordId, string channelDiscordId, string userDiscordId, CancellationToken ct = default)
@@ -211,34 +247,85 @@ public class RouletteRuntimeService(
     public async Task<OperationResult<RouletteSessionDto>> LeaveSessionAsync(Guid gameSessionId, RouletteScopeRequest request, string userDiscordId, CancellationToken ct = default)
     {
         await using var transaction = await db.Database.BeginTransactionAsync(ct);
-        var session = await LoadByGameSessionAsync(gameSessionId, ct);
+        var session = await db.RouletteGameSessions.AsNoTracking()
+            .Include(x => x.GameSession).ThenInclude(x => x.ActivitySession)
+            .Include(x => x.GameSession).ThenInclude(x => x.Events)
+            .Include(x => x.Players)
+            .FirstOrDefaultAsync(x => x.GameSessionId == gameSessionId, ct);
         var scope = ValidateScope(session, request.GuildDiscordId, request.ChannelDiscordId, request.ActivityInstanceId);
         if (scope is not null) return OperationResult<RouletteSessionDto>.Fail(scope.Value.Message, scope.Value.Code);
-        if (!RouletteRuntimeStates.IsOpenForJoin(session!.Status)) return OperationResult<RouletteSessionDto>.Fail("لا يمكن مغادرة الجولة بعد بدء اللعبة.", 409);
-        var player = session.Players.FirstOrDefault(x => x.DiscordUserId == userDiscordId);
-        if (player is null) return OperationResult<RouletteSessionDto>.Fail("أنت غير منضم لهذه الجولة.", 404);
-
-        db.RoulettePlayers.Remove(player);
-        session.Players.Remove(player);
-        AddEvent(session.GameSession, 0, userDiscordId, null, "RoulettePlayerLeft", Idempotency(request.IdempotencyKey, "leave", gameSessionId, userDiscordId), new { message = "غادر لاعب الغرفة." });
-        if (player.IsHost)
+        if (!RouletteRuntimeStates.IsOpenForJoin(session!.Status))
         {
-            var next = session.Players.OrderBy(x => x.JoinedAtUtc).FirstOrDefault();
+            if (RouletteRuntimeStates.IsTerminal(session.Status) && HasLeftEvent(session, userDiscordId))
+            {
+                await transaction.CommitAsync(ct);
+                return OperationResult<RouletteSessionDto>.Ok(Map(session, userDiscordId));
+            }
+            return OperationResult<RouletteSessionDto>.Fail("لا يمكن مغادرة الجولة بعد بدء اللعبة.", 409, "roulette_leave_not_allowed");
+        }
+        var player = session.Players.FirstOrDefault(x => x.DiscordUserId == userDiscordId);
+        if (player is null)
+        {
+            if (HasLeftEvent(session, userDiscordId))
+            {
+                await transaction.CommitAsync(ct);
+                return OperationResult<RouletteSessionDto>.Ok(Map(session, userDiscordId));
+            }
+            return OperationResult<RouletteSessionDto>.Fail("أنت لست عضوًا في هذه الغرفة.", 404, "roulette_player_not_in_session");
+        }
+
+        var wasOwner = player.IsHost;
+        db.GameEvents.Add(new GameEvent
+        {
+            GameSessionId = gameSessionId,
+            GameKey = GameKey,
+            EventType = "RoulettePlayerLeft",
+            Status = "Processed",
+            PayloadJson = JsonSerializer.Serialize(new { round = 0, actor = userDiscordId, target = (string?)null, data = new { message = "غادر لاعب الغرفة." } }),
+            IdempotencyKey = Idempotency(request.IdempotencyKey, "leave", gameSessionId, userDiscordId),
+            DiscordUserId = userDiscordId,
+            ProcessedAtUtc = DateTimeOffset.UtcNow
+        });
+
+        await db.RoulettePlayers.Where(x => x.Id == player.Id).ExecuteDeleteAsync(ct);
+        var remainingPlayers = session.Players.Where(x => x.Id != player.Id).OrderBy(x => x.JoinedAtUtc).ToList();
+        if (wasOwner)
+        {
+            var next = remainingPlayers.FirstOrDefault();
             if (next is null)
             {
-                Transition(session, RouletteRuntimeStates.Cancelled);
+                var now = DateTimeOffset.UtcNow;
+                await db.RouletteGameSessions.Where(x => x.GameSessionId == gameSessionId).ExecuteUpdateAsync(setters => setters
+                    .SetProperty(x => x.Status, RouletteRuntimeStates.Cancelled)
+                    .SetProperty(x => x.CompletedAtUtc, now)
+                    .SetProperty(x => x.CurrentTurnUserDiscordId, (string?)null), ct);
+                await db.GameSessions.Where(x => x.Id == gameSessionId).ExecuteUpdateAsync(setters => setters
+                    .SetProperty(x => x.Status, RouletteRuntimeStates.Cancelled)
+                    .SetProperty(x => x.CompletedAtUtc, now), ct);
             }
             else
             {
-                next.IsHost = true;
-                session.HostUserDiscordId = next.DiscordUserId;
-                session.HostUsername = next.Username;
+                await db.RoulettePlayers.Where(x => x.Id == next.Id).ExecuteUpdateAsync(setters => setters.SetProperty(x => x.IsHost, true), ct);
+                await db.RouletteGameSessions.Where(x => x.GameSessionId == gameSessionId).ExecuteUpdateAsync(setters => setters
+                    .SetProperty(x => x.HostUserDiscordId, next.DiscordUserId)
+                    .SetProperty(x => x.HostUsername, next.Username), ct);
             }
         }
         await db.SaveChangesAsync(ct);
         await transaction.CommitAsync(ct);
-        var dto = Map(session, userDiscordId);
+
+        var updated = await LoadByGameSessionAsync(gameSessionId, ct) ?? session;
+        var dto = Map(updated, userDiscordId);
         await PublishAsync(dto.GameSessionId, "RoulettePlayerLeft", dto, ct);
+        logger.LogInformation(
+            "Activities Roulette player left. GameSessionId={GameSessionId}, DiscordGuildId={GuildId}, ChannelId={ChannelId}, DiscordUserId={UserId}, IsOwner={IsOwner}, RemainingPlayerCount={RemainingPlayerCount}, NewSessionStatus={NewStatus}.",
+            gameSessionId,
+            request.GuildDiscordId,
+            request.ChannelDiscordId,
+            userDiscordId,
+            wasOwner,
+            remainingPlayers.Count,
+            updated.Status);
         return OperationResult<RouletteSessionDto>.Ok(dto);
     }
 
@@ -441,6 +528,100 @@ public class RouletteRuntimeService(
         }
     }
 
+    public async Task<IReadOnlyList<PendingRouletteAnnouncementDto>> GetPendingAnnouncementsAsync(CancellationToken ct = default)
+    {
+        var now = DateTimeOffset.UtcNow;
+        var sessions = await db.RouletteGameSessions.AsNoTracking()
+            .Include(x => x.GameSession)
+            .Include(x => x.Players)
+            .Where(x => x.AnnouncementStatus == "Pending"
+                || (x.AnnouncementStatus == "Failed" && x.AnnouncementAttemptCount < 5 && (x.AnnouncementNextAttemptAtUtc == null || x.AnnouncementNextAttemptAtUtc <= now)))
+            .OrderBy(x => x.AnnouncementRequestedAtUtc ?? x.CreatedAtUtc)
+            .Take(100)
+            .ToListAsync(ct);
+
+        logger.LogInformation("Returning {Count} pending Activities Roulette announcements.", sessions.Count);
+        return sessions.Select(x =>
+        {
+            var joinSeconds = Math.Max(0, (int)Math.Ceiling((x.ExpiresAtUtc - DateTimeOffset.UtcNow).TotalSeconds));
+            return new PendingRouletteAnnouncementDto
+            {
+                GameSessionId = x.GameSessionId,
+                DiscordGuildId = x.GameSession.DiscordGuildId,
+                DiscordChannelId = x.DiscordAnnouncementChannelId ?? x.GameSession.DiscordChannelId,
+                CreatedByDiscordUserId = x.HostUserDiscordId,
+                CreatorUsername = x.HostUsername,
+                Status = x.Status,
+                MinPlayers = x.MinPlayers,
+                MaxPlayers = x.MaxPlayers,
+                PlayersCount = x.Players.Count,
+                JoinWindowSeconds = joinSeconds,
+                WinnerCoins = x.WinnerCoins,
+                AnnouncementAttemptCount = x.AnnouncementAttemptCount
+            };
+        }).ToList();
+    }
+
+    public async Task<OperationResult<PrepareRouletteJoinResponse>> PrepareJoinAsync(Guid gameSessionId, PrepareRouletteJoinRequest request, CancellationToken ct = default)
+    {
+        if (!ValidSnowflake(request.GuildDiscordId) || !ValidSnowflake(request.ChannelDiscordId) || !ValidSnowflake(request.UserDiscordId))
+            return OperationResult<PrepareRouletteJoinResponse>.Fail("بيانات Discord غير صالحة.");
+
+        var now = DateTimeOffset.UtcNow;
+        var session = await db.RouletteGameSessions
+            .Include(x => x.GameSession).ThenInclude(x => x.ActivitySession)
+            .Include(x => x.Players)
+            .FirstOrDefaultAsync(x => x.GameSessionId == gameSessionId, ct);
+        var scope = ValidateScope(session, request.GuildDiscordId, request.ChannelDiscordId);
+        if (scope is not null) return OperationResult<PrepareRouletteJoinResponse>.Fail(scope.Value.Message, scope.Value.Code);
+        if (!RouletteRuntimeStates.IsOpenForJoin(session!.Status)) return OperationResult<PrepareRouletteJoinResponse>.Fail("هذه الجولة لم تعد متاحة للانضمام.", 409, "roulette_session_already_closed");
+        if (session.ExpiresAtUtc <= now) return OperationResult<PrepareRouletteJoinResponse>.Fail("انتهت مدة الانضمام لهذه الجولة.", 410, "roulette_session_already_closed");
+        if (session.Players.Count >= session.MaxPlayers && session.Players.All(x => x.DiscordUserId != request.UserDiscordId)) return OperationResult<PrepareRouletteJoinResponse>.Fail("اكتمل عدد اللاعبين في هذه الجولة.", 409);
+
+        var existing = await db.RouletteJoinIntents
+            .FirstOrDefaultAsync(x => x.GameSessionId == gameSessionId && x.UserDiscordId == request.UserDiscordId && x.Status == "Pending" && x.ExpiresAtUtc > now, ct);
+        if (existing is not null) return OperationResult<PrepareRouletteJoinResponse>.Ok(new PrepareRouletteJoinResponse { JoinIntentId = existing.Id, ExpiresAt = existing.ExpiresAtUtc });
+
+        var intent = new RouletteJoinIntent
+        {
+            GameSessionId = gameSessionId,
+            DiscordGuildId = request.GuildDiscordId,
+            DiscordChannelId = request.ChannelDiscordId,
+            UserDiscordId = request.UserDiscordId,
+            Username = CleanUsername(request.Username, request.UserDiscordId),
+            ExpiresAtUtc = now.AddMinutes(5)
+        };
+        db.RouletteJoinIntents.Add(intent);
+        await db.SaveChangesAsync(ct);
+        logger.LogInformation("Prepared Activities Roulette join intent {JoinIntentId} for session {GameSessionId}, guild {GuildId}, channel {ChannelId}, user {UserId}.", intent.Id, gameSessionId, request.GuildDiscordId, request.ChannelDiscordId, request.UserDiscordId);
+        return OperationResult<PrepareRouletteJoinResponse>.Ok(new PrepareRouletteJoinResponse { JoinIntentId = intent.Id, ExpiresAt = intent.ExpiresAtUtc });
+    }
+
+    public async Task<bool> AckAnnouncementAsync(Guid gameSessionId, AckRouletteAnnouncementRequest request, CancellationToken ct = default)
+    {
+        var session = await db.RouletteGameSessions.FirstOrDefaultAsync(x => x.GameSessionId == gameSessionId && x.AnnouncementStatus != "Posted", ct);
+        if (session is null) return false;
+        session.AnnouncementAttemptCount++;
+        if (request.Success && ValidSnowflake(request.MessageDiscordId ?? string.Empty))
+        {
+            session.AnnouncementStatus = "Posted";
+            session.DiscordAnnouncementMessageId = request.MessageDiscordId!.Trim();
+            session.AnnouncementCreatedAtUtc = DateTimeOffset.UtcNow;
+            session.AnnouncementLastError = null;
+            session.AnnouncementNextAttemptAtUtc = null;
+        }
+        else
+        {
+            session.AnnouncementStatus = "Failed";
+            session.AnnouncementLastError = LimitNullable(request.ErrorMessage, 2000) ?? "تعذر نشر إعلان غرفة الروليت.";
+            var retryAfter = Math.Clamp(request.RetryAfterSeconds ?? 300, 30, 3600);
+            session.AnnouncementNextAttemptAtUtc = DateTimeOffset.UtcNow.AddSeconds(retryAfter);
+        }
+
+        await db.SaveChangesAsync(ct);
+        return true;
+    }
+
     private async Task<OperationResult<GameAccessResult>> ValidateAccessAsync(string guildDiscordId, string channelDiscordId, string userDiscordId, CancellationToken ct)
     {
         if (!ValidSnowflake(guildDiscordId) || !ValidSnowflake(channelDiscordId) || !ValidSnowflake(userDiscordId))
@@ -482,6 +663,9 @@ public class RouletteRuntimeService(
             return ("لا تملك صلاحية الوصول لهذه الجلسة من Activity مختلف.", 403);
         return null;
     }
+
+    private static bool HasLeftEvent(RouletteGameSession session, string userDiscordId) =>
+        session.GameSession.Events.Any(x => x.EventType == "RoulettePlayerLeft" && x.DiscordUserId == userDiscordId);
 
     private async Task ExpireIfNeededAsync(RouletteGameSession session, CancellationToken ct)
     {

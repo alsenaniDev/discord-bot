@@ -19,6 +19,7 @@ builder.Configuration.AddJsonFile(
 builder.Services.Configure<BotOptions>(builder.Configuration.GetSection(BotOptions.SectionName));
 builder.Services.Configure<ApiOptions>(builder.Configuration.GetSection(ApiOptions.SectionName));
 builder.Services.Configure<PlatformOptions>(builder.Configuration.GetSection(PlatformOptions.SectionName));
+builder.Services.Configure<ActivitiesApiOptions>(builder.Configuration.GetSection(ActivitiesApiOptions.SectionName));
 builder.Services.Configure<LavalinkOptions>(builder.Configuration.GetSection(LavalinkOptions.SectionName));
 builder.Services.Configure<DiscordActivityOptions>(builder.Configuration.GetSection(DiscordActivityOptions.SectionName));
 
@@ -47,6 +48,7 @@ builder.Services.ConfigureLavalink(x =>
 });
 
 builder.Services.AddHttpClient<BotApiClient>();
+builder.Services.AddHttpClient<ActivitiesApiClient>();
 builder.Services.AddSingleton<EmbedBuilderService>();
 builder.Services.AddSingleton<ComponentBuilderService>();
 builder.Services.AddSingleton<SlashCommandHandlers>();
@@ -60,6 +62,7 @@ builder.Services.AddSingleton<GamesContextCache>();
 builder.Services.AddSingleton<DiscordActivityLaunchService>();
 builder.Services.AddSingleton<GameResultPublishService>();
 builder.Services.AddSingleton<RoulettePublishService>();
+builder.Services.AddSingleton<ActivitiesRouletteAnnouncementService>();
 builder.Services.AddSingleton<MusicSessionManager>();
 builder.Services.AddSingleton<IAudioSearchService, LavalinkAudioSearchService>();
 builder.Services.AddSingleton<IMusicService, MusicService>();

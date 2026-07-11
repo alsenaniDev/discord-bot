@@ -44,6 +44,52 @@ public sealed class MyActiveRouletteSessionDto
     public bool IsHost { get; set; }
 }
 
+public sealed class PendingRouletteIntentDto
+{
+    public Guid RoomId { get; set; }
+    public Guid GameSessionId { get; set; }
+}
+
+public sealed class PrepareRouletteJoinRequest
+{
+    public string GuildDiscordId { get; set; } = string.Empty;
+    public string ChannelDiscordId { get; set; } = string.Empty;
+    public string UserDiscordId { get; set; } = string.Empty;
+    public string Username { get; set; } = string.Empty;
+}
+
+public sealed class PrepareRouletteJoinResponse
+{
+    public Guid JoinIntentId { get; set; }
+    public DateTimeOffset ExpiresAt { get; set; }
+}
+
+public sealed class PendingRouletteAnnouncementDto
+{
+    public Guid GameSessionId { get; set; }
+    public string DiscordGuildId { get; set; } = string.Empty;
+    public string DiscordChannelId { get; set; } = string.Empty;
+    public string CreatedByDiscordUserId { get; set; } = string.Empty;
+    public string CreatorUsername { get; set; } = string.Empty;
+    public string GameKey { get; set; } = "roulette";
+    public string ActivityRoute { get; set; } = "/games/roulette";
+    public string Status { get; set; } = "Waiting";
+    public int MinPlayers { get; set; }
+    public int MaxPlayers { get; set; }
+    public int PlayersCount { get; set; }
+    public int JoinWindowSeconds { get; set; }
+    public int WinnerCoins { get; set; }
+    public int AnnouncementAttemptCount { get; set; }
+}
+
+public sealed class AckRouletteAnnouncementRequest
+{
+    public bool Success { get; set; }
+    public string? MessageDiscordId { get; set; }
+    public string? ErrorMessage { get; set; }
+    public int? RetryAfterSeconds { get; set; }
+}
+
 public sealed class RoulettePlayerDto
 {
     public string UserDiscordId { get; set; } = string.Empty;

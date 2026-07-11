@@ -170,6 +170,7 @@ public class RouletteAuthorizationTests
         }
 
         public Task<OperationResult<MyActiveRouletteSessionDto>> GetMyActiveSessionAsync(string guildDiscordId, string channelDiscordId, string userDiscordId, CancellationToken ct = default) => Task.FromResult(OperationResult<MyActiveRouletteSessionDto>.Ok(new MyActiveRouletteSessionDto()));
+        public Task<OperationResult<PendingRouletteIntentDto?>> ConsumePendingIntentAsync(string guildDiscordId, string channelDiscordId, string userDiscordId, CancellationToken ct = default) => Task.FromResult(OperationResult<PendingRouletteIntentDto?>.Ok(null));
         public Task<OperationResult<RouletteSessionDto>> GetSessionAsync(Guid gameSessionId, string guildDiscordId, string channelDiscordId, string userDiscordId, CancellationToken ct = default) => Task.FromResult(OperationResult<RouletteSessionDto>.Ok(new RouletteSessionDto()));
         public Task<OperationResult<RouletteSessionDto>> JoinSessionAsync(Guid gameSessionId, RouletteScopeRequest request, TrustedDiscordUser user, CancellationToken ct = default) => Task.FromResult(OperationResult<RouletteSessionDto>.Ok(new RouletteSessionDto()));
         public Task<OperationResult<RouletteSessionDto>> LeaveSessionAsync(Guid gameSessionId, RouletteScopeRequest request, string userDiscordId, CancellationToken ct = default) => Task.FromResult(OperationResult<RouletteSessionDto>.Ok(new RouletteSessionDto()));
@@ -178,6 +179,9 @@ public class RouletteAuthorizationTests
         public Task<OperationResult<RouletteSessionDto>> ResolvePendingActionAsync(Guid gameSessionId, RouletteScopeRequest request, string userDiscordId, CancellationToken ct = default) => Task.FromResult(OperationResult<RouletteSessionDto>.Ok(new RouletteSessionDto()));
         public Task<OperationResult<RouletteSessionDto>> ReconnectAsync(Guid gameSessionId, RouletteScopeRequest request, TrustedDiscordUser user, CancellationToken ct = default) => Task.FromResult(OperationResult<RouletteSessionDto>.Ok(new RouletteSessionDto()));
         public Task<OperationResult<RouletteBetDto>> PlaceBetAsync(Guid gameSessionId, PlaceRouletteBetRequest request, string userDiscordId, CancellationToken ct = default) => Task.FromResult(OperationResult<RouletteBetDto>.Ok(new RouletteBetDto()));
+        public Task<IReadOnlyList<PendingRouletteAnnouncementDto>> GetPendingAnnouncementsAsync(CancellationToken ct = default) => Task.FromResult<IReadOnlyList<PendingRouletteAnnouncementDto>>([]);
+        public Task<OperationResult<PrepareRouletteJoinResponse>> PrepareJoinAsync(Guid gameSessionId, PrepareRouletteJoinRequest request, CancellationToken ct = default) => Task.FromResult(OperationResult<PrepareRouletteJoinResponse>.Ok(new PrepareRouletteJoinResponse()));
+        public Task<bool> AckAnnouncementAsync(Guid gameSessionId, AckRouletteAnnouncementRequest request, CancellationToken ct = default) => Task.FromResult(true);
     }
 
     private sealed class FakeEnvironment : IWebHostEnvironment

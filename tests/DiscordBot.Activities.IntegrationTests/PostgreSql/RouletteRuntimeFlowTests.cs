@@ -1,0 +1,189 @@
+using ActivityGameSession = DiscordBot.Activities.Domain.Entities.GameSession;
+using ActivityRouletteGameSession = DiscordBot.Activities.Domain.Entities.RouletteGameSession;
+using ActivityRoulettePlayer = DiscordBot.Activities.Domain.Entities.RoulettePlayer;
+using ActivitySessionEntity = DiscordBot.Activities.Domain.Entities.ActivitySession;
+using DiscordBot.Activities.Application.Abstractions;
+using DiscordBot.Activities.Application.Models;
+using DiscordBot.Activities.Domain.Roulette;
+using DiscordBot.Activities.Infrastructure.Data;
+using DiscordBot.Activities.Infrastructure.Platform;
+using FluentAssertions;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging.Abstractions;
+using Xunit;
+
+namespace DiscordBot.Activities.IntegrationTests.PostgreSql;
+
+public sealed class RouletteRuntimeFlowTests(PostgreSqlFixture pg) : IClassFixture<PostgreSqlFixture>
+{
+    private const string GuildId = "1521518056852029440";
+    private const string ChannelId = "1523998706331029574";
+    private const string HostId = "941514638598746222";
+    private const string OtherId = "687214635337777267";
+
+    [DockerFact]
+    public async Task Creating_room_queues_one_announcement_and_ack_updates_metadata()
+    {
+        await using var db = pg.CreateActivitiesContext();
+        var service = Service(db);
+        var hostId = UniqueSnowflake();
+
+        var created = await service.CreateSessionAsync(new CreateRouletteSessionRequest { GuildDiscordId = GuildId, ChannelDiscordId = ChannelId, ActivityInstanceId = "instance-a", IdempotencyKey = $"create-announcement-{hostId}" }, User(hostId, "محمد"));
+
+        created.Succeeded.Should().BeTrue();
+        var pending = await service.GetPendingAnnouncementsAsync();
+        pending.Should().ContainSingle(x => x.GameSessionId == created.Value!.GameSessionId);
+
+        await service.AckAnnouncementAsync(created.Value!.GameSessionId, new AckRouletteAnnouncementRequest { Success = false, ErrorMessage = "Discord 429", RetryAfterSeconds = 600 });
+        (await service.GetPendingAnnouncementsAsync()).Should().NotContain(x => x.GameSessionId == created.Value.GameSessionId, "failed announcements should wait for their retry time");
+
+        var stored = await db.RouletteGameSessions.SingleAsync(x => x.GameSessionId == created.Value!.GameSessionId);
+        stored.AnnouncementStatus.Should().Be("Failed");
+        stored.AnnouncementLastError.Should().Be("Discord 429");
+        stored.AnnouncementNextAttemptAtUtc = DateTimeOffset.UtcNow.AddSeconds(-1);
+        await db.SaveChangesAsync();
+
+        (await service.GetPendingAnnouncementsAsync()).Should().ContainSingle(x => x.GameSessionId == created.Value.GameSessionId);
+        await service.AckAnnouncementAsync(created.Value.GameSessionId, new AckRouletteAnnouncementRequest { Success = true, MessageDiscordId = "123456789012345678" });
+
+        stored = await db.RouletteGameSessions.AsNoTracking().SingleAsync(x => x.GameSessionId == created.Value.GameSessionId);
+        stored.AnnouncementStatus.Should().Be("Posted");
+        stored.DiscordAnnouncementMessageId.Should().Be("123456789012345678");
+        stored.AnnouncementCreatedAtUtc.Should().NotBeNull();
+    }
+
+    [DockerFact]
+    public async Task Prepared_join_intent_is_consumed_once()
+    {
+        await using var setup = pg.CreateActivitiesContext();
+        var seed = await SeedWaitingRoomAsync(setup);
+        await using var db = pg.CreateActivitiesContext();
+        var service = Service(db);
+
+        var prepared = await service.PrepareJoinAsync(seed.GameSessionId, new PrepareRouletteJoinRequest { GuildDiscordId = GuildId, ChannelDiscordId = ChannelId, UserDiscordId = OtherId, Username = "نايف" });
+        var consumed = await service.ConsumePendingIntentAsync(GuildId, ChannelId, OtherId);
+        var consumedAgain = await service.ConsumePendingIntentAsync(GuildId, ChannelId, OtherId);
+
+        prepared.Succeeded.Should().BeTrue();
+        consumed.Value.Should().NotBeNull();
+        consumed.Value!.RoomId.Should().Be(seed.GameSessionId);
+        consumedAgain.Value.Should().BeNull();
+    }
+
+    [DockerFact]
+    public async Task Only_player_leaves_room_without_500_and_duplicate_leave_is_idempotent()
+    {
+        await using var setup = pg.CreateActivitiesContext();
+        var seed = await SeedWaitingRoomAsync(setup);
+        await using var db = pg.CreateActivitiesContext();
+        var service = Service(db);
+        var request = Scope();
+
+        var first = await service.LeaveSessionAsync(seed.GameSessionId, request, HostId);
+        var duplicate = await service.LeaveSessionAsync(seed.GameSessionId, request, HostId);
+
+        first.Succeeded.Should().BeTrue();
+        first.Value!.Status.Should().Be(RouletteRuntimeStates.Cancelled);
+        first.Value.Players.Should().BeEmpty();
+        duplicate.Succeeded.Should().BeTrue();
+        duplicate.Value!.Status.Should().Be(RouletteRuntimeStates.Cancelled);
+    }
+
+    [DockerFact]
+    public async Task Owner_leave_transfers_host_to_oldest_remaining_player()
+    {
+        await using var setup = pg.CreateActivitiesContext();
+        var seed = await SeedWaitingRoomAsync(setup, includeOtherPlayer: true);
+        await using var db = pg.CreateActivitiesContext();
+        var service = Service(db);
+
+        var result = await service.LeaveSessionAsync(seed.GameSessionId, Scope(), HostId);
+
+        result.Succeeded.Should().BeTrue();
+        result.Value!.Status.Should().Be(RouletteRuntimeStates.WaitingForPlayers);
+        result.Value.HostUserDiscordId.Should().Be(OtherId);
+        result.Value.Players.Should().ContainSingle();
+        result.Value.Players.Single().IsHost.Should().BeTrue();
+    }
+
+    [DockerFact]
+    public async Task Unauthorized_leave_returns_structured_404_not_500()
+    {
+        await using var setup = pg.CreateActivitiesContext();
+        var seed = await SeedWaitingRoomAsync(setup);
+        await using var db = pg.CreateActivitiesContext();
+        var service = Service(db);
+
+        var result = await service.LeaveSessionAsync(seed.GameSessionId, Scope(), OtherId);
+
+        result.Succeeded.Should().BeFalse();
+        result.StatusCode.Should().Be(404);
+        result.Code.Should().Be("roulette_player_not_in_session");
+    }
+
+    private static RouletteScopeRequest Scope() => new() { GuildDiscordId = GuildId, ChannelDiscordId = ChannelId, ActivityInstanceId = "instance-a" };
+
+    private static string UniqueSnowflake() => (900_000_000_000_000_000UL + (ulong)Random.Shared.Next(1_000_000, 999_999_999)).ToString();
+
+    private static TrustedDiscordUser User(string userId, string username) => new()
+    {
+        DiscordUserId = userId,
+        Username = username,
+        DiscordGuildId = GuildId,
+        DiscordChannelId = ChannelId,
+        ActivityInstanceId = "instance-a"
+    };
+
+    private static RouletteRuntimeService Service(ActivitiesDbContext db) => new(db, new FakePlatformApiClient(), new FakeRealtimePublisher(), NullLogger<RouletteRuntimeService>.Instance);
+
+    private static async Task<ActivityRouletteGameSession> SeedWaitingRoomAsync(ActivitiesDbContext db, bool includeOtherPlayer = false)
+    {
+        var activity = new ActivitySessionEntity
+        {
+            DiscordUserId = HostId,
+            Username = "محمد",
+            DiscordGuildId = GuildId,
+            DiscordChannelId = ChannelId,
+            DiscordActivityInstanceId = "instance-a",
+            GameKey = "roulette",
+            GameVersion = "1.0.0",
+            ExpiresAtUtc = DateTimeOffset.UtcNow.AddHours(1)
+        };
+        var game = new ActivityGameSession { ActivitySession = activity, GameKey = "roulette", GameVersion = "1.0.0", DiscordGuildId = GuildId, DiscordChannelId = ChannelId, Status = RouletteRuntimeStates.WaitingForPlayers };
+        var roulette = new ActivityRouletteGameSession
+        {
+            GameSession = game,
+            HostUserDiscordId = HostId,
+            HostUsername = "محمد",
+            Status = RouletteRuntimeStates.WaitingForPlayers,
+            MinPlayers = 2,
+            MaxPlayers = 6,
+            WinnerCoins = 100,
+            ExpiresAtUtc = DateTimeOffset.UtcNow.AddMinutes(5),
+            DiscordAnnouncementChannelId = ChannelId,
+            AnnouncementStatus = "Pending",
+            AnnouncementRequestedAtUtc = DateTimeOffset.UtcNow,
+            AnnouncementNextAttemptAtUtc = DateTimeOffset.UtcNow
+        };
+        roulette.Players.Add(new ActivityRoulettePlayer { DiscordUserId = HostId, Username = "محمد", IsHost = true, Position = 1, JoinedAtUtc = DateTimeOffset.UtcNow.AddSeconds(-10) });
+        if (includeOtherPlayer) roulette.Players.Add(new ActivityRoulettePlayer { DiscordUserId = OtherId, Username = "نايف", Position = 2, JoinedAtUtc = DateTimeOffset.UtcNow });
+        db.RouletteGameSessions.Add(roulette);
+        await db.SaveChangesAsync();
+        return roulette;
+    }
+
+    private sealed class FakePlatformApiClient : IPlatformApiClient
+    {
+        public Task<GameAccessResult> ValidateGameAccessAsync(ValidateGameAccessRequest request, CancellationToken cancellationToken = default) => Task.FromResult(new GameAccessResult { Allowed = true, GameKey = request.GameKey, GameVersion = "1.0.0", SupportsWallet = true, RouletteSettings = new RouletteSettingsSnapshot() });
+        public Task<WalletReservationResult> ReserveWalletAsync(ReserveWalletRequest request, CancellationToken cancellationToken = default) => Task.FromResult(new WalletReservationResult { Succeeded = true, ReservationId = Guid.NewGuid().ToString("N"), Status = "Pending" });
+        public Task CommitWalletReservationAsync(string reservationId, CancellationToken cancellationToken = default) => Task.CompletedTask;
+        public Task ReleaseWalletReservationAsync(string reservationId, CancellationToken cancellationToken = default) => Task.CompletedTask;
+        public Task<WalletCreditResult> CreditWalletAsync(WalletCreditRequest request, CancellationToken cancellationToken = default) => Task.FromResult(new WalletCreditResult { Succeeded = true, Status = "Paid", Amount = request.Amount });
+    }
+
+    private sealed class FakeRealtimePublisher : IRouletteRealtimePublisher
+    {
+        public Task PublishAsync(RouletteRealtimeEvent evt, CancellationToken ct = default) => Task.CompletedTask;
+    }
+
+}

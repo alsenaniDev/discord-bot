@@ -63,10 +63,15 @@ public static class ConfigurationValidationExtensions
         var platform = configuration.GetSection(PlatformOptions.SectionName).Get<PlatformOptions>() ?? new PlatformOptions();
         CheckSetting(errors, "Platform:DashboardUrl", platform.DashboardUrl, strict);
 
+        var activities = configuration.GetSection(ActivitiesApiOptions.SectionName).Get<ActivitiesApiOptions>() ?? new ActivitiesApiOptions();
+        CheckSetting(errors, "ActivitiesApi:BaseUrl", activities.BaseUrl, strict);
+        CheckSetting(errors, "ActivitiesApi:ServiceToken", activities.ServiceToken, strict);
+
         if (strict)
         {
             CheckProductionUrl(errors, "Api:BaseUrl", api.BaseUrl);
             CheckProductionUrl(errors, "Platform:DashboardUrl", platform.DashboardUrl);
+            CheckProductionUrl(errors, "ActivitiesApi:BaseUrl", activities.BaseUrl);
         }
 
         return errors;
