@@ -126,11 +126,19 @@ Set Vercel/build variables:
 
 ```text
 VITE_DISCORD_CLIENT_ID=YOUR_DISCORD_CLIENT_ID
-VITE_API_BASE_URL=https://YOUR_API_DOMAIN
-VITE_PLATFORM_API_BASE_URL=https://YOUR_API_DOMAIN
-VITE_ACTIVITIES_API_BASE_URL=https://YOUR_ACTIVITIES_API_DOMAIN
+VITE_API_BASE_URL=
+VITE_PLATFORM_API_BASE_URL=
+VITE_ACTIVITIES_API_BASE_URL=/activities-api
 VITE_ACTIVITIES_ROULETTE_PILOT_GUILD_IDS=
 VITE_ENVIRONMENT=production
+```
+
+Configure Discord Developer Portal URL Mappings before deploying:
+
+```text
+/activities-api -> YOUR_ACTIVITIES_API_DOMAIN
+/api            -> YOUR_API_DOMAIN/api
+/               -> YOUR_ACTIVITY_FRONTEND_DOMAIN
 ```
 
 `VITE_ACTIVITIES_ROULETTE_PILOT_GUILD_IDS` may be empty. Empty means all guilds use the legacy Roulette runtime.

@@ -45,9 +45,9 @@ Do not commit real values. Configure these in Railway, Vercel, or your secret ma
 | `Lavalink__Secure` | Bot | Optional | No | `false` | Use TLS for Lavalink when true. | Lavalink service |
 | `Lavalink__SearchPrefix` | Bot | Optional | No | `ytsearch` | Search prefix for text music searches. | No |
 | `VITE_DISCORD_CLIENT_ID` | React Activity | Yes | No | Discord snowflake | Public Discord client id. | Platform/Activities Discord client id |
-| `VITE_API_BASE_URL` | React Activity | Yes | No | `https://api.example.com` | Platform API URL. | Platform API public URL |
-| `VITE_PLATFORM_API_BASE_URL` | React Activity | Optional alias | No | `https://api.example.com` | Alias for Platform API URL. | Platform API public URL |
-| `VITE_ACTIVITIES_API_BASE_URL` | React Activity | Yes | No | `https://activities.example.com` | Activities API URL. | Activities API public URL |
+| `VITE_API_BASE_URL` | React Activity | Optional | No | empty | Leave empty in production; frontend falls back to Discord URL Mapping path `/api`. | No |
+| `VITE_PLATFORM_API_BASE_URL` | React Activity | Optional alias | No | empty | Leave empty in production; explicit values override `/api` and should be avoided unless intentionally bypassing URL mappings. | No |
+| `VITE_ACTIVITIES_API_BASE_URL` | React Activity | Yes | No | `/activities-api` | Discord URL Mapping path for Activities API. | Discord Developer Portal URL Mapping |
 | `VITE_ACTIVITIES_ROULETTE_PILOT_GUILD_IDS` | React Activity | Optional | No | `152...,...` | Comma-separated pilot guild ids; empty means legacy runtime for all. | No |
 | `VITE_ENVIRONMENT` | React Activity | Optional | No | `production` | Build environment marker. | No |
 | `environment.production.ts apiUrl` | Angular Dashboard | Yes | No | `https://api.example.com` | Platform API URL. | Platform API public URL |
