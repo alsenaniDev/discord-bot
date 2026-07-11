@@ -22,6 +22,7 @@ public class GuildMaintenanceWorker : BackgroundService
     private readonly RoulettePublishService _roulettePublish;
     private readonly GamesContextCache _gamesContextCache;
     private readonly DiscordActivityLaunchService _activityLauncher;
+    private DateTimeOffset _lastActivityDiagnosticsLoggedUtc = DateTimeOffset.MinValue;
 
     public GuildMaintenanceWorker(
         DiscordSocketClient client,
@@ -62,7 +63,8 @@ public class GuildMaintenanceWorker : BackgroundService
                     await _gameResults.ProcessAsync(_client, stoppingToken);
                     await _roulettePublish.ProcessAsync(_client, stoppingToken);
                     foreach (var guild in _client.Guilds) await _gamesContextCache.RefreshAsync(guild.Id, stoppingToken);
-                    await _activityLauncher.RefreshAvailabilityAsync();
+                    await _activityLauncher.RefreshAvailabilityAsync(ct: stoppingToken);
+                    LogActivityDiagnosticsIfDue();
                 }
             }
             catch (Exception ex)
@@ -72,5 +74,30 @@ public class GuildMaintenanceWorker : BackgroundService
 
             await Task.Delay(PollInterval, stoppingToken);
         }
+    }
+
+    private void LogActivityDiagnosticsIfDue()
+    {
+        var now = DateTimeOffset.UtcNow;
+        if (now - _lastActivityDiagnosticsLoggedUtc < TimeSpan.FromMinutes(5)) return;
+        _lastActivityDiagnosticsLoggedUtc = now;
+        var diagnostics = _activityLauncher.GetDiagnostics();
+        _logger.LogInformation(
+            "Discord Activity launch diagnostics: successful={SuccessfulLaunches}, failed={FailedLaunches}, rateLimited={RateLimitedLaunches}, averageLatencyMs={AverageLatencyMs:F1}, lastSuccess={LastSuccessfulLaunchUtc}, lastRateLimit={LastRateLimitUtc}, retryAfterMs={RetryAfterMs}, launchInFlight={LaunchInFlight}, userCooldowns={UserCooldownCount}, guildCooldowns={GuildCooldownCount}, availabilityLoaded={AvailabilityLoaded}, embedded={IsEmbedded}, applicationId={ApplicationId}, availabilityAgeSeconds={AvailabilityAgeSeconds}, availabilityTtlSeconds={AvailabilityTtlSeconds}.",
+            diagnostics.SuccessfulLaunches,
+            diagnostics.FailedLaunches,
+            diagnostics.RateLimitedLaunches,
+            diagnostics.AverageLatencyMs,
+            diagnostics.LastSuccessfulLaunchUtc,
+            diagnostics.LastRateLimitUtc,
+            diagnostics.LastRetryAfter?.TotalMilliseconds,
+            diagnostics.LaunchInFlight,
+            diagnostics.UserCooldownCount,
+            diagnostics.GuildCooldownCount,
+            diagnostics.AvailabilityLoaded,
+            diagnostics.IsEmbedded,
+            diagnostics.ApplicationId,
+            diagnostics.AvailabilityLoaded ? (int)(now - diagnostics.AvailabilityLoadedAtUtc).TotalSeconds : null,
+            diagnostics.AvailabilityCacheSeconds);
     }
 }

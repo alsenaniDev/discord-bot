@@ -43,6 +43,7 @@ public class DiscordBotHostedService : IHostedService
     private readonly DiscordActivityLaunchService _activityLauncher;
     private readonly BotOptions _botOptions;
     private readonly ILogger<DiscordBotHostedService> _logger;
+    private int _readyStartupWorkStarted;
 
     public DiscordBotHostedService(
         DiscordSocketClient client,
@@ -139,6 +140,18 @@ public class DiscordBotHostedService : IHostedService
     private async Task OnReadyAsync()
     {
         _logger.LogInformation("Logged in as {Username} ({Id})", _client.CurrentUser.Username, _client.CurrentUser.Id);
+
+        if (Interlocked.Exchange(ref _readyStartupWorkStarted, 1) == 1)
+        {
+            _logger.LogInformation(
+                "Discord Ready received again for bot {BotId}; skipping one-time startup REST work (global command overwrite, guild command overwrite, guild sync, activity availability refresh).",
+                _client.CurrentUser.Id);
+            return;
+        }
+
+        _logger.LogInformation(
+            "Running one-time Ready startup work for bot {BotId}. If production shows multiple copies of this log at the same time, multiple bot instances are running.",
+            _client.CurrentUser.Id);
 
         await SlashCommandRegistration.RegisterGlobalCommandsAsync(_client);
         _logger.LogInformation("Global slash commands registered.");
