@@ -2,11 +2,12 @@ using System.Net.Http.Json;
 using DiscordBot.Activities.Application.Abstractions;
 using DiscordBot.Activities.Application.Models;
 using DiscordBot.Activities.Infrastructure.Options;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
 namespace DiscordBot.Activities.Infrastructure.Platform;
 
-public class PlatformApiClient(HttpClient http, IOptions<PlatformApiOptions> options) : IPlatformApiClient
+public class PlatformApiClient(HttpClient http, IOptions<PlatformApiOptions> options, ILogger<PlatformApiClient> logger) : IPlatformApiClient
 {
     public async Task<GameAccessResult> ValidateGameAccessAsync(ValidateGameAccessRequest request, CancellationToken cancellationToken = default)
     {
@@ -16,13 +17,21 @@ public class PlatformApiClient(HttpClient http, IOptions<PlatformApiOptions> opt
         };
         AddServiceAuth(message);
         using var response = await http.SendAsync(message, cancellationToken);
-        if (!response.IsSuccessStatusCode)
+        var result = await ReadGameAccessResultAsync(response, request, cancellationToken);
+        if (!response.IsSuccessStatusCode || !result.Allowed)
         {
-            return new GameAccessResult { Allowed = false, GameKey = request.GameKey, DenialReason = "تعذر التحقق من صلاحية اللعبة من منصة البوت." };
+            logger.LogWarning(
+                "Platform game access denied. StatusCode={StatusCode}, GuildId={GuildId}, ChannelId={ChannelId}, UserDiscordId={UserDiscordId}, GameKey={GameKey}, DenialReason={DenialReason}.",
+                (int)response.StatusCode,
+                request.DiscordGuildId,
+                request.DiscordChannelId,
+                request.DiscordUserId,
+                request.GameKey,
+                result.DenialReason);
+            return result;
         }
 
-        return await response.Content.ReadFromJsonAsync<GameAccessResult>(cancellationToken: cancellationToken)
-            ?? new GameAccessResult { Allowed = false, GameKey = request.GameKey, DenialReason = "استجابة منصة البوت غير صالحة." };
+        return result;
     }
 
     public async Task<WalletReservationResult> ReserveWalletAsync(ReserveWalletRequest request, CancellationToken cancellationToken = default)
@@ -61,5 +70,30 @@ public class PlatformApiClient(HttpClient http, IOptions<PlatformApiOptions> opt
     {
         var token = options.Value.ServiceToken;
         if (!string.IsNullOrWhiteSpace(token)) message.Headers.Add("X-Activities-Service-Key", token);
+    }
+
+    private static async Task<GameAccessResult> ReadGameAccessResultAsync(HttpResponseMessage response, ValidateGameAccessRequest request, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var result = await response.Content.ReadFromJsonAsync<GameAccessResult>(cancellationToken: cancellationToken);
+            if (result is not null)
+            {
+                result.GameKey = string.IsNullOrWhiteSpace(result.GameKey) ? request.GameKey : result.GameKey;
+                result.DenialReason ??= response.IsSuccessStatusCode ? null : "تعذر التحقق من صلاحية اللعبة من منصة البوت.";
+                return result;
+            }
+        }
+        catch
+        {
+            // Fall through to a safe Arabic denial. The controller logs the final 403 decision.
+        }
+
+        return new GameAccessResult
+        {
+            Allowed = false,
+            GameKey = request.GameKey,
+            DenialReason = response.IsSuccessStatusCode ? "استجابة منصة البوت غير صالحة." : "تعذر التحقق من صلاحية اللعبة من منصة البوت."
+        };
     }
 }

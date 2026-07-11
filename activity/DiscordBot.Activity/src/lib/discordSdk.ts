@@ -1,5 +1,5 @@
 import { DiscordSDK } from '@discord/embedded-app-sdk';
-import { exchangeActivitiesCode, exchangeActivityCode, setActivitiesAccessToken } from './api';
+import { exchangeActivitiesCode, exchangeActivityCode, setActivitiesAccessToken, setActivityRequestContext } from './api';
 import type { ActivityIdentity } from '../types';
 
 const clientId = (import.meta.env.VITE_DISCORD_CLIENT_ID as string | undefined)?.trim();
@@ -12,7 +12,8 @@ export async function initializeDiscordActivity(): Promise<ActivityIdentity> {
   await discordSdk.ready();
   if (!discordSdk.guildId || !discordSdk.channelId) throw new Error('يجب فتح مركز الألعاب من داخل روم في سيرفر ديسكورد.');
   const { code } = await discordSdk.commands.authorize({ client_id: clientId!, response_type: 'code', state: crypto.randomUUID(), prompt: 'none', scope: ['identify'] });
-  const activityInstanceId = discordSdk.instanceId || null;
+  const activityInstanceId = discordSdk.instanceId?.trim() || null;
+  setActivityRequestContext({ guildId: discordSdk.guildId, channelId: discordSdk.channelId, activityInstanceId });
   const token = activitiesApiBase
     ? await exchangeActivitiesCode(code, discordSdk.guildId, discordSdk.channelId, activityInstanceId)
     : null;

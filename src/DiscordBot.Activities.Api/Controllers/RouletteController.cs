@@ -34,7 +34,7 @@ public class RouletteController(
         var scope = ValidateAndApplyTrustedScope(request);
         if (scope is not null) return scope;
         var result = await roulette.CreateSessionAsync(request, user, ct);
-        return Result(result);
+        return Result(result, request.GuildDiscordId, request.ChannelDiscordId, request.ActivityInstanceId);
     }
 
     [HttpGet("sessions/open")]
@@ -44,7 +44,7 @@ public class RouletteController(
         if (string.IsNullOrWhiteSpace(userId)) return Unauthorized(new { message = "انتهت صلاحية تسجيل الدخول. افتح مركز الألعاب مرة ثانية." });
         var scope = ValidateTrustedScope(guildDiscordId, channelDiscordId, null, out _);
         if (scope is not null) return scope;
-        return Result(await roulette.GetOpenSessionsAsync(guildDiscordId, channelDiscordId, userId, ct));
+        return Result(await roulette.GetOpenSessionsAsync(guildDiscordId, channelDiscordId, userId, ct), guildDiscordId, channelDiscordId, TrustedActivityInstanceId());
     }
 
     [HttpGet("sessions/my-active")]
@@ -54,7 +54,7 @@ public class RouletteController(
         if (string.IsNullOrWhiteSpace(userId)) return Unauthorized(new { message = "انتهت صلاحية تسجيل الدخول. افتح مركز الألعاب مرة ثانية." });
         var scope = ValidateTrustedScope(guildDiscordId, channelDiscordId, null, out _);
         if (scope is not null) return scope;
-        return Result(await roulette.GetMyActiveSessionAsync(guildDiscordId, channelDiscordId, userId, ct));
+        return Result(await roulette.GetMyActiveSessionAsync(guildDiscordId, channelDiscordId, userId, ct), guildDiscordId, channelDiscordId, TrustedActivityInstanceId());
     }
 
     [HttpGet("sessions/{gameSessionId:guid}")]
@@ -64,7 +64,7 @@ public class RouletteController(
         if (string.IsNullOrWhiteSpace(userId)) return Unauthorized(new { message = "انتهت صلاحية تسجيل الدخول. افتح مركز الألعاب مرة ثانية." });
         var scope = ValidateTrustedScope(guildDiscordId, channelDiscordId, null, out _);
         if (scope is not null) return scope;
-        return Result(await roulette.GetSessionAsync(gameSessionId, guildDiscordId, channelDiscordId, userId, ct));
+        return Result(await roulette.GetSessionAsync(gameSessionId, guildDiscordId, channelDiscordId, userId, ct), guildDiscordId, channelDiscordId, TrustedActivityInstanceId());
     }
 
     [HttpPost("sessions/{gameSessionId:guid}/join")]
@@ -74,7 +74,7 @@ public class RouletteController(
         if (user is null) return Unauthorized(new { message = "انتهت صلاحية تسجيل الدخول. افتح مركز الألعاب مرة ثانية." });
         var scope = ValidateAndApplyTrustedScope(request);
         if (scope is not null) return scope;
-        return Result(await roulette.JoinSessionAsync(gameSessionId, request, user, ct));
+        return Result(await roulette.JoinSessionAsync(gameSessionId, request, user, ct), request.GuildDiscordId, request.ChannelDiscordId, request.ActivityInstanceId);
     }
 
     [HttpPost("sessions/{gameSessionId:guid}/leave")]
@@ -84,7 +84,7 @@ public class RouletteController(
         if (string.IsNullOrWhiteSpace(userId)) return Unauthorized(new { message = "انتهت صلاحية تسجيل الدخول. افتح مركز الألعاب مرة ثانية." });
         var scope = ValidateAndApplyTrustedScope(request);
         if (scope is not null) return scope;
-        return Result(await roulette.LeaveSessionAsync(gameSessionId, request, userId, ct));
+        return Result(await roulette.LeaveSessionAsync(gameSessionId, request, userId, ct), request.GuildDiscordId, request.ChannelDiscordId, request.ActivityInstanceId);
     }
 
     [HttpPost("sessions/{gameSessionId:guid}/rounds/start")]
@@ -94,7 +94,7 @@ public class RouletteController(
         if (string.IsNullOrWhiteSpace(userId)) return Unauthorized(new { message = "انتهت صلاحية تسجيل الدخول. افتح مركز الألعاب مرة ثانية." });
         var scope = ValidateAndApplyTrustedScope(request);
         if (scope is not null) return scope;
-        return Result(await roulette.StartSessionAsync(gameSessionId, request, userId, ct));
+        return Result(await roulette.StartSessionAsync(gameSessionId, request, userId, ct), request.GuildDiscordId, request.ChannelDiscordId, request.ActivityInstanceId);
     }
 
     [HttpPost("sessions/{gameSessionId:guid}/spin")]
@@ -104,7 +104,7 @@ public class RouletteController(
         if (string.IsNullOrWhiteSpace(userId)) return Unauthorized(new { message = "انتهت صلاحية تسجيل الدخول. افتح مركز الألعاب مرة ثانية." });
         var scope = ValidateAndApplyTrustedScope(request);
         if (scope is not null) return scope;
-        return Result(await roulette.SpinAsync(gameSessionId, request, userId, ct));
+        return Result(await roulette.SpinAsync(gameSessionId, request, userId, ct), request.GuildDiscordId, request.ChannelDiscordId, request.ActivityInstanceId);
     }
 
     [HttpPost("sessions/{gameSessionId:guid}/resolve-pending-action")]
@@ -114,7 +114,7 @@ public class RouletteController(
         if (string.IsNullOrWhiteSpace(userId)) return Unauthorized(new { message = "انتهت صلاحية تسجيل الدخول. افتح مركز الألعاب مرة ثانية." });
         var scope = ValidateAndApplyTrustedScope(request);
         if (scope is not null) return scope;
-        return Result(await roulette.ResolvePendingActionAsync(gameSessionId, request, userId, ct));
+        return Result(await roulette.ResolvePendingActionAsync(gameSessionId, request, userId, ct), request.GuildDiscordId, request.ChannelDiscordId, request.ActivityInstanceId);
     }
 
     [HttpPost("sessions/{gameSessionId:guid}/reconnect")]
@@ -124,7 +124,7 @@ public class RouletteController(
         if (user is null) return Unauthorized(new { message = "انتهت صلاحية تسجيل الدخول. افتح مركز الألعاب مرة ثانية." });
         var scope = ValidateAndApplyTrustedScope(request);
         if (scope is not null) return scope;
-        return Result(await roulette.ReconnectAsync(gameSessionId, request, user, ct));
+        return Result(await roulette.ReconnectAsync(gameSessionId, request, user, ct), request.GuildDiscordId, request.ChannelDiscordId, request.ActivityInstanceId);
     }
 
     [HttpPost("sessions/{gameSessionId:guid}/bets")]
@@ -134,7 +134,7 @@ public class RouletteController(
         if (string.IsNullOrWhiteSpace(userId)) return Unauthorized(new { message = "انتهت صلاحية تسجيل الدخول. افتح مركز الألعاب مرة ثانية." });
         var scope = ValidateAndApplyTrustedScope(request);
         if (scope is not null) return scope;
-        return Result(await roulette.PlaceBetAsync(gameSessionId, request, userId, ct));
+        return Result(await roulette.PlaceBetAsync(gameSessionId, request, userId, ct), request.GuildDiscordId, request.ChannelDiscordId, request.ActivityInstanceId);
     }
 
     [HttpPost("sessions/{gameSessionId:guid}/use-power-up")]
@@ -192,13 +192,13 @@ public class RouletteController(
 
         if (string.IsNullOrWhiteSpace(trustedGuildId) || string.IsNullOrWhiteSpace(trustedChannelId))
         {
-            logger.LogWarning("Activities token is missing trusted guild/channel claims. user={DiscordUserId}, requestedGuild={RequestedGuildId}, requestedChannel={RequestedChannelId}", DiscordUserId(), requestedGuildId, requestedChannelId);
+            LogForbiddenDecision(requestedGuildId, requestedChannelId, trustedActivityInstanceId, "missing_trusted_guild_or_channel_claims");
             return StatusCode(403, new { message = "جلسة Discord Activity غير موثوقة. افتح مركز الألعاب مرة ثانية." });
         }
 
         if (!string.Equals(trustedGuildId, requestedGuildId, StringComparison.Ordinal) || !string.Equals(trustedChannelId, requestedChannelId, StringComparison.Ordinal))
         {
-            logger.LogWarning("Activities trusted context mismatch. user={DiscordUserId}, tokenGuild={TokenGuildId}, tokenChannel={TokenChannelId}, requestedGuild={RequestedGuildId}, requestedChannel={RequestedChannelId}", DiscordUserId(), trustedGuildId, trustedChannelId, requestedGuildId, requestedChannelId);
+            LogForbiddenDecision(requestedGuildId, requestedChannelId, trustedActivityInstanceId, "trusted_guild_or_channel_mismatch");
             return StatusCode(403, new { message = "لا يمكن استخدام جلسة الألعاب خارج الروم الذي فُتحت منه." });
         }
 
@@ -206,22 +206,56 @@ public class RouletteController(
         {
             if (environment.IsDevelopment() && authOptions.Value.AllowMissingActivityInstanceInDevelopment)
             {
-                logger.LogWarning("Activities token is missing activity instance claim in Development. user={DiscordUserId}, guild={GuildId}, channel={ChannelId}", DiscordUserId(), trustedGuildId, trustedChannelId);
+                logger.LogWarning(
+                    "Roulette trusted context allowed without activity instance in Development. Endpoint={Endpoint}, UserDiscordId={DiscordUserId}, GuildId={GuildId}, ChannelId={ChannelId}, ActivityInstancePresent={ActivityInstancePresent}, DenialReason={DenialReason}, CorrelationId={CorrelationId}.",
+                    Request.Path.Value,
+                    DiscordUserId(),
+                    trustedGuildId,
+                    trustedChannelId,
+                    false,
+                    "missing_activity_instance_claim_development_override",
+                    CorrelationId());
                 return null;
             }
 
-            logger.LogWarning("Activities token is missing activity instance claim. user={DiscordUserId}, guild={GuildId}, channel={ChannelId}", DiscordUserId(), trustedGuildId, trustedChannelId);
+            LogForbiddenDecision(requestedGuildId, requestedChannelId, trustedActivityInstanceId, "missing_activity_instance_claim");
             return StatusCode(403, new { message = "جلسة Discord Activity غير مكتملة. افتح مركز الألعاب مرة ثانية." });
         }
 
         if (!string.IsNullOrWhiteSpace(requestedActivityInstanceId) && !string.Equals(trustedActivityInstanceId, requestedActivityInstanceId, StringComparison.Ordinal))
         {
-            logger.LogWarning("Activities activity instance mismatch. user={DiscordUserId}, guild={GuildId}, channel={ChannelId}, tokenInstance={TokenInstanceId}, requestedInstance={RequestedInstanceId}", DiscordUserId(), trustedGuildId, trustedChannelId, trustedActivityInstanceId, requestedActivityInstanceId);
+            LogForbiddenDecision(requestedGuildId, requestedChannelId, trustedActivityInstanceId, "activity_instance_mismatch");
             return StatusCode(403, new { message = "لا يمكن استخدام هذه الجلسة من Activity مختلف." });
         }
 
         return null;
     }
 
-    private ObjectResult Result<T>(DiscordBot.Shared.OperationResult<T> result) => StatusCode(result.StatusCode, result.Succeeded ? result.Value : new { code = result.Code, message = result.Error, feature = result.Feature });
+    private ObjectResult Result<T>(DiscordBot.Shared.OperationResult<T> result, string? guildDiscordId = null, string? channelDiscordId = null, string? activityInstanceId = null)
+    {
+        if (!result.Succeeded && result.StatusCode == 403)
+        {
+            LogForbiddenDecision(guildDiscordId, channelDiscordId, activityInstanceId, result.Code ?? result.Error ?? "operation_forbidden");
+        }
+
+        return StatusCode(result.StatusCode, result.Succeeded ? result.Value : new { code = result.Code, message = result.Error, feature = result.Feature });
+    }
+
+    private void LogForbiddenDecision(string? guildDiscordId, string? channelDiscordId, string? activityInstanceId, string denialReason)
+    {
+        logger.LogWarning(
+            "Roulette request forbidden. Endpoint={Endpoint}, UserDiscordId={DiscordUserId}, GuildId={GuildId}, ChannelId={ChannelId}, ActivityInstancePresent={ActivityInstancePresent}, DenialReason={DenialReason}, CorrelationId={CorrelationId}.",
+            Request.Path.Value,
+            DiscordUserId(),
+            guildDiscordId,
+            channelDiscordId,
+            !string.IsNullOrWhiteSpace(activityInstanceId),
+            denialReason,
+            CorrelationId());
+    }
+
+    private string CorrelationId() =>
+        Request.Headers.TryGetValue("X-Correlation-ID", out var value) && !string.IsNullOrWhiteSpace(value)
+            ? value.ToString()
+            : HttpContext.TraceIdentifier;
 }
