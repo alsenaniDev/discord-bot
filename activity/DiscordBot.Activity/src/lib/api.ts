@@ -1,9 +1,17 @@
 import type { ActivityContext, CompleteSessionResponse, GameWallet, LeaderboardEntry, MyActiveRouletteRoom, PendingRouletteIntent, PowerUpStore, PurchasePowerUpResponse, RouletteRoom, RouletteRuntimeCapabilities, RouletteSpinResult, StartSessionResponse } from '../types';
 
-const configuredBase = ((import.meta.env.VITE_API_BASE_URL as string | undefined) || (import.meta.env.VITE_PLATFORM_API_BASE_URL as string | undefined))?.trim().replace(/\/$/, '') ?? '';
+const normalizeBase = (value?: string | null) => value?.trim().replace(/\/$/, '') || '';
+const configuredBase =
+  normalizeBase(import.meta.env.VITE_PLATFORM_API_BASE_URL as string | undefined)
+  || normalizeBase(import.meta.env.VITE_API_BASE_URL as string | undefined)
+  || '/api';
+const configuredBaseSource =
+  normalizeBase(import.meta.env.VITE_PLATFORM_API_BASE_URL as string | undefined) ? 'VITE_PLATFORM_API_BASE_URL'
+  : normalizeBase(import.meta.env.VITE_API_BASE_URL as string | undefined) ? 'VITE_API_BASE_URL'
+  : 'default:/api';
 const configuredActivitiesBase = (import.meta.env.VITE_ACTIVITIES_API_BASE_URL as string | undefined)?.trim().replace(/\/$/, '') ?? '';
 const roulettePilotGuildIds = new Set(((import.meta.env.VITE_ACTIVITIES_ROULETTE_PILOT_GUILD_IDS as string | undefined) ?? '').split(',').map(x => x.trim()).filter(Boolean));
-const url = (path: string, base = configuredBase) => `${base}${path}`;
+const url = (path: string, base = configuredBase) => base === '/api' && path.startsWith('/api/') ? path : `${base}${path}`;
 let activitiesAccessToken: string | null = null;
 
 export interface ApiFailureDiagnostic {
@@ -15,6 +23,7 @@ export interface ApiFailureDiagnostic {
   responseReceived: boolean;
   message: string;
   platformApiBaseUrl: string;
+  platformApiBaseSource: string;
   activitiesApiBaseUrl: string;
   guildId?: string | null;
   channelId?: string | null;
@@ -38,7 +47,8 @@ export class ApiError extends Error {
 
 export const getLastApiFailure = () => lastFailure;
 export const getRuntimeConfigSummary = () => ({
-  platformApiBaseUrl: configuredBase || '(same-origin)',
+  platformApiBaseUrl: configuredBase,
+  platformApiBaseSource: configuredBaseSource,
   activitiesApiBaseUrl: configuredActivitiesBase || '(not configured)',
   environment: (import.meta.env.VITE_ENVIRONMENT as string | undefined) || import.meta.env.MODE,
   pilotGuildCount: roulettePilotGuildIds.size
@@ -69,7 +79,8 @@ async function request<T>(path: string, accessToken?: string, init?: RequestInit
         status: response.status,
         responseReceived: true,
         message,
-        platformApiBaseUrl: configuredBase || '(same-origin)',
+        platformApiBaseUrl: configuredBase,
+        platformApiBaseSource: configuredBaseSource,
         activitiesApiBaseUrl: configuredActivitiesBase || '(not configured)',
         guildId: meta.guildId,
         channelId: meta.channelId,
@@ -88,7 +99,8 @@ async function request<T>(path: string, accessToken?: string, init?: RequestInit
       targetService,
       responseReceived: false,
       message,
-      platformApiBaseUrl: configuredBase || '(same-origin)',
+      platformApiBaseUrl: configuredBase,
+      platformApiBaseSource: configuredBaseSource,
       activitiesApiBaseUrl: configuredActivitiesBase || '(not configured)',
       guildId: meta.guildId,
       channelId: meta.channelId,

@@ -20,6 +20,7 @@ function ActivityDiagnostics({ diagnostic, onRetry }: { diagnostic: ApiFailureDi
     responseReceived: diagnostic.responseReceived,
     message: diagnostic.message,
     platformApiBaseUrl: diagnostic.platformApiBaseUrl,
+    platformApiBaseSource: diagnostic.platformApiBaseSource,
     activitiesApiBaseUrl: diagnostic.activitiesApiBaseUrl,
     guildId: diagnostic.guildId,
     channelId: diagnostic.channelId,
@@ -39,6 +40,7 @@ function ActivityDiagnostics({ diagnostic, onRetry }: { diagnostic: ApiFailureDi
       <div><dt>رمز HTTP</dt><dd>{diagnostic.status ?? 'لم يصل رد من الخادم'}</dd></div>
       <div><dt>Correlation ID</dt><dd>{diagnostic.correlationId}</dd></div>
       <div><dt>Platform API</dt><dd>{diagnostic.platformApiBaseUrl}</dd></div>
+      <div><dt>Platform source</dt><dd>{diagnostic.platformApiBaseSource}</dd></div>
       <div><dt>Activities API</dt><dd>{diagnostic.activitiesApiBaseUrl}</dd></div>
       <div><dt>Guild</dt><dd>{diagnostic.guildId ?? 'غير متاح'}</dd></div>
       <div><dt>Channel</dt><dd>{diagnostic.channelId ?? 'غير متاح'}</dd></div>

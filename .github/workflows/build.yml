@@ -113,6 +113,9 @@ jobs:
           VITE_ACTIVITIES_ROULETTE_PILOT_GUILD_IDS: ""
           VITE_ENVIRONMENT: "production"
         run: npm run build
+      - name: Assert production bundle
+        working-directory: activity/DiscordBot.Activity
+        run: npm run assert:bundle
 
   dashboard:
     runs-on: ubuntu-latest

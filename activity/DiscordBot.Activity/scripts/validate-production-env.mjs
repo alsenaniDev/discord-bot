@@ -23,6 +23,9 @@ if (!values.VITE_ACTIVITIES_API_BASE_URL?.trim()) missing.push('VITE_ACTIVITIES_
 
 const invalid = [];
 const urlKeys = ['VITE_API_BASE_URL', 'VITE_PLATFORM_API_BASE_URL', 'VITE_ACTIVITIES_API_BASE_URL'];
+const explicitDirectPlatformOverride = values.VITE_ALLOW_DIRECT_PLATFORM_API_BASE_URL === 'true';
+const effectivePlatformApiBaseUrl = values.VITE_PLATFORM_API_BASE_URL?.trim() || values.VITE_API_BASE_URL?.trim() || '/api';
+const effectiveActivitiesApiBaseUrl = values.VITE_ACTIVITIES_API_BASE_URL?.trim() || '';
 const placeholderFragments = [
   'example.com',
   'YOUR_',
@@ -55,6 +58,14 @@ for (const key of urlKeys) {
   }
 }
 
+if (values.VITE_ENVIRONMENT?.trim() === 'production' && !explicitDirectPlatformOverride && effectivePlatformApiBaseUrl !== '/api') {
+  invalid.push('effectivePlatformApiBaseUrl must be /api for Discord URL Mapping production builds. Delete VITE_API_BASE_URL and VITE_PLATFORM_API_BASE_URL, or set VITE_ALLOW_DIRECT_PLATFORM_API_BASE_URL=true intentionally.');
+}
+
+if (values.VITE_ENVIRONMENT?.trim() === 'production' && effectiveActivitiesApiBaseUrl !== '/activities-api') {
+  invalid.push('effectiveActivitiesApiBaseUrl must be /activities-api for Discord URL Mapping production builds.');
+}
+
 if (missing.length > 0) {
   console.error('Missing required production Activity build variables:');
   for (const key of missing) console.error(`  - ${key}`);
@@ -75,14 +86,16 @@ if (invalid.length > 0) {
 
 const publicSummary = {
   discordClientId: values.VITE_DISCORD_CLIENT_ID?.trim(),
-  platformApiBaseUrl: (values.VITE_API_BASE_URL?.trim() || values.VITE_PLATFORM_API_BASE_URL?.trim() || '(same-origin)'),
-  activitiesApiBaseUrl: values.VITE_ACTIVITIES_API_BASE_URL?.trim(),
+  effectivePlatformApiBaseUrl,
+  effectiveActivitiesApiBaseUrl,
   pilotGuildCount: (values.VITE_ACTIVITIES_ROULETTE_PILOT_GUILD_IDS ?? '').split(',').map(x => x.trim()).filter(Boolean).length,
   environment: values.VITE_ENVIRONMENT?.trim() || values.NODE_ENV || 'production'
 };
 
 console.log('Activity production environment variables validated.');
 console.log('Safe Activity build summary:');
-for (const [key, value] of Object.entries(publicSummary)) {
-  console.log(`  ${key}: ${value}`);
-}
+console.log(`  Discord Client ID: ${publicSummary.discordClientId}`);
+console.log(`  Platform API base URL: ${publicSummary.effectivePlatformApiBaseUrl}`);
+console.log(`  Activities API base URL: ${publicSummary.effectiveActivitiesApiBaseUrl}`);
+console.log(`  Pilot guild count: ${publicSummary.pilotGuildCount}`);
+console.log(`  Environment: ${publicSummary.environment}`);
