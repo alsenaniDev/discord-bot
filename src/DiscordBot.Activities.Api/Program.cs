@@ -100,6 +100,37 @@ ValidateActivitiesConfiguration(app, builder.Configuration);
 
 app.UseHttpsRedirection();
 app.UseCors("Activities");
+app.Use(async (context, next) =>
+{
+    var correlationId = context.Request.Headers.TryGetValue("X-Correlation-ID", out var header) && !string.IsNullOrWhiteSpace(header)
+        ? header.ToString()
+        : Guid.NewGuid().ToString("N");
+    context.Response.Headers["X-Correlation-ID"] = correlationId;
+
+    var stopwatch = System.Diagnostics.Stopwatch.StartNew();
+    try
+    {
+        await next(context);
+    }
+    finally
+    {
+        stopwatch.Stop();
+        var userId = context.User.FindFirst("discord_user_id")?.Value;
+        var level = context.Response.StatusCode >= 500 ? LogLevel.Error
+            : context.Response.StatusCode >= 400 ? LogLevel.Warning
+            : LogLevel.Information;
+        app.Logger.Log(
+            level,
+            "Activities API request completed. CorrelationId={CorrelationId}, Method={Method}, Path={Path}, StatusCode={StatusCode}, Origin={Origin}, UserDiscordId={UserDiscordId}, DurationMs={DurationMs}",
+            correlationId,
+            context.Request.Method,
+            context.Request.Path.Value,
+            context.Response.StatusCode,
+            context.Request.Headers.Origin.ToString(),
+            userId,
+            stopwatch.ElapsedMilliseconds);
+    }
+});
 app.UseRateLimiter();
 app.UseAuthentication();
 app.UseAuthorization();

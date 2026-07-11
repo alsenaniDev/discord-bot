@@ -6,20 +6,112 @@ const roulettePilotGuildIds = new Set(((import.meta.env.VITE_ACTIVITIES_ROULETTE
 const url = (path: string, base = configuredBase) => `${base}${path}`;
 let activitiesAccessToken: string | null = null;
 
-export class ApiError extends Error { constructor(message: string, public status: number) { super(message); } }
+export interface ApiFailureDiagnostic {
+  correlationId: string;
+  method: string;
+  url: string;
+  targetService: 'Platform API' | 'Activities API';
+  status?: number;
+  responseReceived: boolean;
+  message: string;
+  platformApiBaseUrl: string;
+  activitiesApiBaseUrl: string;
+  guildId?: string | null;
+  channelId?: string | null;
+  activityInstanceId?: string | null;
+}
 
-async function request<T>(path: string, accessToken?: string, init?: RequestInit, base = configuredBase): Promise<T> {
+type RequestMeta = {
+  targetService?: ApiFailureDiagnostic['targetService'];
+  guildId?: string | null;
+  channelId?: string | null;
+  activityInstanceId?: string | null;
+};
+
+let lastFailure: ApiFailureDiagnostic | null = null;
+
+export class ApiError extends Error {
+  constructor(message: string, public status: number, public diagnostic?: ApiFailureDiagnostic) {
+    super(message);
+  }
+}
+
+export const getLastApiFailure = () => lastFailure;
+export const getRuntimeConfigSummary = () => ({
+  platformApiBaseUrl: configuredBase || '(same-origin)',
+  activitiesApiBaseUrl: configuredActivitiesBase || '(not configured)',
+  environment: (import.meta.env.VITE_ENVIRONMENT as string | undefined) || import.meta.env.MODE,
+  pilotGuildCount: roulettePilotGuildIds.size
+});
+export const isActivityDiagnosticsEnabled = (guildId?: string | null) => import.meta.env.DEV || (!!guildId && roulettePilotGuildIds.has(guildId));
+
+async function request<T>(path: string, accessToken?: string, init?: RequestInit, base = configuredBase, meta: RequestMeta = {}): Promise<T> {
   const headers = new Headers(init?.headers);
   headers.set('Content-Type', 'application/json');
+  const correlationId = crypto.randomUUID();
+  headers.set('X-Correlation-ID', correlationId);
   if (accessToken) headers.set('Authorization', `Bearer ${accessToken}`);
-  const response = await fetch(url(path, base), { ...init, headers });
-  const raw = await response.text().catch(() => '');
-  const body = raw ? tryParseJson(raw) as ({ message?: string; detail?: string; title?: string } | T | null) : null;
-  if (!response.ok) {
-    const problem = body as { message?: string; detail?: string; title?: string } | null;
-    throw new ApiError(problem?.message ?? problem?.detail ?? problem?.title ?? plainError(raw) ?? fallbackError(response.status), response.status);
+  const method = init?.method ?? 'GET';
+  const requestUrl = url(path, base);
+  const targetService = meta.targetService ?? (base === configuredActivitiesBase && configuredActivitiesBase ? 'Activities API' : 'Platform API');
+  try {
+    const response = await fetch(requestUrl, { ...init, headers });
+    const raw = await response.text().catch(() => '');
+    const body = raw ? tryParseJson(raw) as ({ message?: string; detail?: string; title?: string } | T | null) : null;
+    if (!response.ok) {
+      const problem = body as { message?: string; detail?: string; title?: string } | null;
+      const message = problem?.message ?? problem?.detail ?? problem?.title ?? plainError(raw) ?? fallbackError(response.status);
+      const diagnostic = setFailure({
+        correlationId,
+        method,
+        url: requestUrl,
+        targetService,
+        status: response.status,
+        responseReceived: true,
+        message,
+        platformApiBaseUrl: configuredBase || '(same-origin)',
+        activitiesApiBaseUrl: configuredActivitiesBase || '(not configured)',
+        guildId: meta.guildId,
+        channelId: meta.channelId,
+        activityInstanceId: meta.activityInstanceId
+      });
+      throw new ApiError(message, response.status, diagnostic);
+    }
+    return body as T;
+  } catch (error) {
+    if (error instanceof ApiError) throw error;
+    const message = error instanceof Error ? error.message : 'Failed to fetch';
+    const diagnostic = setFailure({
+      correlationId,
+      method,
+      url: requestUrl,
+      targetService,
+      responseReceived: false,
+      message,
+      platformApiBaseUrl: configuredBase || '(same-origin)',
+      activitiesApiBaseUrl: configuredActivitiesBase || '(not configured)',
+      guildId: meta.guildId,
+      channelId: meta.channelId,
+      activityInstanceId: meta.activityInstanceId
+    });
+    throw new ApiError(message, 0, diagnostic);
   }
-  return body as T;
+}
+
+function setFailure(diagnostic: ApiFailureDiagnostic): ApiFailureDiagnostic {
+  lastFailure = diagnostic;
+  console.warn('Activity API request failed', {
+    correlationId: diagnostic.correlationId,
+    method: diagnostic.method,
+    url: diagnostic.url,
+    targetService: diagnostic.targetService,
+    status: diagnostic.status,
+    responseReceived: diagnostic.responseReceived,
+    guildId: diagnostic.guildId,
+    channelId: diagnostic.channelId,
+    activityInstanceId: diagnostic.activityInstanceId
+  });
+  return diagnostic;
 }
 
 function tryParseJson(value: string): unknown {
@@ -47,10 +139,10 @@ export const exchangeActivitiesCode = (code: string, guildDiscordId: string, cha
   discordTokenType?: string | null;
   discordScope?: string | null;
   user: { discordUserId: string; username: string; avatarUrl?: string | null };
-}>('/api/auth/discord/exchange', undefined, { method: 'POST', body: JSON.stringify({ code, guildDiscordId, channelDiscordId, activityInstanceId }) }, configuredActivitiesBase);
+}>('/api/auth/discord/exchange', undefined, { method: 'POST', body: JSON.stringify({ code, guildDiscordId, channelDiscordId, activityInstanceId }) }, configuredActivitiesBase, { targetService: 'Activities API', guildId: guildDiscordId, channelId: channelDiscordId, activityInstanceId });
 export const setActivitiesAccessToken = (token?: string | null) => { activitiesAccessToken = token?.trim() || null; };
 export const getActivitiesAccessToken = () => activitiesAccessToken;
-export const getActivityContext = (token: string, guildId: string, channelId: string) => request<ActivityContext>(`/api/games/activity/context?guildDiscordId=${encodeURIComponent(guildId)}&channelDiscordId=${encodeURIComponent(channelId)}`, token);
+export const getActivityContext = (token: string, guildId: string, channelId: string) => request<ActivityContext>(`/api/games/activity/context?guildDiscordId=${encodeURIComponent(guildId)}&channelDiscordId=${encodeURIComponent(channelId)}`, token, undefined, configuredBase, { targetService: 'Platform API', guildId, channelId });
 export const startSession = (token: string, guildDiscordId: string, channelDiscordId: string, gameKey: string) => request<StartSessionResponse>('/api/games/activity/start-session', token, { method: 'POST', body: JSON.stringify({ guildDiscordId, channelDiscordId, gameKey }) });
 export const completeSession = (token: string, sessionId: string, guildDiscordId: string, score: number, won: boolean) => request<CompleteSessionResponse>('/api/games/activity/complete-session', token, { method: 'POST', body: JSON.stringify({ sessionId, guildDiscordId, score, won }) });
 export const getLeaderboard = (token: string, guildId: string, channelId: string, gameKey = 'quiz') => request<LeaderboardEntry[]>(`/api/games/activity/leaderboard?guildDiscordId=${encodeURIComponent(guildId)}&channelDiscordId=${encodeURIComponent(channelId)}&gameKey=${encodeURIComponent(gameKey)}`, token);
