@@ -40,3 +40,8 @@ Thumbs.db
 
 # Logs
 *.log
+
+# Local database/runtime data
+postgres_data/
+discordbot-local-postgres/
+.local-data/

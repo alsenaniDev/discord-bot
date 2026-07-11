@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { RouletteWheel } from '../components/roulette/RouletteWheel';
-import { getRouletteRoom, getStore, joinRouletteRoom, leaveRouletteRoom, resolveRoulettePendingAction, spinRoulette, startRouletteRoom, useRoulettePowerUp } from '../lib/api';
+import { getRouletteCapabilities, getRouletteRoom, getStore, joinRouletteRoom, leaveRouletteRoom, reconnectRouletteRoom, resolveRoulettePendingAction, spinRoulette, startRouletteRoom, useRoulettePowerUp } from '../lib/api';
+import { joinRouletteGameSession, onActivitiesReconnected, onRouletteEvent } from '../lib/activitiesSignalR';
 import { useActivity } from '../context/ActivityProvider';
-import type { PowerUpStoreItem, RoulettePlayer, RouletteRoom } from '../types';
+import type { PowerUpStoreItem, RoulettePlayer, RouletteRoom, RouletteRuntimeCapabilities } from '../types';
 import './RoulettePage.css';
 
 const statusText: Record<string, string> = { Waiting: 'بانتظار اللاعبين', InProgress: 'اللعبة جارية', Completed: 'اكتملت اللعبة', Cancelled: 'أُلغيت الغرفة', Expired: 'انتهت مدة الانضمام' };
@@ -24,11 +25,36 @@ function PlayerToken({ player, current, pending }: { player: RoulettePlayer; cur
 export function RouletteRoomPage() {
   const { roomId = '' } = useParams(); const { identity } = useActivity(); const navigate = useNavigate();
   const [room, setRoom] = useState<RouletteRoom | null>(null); const [inventory, setInventory] = useState<PowerUpStoreItem[]>([]); const [balance, setBalance] = useState(0); const [busy, setBusy] = useState(false); const [error, setError] = useState(''); const [event, setEvent] = useState(''); const [now, setNow] = useState(Date.now()); const [spinning, setSpinning] = useState(false); const [flash, setFlash] = useState(''); const [spinOrder, setSpinOrder] = useState<RoulettePlayer[] | null>(null); const [spinSelectedIndex, setSpinSelectedIndex] = useState<number | null>(null);
+  const [capabilities, setCapabilities] = useState<RouletteRuntimeCapabilities>({ runtimeVersion: 'legacy', supportsWalletBets: true, supportsPowerUps: true, supportsReconnect: false });
   const resolvingRef = useRef(false);
   const spinningRef = useRef(false);
   const queuedRoomRef = useRef<RouletteRoom | null>(null);
   const load = async () => { if (!identity || !roomId) return; try { const value = await getRouletteRoom(identity.accessToken, roomId, identity.guildId, identity.channelId); if (spinningRef.current) queuedRoomRef.current = value; else setRoom(value); try { const store = await getStore(identity.accessToken, identity.guildId); setInventory(store.items); setBalance(store.balance); } catch { /* Keep room usable if store refresh fails. */ } } catch (e) { setError(e instanceof Error ? e.message : 'تعذر تحميل الغرفة.'); } };
   useEffect(() => { void load(); }, [identity, roomId]);
+  useEffect(() => { if (!identity) return; getRouletteCapabilities(identity.accessToken, identity.guildId).then(setCapabilities).catch(() => undefined); }, [identity]);
+  useEffect(() => {
+    if (!identity || !roomId || !capabilities.supportsReconnect) return;
+    let active = true;
+    const reconnect = async () => {
+      if (!active) return;
+      try {
+        const snapshot = await reconnectRouletteRoom(identity.accessToken, roomId, identity.guildId, identity.channelId);
+        if (!active) return;
+        setRoom(snapshot);
+        if (!['Completed', 'Cancelled', 'Expired'].includes(snapshot.status)) await joinRouletteGameSession(snapshot.gameSessionId);
+        setEvent(snapshot.status === 'Completed' ? 'تمت استعادة نتيجة اللعبة.' : 'تمت استعادة الاتصال بالغرفة.');
+      } catch (e) {
+        if (active) setError(e instanceof Error ? e.message : 'تعذر استعادة الاتصال بالغرفة.');
+      }
+    };
+    const offReconnect = onActivitiesReconnected(reconnect);
+    const offEvent = onRouletteEvent(roomId, evt => {
+      const snapshot = (evt as { payload?: RouletteRoom }).payload;
+      if (snapshot?.id === roomId && !spinningRef.current) setRoom(snapshot);
+    });
+    reconnect();
+    return () => { active = false; offReconnect(); offEvent(); };
+  }, [identity, roomId, capabilities.supportsReconnect]);
   useEffect(() => { const id = window.setInterval(() => setNow(Date.now()), 1000); return () => window.clearInterval(id); }, []);
   useEffect(() => { if (!room || !['Waiting', 'InProgress'].includes(room.status)) return; const id = window.setInterval(() => void load(), 2500); return () => window.clearInterval(id); }, [room?.status, identity, roomId]);
   const me = useMemo(() => room?.players.find(x => x.userDiscordId === identity?.userId), [room, identity]); const isHost = room?.hostUserDiscordId === identity?.userId;
@@ -77,9 +103,9 @@ export function RouletteRoomPage() {
       setSpinning(false); spinningRef.current = false; setBusy(false); setSpinOrder(null); setSpinSelectedIndex(null); setError(e instanceof Error ? e.message : 'تعذر تدوير الروليت.');
     }
   };
-  const usePower = async (item: PowerUpStoreItem) => { if (!identity || busy) return; setBusy(true); setError(''); try { const value = await useRoulettePowerUp(identity.accessToken, roomId, identity.guildId, identity.channelId, item.key); setRoom(value); setEvent(`${item.icon} تم استخدام ${item.name}`); setFlash(item.key); soundHooks.onPowerUpUsed(); window.setTimeout(() => setFlash(''), 850); void load(); } catch (e) { setError(e instanceof Error ? e.message : 'تعذر استخدام الخاصية.'); } finally { setBusy(false); } };
+  const usePower = async (item: PowerUpStoreItem) => { if (!identity || busy) return; if (!capabilities.supportsPowerUps) { setError('الخصائص غير متاحة في تجربة الروليت الجديدة حاليًا.'); return; } setBusy(true); setError(''); try { const value = await useRoulettePowerUp(identity.accessToken, roomId, identity.guildId, identity.channelId, item.key); setRoom(value); setEvent(`${item.icon} تم استخدام ${item.name}`); setFlash(item.key); soundHooks.onPowerUpUsed(); window.setTimeout(() => setFlash(''), 850); void load(); } catch (e) { setError(e instanceof Error ? e.message : 'تعذر استخدام الخاصية.'); } finally { setBusy(false); } };
   if (!room || !identity) return <main className="center-state game-page"><div className="loader"/><p>{error || 'جاري تحميل غرفة الروليت...'}</p></main>;
-  const alive = room.alivePlayers?.length ? room.alivePlayers : room.players.filter(x => x.isAlive); const eliminated = room.eliminatedPlayers?.length ? room.eliminatedPlayers : room.players.filter(x => !x.isAlive); const usable = inventory.filter(x => x.isEnabledForGuild && x.ownedQuantity > 0);
+  const alive = room.alivePlayers?.length ? room.alivePlayers : room.players.filter(x => x.isAlive); const eliminated = room.eliminatedPlayers?.length ? room.eliminatedPlayers : room.players.filter(x => !x.isAlive); const usable = capabilities.supportsPowerUps ? inventory.filter(x => x.isEnabledForGuild && x.ownedQuantity > 0) : [];
   const storePath = `/store?returnTo=${encodeURIComponent(`/games/roulette/room/${roomId}`)}`;
   const selectedUserId = room.pendingTargetUserDiscordId ?? room.lastSpinResult?.targetUserDiscordId;
   const wheelPlayers = spinning && spinOrder?.length ? spinOrder : alive;
@@ -102,7 +128,7 @@ export function RouletteRoomPage() {
     {room.status === 'InProgress' && <div className="arena-grid">
       <section className={`arena-main game-glass ${flash ? 'pulse-turn' : ''}`}>
         <div className="turn-banner pulse-turn">{room.currentTurnPlayer?.avatarUrl && <span className="game-avatar"><img src={room.currentTurnPlayer.avatarUrl} alt="" /></span>}<div><span>الدور الآن</span><strong>{displayName(room.currentTurnPlayer, room.currentTurnUsername ?? 'غير محدد')}</strong><small>{isMyTurn ? 'دورك! لف العجلة الآن' : `بانتظار ${room.currentTurnUsername ?? 'اللاعب'}`}</small></div></div>
-        {hasPending && <div className="pending-panel game-glass"><h2>العجلة وقفت على {displayName(room.pendingTargetPlayer, room.pendingTargetUsername ?? 'اللاعب')}</h2><p>{room.pendingActionStatus === 'AutoResolved' ? 'لا توجد خصائص متاحة لهذا اللاعب، سيتم تنفيذ النتيجة مباشرة.' : isPendingTarget ? <>لديك <span className="pending-count">{pendingSeconds}</span> ثانية لاستخدام خاصية!</> : `بانتظار قرار ${room.pendingTargetUsername}...`}</p>{isPendingTarget && <div className="powerup-actions">{usable.length === 0 ? <><p className="game-help">لا تملك خصائص متاحة لهذا الدور.</p><button className="game-button secondary" onClick={() => navigate(storePath)}>فتح المتجر</button></> : usable.map(item => <button className={`game-button ${powerClass(item.key)}`} disabled={busy} onClick={() => void usePower(item)} key={item.key}>{item.icon} {powerLabel(item)} · {item.ownedQuantity}</button>)}</div>}</div>}
+        {hasPending && <div className="pending-panel game-glass"><h2>العجلة وقفت على {displayName(room.pendingTargetPlayer, room.pendingTargetUsername ?? 'اللاعب')}</h2><p>{room.pendingActionStatus === 'AutoResolved' ? 'لا توجد خصائص متاحة لهذا اللاعب، سيتم تنفيذ النتيجة مباشرة.' : isPendingTarget ? <>لديك <span className="pending-count">{pendingSeconds}</span> ثانية لاستخدام خاصية!</> : `بانتظار قرار ${room.pendingTargetUsername}...`}</p>{isPendingTarget && <div className="powerup-actions">{!capabilities.supportsPowerUps ? <p className="game-help">الخصائص غير متاحة في تجربة الروليت الجديدة حاليًا.</p> : usable.length === 0 ? <><p className="game-help">لا تملك خصائص متاحة لهذا الدور.</p><button className="game-button secondary" onClick={() => navigate(storePath)}>فتح المتجر</button></> : usable.map(item => <button className={`game-button ${powerClass(item.key)}`} disabled={busy} onClick={() => void usePower(item)} key={item.key}>{item.icon} {powerLabel(item)} · {item.ownedQuantity}</button>)}</div>}</div>}
         {latestPowerUpAction && <div className={`powerup-banner game-glass ${latestPowerUpAction.powerUpKey ?? ''}`}><span>{latestPowerUpAction.powerUpIcon ?? '✨'}</span><div><strong>{latestPowerUpAction.powerUpName ?? 'خاصية'}</strong><p>{latestPowerUpAction.message}</p></div></div>}
         <div className="arena-center"><RouletteWheel players={wheelPlayers} spinning={spinning} selectedUserDiscordId={selectedUserId} selectedIndex={selectedWheelIndex} /><button className="game-button danger spin-cta" disabled={busy || !isMyTurn || hasPending} onClick={() => void spin()}>{spinning ? 'العجلة تدور...' : isMyTurn ? 'تدوير العجلة' : 'بانتظار دورك'}</button>{event && <div className="wheel-result">{event}</div>}</div>
       </section>

@@ -1,0 +1,31 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: discordbot-local-postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: discordbot_platform
+    ports:
+      - "5432:5432"
+    volumes:
+      - discordbot-local-postgres:/var/lib/postgresql/data
+      - ./scripts/local/postgres-init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d discordbot_platform"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+
+  seq:
+    image: datalust/seq:2024.3
+    container_name: discordbot-local-seq
+    environment:
+      ACCEPT_EULA: "Y"
+    ports:
+      - "5341:80"
+    profiles:
+      - observability
+
+volumes:
+  discordbot-local-postgres:
