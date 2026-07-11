@@ -8,16 +8,20 @@ Deploy the Discord Bot Platform to [Railway](https://railway.app).
 
 1. Create Railway project → add **PostgreSQL**
 2. Add **API** service → Dockerfile `deploy/railway/Dockerfile.api` → generate domain
-3. Add **Bot** service → Dockerfile `deploy/railway/Dockerfile.bot` → disable public networking
-4. Add private **Lavalink** service → Dockerfile `deploy/railway/Dockerfile.lavalink` → disable public networking
-5. Set variables from `railway.env.example`
-6. Run migrations: `railway run --service discord-bot-api ./deploy/railway/migrate.sh`
-7. Deploy the dashboard on Vercel (`dashboard/DiscordBot.Dashboard/vercel.json`)
+3. Add **Activities API** service → Dockerfile `deploy/railway/Dockerfile.activities-api` → generate domain
+4. Add **Bot** service → Dockerfile `deploy/railway/Dockerfile.bot` → disable public networking
+5. Add private **Lavalink** service → Dockerfile `deploy/railway/Dockerfile.lavalink` → disable public networking
+6. Set variables from `railway.env.example`
+7. Run migrations from an SDK migration job:
+   - `./deploy/railway/migrate-platform.sh`
+   - `./deploy/railway/migrate-activities.sh`
+8. Deploy the dashboard on Vercel (`dashboard/DiscordBot.Dashboard/vercel.json`)
 
 ## Health check
 
 ```
-GET /api/health
+GET /health
+GET /health/ready
 ```
 
 ## Services
@@ -25,6 +29,7 @@ GET /api/health
 | Dockerfile | Railway public URL |
 |------------|-------------------|
 | `Dockerfile.api` | Yes |
+| `Dockerfile.activities-api` | Yes |
 | `Dockerfile.bot` | No (worker) |
 | `Dockerfile.lavalink` | No (private service) |
 | `Dockerfile.dashboard` | Yes (optional) |

@@ -6,11 +6,12 @@ FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
 WORKDIR /src
 
 COPY DiscordBot.sln .
-COPY src/DiscordBot.Domain/ src/DiscordBot.Domain/
-COPY src/DiscordBot.Infrastructure/ src/DiscordBot.Infrastructure/
-COPY src/DiscordBot.Api/ src/DiscordBot.Api/
+COPY src/DiscordBot.Domain/DiscordBot.Domain.csproj src/DiscordBot.Domain/
+COPY src/DiscordBot.Infrastructure/DiscordBot.Infrastructure.csproj src/DiscordBot.Infrastructure/
+COPY src/DiscordBot.Api/DiscordBot.Api.csproj src/DiscordBot.Api/
 
 RUN dotnet restore src/DiscordBot.Api/DiscordBot.Api.csproj
+COPY src/ src/
 RUN dotnet publish src/DiscordBot.Api/DiscordBot.Api.csproj \
     -c Release \
     -o /app/publish \
@@ -20,10 +21,13 @@ FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS runtime
 WORKDIR /app
 
 ENV ASPNETCORE_ENVIRONMENT=Production
+ENV ASPNETCORE_URLS=http://+:8080
+ENV DOTNET_EnableDiagnostics=0
 
 COPY --from=build /app/publish .
 
 # Railway injects PORT at runtime; Program.cs binds to it.
 EXPOSE 8080
 
+USER app
 ENTRYPOINT ["dotnet", "DiscordBot.Api.dll"]

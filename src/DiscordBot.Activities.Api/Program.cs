@@ -21,6 +21,12 @@ builder.Configuration.AddJsonFile(
     reloadOnChange: true);
 builder.Configuration.AddEnvironmentVariables();
 
+var port = Environment.GetEnvironmentVariable("PORT");
+if (!string.IsNullOrWhiteSpace(port))
+{
+    builder.WebHost.UseUrls($"http://0.0.0.0:{port}");
+}
+
 builder.Services.AddControllers();
 builder.Services.AddSignalR();
 builder.Services.AddScoped<IRouletteRealtimePublisher, RouletteRealtimePublisher>();
@@ -120,16 +126,36 @@ static void LogSafeStartupConfiguration(WebApplication app, IConfiguration confi
 static void ValidateActivitiesConfiguration(WebApplication app, IConfiguration configuration)
 {
     var errors = new List<string>();
-    CheckRequired(errors, configuration.GetConnectionString("ActivitiesDatabase") ?? configuration.GetConnectionString("DefaultConnection"), "ConnectionStrings:ActivitiesDatabase");
-    CheckRequired(errors, configuration["Discord:ClientId"], "Discord:ClientId");
-    CheckRequired(errors, configuration["Discord:ClientSecret"], "Discord:ClientSecret");
-    CheckRequired(errors, configuration["Discord:RedirectUri"], "Discord:RedirectUri");
-    CheckRequired(errors, configuration["PlatformApi:BaseUrl"], "PlatformApi:BaseUrl");
-    CheckRequired(errors, configuration["PlatformApi:ServiceToken"], "PlatformApi:ServiceToken");
-    CheckRequired(errors, configuration["ActivitiesDiagnostics:ServiceToken"], "ActivitiesDiagnostics:ServiceToken");
-    CheckRequired(errors, configuration["Jwt:Issuer"], "Jwt:Issuer");
-    CheckRequired(errors, configuration["Jwt:Audience"], "Jwt:Audience");
-    CheckRequired(errors, configuration["Jwt:SigningKey"], "Jwt:SigningKey");
+    var strict = app.Environment.IsProduction();
+    CheckRequired(errors, configuration.GetConnectionString("ActivitiesDatabase") ?? configuration.GetConnectionString("DefaultConnection"), "ConnectionStrings:ActivitiesDatabase", strict);
+    CheckRequired(errors, configuration["Discord:ClientId"], "Discord:ClientId", strict);
+    CheckRequired(errors, configuration["Discord:ClientSecret"], "Discord:ClientSecret", strict);
+    CheckRequired(errors, configuration["Discord:RedirectUri"], "Discord:RedirectUri", strict);
+    CheckRequired(errors, configuration["PlatformApi:BaseUrl"], "PlatformApi:BaseUrl", strict);
+    CheckRequired(errors, configuration["PlatformApi:ServiceToken"], "PlatformApi:ServiceToken", strict);
+    CheckRequired(errors, configuration["ActivitiesDiagnostics:ServiceToken"], "ActivitiesDiagnostics:ServiceToken", strict);
+    CheckRequired(errors, configuration["Jwt:Issuer"], "Jwt:Issuer", strict);
+    CheckRequired(errors, configuration["Jwt:Audience"], "Jwt:Audience", strict);
+    CheckRequired(errors, configuration["Jwt:SigningKey"], "Jwt:SigningKey", strict);
+
+    if (strict)
+    {
+        CheckProductionUrl(errors, "Discord:RedirectUri", configuration["Discord:RedirectUri"]);
+        CheckProductionUrl(errors, "PlatformApi:BaseUrl", configuration["PlatformApi:BaseUrl"]);
+        var origins = configuration.GetSection("Cors:AllowedOrigins").Get<string[]>() ?? [];
+        if (origins.Length == 0)
+        {
+            errors.Add("Cors:AllowedOrigins must include at least one explicit production origin.");
+        }
+        foreach (var origin in origins.Where(x => !string.IsNullOrWhiteSpace(x)))
+        {
+            if (origin.Trim() == "*")
+            {
+                errors.Add("Cors:AllowedOrigins must not use wildcard origins with credentials.");
+            }
+            CheckProductionUrl(errors, "Cors:AllowedOrigins", origin);
+        }
+    }
 
     if (errors.Count == 0)
     {
@@ -149,12 +175,42 @@ static void ValidateActivitiesConfiguration(WebApplication app, IConfiguration c
     app.Logger.LogWarning("{Message}", message);
 }
 
-static void CheckRequired(List<string> errors, string? value, string key)
+static void CheckRequired(List<string> errors, string? value, string key, bool strict)
 {
     if (string.IsNullOrWhiteSpace(value))
     {
         errors.Add($"{key} must be configured.");
+        return;
     }
+
+    if (strict && IsPlaceholder(value))
+    {
+        errors.Add($"{key} is still a placeholder value.");
+    }
+}
+
+static void CheckProductionUrl(List<string> errors, string key, string? value)
+{
+    if (string.IsNullOrWhiteSpace(value))
+    {
+        return;
+    }
+
+    if (value.StartsWith("http://", StringComparison.OrdinalIgnoreCase))
+    {
+        errors.Add($"{key} must use HTTPS in Production.");
+    }
+
+    if (value.Contains("localhost", StringComparison.OrdinalIgnoreCase) || value.Contains("127.0.0.1", StringComparison.OrdinalIgnoreCase))
+    {
+        errors.Add($"{key} must not use localhost in Production.");
+    }
+}
+
+static bool IsPlaceholder(string value)
+{
+    string[] fragments = ["YOUR_", "CHANGE_ME", "REPLACE_WITH", "your-domain.com", "example.com"];
+    return fragments.Any(fragment => value.Contains(fragment, StringComparison.OrdinalIgnoreCase));
 }
 
 static string SafeConnectionStringSummary(string? connectionString)

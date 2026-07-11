@@ -58,11 +58,13 @@ public static class ConfigurationValidationExtensions
         CheckSetting(errors, "Discord:BotToken", discord.BotToken, strict);
         CheckSetting(errors, "Discord:RedirectUri", discord.RedirectUri, strict);
         CheckSetting(errors, "Discord:DashboardUrl", discord.DashboardUrl, strict);
+        CheckSetting(errors, "Discord:ActivityUrl", discord.ActivityUrl, strict);
 
         if (strict)
         {
             CheckProductionUrl(errors, "Discord:RedirectUri", discord.RedirectUri);
             CheckProductionUrls(errors, "Discord:DashboardUrl", discord.DashboardUrl);
+            CheckProductionUrls(errors, "Discord:ActivityUrl", discord.ActivityUrl);
         }
 
         var jwt = configuration.GetSection(JwtOptions.SectionName).Get<JwtOptions>() ?? new JwtOptions();
@@ -80,6 +82,8 @@ public static class ConfigurationValidationExtensions
 
         var bot = configuration.GetSection(BotOptions.SectionName).Get<BotOptions>() ?? new BotOptions();
         CheckSetting(errors, "Bot:ApiKey", bot.ApiKey, strict);
+
+        CheckSetting(errors, "ActivitiesIntegration:ServiceToken", configuration["ActivitiesIntegration:ServiceToken"], strict);
 
         var admin = configuration.GetSection(AdminOptions.SectionName).Get<AdminOptions>() ?? new AdminOptions();
         CheckSetting(errors, "Admin:DiscordUserId", admin.DiscordUserId, strict);

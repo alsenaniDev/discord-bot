@@ -1,0 +1,35 @@
+# Discord Bot Platform — Activities API (Railway)
+# Build context: repository root
+# Railway: set dockerfilePath = deploy/railway/Dockerfile.activities-api
+
+FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
+WORKDIR /src
+
+COPY DiscordBot.sln .
+COPY src/DiscordBot.Shared/DiscordBot.Shared.csproj src/DiscordBot.Shared/
+COPY src/DiscordBot.Activities.Domain/DiscordBot.Activities.Domain.csproj src/DiscordBot.Activities.Domain/
+COPY src/DiscordBot.Activities.Application/DiscordBot.Activities.Application.csproj src/DiscordBot.Activities.Application/
+COPY src/DiscordBot.Activities.Infrastructure/DiscordBot.Activities.Infrastructure.csproj src/DiscordBot.Activities.Infrastructure/
+COPY src/DiscordBot.Activities.Api/DiscordBot.Activities.Api.csproj src/DiscordBot.Activities.Api/
+
+RUN dotnet restore src/DiscordBot.Activities.Api/DiscordBot.Activities.Api.csproj
+COPY src/ src/
+RUN dotnet publish src/DiscordBot.Activities.Api/DiscordBot.Activities.Api.csproj \
+    -c Release \
+    -o /app/publish \
+    --no-restore
+
+FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS runtime
+WORKDIR /app
+
+ENV ASPNETCORE_ENVIRONMENT=Production
+ENV ASPNETCORE_URLS=http://+:8080
+ENV DOTNET_EnableDiagnostics=0
+
+COPY --from=build /app/publish .
+
+# Railway injects PORT at runtime; Program.cs binds to it.
+EXPOSE 8080
+
+USER app
+ENTRYPOINT ["dotnet", "DiscordBot.Activities.Api.dll"]
