@@ -9,29 +9,110 @@ on:
 jobs:
   dotnet:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: discordbot_platform_ci
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d discordbot_platform_ci"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 20
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-dotnet@v4
         with:
           dotnet-version: '9.0.x'
+      - name: Restore local .NET tools
+        run: dotnet tool restore
+      - name: Verify EF Core tool
+        run: dotnet tool run dotnet-ef --version
       - name: Restore
         run: dotnet restore DiscordBot.sln
       - name: Build
         run: dotnet build DiscordBot.sln --no-restore --configuration Release
-      - name: Install EF Core tools
+      - name: Check duplicate migration files
+        shell: bash
         run: |
-          dotnet tool install --global dotnet-ef --version 9.0.4
-          echo "$HOME/.dotnet/tools" >> "$GITHUB_PATH"
-      - name: Verify EF migrations compile
+          check_duplicates() {
+            local dir="$1"
+            local duplicates
+            duplicates="$(find "$dir" -maxdepth 1 -name '*.cs' ! -name '*.Designer.cs' ! -name '*ModelSnapshot.cs' -exec basename {} \; | sort | uniq -d)"
+            if [ -n "$duplicates" ]; then
+              echo "Duplicate migration files in $dir:"
+              echo "$duplicates"
+              exit 1
+            fi
+          }
+          check_duplicates src/DiscordBot.Infrastructure/Migrations
+          check_duplicates src/DiscordBot.Activities.Infrastructure/Data/Migrations
+      - name: Prepare CI databases
+        run: docker exec ${{ job.services.postgres.id }} createdb -U postgres discordbot_activities_ci
+      - name: Verify Platform EF migrations
         env:
           ASPNETCORE_ENVIRONMENT: Development
+          ConnectionStrings__DefaultConnection: Host=localhost;Port=5432;Database=discordbot_platform_ci;Username=postgres;Password=postgres
         run: |
-          dotnet ef migrations list \
+          dotnet tool run dotnet-ef migrations list \
             --project src/DiscordBot.Infrastructure \
             --startup-project src/DiscordBot.Api \
-            --configuration Release \
-            --no-build \
-            --no-connect
+            --configuration Release
+          dotnet tool run dotnet-ef database update \
+            --project src/DiscordBot.Infrastructure \
+            --startup-project src/DiscordBot.Api \
+            --configuration Release
+      - name: Verify Activities EF migrations
+        env:
+          ASPNETCORE_ENVIRONMENT: Development
+          ConnectionStrings__ActivitiesDatabase: Host=localhost;Port=5432;Database=discordbot_activities_ci;Username=postgres;Password=postgres
+        run: |
+          dotnet tool run dotnet-ef migrations list \
+            --project src/DiscordBot.Activities.Infrastructure \
+            --startup-project src/DiscordBot.Activities.Api \
+            --configuration Release
+          dotnet tool run dotnet-ef database update \
+            --project src/DiscordBot.Activities.Infrastructure \
+            --startup-project src/DiscordBot.Activities.Api \
+            --configuration Release
+      - name: Test
+        run: dotnet test DiscordBot.sln --configuration Release --no-build --logger "console;verbosity=minimal"
+      - name: Build Platform API image
+        run: docker build -f deploy/railway/Dockerfile.api -t discordbot-api:ci .
+      - name: Build Activities API image
+        run: docker build -f deploy/railway/Dockerfile.activities-api -t discordbot-activities-api:ci .
+      - name: Build Bot image
+        run: docker build -f deploy/railway/Dockerfile.bot -t discordbot-bot:ci .
+
+  activity:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: activity/DiscordBot.Activity/package-lock.json
+      - name: Install
+        working-directory: activity/DiscordBot.Activity
+        run: npm ci
+      - name: Test
+        working-directory: activity/DiscordBot.Activity
+        run: npm test
+      - name: Build
+        working-directory: activity/DiscordBot.Activity
+        env:
+          VITE_DISCORD_CLIENT_ID: "000000000000000000"
+          VITE_API_BASE_URL: "https://platform-api.example.com"
+          VITE_PLATFORM_API_BASE_URL: "https://platform-api.example.com"
+          VITE_ACTIVITIES_API_BASE_URL: "https://activities-api.example.com"
+          VITE_ACTIVITIES_ROULETTE_PILOT_GUILD_IDS: ""
+          VITE_ENVIRONMENT: "production"
+        run: npm run build
 
   dashboard:
     runs-on: ubuntu-latest

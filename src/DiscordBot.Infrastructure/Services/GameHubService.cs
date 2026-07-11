@@ -256,7 +256,7 @@ public class GameHubService(AppDbContext db, ILogger<GameHubService> logger) : I
         if (string.IsNullOrWhiteSpace(settings.GamesChannelDiscordId)) return GameHubResult<ActivityGamesContextDto>.Fail("لم يتم تحديد روم الألعاب بعد.", 403);
         if (settings.GamesChannelDiscordId != channelDiscordId) return GameHubResult<ActivityGamesContextDto>.Fail($"🎮 الألعاب متاحة فقط في روم <#{settings.GamesChannelDiscordId}>.", 403);
         var botContext = await GetBotContextAsync(discordGuildId, ct);
-        if (!string.IsNullOrWhiteSpace(userDiscordId)) await ApplySandboxVersionsAsync(botContext.Games, guild.Id, discordGuildId, userDiscordId, ct);
+        if (!string.IsNullOrWhiteSpace(userDiscordId)) await ApplyActivityVersionSelectionAsync(botContext.Games, discordGuildId, userDiscordId, ct);
         var leaderboard = await GetLeaderboardAsync(guild.Id, null, 10, ct) ?? [];
         return GameHubResult<ActivityGamesContextDto>.Ok(new ActivityGamesContextDto { GuildDiscordId = discordGuildId, ChannelDiscordId = channelDiscordId, GamesChannelDiscordId = settings.GamesChannelDiscordId, Games = botContext.Games, Leaderboard = leaderboard });
     }
@@ -293,33 +293,57 @@ public class GameHubService(AppDbContext db, ILogger<GameHubService> logger) : I
         }
     }
 
-    private async Task ApplySandboxVersionsAsync(List<AvailableGameDto> games, Guid guildId, string discordGuildId, string userDiscordId, CancellationToken ct)
+    private async Task ApplyActivityVersionSelectionAsync(List<AvailableGameDto> games, string guildDiscordId, string userDiscordId, CancellationToken ct)
     {
         if (games.Count == 0) return;
         var gameIds = games.Select(x => x.Id).ToHashSet();
-        var sandboxVersions = await db.GameVersions.AsNoTracking().Include(x => x.SandboxAccess)
-            .Where(x => gameIds.Contains(x.GameDefinitionId) && x.Status == "Sandbox" && x.SandboxAccess.Any(a => a.GuildDiscordId == discordGuildId && (a.UserDiscordId == null || a.UserDiscordId == userDiscordId)))
-            .OrderByDescending(x => x.CreatedAt).ToListAsync(ct);
-        foreach (var version in sandboxVersions)
+        var versions = await db.GameVersions.AsNoTracking().Include(x => x.SandboxAccess)
+            .Where(x => gameIds.Contains(x.GameDefinitionId) && (x.Status == "Sandbox" || x.Status == "Published"))
+            .OrderByDescending(x => x.CreatedAt)
+            .ToListAsync(ct);
+        foreach (var game in games.GroupBy(x => x.Key, StringComparer.OrdinalIgnoreCase).Select(x => x.First()))
         {
-            var game = games.FirstOrDefault(x => x.Id == version.GameDefinitionId);
-            if (game is null) continue;
-            ApplyVersion(game, version, true);
+            var gameVersions = versions.Where(x => x.GameDefinitionId == game.Id).ToList();
+            var published = gameVersions.Where(x => x.Status == "Published").OrderByDescending(x => x.PublishedAt).ThenByDescending(x => x.CreatedAt).FirstOrDefault();
+            var sandboxCandidates = gameVersions.Where(x => x.Status == "Sandbox").OrderByDescending(x => x.CreatedAt).ToList();
+            var sandbox = sandboxCandidates.FirstOrDefault(x => HasSandboxAccess(x, guildDiscordId, userDiscordId));
+            var selected = sandbox ?? published;
+            if (selected is not null) ApplyVersion(game, selected, sandbox is not null);
+            logger.LogInformation(
+                "Game version selection: guild={GuildDiscordId}, user={UserDiscordId}, game={GameKey}, publishedVersion={PublishedVersion}, sandboxFound={SandboxFound}, sandboxAccess={SandboxAccess}, selectedVersion={Version}, isSandbox={IsSandbox}",
+                guildDiscordId,
+                userDiscordId,
+                game.Key,
+                published?.Version ?? "none",
+                sandboxCandidates.Count > 0,
+                sandbox is not null,
+                selected?.Version ?? "none",
+                sandbox is not null);
         }
-        if (sandboxVersions.Count > 0)
-            logger.LogInformation("Applied {Count} sandbox game versions for guild {GuildId}, user {UserId}.", sandboxVersions.Count, guildId, userDiscordId);
     }
 
     private static void ApplyVersion(AvailableGameDto game, GameVersion version, bool sandbox)
     {
         game.GameVersionId = version.Id;
+        game.Version = version.Version;
+        game.Status = version.Status;
         game.ActivityRoute = string.IsNullOrWhiteSpace(version.ActivityRoute) ? game.ActivityRoute : version.ActivityRoute;
         game.FrontendUrl = version.FrontendUrl;
         game.BackendUrl = version.BackendUrl;
         game.EngineType = ManifestString(version.ManifestJson, "engineType") ?? game.EngineType;
         game.FrontendMode = ManifestString(version.ManifestJson, "frontendMode") ?? game.FrontendMode;
+        game.ManifestJson = version.ManifestJson;
         game.IsSandbox = sandbox;
         game.SandboxWarning = sandbox ? "هذه نسخة تجريبية وقد تحتوي على أخطاء." : null;
+    }
+
+    private static bool HasSandboxAccess(GameVersion version, string guildDiscordId, string userDiscordId)
+    {
+        var guild = guildDiscordId.Trim();
+        var user = userDiscordId.Trim();
+        return version.SandboxAccess.Any(x =>
+            string.Equals(x.GuildDiscordId.Trim(), guild, StringComparison.Ordinal)
+            && (string.IsNullOrWhiteSpace(x.UserDiscordId) || string.Equals(x.UserDiscordId.Trim(), user, StringComparison.Ordinal)));
     }
 
     private static string? ManifestString(string json, string property)

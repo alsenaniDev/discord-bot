@@ -1,0 +1,1 @@
+CREATE DATABASE discordbot_activities;

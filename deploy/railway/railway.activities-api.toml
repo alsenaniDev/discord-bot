@@ -1,0 +1,12 @@
+# Example Railway service config for the Activities API.
+# In Railway dashboard: Settings → Config-as-code → path: deploy/railway/railway.activities-api.toml
+
+[build]
+builder = "DOCKERFILE"
+dockerfilePath = "deploy/railway/Dockerfile.activities-api"
+
+[deploy]
+healthcheckPath = "/health/ready"
+healthcheckTimeout = 120
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 5

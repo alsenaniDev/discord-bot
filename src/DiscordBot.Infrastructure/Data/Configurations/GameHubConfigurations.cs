@@ -162,6 +162,27 @@ public class GameWalletTransactionConfiguration : IEntityTypeConfiguration<GameW
     }
 }
 
+public class WalletReservationConfiguration : IEntityTypeConfiguration<WalletReservation>
+{
+    public void Configure(EntityTypeBuilder<WalletReservation> b)
+    {
+        b.ToTable("WalletReservations");
+        b.HasKey(x => x.Id);
+        b.HasIndex(x => x.ReservationId).IsUnique();
+        b.HasIndex(x => x.IdempotencyKey).IsUnique();
+        b.HasIndex(x => new { x.GuildId, x.DiscordUserId, x.Status, x.ExpiresAtUtc });
+        b.Property(x => x.ReservationId).HasMaxLength(80).IsRequired();
+        b.Property(x => x.IdempotencyKey).HasMaxLength(160).IsRequired();
+        b.Property(x => x.DiscordUserId).HasMaxLength(32).IsRequired();
+        b.Property(x => x.GameKey).HasMaxLength(64).IsRequired();
+        b.Property(x => x.Amount).HasPrecision(18, 2);
+        b.Property(x => x.Currency).HasMaxLength(16).IsRequired();
+        b.Property(x => x.Status).HasMaxLength(24).IsRequired();
+        b.Property(x => x.FailureReason).HasMaxLength(500);
+        b.HasOne(x => x.Guild).WithMany().HasForeignKey(x => x.GuildId).OnDelete(DeleteBehavior.Cascade);
+    }
+}
+
 public class RouletteRoomConfiguration : IEntityTypeConfiguration<RouletteRoom>
 {
     public void Configure(EntityTypeBuilder<RouletteRoom> b)

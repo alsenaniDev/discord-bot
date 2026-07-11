@@ -53,6 +53,7 @@ public class AppDbContext : DbContext
     public DbSet<RouletteGuildSettings> RouletteGuildSettings => Set<RouletteGuildSettings>();
     public DbSet<GameWallet> GameWallets => Set<GameWallet>();
     public DbSet<GameWalletTransaction> GameWalletTransactions => Set<GameWalletTransaction>();
+    public DbSet<WalletReservation> WalletReservations => Set<WalletReservation>();
     public DbSet<RouletteRoom> RouletteRooms => Set<RouletteRoom>();
     public DbSet<RouletteRoomPlayer> RouletteRoomPlayers => Set<RouletteRoomPlayer>();
     public DbSet<RouletteRoundAction> RouletteRoundActions => Set<RouletteRoundAction>();

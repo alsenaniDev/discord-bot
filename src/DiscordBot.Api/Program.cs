@@ -58,6 +58,7 @@ if (app.Environment.IsDevelopment())
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
+app.MapGet("/health", () => Results.Ok(new { status = "Healthy" }));
 
 app.Logger.LogInformation("DiscordBot API starting. Environment: {Environment}", app.Environment.EnvironmentName);
 

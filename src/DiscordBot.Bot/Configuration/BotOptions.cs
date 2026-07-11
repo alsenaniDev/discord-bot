@@ -11,6 +11,6 @@ public class ApiOptions
 {
     public const string SectionName = "Api";
 
-    public string BaseUrl { get; set; } = "http://localhost:5217";
+    public string BaseUrl { get; set; } = "https://localhost:5001";
     public string ApiKey { get; set; } = string.Empty;
 }

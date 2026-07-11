@@ -6,10 +6,11 @@ FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
 WORKDIR /src
 
 COPY DiscordBot.sln .
-COPY src/DiscordBot.Domain/ src/DiscordBot.Domain/
-COPY src/DiscordBot.Bot/ src/DiscordBot.Bot/
+COPY src/DiscordBot.Domain/DiscordBot.Domain.csproj src/DiscordBot.Domain/
+COPY src/DiscordBot.Bot/DiscordBot.Bot.csproj src/DiscordBot.Bot/
 
 RUN dotnet restore src/DiscordBot.Bot/DiscordBot.Bot.csproj
+COPY src/ src/
 RUN dotnet publish src/DiscordBot.Bot/DiscordBot.Bot.csproj \
     -c Release \
     -o /app/publish \
@@ -23,4 +24,5 @@ ENV DOTNET_EnableDiagnostics=0
 
 COPY --from=build /app/publish .
 
+USER app
 ENTRYPOINT ["dotnet", "DiscordBot.Bot.dll"]

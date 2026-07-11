@@ -134,6 +134,8 @@ public class AvailableGameDto
 {
     public Guid Id { get; set; }
     public Guid? GameVersionId { get; set; }
+    public string? Version { get; set; }
+    public string? Status { get; set; }
     public string Key { get; set; } = string.Empty;
     public string Name { get; set; } = string.Empty;
     public string? Description { get; set; }
@@ -143,6 +145,7 @@ public class AvailableGameDto
     public string? BackendUrl { get; set; }
     public string EngineType { get; set; } = "Platform";
     public string FrontendMode { get; set; } = "InternalRoute";
+    public string? ManifestJson { get; set; }
     public GamePlayMode PlayMode { get; set; } = GamePlayMode.Solo;
     public bool SupportsScores { get; set; }
     public bool SupportsLeaderboard { get; set; }
