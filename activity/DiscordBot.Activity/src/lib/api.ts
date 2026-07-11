@@ -13,6 +13,7 @@ const configuredActivitiesBase = (import.meta.env.VITE_ACTIVITIES_API_BASE_URL a
 const roulettePilotGuildIds = new Set(((import.meta.env.VITE_ACTIVITIES_ROULETTE_PILOT_GUILD_IDS as string | undefined) ?? '').split(',').map(x => x.trim()).filter(Boolean));
 const url = (path: string, base = configuredBase) => base === '/api' && path.startsWith('/api/') ? path : `${base}${path}`;
 let activitiesAccessToken: string | null = null;
+let activityRequestContext: Pick<RequestMeta, 'guildId' | 'channelId' | 'activityInstanceId'> = {};
 
 export interface ApiFailureDiagnostic {
   correlationId: string;
@@ -153,17 +154,25 @@ export const exchangeActivitiesCode = (code: string, guildDiscordId: string, cha
   user: { discordUserId: string; username: string; avatarUrl?: string | null };
 }>('/api/auth/discord/exchange', undefined, { method: 'POST', body: JSON.stringify({ code, guildDiscordId, channelDiscordId, activityInstanceId }) }, configuredActivitiesBase, { targetService: 'Activities API', guildId: guildDiscordId, channelId: channelDiscordId, activityInstanceId });
 export const setActivitiesAccessToken = (token?: string | null) => { activitiesAccessToken = token?.trim() || null; };
+export const setActivityRequestContext = (context: Pick<RequestMeta, 'guildId' | 'channelId' | 'activityInstanceId'>) => { activityRequestContext = context; };
 export const getActivitiesAccessToken = () => activitiesAccessToken;
 export const getActivityContext = (token: string, guildId: string, channelId: string) => request<ActivityContext>(`/api/games/activity/context?guildDiscordId=${encodeURIComponent(guildId)}&channelDiscordId=${encodeURIComponent(channelId)}`, token, undefined, configuredBase, { targetService: 'Platform API', guildId, channelId });
 export const startSession = (token: string, guildDiscordId: string, channelDiscordId: string, gameKey: string) => request<StartSessionResponse>('/api/games/activity/start-session', token, { method: 'POST', body: JSON.stringify({ guildDiscordId, channelDiscordId, gameKey }) });
 export const completeSession = (token: string, sessionId: string, guildDiscordId: string, score: number, won: boolean) => request<CompleteSessionResponse>('/api/games/activity/complete-session', token, { method: 'POST', body: JSON.stringify({ sessionId, guildDiscordId, score, won }) });
 export const getLeaderboard = (token: string, guildId: string, channelId: string, gameKey = 'quiz') => request<LeaderboardEntry[]>(`/api/games/activity/leaderboard?guildDiscordId=${encodeURIComponent(guildId)}&channelDiscordId=${encodeURIComponent(channelId)}&gameKey=${encodeURIComponent(gameKey)}`, token);
-const rouletteScope = (guildDiscordId: string, channelDiscordId: string) => JSON.stringify({ guildDiscordId, channelDiscordId });
+const rouletteMeta = (guildDiscordId: string, channelDiscordId: string): RequestMeta => ({
+  targetService: rouletteRuntime(guildDiscordId) === 'activities' ? 'Activities API' : 'Platform API',
+  guildId: guildDiscordId,
+  channelId: channelDiscordId,
+  activityInstanceId: activityRequestContext.activityInstanceId
+});
+const rouletteScope = (guildDiscordId: string, channelDiscordId: string) => JSON.stringify({ guildDiscordId, channelDiscordId, activityInstanceId: activityRequestContext.activityInstanceId ?? null });
 const rouletteRuntime = (guildDiscordId: string): 'legacy' | 'activities' => configuredActivitiesBase && roulettePilotGuildIds.has(guildDiscordId) ? 'activities' : 'legacy';
 const rouletteRequest = <T>(token: string, guildDiscordId: string, legacyPath: string, activitiesPath: string, init?: RequestInit) => {
-  if (rouletteRuntime(guildDiscordId) !== 'activities') return request<T>(legacyPath, token, init);
+  const meta = rouletteMeta(guildDiscordId, activityRequestContext.channelId ?? '');
+  if (rouletteRuntime(guildDiscordId) !== 'activities') return request<T>(legacyPath, token, init, configuredBase, meta);
   if (!activitiesAccessToken) throw new ApiError('انتهت صلاحية جلسة Activity الجديدة. افتح مركز الألعاب مرة ثانية.', 401);
-  return request<T>(activitiesPath, activitiesAccessToken, init, configuredActivitiesBase);
+  return request<T>(activitiesPath, activitiesAccessToken, init, configuredActivitiesBase, meta);
 };
 export const getWallet = (token: string, guildId: string) => request<GameWallet>(`/api/games/activity/wallet?guildDiscordId=${encodeURIComponent(guildId)}`, token);
 export const getStore = (token: string, guildId: string) => request<PowerUpStore>(`/api/games/activity/store?guildDiscordId=${encodeURIComponent(guildId)}`, token);
