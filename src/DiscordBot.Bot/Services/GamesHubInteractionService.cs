@@ -31,6 +31,21 @@ public class GamesHubInteractionService(BotApiClient api, GamesContextCache cont
             // Never attempt a second initial response after sending the launch callback.
             var launch = await activityLauncher.TryLaunchAsync(interaction);
             if (launch.WasAccepted) return;
+            if (launch.IsThrottled)
+            {
+                await ReplyAsync(interaction, launch.UserMessage ?? "يتم فتح مركز الألعاب الآن. حاول مرة ثانية بعد لحظات.");
+                return;
+            }
+            if (launch.IsRateLimited)
+            {
+                logger.LogWarning("Discord Activity launch rate limited after initial response for interaction {InteractionId}; cannot send fallback.", interaction.Id);
+                return;
+            }
+            if (launch.IsDuplicate)
+            {
+                logger.LogWarning("Duplicate Discord Activity launch ignored for interaction {InteractionId}; no fallback sent.", interaction.Id);
+                return;
+            }
             if (!launch.CanFallback)
             {
                 logger.LogWarning("Discord Activity launch failed after initial response. Cannot fallback.");
@@ -91,8 +106,9 @@ public class GamesHubInteractionService(BotApiClient api, GamesContextCache cont
         logger.LogInformation("Prepared Roulette join intent {JoinIntentId} for room {RoomId}, guild {GuildId}, user {UserId}.", prepared.Value.JoinIntentId, roomId, guildId, component.User.Id);
         var launch = await activityLauncher.TryLaunchAsync(component);
         if (launch.WasAccepted) return;
+        if (launch.IsThrottled) { await ReplyAsync(component, launch.UserMessage ?? "يتم فتح واجهة الروليت الآن. حاول مرة ثانية بعد لحظات."); return; }
         if (launch.CanFallback) await ReplyAsync(component, "تعذر فتح واجهة الروليت الآن. حاول مرة أخرى.");
-        else logger.LogWarning("Roulette Activity launch failed after initial response for room {RoomId}; cannot send fallback.", roomId);
+        else logger.LogWarning("Roulette Activity launch failed after initial response for room {RoomId}; cannot send fallback. RateLimited={RateLimited}, Duplicate={Duplicate}.", roomId, launch.IsRateLimited, launch.IsDuplicate);
     }
 
     private async Task ShowLeaderboardAsync(SocketMessageComponent component, ulong guildId)
