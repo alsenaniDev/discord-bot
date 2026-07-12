@@ -66,6 +66,10 @@ if (values.VITE_ENVIRONMENT?.trim() === 'production' && effectiveActivitiesApiBa
   invalid.push('effectiveActivitiesApiBaseUrl must be /activities-api for Discord URL Mapping production builds.');
 }
 
+if (values.VITE_LOCAL_BROWSER_MODE?.trim().toLowerCase() === 'true') {
+  invalid.push('VITE_LOCAL_BROWSER_MODE must not be enabled for production Activity builds.');
+}
+
 if (missing.length > 0) {
   console.error('Missing required production Activity build variables:');
   for (const key of missing) console.error(`  - ${key}`);

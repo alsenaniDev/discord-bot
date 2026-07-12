@@ -116,7 +116,38 @@ Use the Vite app at:
 http://localhost:5173
 ```
 
-This validates routing, API calls, SignalR, and production-like base paths. Discord SDK calls still require a real Discord Activity context; for complete auth and launch behavior use the real Discord flow below.
+Development local browser mode skips the real Discord SDK when `frame_id` is missing and uses server-configured local profiles instead. The browser cannot submit arbitrary Discord IDs; it can only select profiles configured in the Activities API and Platform API.
+
+Open two browser windows:
+
+```text
+http://localhost:5173/?localProfile=PlayerA
+http://localhost:5173/?localProfile=PlayerB
+```
+
+Both profiles share the same local guild, channel, and Activity instance, but use different Discord user IDs. You should see the Arabic banner:
+
+```text
+وضع الاختبار المحلي
+```
+
+If `localProfile` is omitted, the Activity shows a local profile selector. The Activities JWT is held in memory only.
+
+With the two local windows you can test:
+
+- Player A creates a Roulette room.
+- Player B sees the open room and joins it.
+- Player A starts the game.
+- Both windows receive SignalR events.
+- Host transfers when Player A leaves.
+
+Discord channel announcement publishing is skipped/mocked by the browser-only local path where needed, so local room creation does not require a live Discord channel post.
+
+Production protection:
+
+- `LocalBrowserMode:Enabled=true` is rejected on Production startup.
+- `VITE_LOCAL_BROWSER_MODE=true` is rejected by the production React build.
+- Real Discord Activity auth remains required in Production.
 
 ## Real Discord local testing
 

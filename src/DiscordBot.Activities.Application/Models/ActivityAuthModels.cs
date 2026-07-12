@@ -8,6 +8,11 @@ public sealed class ExchangeDiscordCodeRequest
     public string? ActivityInstanceId { get; set; }
 }
 
+public sealed class ExchangeLocalActivityProfileRequest
+{
+    public string ProfileName { get; set; } = string.Empty;
+}
+
 public sealed class ActivityAuthResponse
 {
     public string AccessToken { get; set; } = string.Empty;

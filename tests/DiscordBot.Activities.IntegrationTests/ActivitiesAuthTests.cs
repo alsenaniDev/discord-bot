@@ -83,6 +83,50 @@ public class ActivitiesAuthTests(ActivitiesApiFactory factory) : IClassFixture<A
     }
 
     [Fact]
+    public async Task Local_browser_profiles_are_returned_from_server_configuration()
+    {
+        using var client = factory.CreateClient();
+
+        var response = await client.GetAsync("/api/auth/local/profiles");
+        var body = await response.Content.ReadAsStringAsync();
+
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        body.Should().Contain("PlayerA");
+        body.Should().Contain("PlayerB");
+        body.Should().Contain("لاعب A");
+    }
+
+    [Fact]
+    public async Task Local_browser_exchange_issues_scoped_activities_jwt_for_configured_profile()
+    {
+        using var client = factory.CreateClient();
+
+        var response = await client.PostAsync("/api/auth/local/exchange", Json(new { profileName = "PlayerA" }));
+        var body = await response.Content.ReadAsStringAsync();
+        using var document = JsonDocument.Parse(body);
+        var token = document.RootElement.GetProperty("accessToken").GetString();
+        var jwt = new JwtSecurityTokenHandler().ReadJwtToken(token);
+
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+        jwt.Claims.Should().Contain(x => x.Type == "discord_user_id" && x.Value == "900000000000000001");
+        jwt.Claims.Should().Contain(x => x.Type == "discord_guild_id" && x.Value == "1521518056852029440");
+        jwt.Claims.Should().Contain(x => x.Type == "discord_channel_id" && x.Value == "1523998706331029574");
+        jwt.Claims.Should().Contain(x => x.Type == "activity_instance_id" && x.Value == "local-browser-activity");
+    }
+
+    [Fact]
+    public async Task Local_browser_exchange_rejects_unknown_profile_names()
+    {
+        using var client = factory.CreateClient();
+
+        var response = await client.PostAsync("/api/auth/local/exchange", Json(new { profileName = "900000000000000003" }));
+        var body = await response.Content.ReadAsStringAsync();
+
+        response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+        body.Should().Contain("local_profile_invalid");
+    }
+
+    [Fact]
     public async Task Roulette_scope_request_with_wrong_guild_is_rejected_before_runtime()
     {
         using var client = factory.CreateClient();

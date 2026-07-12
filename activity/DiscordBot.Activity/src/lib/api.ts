@@ -154,6 +154,18 @@ export const exchangeActivitiesCode = (code: string, guildDiscordId: string, cha
   discordScope?: string | null;
   user: { discordUserId: string; username: string; avatarUrl?: string | null };
 }>('/api/auth/discord/exchange', undefined, { method: 'POST', body: JSON.stringify({ code, guildDiscordId, channelDiscordId, activityInstanceId }) }, configuredActivitiesBase, { targetService: 'Activities API', guildId: guildDiscordId, channelId: channelDiscordId, activityInstanceId });
+export interface LocalActivityProfile { name: string; username: string; }
+export interface LocalActivityAuthResponse {
+  accessToken: string;
+  expiresAt: string;
+  user: { discordUserId: string; username: string; avatarUrl?: string | null };
+  guildDiscordId: string;
+  channelDiscordId: string;
+  activityInstanceId: string;
+}
+export const isActivitiesApiConfigured = () => !!configuredActivitiesBase;
+export const getLocalActivityProfiles = () => request<LocalActivityProfile[]>('/api/auth/local/profiles', undefined, undefined, configuredActivitiesBase, { targetService: 'Activities API' });
+export const exchangeLocalActivityProfile = (profileName: string) => request<LocalActivityAuthResponse>('/api/auth/local/exchange', undefined, { method: 'POST', body: JSON.stringify({ profileName }) }, configuredActivitiesBase, { targetService: 'Activities API' });
 export const setActivitiesAccessToken = (token?: string | null) => { activitiesAccessToken = token?.trim() || null; };
 export const setActivityRequestContext = (context: Pick<RequestMeta, 'guildId' | 'channelId' | 'activityInstanceId'>) => { activityRequestContext = context; };
 export const getActivitiesAccessToken = () => activitiesAccessToken;

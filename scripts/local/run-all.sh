@@ -24,5 +24,7 @@ echo $! > .local/activity.pid
 echo "Local services are starting."
 echo "Logs: .local/logs"
 echo "Activity: http://localhost:5173"
+echo "Activity Player A: http://localhost:5173/?localProfile=PlayerA"
+echo "Activity Player B: http://localhost:5173/?localProfile=PlayerB"
 echo "Platform API: https://localhost:5001"
 echo "Activities API: https://localhost:7001"

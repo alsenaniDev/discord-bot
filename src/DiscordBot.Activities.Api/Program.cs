@@ -36,6 +36,7 @@ builder.Services.AddHealthChecks()
 builder.Services.AddActivitiesInfrastructure(builder.Configuration);
 builder.Services.Configure<ActivitiesCorsOptions>(builder.Configuration.GetSection(ActivitiesCorsOptions.SectionName));
 builder.Services.Configure<ActivityRuntimeAuthOptions>(builder.Configuration.GetSection(ActivityRuntimeAuthOptions.SectionName));
+builder.Services.Configure<LocalBrowserModeOptions>(builder.Configuration.GetSection(LocalBrowserModeOptions.SectionName));
 builder.Services.AddRateLimiter(options =>
 {
     options.AddFixedWindowLimiter("activity-api", limiter =>
@@ -168,6 +169,10 @@ static void ValidateActivitiesConfiguration(WebApplication app, IConfiguration c
     CheckRequired(errors, configuration["Jwt:Issuer"], "Jwt:Issuer", strict);
     CheckRequired(errors, configuration["Jwt:Audience"], "Jwt:Audience", strict);
     CheckRequired(errors, configuration["Jwt:SigningKey"], "Jwt:SigningKey", strict);
+    if (app.Environment.IsProduction() && configuration.GetValue<bool>("LocalBrowserMode:Enabled"))
+    {
+        errors.Add("LocalBrowserMode:Enabled must be false in Production.");
+    }
 
     if (strict)
     {

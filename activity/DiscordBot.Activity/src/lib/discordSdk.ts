@@ -1,14 +1,45 @@
 import { DiscordSDK } from '@discord/embedded-app-sdk';
-import { exchangeActivitiesCode, exchangeActivityCode, setActivitiesAccessToken, setActivityRequestContext } from './api';
+import { exchangeActivitiesCode, exchangeActivityCode, exchangeLocalActivityProfile, isActivitiesApiConfigured, setActivitiesAccessToken, setActivityRequestContext } from './api';
 import type { ActivityIdentity } from '../types';
 
 const clientId = (import.meta.env.VITE_DISCORD_CLIENT_ID as string | undefined)?.trim();
 const activitiesApiBase = (import.meta.env.VITE_ACTIVITIES_API_BASE_URL as string | undefined)?.trim();
-if (!clientId) throw new Error('لم يتم إعداد معرّف تطبيق ديسكورد للواجهة.');
 
-export const discordSdk = new DiscordSDK(clientId);
+const query = () => new URLSearchParams(window.location.search);
+const hasDiscordFrameId = () => query().has('frame_id');
+const isDevEnvironment = () => import.meta.env.DEV || ((import.meta.env.VITE_ENVIRONMENT as string | undefined)?.trim().toLowerCase() === 'development');
 
-export async function initializeDiscordActivity(): Promise<ActivityIdentity> {
+export const getRequestedLocalProfile = () => query().get('localProfile')?.trim() || '';
+export const isLocalBrowserModeAvailable = () => isDevEnvironment() && !hasDiscordFrameId() && isActivitiesApiConfigured();
+
+export async function initializeDiscordActivity(localProfileName?: string): Promise<ActivityIdentity> {
+  if (isLocalBrowserModeAvailable()) {
+    const profileName = (localProfileName?.trim() || getRequestedLocalProfile()).trim();
+    if (!profileName) throw new Error('اختر ملف اختبار محلي للمتابعة.');
+    const token = await exchangeLocalActivityProfile(profileName);
+    setActivitiesAccessToken(token.accessToken);
+    setActivityRequestContext({
+      guildId: token.guildDiscordId,
+      channelId: token.channelDiscordId,
+      activityInstanceId: token.activityInstanceId
+    });
+    return {
+      accessToken: token.accessToken,
+      activitiesAccessToken: token.accessToken,
+      activitiesTokenExpiresAt: token.expiresAt,
+      activityInstanceId: token.activityInstanceId,
+      userId: token.user.discordUserId,
+      username: token.user.username,
+      avatarUrl: token.user.avatarUrl,
+      guildId: token.guildDiscordId,
+      channelId: token.channelDiscordId,
+      isLocalBrowserMode: true,
+      localProfileName: profileName
+    };
+  }
+
+  if (!clientId) throw new Error('لم يتم إعداد معرّف تطبيق ديسكورد للواجهة.');
+  const discordSdk = new DiscordSDK(clientId);
   await discordSdk.ready();
   if (!discordSdk.guildId || !discordSdk.channelId) throw new Error('يجب فتح مركز الألعاب من داخل روم في سيرفر ديسكورد.');
   const { code } = await discordSdk.commands.authorize({ client_id: clientId!, response_type: 'code', state: crypto.randomUUID(), prompt: 'none', scope: ['identify'] });
@@ -33,6 +64,7 @@ export async function initializeDiscordActivity(): Promise<ActivityIdentity> {
     username: authentication.user.global_name ?? authentication.user.username,
     avatarUrl,
     guildId: discordSdk.guildId,
-    channelId: discordSdk.channelId
+    channelId: discordSdk.channelId,
+    isLocalBrowserMode: false
   };
 }

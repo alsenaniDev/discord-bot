@@ -22,6 +22,7 @@ public static class DependencyInjection
         services.Configure<SeedOptions>(configuration.GetSection(SeedOptions.SectionName));
         services.Configure<BotOptions>(configuration.GetSection(BotOptions.SectionName));
         services.Configure<AdminOptions>(configuration.GetSection(AdminOptions.SectionName));
+        services.Configure<LocalBrowserModeOptions>(configuration.GetSection(LocalBrowserModeOptions.SectionName));
 
         services.AddMemoryCache();
         services.AddHttpClient<IDiscordOAuthService, DiscordOAuthService>();

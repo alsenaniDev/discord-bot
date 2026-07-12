@@ -3,7 +3,7 @@ export interface LeaderboardEntry { rank: number; userDiscordId: string; usernam
 export interface ActivityContext { guildDiscordId: string; channelDiscordId: string; gamesChannelDiscordId: string; games: ActivityGame[]; leaderboard: LeaderboardEntry[]; }
 export interface StartSessionResponse { sessionId: string; gameKey: string; gameName: string; activityRoute: string; expiresAt: string; }
 export interface CompleteSessionResponse { sessionId: string; pointsAwarded: number; player: LeaderboardEntry; }
-export interface ActivityIdentity { accessToken: string; activitiesAccessToken?: string | null; activitiesTokenExpiresAt?: string | null; activityInstanceId?: string | null; userId: string; username: string; avatarUrl?: string | null; guildId: string; channelId: string; }
+export interface ActivityIdentity { accessToken: string; activitiesAccessToken?: string | null; activitiesTokenExpiresAt?: string | null; activityInstanceId?: string | null; userId: string; username: string; avatarUrl?: string | null; guildId: string; channelId: string; isLocalBrowserMode?: boolean; localProfileName?: string | null; }
 export interface GameWallet { balance: number; }
 export interface PowerUpStoreItem { key: string; name: string; description: string; icon: string; isEnabledForGuild: boolean; price: number; maxUsesPerGame: number; ownedQuantity: number; }
 export interface PowerUpStore { balance: number; items: PowerUpStoreItem[]; }

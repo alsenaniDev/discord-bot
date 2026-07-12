@@ -31,7 +31,17 @@ public class ActivitiesApiFactory : WebApplicationFactory<Program>
                 ["Jwt:SigningKey"] = SigningKey,
                 ["Jwt:AccessTokenMinutes"] = "15",
                 ["PlatformApi:BaseUrl"] = "http://localhost/",
-                ["PlatformApi:ServiceToken"] = "test-service-token"
+                ["PlatformApi:ServiceToken"] = "test-service-token",
+                ["LocalBrowserMode:Enabled"] = "true",
+                ["LocalBrowserMode:GuildDiscordId"] = "1521518056852029440",
+                ["LocalBrowserMode:ChannelDiscordId"] = "1523998706331029574",
+                ["LocalBrowserMode:ActivityInstanceId"] = "local-browser-activity",
+                ["LocalBrowserMode:Profiles:0:Name"] = "PlayerA",
+                ["LocalBrowserMode:Profiles:0:DiscordUserId"] = "900000000000000001",
+                ["LocalBrowserMode:Profiles:0:Username"] = "لاعب A",
+                ["LocalBrowserMode:Profiles:1:Name"] = "PlayerB",
+                ["LocalBrowserMode:Profiles:1:DiscordUserId"] = "900000000000000002",
+                ["LocalBrowserMode:Profiles:1:Username"] = "لاعب B"
             });
         });
 

@@ -85,6 +85,11 @@ public static class ConfigurationValidationExtensions
 
         CheckSetting(errors, "ActivitiesIntegration:ServiceToken", configuration["ActivitiesIntegration:ServiceToken"], strict);
 
+        if (environment.IsProduction() && configuration.GetValue<bool>("LocalBrowserMode:Enabled"))
+        {
+            errors.Add("LocalBrowserMode:Enabled must be false in Production.");
+        }
+
         var admin = configuration.GetSection(AdminOptions.SectionName).Get<AdminOptions>() ?? new AdminOptions();
         CheckSetting(errors, "Admin:DiscordUserId", admin.DiscordUserId, strict);
 

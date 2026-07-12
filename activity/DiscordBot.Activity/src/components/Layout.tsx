@@ -3,10 +3,13 @@ import { useActivity } from '../context/ActivityProvider';
 import { getRuntimeConfigSummary, isActivityDiagnosticsEnabled, type ApiFailureDiagnostic } from '../lib/api';
 
 export function Layout() {
-  const { loading, error, diagnostic, refresh } = useActivity();
+  const { loading, error, diagnostic, refresh, identity } = useActivity();
   if (loading) return <main className="center-state"><div className="loader"/><h1>جاري تجهيز مركز الألعاب...</h1></main>;
   if (error) return <main className="center-state error-state"><span className="state-icon">⚠️</span><h1>تعذر فتح مركز الألعاب.</h1><p>{error}</p><button className="button primary" onClick={() => { void refresh(); }}>إعادة المحاولة</button><ActivityDiagnostics diagnostic={diagnostic} onRetry={refresh} /></main>;
-  return <div className="app-shell"><Outlet /></div>;
+  return <div className="app-shell">
+    {identity?.isLocalBrowserMode ? <div className="local-mode-banner">وضع الاختبار المحلي — {identity.username}</div> : null}
+    <Outlet />
+  </div>;
 }
 
 function ActivityDiagnostics({ diagnostic, onRetry }: { diagnostic: ApiFailureDiagnostic | null; onRetry: () => Promise<void> }) {
