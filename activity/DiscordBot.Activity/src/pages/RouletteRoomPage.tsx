@@ -65,7 +65,8 @@ export function RouletteRoomPage() {
     };
     const offReconnect = onActivitiesReconnected(restoreAfterReconnect);
     const offEvent = onRouletteEvent(roomId, evt => {
-      const snapshot = (evt as { payload?: RouletteRoom }).payload;
+      const payload = (evt as { payload?: RouletteRoom | { session?: RouletteRoom } }).payload;
+      const snapshot: RouletteRoom | undefined = payload && 'session' in payload ? payload.session : payload as RouletteRoom | undefined;
       if (snapshot?.id === roomId && !spinningRef.current) setRoom(snapshot);
     });
     void joinRouletteGameSession(roomId).catch(e => {

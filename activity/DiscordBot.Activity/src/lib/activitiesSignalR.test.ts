@@ -98,6 +98,19 @@ describe('activitiesSignalR', () => {
     expect(second).toHaveBeenCalledOnce();
   });
 
+  it('routes host-change snapshots to the active roulette room handler', async () => {
+    setActivitiesAccessToken('jwt-token');
+    const mod = await import('./activitiesSignalR');
+    await mod.connectActivitiesGameHub();
+    const handler = vi.fn();
+
+    mod.onRouletteEvent('game-1', handler);
+    instances[0].handlers.get('RouletteHostChanged')?.({ gameSessionId: 'game-1', session: { id: 'game-1', hostUserDiscordId: 'new-host' } });
+
+    expect(handler).toHaveBeenCalledOnce();
+    expect(handler.mock.calls[0][0]).toMatchObject({ type: 'RouletteHostChanged' });
+  });
+
   it('does not run reconnect callbacks during first connect or synthetic reconnected events', async () => {
     setActivitiesAccessToken('jwt-token');
     const mod = await import('./activitiesSignalR');

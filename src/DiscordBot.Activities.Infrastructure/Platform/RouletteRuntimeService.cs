@@ -219,7 +219,7 @@ public class RouletteRuntimeService(
     {
         var session = await LoadByGameSessionAsync(gameSessionId, ct);
         var scope = ValidateScope(session, guildDiscordId, channelDiscordId);
-        if (scope is not null) return OperationResult<RouletteSessionDto>.Fail(scope.Value.Message, scope.Value.Code);
+        if (scope is not null) return OperationResult<RouletteSessionDto>.Fail(scope.Value.Message, scope.Value.StatusCode, scope.Value.ErrorCode);
         await ExpireIfNeededAsync(session!, ct);
         return OperationResult<RouletteSessionDto>.Ok(Map(session!, userDiscordId));
     }
@@ -236,7 +236,7 @@ public class RouletteRuntimeService(
             .Include(x => x.Players)
             .FirstOrDefaultAsync(x => x.GameSessionId == gameSessionId, ct);
         var scope = ValidateScope(session, request.GuildDiscordId, request.ChannelDiscordId, request.ActivityInstanceId);
-        if (scope is not null) return OperationResult<RouletteSessionDto>.Fail(scope.Value.Message, scope.Value.Code);
+        if (scope is not null) return OperationResult<RouletteSessionDto>.Fail(scope.Value.Message, scope.Value.StatusCode, scope.Value.ErrorCode);
         var existing = session!.Players.FirstOrDefault(x => x.DiscordUserId == user.DiscordUserId);
         if (existing is not null && session.Status is RouletteRuntimeStates.WaitingForPlayers or RouletteRuntimeStates.BettingOpen)
         {
@@ -326,7 +326,7 @@ public class RouletteRuntimeService(
             .Include(x => x.Players)
             .FirstOrDefaultAsync(x => x.GameSessionId == gameSessionId, ct);
         var scope = ValidateScope(session, request.GuildDiscordId, request.ChannelDiscordId, request.ActivityInstanceId);
-        if (scope is not null) return OperationResult<RouletteSessionDto>.Fail(scope.Value.Message, scope.Value.Code);
+        if (scope is not null) return OperationResult<RouletteSessionDto>.Fail(scope.Value.Message, scope.Value.StatusCode, scope.Value.ErrorCode);
         if (!RouletteRuntimeStates.IsOpenForJoin(session!.Status))
         {
             if (RouletteRuntimeStates.IsTerminal(session.Status) && HasLeftEvent(session, userDiscordId))
@@ -348,6 +348,7 @@ public class RouletteRuntimeService(
         }
 
         var wasOwner = player.IsHost;
+        string? newHostUserDiscordId = null;
         db.GameEvents.Add(new GameEvent
         {
             GameSessionId = gameSessionId,
@@ -378,10 +379,12 @@ public class RouletteRuntimeService(
             }
             else
             {
+                await db.RoulettePlayers.Where(x => x.RouletteGameSessionId == session.Id).ExecuteUpdateAsync(setters => setters.SetProperty(x => x.IsHost, false), ct);
                 await db.RoulettePlayers.Where(x => x.Id == next.Id).ExecuteUpdateAsync(setters => setters.SetProperty(x => x.IsHost, true), ct);
                 await db.RouletteGameSessions.Where(x => x.GameSessionId == gameSessionId).ExecuteUpdateAsync(setters => setters
                     .SetProperty(x => x.HostUserDiscordId, next.DiscordUserId)
                     .SetProperty(x => x.HostUsername, next.Username), ct);
+                newHostUserDiscordId = next.DiscordUserId;
             }
         }
         await db.SaveChangesAsync(ct);
@@ -390,13 +393,25 @@ public class RouletteRuntimeService(
         var updated = await LoadByGameSessionAsync(gameSessionId, ct) ?? session;
         var dto = Map(updated, userDiscordId);
         await PublishAsync(dto.GameSessionId, "RoulettePlayerLeft", dto, ct);
+        if (wasOwner && !string.IsNullOrWhiteSpace(newHostUserDiscordId))
+        {
+            await PublishAsync(dto.GameSessionId, "RouletteHostChanged", new
+            {
+                gameSessionId = dto.GameSessionId,
+                previousHostDiscordUserId = userDiscordId,
+                newHostDiscordUserId = newHostUserDiscordId,
+                session = dto
+            }, ct);
+        }
         logger.LogInformation(
-            "Activities Roulette player left. GameSessionId={GameSessionId}, DiscordGuildId={GuildId}, ChannelId={ChannelId}, DiscordUserId={UserId}, IsOwner={IsOwner}, RemainingPlayerCount={RemainingPlayerCount}, NewSessionStatus={NewStatus}.",
+            "Activities Roulette player left. GameSessionId={GameSessionId}, DiscordGuildId={GuildId}, ChannelId={ChannelId}, DiscordUserId={UserId}, IsOwner={IsOwner}, PreviousHostDiscordUserId={PreviousHostDiscordUserId}, NewHostDiscordUserId={NewHostDiscordUserId}, RemainingPlayerCount={RemainingPlayerCount}, NewSessionStatus={NewStatus}.",
             gameSessionId,
             request.GuildDiscordId,
             request.ChannelDiscordId,
             userDiscordId,
             wasOwner,
+            wasOwner ? userDiscordId : null,
+            newHostUserDiscordId,
             remainingPlayers.Count,
             updated.Status);
         return OperationResult<RouletteSessionDto>.Ok(dto);
@@ -405,23 +420,108 @@ public class RouletteRuntimeService(
     public async Task<OperationResult<RouletteSessionDto>> StartSessionAsync(Guid gameSessionId, RouletteScopeRequest request, string userDiscordId, CancellationToken ct = default)
     {
         await using var transaction = await db.Database.BeginTransactionAsync(ct);
-        var session = await LoadByGameSessionAsync(gameSessionId, ct);
+        var session = await db.RouletteGameSessions.AsNoTracking()
+            .Include(x => x.GameSession).ThenInclude(x => x.ActivitySession)
+            .Include(x => x.GameSession).ThenInclude(x => x.Events)
+            .Include(x => x.Players)
+            .Include(x => x.Rounds)
+            .FirstOrDefaultAsync(x => x.GameSessionId == gameSessionId, ct);
         var scope = ValidateScope(session, request.GuildDiscordId, request.ChannelDiscordId, request.ActivityInstanceId);
-        if (scope is not null) return OperationResult<RouletteSessionDto>.Fail(scope.Value.Message, scope.Value.Code);
-        if (session!.HostUserDiscordId != userDiscordId) return OperationResult<RouletteSessionDto>.Fail("فقط صاحب الغرفة يقدر يبدأ اللعبة.", 403);
-        if (!RouletteRuntimeStates.IsOpenForJoin(session.Status)) return OperationResult<RouletteSessionDto>.Fail("هذه الجولة بدأت أو انتهت مسبقًا.", 409);
-        if (session.ExpiresAtUtc <= DateTimeOffset.UtcNow) return OperationResult<RouletteSessionDto>.Fail("انتهت مدة الانضمام لهذه الجولة.", 410);
-        if (session.Players.Count < session.MinPlayers) return OperationResult<RouletteSessionDto>.Fail($"تحتاج {session.MinPlayers} لاعبين على الأقل لبدء اللعبة.", 409);
-        Transition(session, RouletteRuntimeStates.BettingOpen);
-        session.GameSession.StartedAtUtc = DateTimeOffset.UtcNow;
-        session.StartedAtUtc = DateTimeOffset.UtcNow;
-        session.CurrentRound = 1;
-        session.CurrentTurnUserDiscordId = session.Players.OrderBy(x => x.Position).First(x => x.IsAlive).DiscordUserId;
-        session.PendingActionStatus = "None";
-        AddEvent(session.GameSession, 1, userDiscordId, null, "RouletteRoundStarted", Idempotency(request.IdempotencyKey, "start", gameSessionId, userDiscordId), new { message = "بدأت لعبة الروليت." });
-        await db.SaveChangesAsync(ct);
-        await transaction.CommitAsync(ct);
-        var dto = Map(session, userDiscordId);
+        if (scope is not null) return OperationResult<RouletteSessionDto>.Fail(scope.Value.Message, scope.Value.StatusCode, scope.Value.ErrorCode);
+        var actor = session!.Players.FirstOrDefault(x => x.DiscordUserId == userDiscordId);
+        var activePlayers = session.Players.Where(x => x.IsAlive).OrderBy(x => x.JoinedAtUtc).ThenBy(x => x.Position).ToList();
+        if (actor is null || !actor.IsAlive) return OperationResult<RouletteSessionDto>.Fail("أنت غير منضم لهذه الجولة.", 403, "roulette_player_not_in_session");
+        if (session.HostUserDiscordId != userDiscordId || !actor.IsHost) return OperationResult<RouletteSessionDto>.Fail("يمكن لمضيف الغرفة فقط بدء اللعبة.", 403, "roulette_only_host_can_start");
+        if (activePlayers.Count < session.MinPlayers) return OperationResult<RouletteSessionDto>.Fail($"تحتاج {session.MinPlayers} لاعبين على الأقل لبدء اللعبة.", 409, "roulette_not_enough_players");
+        var existingActiveRound = session.Rounds.OrderByDescending(x => x.RoundNumber).FirstOrDefault(x => x.CompletedAtUtc is null && x.Status is not "Completed" and not "Cancelled");
+        if (existingActiveRound is not null && !RouletteRuntimeStates.IsOpenForJoin(session.Status))
+        {
+            await transaction.CommitAsync(ct);
+            return OperationResult<RouletteSessionDto>.Ok(Map(session, userDiscordId));
+        }
+        if (!RouletteRuntimeStates.IsOpenForJoin(session.Status))
+        {
+            return OperationResult<RouletteSessionDto>.Fail("هذه الجولة بدأت أو انتهت مسبقًا.", 409, "roulette_session_not_startable");
+        }
+        if (session.ExpiresAtUtc <= DateTimeOffset.UtcNow) return OperationResult<RouletteSessionDto>.Fail("انتهت مدة الانضمام لهذه الجولة.", 410, "roulette_session_not_startable");
+        if (existingActiveRound is not null) return OperationResult<RouletteSessionDto>.Fail("توجد جولة نشطة مسبقًا.", 409, "roulette_round_already_active");
+
+        var now = DateTimeOffset.UtcNow;
+        var firstTurnUserId = activePlayers.First().DiscordUserId;
+        var updatedRows = await db.RouletteGameSessions
+            .Where(x => x.GameSessionId == gameSessionId && x.Status == RouletteRuntimeStates.WaitingForPlayers)
+            .ExecuteUpdateAsync(setters => setters
+                .SetProperty(x => x.Status, RouletteRuntimeStates.BettingOpen)
+                .SetProperty(x => x.StartedAtUtc, now)
+                .SetProperty(x => x.CurrentRound, 1)
+                .SetProperty(x => x.CurrentTurnUserDiscordId, firstTurnUserId)
+                .SetProperty(x => x.PendingActionStatus, "None")
+                .SetProperty(x => x.PendingTargetUserDiscordId, (string?)null)
+                .SetProperty(x => x.PendingActionExpiresAtUtc, (DateTimeOffset?)null)
+                .SetProperty(x => x.UpdatedAtUtc, now), ct);
+        if (updatedRows == 0)
+        {
+            await transaction.CommitAsync(ct);
+            var current = await LoadByGameSessionAsync(gameSessionId, ct);
+            if (current is not null && current.Status == RouletteRuntimeStates.BettingOpen && current.Rounds.Any(x => x.RoundNumber == 1))
+                return OperationResult<RouletteSessionDto>.Ok(Map(current, userDiscordId));
+            return OperationResult<RouletteSessionDto>.Fail("هذه الجولة بدأت أو انتهت مسبقًا.", 409, "roulette_session_not_startable");
+        }
+
+        await db.GameSessions.Where(x => x.Id == gameSessionId).ExecuteUpdateAsync(setters => setters
+            .SetProperty(x => x.Status, RouletteRuntimeStates.BettingOpen)
+            .SetProperty(x => x.StartedAtUtc, now)
+            .SetProperty(x => x.UpdatedAtUtc, now), ct);
+
+        db.RouletteRounds.Add(new RouletteRound
+        {
+            RouletteGameSessionId = session.Id,
+            RoundNumber = 1,
+            Status = "Active",
+            SpinnerUserDiscordId = firstTurnUserId,
+            ResultJson = "{}",
+            IdempotencyKey = Idempotency(request.IdempotencyKey, "start-round", gameSessionId, 1),
+            StartedAtUtc = now
+        });
+        db.GameEvents.Add(new GameEvent
+        {
+            GameSessionId = gameSessionId,
+            GameKey = GameKey,
+            EventType = "RouletteRoundStarted",
+            Status = "Processed",
+            PayloadJson = JsonSerializer.Serialize(new { round = 1, actor = userDiscordId, target = (string?)null, data = new { message = "بدأت لعبة الروليت." } }),
+            IdempotencyKey = Idempotency(request.IdempotencyKey, "start", gameSessionId, userDiscordId),
+            DiscordUserId = userDiscordId,
+            ProcessedAtUtc = now
+        });
+        try
+        {
+            await db.SaveChangesAsync(ct);
+            await transaction.CommitAsync(ct);
+        }
+        catch (DbUpdateException ex) when (IsUniqueViolation(ex))
+        {
+            await transaction.RollbackAsync(CancellationToken.None);
+            db.ChangeTracker.Clear();
+            var current = await LoadByGameSessionAsync(gameSessionId, ct);
+            if (current is not null && current.Status == RouletteRuntimeStates.BettingOpen)
+                return OperationResult<RouletteSessionDto>.Ok(Map(current, userDiscordId));
+            logger.LogWarning(ex, "Activities Roulette start hit a unique constraint without a started session. GameSessionId={GameSessionId}, UserId={UserId}.", gameSessionId, userDiscordId);
+            return OperationResult<RouletteSessionDto>.Fail("توجد جولة نشطة مسبقًا.", 409, "roulette_round_already_active");
+        }
+
+        db.ChangeTracker.Clear();
+        var updated = await LoadByGameSessionAsync(gameSessionId, ct) ?? session;
+        var dto = Map(updated, userDiscordId);
+        logger.LogInformation(
+            "Activities Roulette round started. GameSessionId={GameSessionId}, RoundNumber={RoundNumber}, AuthenticatedDiscordUserId={UserId}, CurrentHostDiscordUserId={HostUserId}, ActivePlayerCount={ActivePlayerCount}, PreviousSessionState={PreviousState}, NewSessionState={NewState}.",
+            gameSessionId,
+            1,
+            userDiscordId,
+            session.HostUserDiscordId,
+            activePlayers.Count,
+            session.Status,
+            updated.Status);
         await PublishAsync(dto.GameSessionId, "RouletteRoundStarted", dto, ct);
         return OperationResult<RouletteSessionDto>.Ok(dto);
     }
@@ -431,7 +531,7 @@ public class RouletteRuntimeService(
         await using var transaction = await db.Database.BeginTransactionAsync(ct);
         var session = await LoadByGameSessionAsync(gameSessionId, ct);
         var scope = ValidateScope(session, request.GuildDiscordId, request.ChannelDiscordId, request.ActivityInstanceId);
-        if (scope is not null) return OperationResult<RouletteSpinResultDto>.Fail(scope.Value.Message, scope.Value.Code);
+        if (scope is not null) return OperationResult<RouletteSpinResultDto>.Fail(scope.Value.Message, scope.Value.StatusCode, scope.Value.ErrorCode);
         if (session!.Status != RouletteRuntimeStates.BettingOpen) return OperationResult<RouletteSpinResultDto>.Fail("اللعبة غير جاهزة للتدوير.", 409);
         if (session.PendingActionStatus is "WaitingForPowerUp" or "AutoResolved") return OperationResult<RouletteSpinResultDto>.Fail("يوجد إجراء معلق، انتظر حتى يتم تنفيذ نتيجة العجلة.", 409);
         if (session.CurrentTurnUserDiscordId != userDiscordId) return OperationResult<RouletteSpinResultDto>.Fail("ليس دورك الآن.", 403);
@@ -457,18 +557,28 @@ public class RouletteRuntimeService(
             ResultType = "PendingElimination",
             CreatedAt = now
         });
-        session.Rounds.Add(new RouletteRound
+        var round = session.Rounds.FirstOrDefault(x => x.RoundNumber == session.CurrentRound);
+        if (round is null)
         {
-            RoundNumber = session.CurrentRound,
-            Status = "ResultGenerated",
-            SpinnerUserDiscordId = spinner.DiscordUserId,
-            TargetUserDiscordId = target.DiscordUserId,
-            SelectedIndex = selectedIndex,
-            ResultJson = session.LastSpinResultJson,
-            IdempotencyKey = Idempotency(request.IdempotencyKey, "spin", gameSessionId, userDiscordId, session.CurrentRound),
-            StartedAtUtc = now,
-            CompletedAtUtc = now
-        });
+            round = new RouletteRound
+            {
+                RoundNumber = session.CurrentRound,
+                IdempotencyKey = Idempotency(request.IdempotencyKey, "spin", gameSessionId, userDiscordId, session.CurrentRound)
+            };
+            session.Rounds.Add(round);
+        }
+        else if (round.CompletedAtUtc is not null || round.Status == "ResultGenerated")
+        {
+            return OperationResult<RouletteSpinResultDto>.Fail("تم تدوير العجلة لهذه الجولة مسبقًا.", 409, "roulette_round_already_active");
+        }
+
+        round.Status = "ResultGenerated";
+        round.SpinnerUserDiscordId = spinner.DiscordUserId;
+        round.TargetUserDiscordId = target.DiscordUserId;
+        round.SelectedIndex = selectedIndex;
+        round.ResultJson = session.LastSpinResultJson;
+        round.StartedAtUtc ??= now;
+        round.CompletedAtUtc = now;
         AddEvent(session.GameSession, session.CurrentRound, spinner.DiscordUserId, target.DiscordUserId, "RouletteRoundResult", Idempotency(null, "event-spin", gameSessionId, userDiscordId, session.CurrentRound), new { spinnerUsername = spinner.Username, targetUsername = target.Username, selectedIndex, message = $"🎡 العجلة اختارت {target.Username}. لا يملك خصائص متاحة في runtime الجديد." });
         await db.SaveChangesAsync(ct);
         await transaction.CommitAsync(ct);
@@ -483,7 +593,7 @@ public class RouletteRuntimeService(
         await using var transaction = await db.Database.BeginTransactionAsync(ct);
         var session = await LoadByGameSessionAsync(gameSessionId, ct);
         var scope = ValidateScope(session, request.GuildDiscordId, request.ChannelDiscordId, request.ActivityInstanceId);
-        if (scope is not null) return OperationResult<RouletteSessionDto>.Fail(scope.Value.Message, scope.Value.Code);
+        if (scope is not null) return OperationResult<RouletteSessionDto>.Fail(scope.Value.Message, scope.Value.StatusCode, scope.Value.ErrorCode);
         if (!RouletteRuntimeStates.IsPlayable(session!.Status)) return OperationResult<RouletteSessionDto>.Fail("اللعبة غير جارية حاليًا.", 409);
         if ((session.PendingActionStatus != "AutoResolved" && session.PendingActionStatus != "WaitingForPowerUp") || string.IsNullOrWhiteSpace(session.PendingTargetUserDiscordId))
             return OperationResult<RouletteSessionDto>.Ok(Map(session, userDiscordId));
@@ -509,7 +619,7 @@ public class RouletteRuntimeService(
     {
         var session = await LoadByGameSessionAsync(gameSessionId, ct);
         var scope = ValidateScope(session, request.GuildDiscordId, request.ChannelDiscordId, request.ActivityInstanceId);
-        if (scope is not null) return OperationResult<RouletteSessionDto>.Fail(scope.Value.Message, scope.Value.Code);
+        if (scope is not null) return OperationResult<RouletteSessionDto>.Fail(scope.Value.Message, scope.Value.StatusCode, scope.Value.ErrorCode);
         if (!session!.Players.Any(x => x.DiscordUserId == user.DiscordUserId)) return OperationResult<RouletteSessionDto>.Fail("أنت غير منضم لهذه الجولة.", 403);
         var activityPlayer = await db.ActivityPlayers.FirstOrDefaultAsync(x => x.ActivitySessionId == session.GameSession.ActivitySessionId && x.DiscordUserId == user.DiscordUserId, ct);
         if (activityPlayer is not null)
@@ -525,7 +635,7 @@ public class RouletteRuntimeService(
     {
         var session = await LoadByGameSessionAsync(gameSessionId, ct);
         var scope = ValidateScope(session, request.GuildDiscordId, request.ChannelDiscordId, request.ActivityInstanceId);
-        if (scope is not null) return OperationResult<RouletteBetDto>.Fail(scope.Value.Message, scope.Value.Code);
+        if (scope is not null) return OperationResult<RouletteBetDto>.Fail(scope.Value.Message, scope.Value.StatusCode, scope.Value.ErrorCode);
         if (session!.Status != RouletteRuntimeStates.BettingOpen) return OperationResult<RouletteBetDto>.Fail("لا يمكن تسجيل نية الرهان قبل بدء الجولة.", 409);
         if (!session.Players.Any(x => x.DiscordUserId == userDiscordId && x.IsAlive)) return OperationResult<RouletteBetDto>.Fail("أنت غير منضم لهذه الجولة.", 403);
         if (request.Amount < 0) return OperationResult<RouletteBetDto>.Fail("مبلغ الرهان غير صالح.", 400);
@@ -646,7 +756,7 @@ public class RouletteRuntimeService(
             .Include(x => x.Players)
             .FirstOrDefaultAsync(x => x.GameSessionId == gameSessionId, ct);
         var scope = ValidateScope(session, request.GuildDiscordId, request.ChannelDiscordId);
-        if (scope is not null) return OperationResult<PrepareRouletteJoinResponse>.Fail(scope.Value.Message, scope.Value.Code);
+        if (scope is not null) return OperationResult<PrepareRouletteJoinResponse>.Fail(scope.Value.Message, scope.Value.StatusCode, scope.Value.ErrorCode);
         if (!RouletteRuntimeStates.IsOpenForJoin(session!.Status)) return OperationResult<PrepareRouletteJoinResponse>.Fail("هذه الجولة لم تعد متاحة للانضمام.", 409, "roulette_session_already_closed");
         if (session.ExpiresAtUtc <= now) return OperationResult<PrepareRouletteJoinResponse>.Fail("انتهت مدة الانضمام لهذه الجولة.", 410, "roulette_session_already_closed");
         if (session.Players.Count >= session.MaxPlayers && session.Players.All(x => x.DiscordUserId != request.UserDiscordId)) return OperationResult<PrepareRouletteJoinResponse>.Fail("اكتمل عدد اللاعبين في هذه الجولة.", 409);
@@ -725,15 +835,15 @@ public class RouletteRuntimeService(
             .FirstOrDefaultAsync(x => x.GameSessionId == gameSessionId, ct);
     }
 
-    private static (string Message, int Code)? ValidateScope(RouletteGameSession? session, string guildDiscordId, string channelDiscordId, string? activityInstanceId = null)
+    private static (string Message, int StatusCode, string ErrorCode)? ValidateScope(RouletteGameSession? session, string guildDiscordId, string channelDiscordId, string? activityInstanceId = null)
     {
-        if (session is null) return ("غرفة الروليت غير موجودة.", 404);
-        if (session.GameSession.DiscordGuildId != guildDiscordId || session.GameSession.DiscordChannelId != channelDiscordId) return ("لا تملك صلاحية الوصول لهذه الغرفة.", 403);
+        if (session is null) return ("غرفة الروليت غير موجودة.", 404, "roulette_session_not_found");
+        if (session.GameSession.DiscordGuildId != guildDiscordId || session.GameSession.DiscordChannelId != channelDiscordId) return ("لا تملك صلاحية الوصول لهذه الغرفة.", 403, "roulette_scope_mismatch");
         var storedActivityInstanceId = session.GameSession.ActivitySession.DiscordActivityInstanceId;
         if (!string.IsNullOrWhiteSpace(storedActivityInstanceId)
             && !string.IsNullOrWhiteSpace(activityInstanceId)
             && !string.Equals(storedActivityInstanceId, activityInstanceId, StringComparison.Ordinal))
-            return ("لا تملك صلاحية الوصول لهذه الجلسة من Activity مختلف.", 403);
+            return ("لا تملك صلاحية الوصول لهذه الجلسة من Activity مختلف.", 403, "roulette_activity_instance_mismatch");
         return null;
     }
 
