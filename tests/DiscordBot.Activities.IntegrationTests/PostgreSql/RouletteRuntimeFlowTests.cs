@@ -145,6 +145,129 @@ public sealed class RouletteRuntimeFlowTests(PostgreSqlFixture pg) : IClassFixtu
     }
 
     [DockerFact]
+    public async Task Host_can_start_valid_room_and_round_is_persisted()
+    {
+        await using var setup = pg.CreateActivitiesContext();
+        var seed = await SeedWaitingRoomAsync(setup, includeOtherPlayer: true);
+        await using var db = pg.CreateActivitiesContext();
+        var service = Service(db);
+
+        var result = await service.StartSessionAsync(seed.GameSessionId, Scope(), HostId);
+
+        result.Succeeded.Should().BeTrue();
+        result.Value!.Status.Should().Be(RouletteRuntimeStates.BettingOpen);
+        result.Value.CurrentTurnUserDiscordId.Should().Be(HostId);
+        var roundCount = await db.RouletteRounds.CountAsync(x => x.RouletteGameSessionId == seed.Id && x.RoundNumber == 1);
+        roundCount.Should().Be(1);
+    }
+
+    [DockerFact]
+    public async Task Non_host_cannot_start_room()
+    {
+        await using var setup = pg.CreateActivitiesContext();
+        var seed = await SeedWaitingRoomAsync(setup, includeOtherPlayer: true);
+        await using var db = pg.CreateActivitiesContext();
+        var service = Service(db);
+
+        var result = await service.StartSessionAsync(seed.GameSessionId, Scope(), OtherId);
+
+        result.Succeeded.Should().BeFalse();
+        result.StatusCode.Should().Be(403);
+        result.Code.Should().Be("roulette_only_host_can_start");
+    }
+
+    [DockerFact]
+    public async Task Transferred_host_can_start_and_old_host_cannot_start_after_leaving()
+    {
+        await using var setup = pg.CreateActivitiesContext();
+        var seed = await SeedWaitingRoomAsync(setup, includeOtherPlayer: true);
+        await using var db = pg.CreateActivitiesContext();
+        var service = Service(db);
+
+        var leave = await service.LeaveSessionAsync(seed.GameSessionId, Scope(), HostId);
+        var oldHostStart = await service.StartSessionAsync(seed.GameSessionId, Scope(), HostId);
+        var newHostStart = await service.StartSessionAsync(seed.GameSessionId, Scope(), OtherId);
+
+        leave.Succeeded.Should().BeTrue();
+        leave.Value!.HostUserDiscordId.Should().Be(OtherId);
+        oldHostStart.Succeeded.Should().BeFalse();
+        oldHostStart.Code.Should().Be("roulette_player_not_in_session");
+        newHostStart.Succeeded.Should().BeFalse("only one player remains and min players is 2");
+        newHostStart.Code.Should().Be("roulette_not_enough_players");
+    }
+
+    [DockerFact]
+    public async Task Transferred_host_can_start_when_enough_players_remain()
+    {
+        await using var setup = pg.CreateActivitiesContext();
+        var thirdId = UniqueSnowflake();
+        var seed = await SeedWaitingRoomAsync(setup, includeOtherPlayer: true, thirdPlayerId: thirdId);
+        await using var db = pg.CreateActivitiesContext();
+        var service = Service(db);
+
+        var leave = await service.LeaveSessionAsync(seed.GameSessionId, Scope(), HostId);
+        var start = await service.StartSessionAsync(seed.GameSessionId, Scope(), OtherId);
+
+        leave.Value!.HostUserDiscordId.Should().Be(OtherId);
+        leave.Value.Players.Count(x => x.IsHost).Should().Be(1);
+        start.Succeeded.Should().BeTrue();
+        start.Value!.Status.Should().Be(RouletteRuntimeStates.BettingOpen);
+        start.Value.HostUserDiscordId.Should().Be(OtherId);
+    }
+
+    [DockerFact]
+    public async Task Duplicate_start_is_idempotent_and_creates_one_round()
+    {
+        await using var setup = pg.CreateActivitiesContext();
+        var seed = await SeedWaitingRoomAsync(setup, includeOtherPlayer: true);
+        await using var db = pg.CreateActivitiesContext();
+        var service = Service(db);
+
+        var first = await service.StartSessionAsync(seed.GameSessionId, Scope(), HostId);
+        var second = await service.StartSessionAsync(seed.GameSessionId, Scope(), HostId);
+
+        first.Succeeded.Should().BeTrue();
+        second.Succeeded.Should().BeTrue();
+        var roundCount = await db.RouletteRounds.CountAsync(x => x.RouletteGameSessionId == seed.Id && x.RoundNumber == 1);
+        roundCount.Should().Be(1);
+    }
+
+    [DockerFact]
+    public async Task Concurrent_start_requests_create_one_round_without_500()
+    {
+        await using var setup = pg.CreateActivitiesContext();
+        var seed = await SeedWaitingRoomAsync(setup, includeOtherPlayer: true);
+        await using var firstDb = pg.CreateActivitiesContext();
+        await using var secondDb = pg.CreateActivitiesContext();
+        var first = Service(firstDb);
+        var second = Service(secondDb);
+
+        var results = await Task.WhenAll(
+            first.StartSessionAsync(seed.GameSessionId, Scope(), HostId),
+            second.StartSessionAsync(seed.GameSessionId, Scope(), HostId));
+
+        results.Should().OnlyContain(x => x.Succeeded);
+        await using var verify = pg.CreateActivitiesContext();
+        var roundCount = await verify.RouletteRounds.CountAsync(x => x.RouletteGameSessionId == seed.Id && x.RoundNumber == 1);
+        roundCount.Should().Be(1);
+    }
+
+    [DockerFact]
+    public async Task Insufficient_players_returns_structured_error_not_500()
+    {
+        await using var setup = pg.CreateActivitiesContext();
+        var seed = await SeedWaitingRoomAsync(setup);
+        await using var db = pg.CreateActivitiesContext();
+        var service = Service(db);
+
+        var result = await service.StartSessionAsync(seed.GameSessionId, Scope(), HostId);
+
+        result.Succeeded.Should().BeFalse();
+        result.StatusCode.Should().Be(409);
+        result.Code.Should().Be("roulette_not_enough_players");
+    }
+
+    [DockerFact]
     public async Task Unauthorized_leave_returns_structured_404_not_500()
     {
         await using var setup = pg.CreateActivitiesContext();
@@ -174,7 +297,7 @@ public sealed class RouletteRuntimeFlowTests(PostgreSqlFixture pg) : IClassFixtu
 
     private static RouletteRuntimeService Service(ActivitiesDbContext db) => new(db, new FakePlatformApiClient(), new FakeRealtimePublisher(), NullLogger<RouletteRuntimeService>.Instance);
 
-    private static async Task<ActivityRouletteGameSession> SeedWaitingRoomAsync(ActivitiesDbContext db, bool includeOtherPlayer = false)
+    private static async Task<ActivityRouletteGameSession> SeedWaitingRoomAsync(ActivitiesDbContext db, bool includeOtherPlayer = false, string? thirdPlayerId = null)
     {
         var activity = new ActivitySessionEntity
         {
@@ -205,6 +328,7 @@ public sealed class RouletteRuntimeFlowTests(PostgreSqlFixture pg) : IClassFixtu
         };
         roulette.Players.Add(new ActivityRoulettePlayer { DiscordUserId = HostId, Username = "محمد", IsHost = true, Position = 1, JoinedAtUtc = DateTimeOffset.UtcNow.AddSeconds(-10) });
         if (includeOtherPlayer) roulette.Players.Add(new ActivityRoulettePlayer { DiscordUserId = OtherId, Username = "نايف", Position = 2, JoinedAtUtc = DateTimeOffset.UtcNow });
+        if (!string.IsNullOrWhiteSpace(thirdPlayerId)) roulette.Players.Add(new ActivityRoulettePlayer { DiscordUserId = thirdPlayerId, Username = "سعود", Position = 3, JoinedAtUtc = DateTimeOffset.UtcNow.AddSeconds(1) });
         db.RouletteGameSessions.Add(roulette);
         await db.SaveChangesAsync();
         return roulette;

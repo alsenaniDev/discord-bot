@@ -2,7 +2,7 @@ import * as signalR from '@microsoft/signalr';
 import { getActivitiesAccessToken } from './api';
 
 const configuredActivitiesBase = (import.meta.env.VITE_ACTIVITIES_API_BASE_URL as string | undefined)?.trim().replace(/\/$/, '') ?? '';
-const rouletteEventNames = ['RouletteSessionUpdated', 'RoulettePlayerJoined', 'RoulettePlayerLeft', 'RouletteRoundStarted', 'RouletteRoundResult', 'RouletteRoundSettled'];
+const rouletteEventNames = ['RouletteSessionUpdated', 'RoulettePlayerJoined', 'RoulettePlayerLeft', 'RouletteHostChanged', 'RouletteRoundStarted', 'RouletteRoundResult', 'RouletteRoundSettled'];
 
 export type ActivitiesGameEventHandler<T = unknown> = (payload: T) => void;
 export type ConnectionPhase = 'idle' | 'connecting' | 'connected' | 'disconnected' | 'reconnecting' | 'restored';
