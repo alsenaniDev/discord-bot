@@ -5,12 +5,16 @@ const configuredActivitiesBase = (import.meta.env.VITE_ACTIVITIES_API_BASE_URL a
 const rouletteEventNames = ['RouletteSessionUpdated', 'RoulettePlayerJoined', 'RoulettePlayerLeft', 'RouletteRoundStarted', 'RouletteRoundResult', 'RouletteRoundSettled'];
 
 export type ActivitiesGameEventHandler<T = unknown> = (payload: T) => void;
+export type ConnectionPhase = 'idle' | 'connecting' | 'connected' | 'disconnected' | 'reconnecting' | 'restored';
 type ReconnectHandler = () => Promise<void> | void;
 
 let connection: signalR.HubConnection | null = null;
 const rouletteHandlers = new Map<string, ActivitiesGameEventHandler>();
 const reconnectHandlers = new Set<ReconnectHandler>();
 let reconnectHooksRegistered = false;
+let connectionPhase: ConnectionPhase = 'idle';
+let hasConnectedBefore = false;
+let realReconnectPending = false;
 
 export async function connectActivitiesGameHub(): Promise<signalR.HubConnection> {
   if (!configuredActivitiesBase) throw new Error('لم يتم إعداد رابط Activities API.');
@@ -20,6 +24,7 @@ export async function connectActivitiesGameHub(): Promise<signalR.HubConnection>
     return connection;
   }
 
+  connectionPhase = 'connecting';
   connection = new signalR.HubConnectionBuilder()
     .withUrl(`${configuredActivitiesBase}/hubs/games`, {
       accessTokenFactory: () => {
@@ -42,14 +47,29 @@ export async function connectActivitiesGameHub(): Promise<signalR.HubConnection>
 
   if (!reconnectHooksRegistered) {
     reconnectHooksRegistered = true;
+    connection.onreconnecting(() => {
+      if (hasConnectedBefore) realReconnectPending = true;
+      connectionPhase = 'reconnecting';
+    });
     connection.onreconnected(async () => {
+      const shouldRestore = hasConnectedBefore && realReconnectPending;
+      connectionPhase = shouldRestore ? 'restored' : 'connected';
+      realReconnectPending = false;
+      if (!shouldRestore) return;
       for (const handler of reconnectHandlers) {
         try { await handler(); } catch { /* Individual screens surface reconnect failures. */ }
       }
+      connectionPhase = 'connected';
+    });
+    connection.onclose(() => {
+      connectionPhase = 'disconnected';
+      realReconnectPending = false;
     });
   }
 
   await connection.start();
+  connectionPhase = 'connected';
+  hasConnectedBefore = true;
   return connection;
 }
 
@@ -78,10 +98,17 @@ export function onActivitiesReconnected(handler: ReconnectHandler): () => void {
   return () => reconnectHandlers.delete(handler);
 }
 
+export function getActivitiesConnectionLifecycle() {
+  return { phase: connectionPhase, hasConnectedBefore };
+}
+
 export async function disconnectActivitiesGameHub(): Promise<void> {
   rouletteHandlers.clear();
   reconnectHandlers.clear();
   reconnectHooksRegistered = false;
+  connectionPhase = 'idle';
+  hasConnectedBefore = false;
+  realReconnectPending = false;
   if (!connection) return;
   const current = connection;
   connection = null;

@@ -8,6 +8,7 @@ using DiscordBot.Activities.Infrastructure.Data;
 using DiscordBot.Shared;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Npgsql;
 
 namespace DiscordBot.Activities.Infrastructure.Platform;
 
@@ -185,9 +186,32 @@ public class RouletteRuntimeService(
             return OperationResult<PendingRouletteIntentDto?>.Ok(null);
         }
 
-        intent.Status = "Consumed";
-        intent.ConsumedAtUtc = now;
-        await db.SaveChangesAsync(ct);
+        var consumed = await db.RouletteJoinIntents
+            .Where(x => x.Id == intent.Id && x.Status == "Pending" && x.ExpiresAtUtc > now)
+            .ExecuteUpdateAsync(setters => setters
+                .SetProperty(x => x.Status, "Consumed")
+                .SetProperty(x => x.ConsumedAtUtc, now)
+                .SetProperty(x => x.UpdatedAtUtc, now), ct);
+        if (consumed == 0)
+        {
+            logger.LogInformation(
+                "Activities Roulette join intent was already consumed or expired. JoinIntentId={JoinIntentId}, GameSessionId={GameSessionId}, GuildId={GuildId}, ChannelId={ChannelId}, UserId={UserId}.",
+                intent.Id,
+                intent.GameSessionId,
+                guildDiscordId,
+                channelDiscordId,
+                userDiscordId);
+            return OperationResult<PendingRouletteIntentDto?>.Fail("تم استخدام رابط الانضمام مسبقًا.", 409, "roulette_join_intent_already_consumed");
+        }
+
+        logger.LogInformation(
+            "Consumed Activities Roulette join intent. JoinIntentId={JoinIntentId}, GameSessionId={GameSessionId}, GuildId={GuildId}, ChannelId={ChannelId}, UserId={UserId}, ExpiresAtUtc={ExpiresAtUtc}.",
+            intent.Id,
+            intent.GameSessionId,
+            guildDiscordId,
+            channelDiscordId,
+            userDiscordId,
+            intent.ExpiresAtUtc);
         return OperationResult<PendingRouletteIntentDto?>.Ok(new PendingRouletteIntentDto { RoomId = intent.GameSessionId, GameSessionId = intent.GameSessionId });
     }
 
@@ -206,7 +230,11 @@ public class RouletteRuntimeService(
         if (!access.Succeeded) return OperationResult<RouletteSessionDto>.Fail(access.Error!, access.StatusCode);
 
         await using var transaction = await db.Database.BeginTransactionAsync(ct);
-        var session = await LoadByGameSessionAsync(gameSessionId, ct);
+        var session = await db.RouletteGameSessions.AsNoTracking()
+            .Include(x => x.GameSession).ThenInclude(x => x.ActivitySession)
+            .Include(x => x.GameSession).ThenInclude(x => x.Events)
+            .Include(x => x.Players)
+            .FirstOrDefaultAsync(x => x.GameSessionId == gameSessionId, ct);
         var scope = ValidateScope(session, request.GuildDiscordId, request.ChannelDiscordId, request.ActivityInstanceId);
         if (scope is not null) return OperationResult<RouletteSessionDto>.Fail(scope.Value.Message, scope.Value.Code);
         var existing = session!.Players.FirstOrDefault(x => x.DiscordUserId == user.DiscordUserId);
@@ -218,16 +246,22 @@ public class RouletteRuntimeService(
         if (!RouletteRuntimeStates.IsOpenForJoin(session.Status)) return OperationResult<RouletteSessionDto>.Fail("هذه الجولة لم تعد متاحة للانضمام.", 409);
         if (session.ExpiresAtUtc <= DateTimeOffset.UtcNow)
         {
-            Transition(session, RouletteRuntimeStates.Expired);
-            await db.SaveChangesAsync(ct);
+            var now = DateTimeOffset.UtcNow;
+            await db.RouletteGameSessions.Where(x => x.GameSessionId == gameSessionId).ExecuteUpdateAsync(setters => setters
+                .SetProperty(x => x.Status, RouletteRuntimeStates.Expired)
+                .SetProperty(x => x.UpdatedAtUtc, now), ct);
+            await db.GameSessions.Where(x => x.Id == gameSessionId).ExecuteUpdateAsync(setters => setters
+                .SetProperty(x => x.Status, RouletteRuntimeStates.Expired)
+                .SetProperty(x => x.UpdatedAtUtc, now), ct);
             await transaction.CommitAsync(ct);
-            return OperationResult<RouletteSessionDto>.Fail("انتهت مدة الانضمام لهذه الجولة.", 410);
+            return OperationResult<RouletteSessionDto>.Fail("انتهت مدة الانضمام لهذه الجولة.", 410, "roulette_session_closed");
         }
         if (session.Players.Count >= session.MaxPlayers) return OperationResult<RouletteSessionDto>.Fail("اكتمل عدد اللاعبين في هذه الجولة.", 409);
 
         var cleanName = CleanUsername(user.Username, user.DiscordUserId);
-        session.Players.Add(new RoulettePlayer
+        db.RoulettePlayers.Add(new RoulettePlayer
         {
+            RouletteGameSessionId = session.Id,
             DiscordUserId = user.DiscordUserId,
             Username = cleanName,
             DisplayName = cleanName,
@@ -235,11 +269,50 @@ public class RouletteRuntimeService(
             Position = session.Players.Count + 1,
             JoinedAtUtc = DateTimeOffset.UtcNow
         });
-        AddEvent(session.GameSession, 0, user.DiscordUserId, null, "RoulettePlayerJoined", Idempotency(request.IdempotencyKey, "join", gameSessionId, user.DiscordUserId), new { message = "انضم لاعب للغرفة." });
-        await db.SaveChangesAsync(ct);
-        await transaction.CommitAsync(ct);
+        db.GameEvents.Add(new GameEvent
+        {
+            GameSessionId = gameSessionId,
+            GameKey = GameKey,
+            EventType = "RoulettePlayerJoined",
+            Status = "Processed",
+            PayloadJson = JsonSerializer.Serialize(new { round = 0, actor = user.DiscordUserId, target = (string?)null, data = new { message = "انضم لاعب للغرفة." } }),
+            IdempotencyKey = Idempotency(request.IdempotencyKey, "join", gameSessionId, user.DiscordUserId),
+            DiscordUserId = user.DiscordUserId,
+            ProcessedAtUtc = DateTimeOffset.UtcNow
+        });
+        try
+        {
+            await db.SaveChangesAsync(ct);
+            await transaction.CommitAsync(ct);
+        }
+        catch (DbUpdateException ex) when (IsUniqueViolation(ex))
+        {
+            await transaction.RollbackAsync(CancellationToken.None);
+            db.ChangeTracker.Clear();
+            var current = await LoadByGameSessionAsync(gameSessionId, ct);
+            if (current?.Players.Any(x => x.DiscordUserId == user.DiscordUserId) == true)
+            {
+                logger.LogInformation(
+                    "Activities Roulette duplicate join returned existing membership. GameSessionId={GameSessionId}, GuildId={GuildId}, ChannelId={ChannelId}, UserId={UserId}.",
+                    gameSessionId,
+                    request.GuildDiscordId,
+                    request.ChannelDiscordId,
+                    user.DiscordUserId);
+                return OperationResult<RouletteSessionDto>.Ok(Map(current, user.DiscordUserId));
+            }
 
-        var dto = Map(session, user.DiscordUserId);
+            logger.LogWarning(
+                ex,
+                "Activities Roulette join unique constraint failed but no existing player was found. GameSessionId={GameSessionId}, GuildId={GuildId}, ChannelId={ChannelId}, UserId={UserId}.",
+                gameSessionId,
+                request.GuildDiscordId,
+                request.ChannelDiscordId,
+                user.DiscordUserId);
+            return OperationResult<RouletteSessionDto>.Fail("تعذر الانضمام لهذه الجولة الآن.", 409, "roulette_join_failed");
+        }
+
+        var updated = await LoadByGameSessionAsync(gameSessionId, ct) ?? session;
+        var dto = Map(updated, user.DiscordUserId);
         await PublishAsync(dto.GameSessionId, "RoulettePlayerJoined", dto, ct);
         return OperationResult<RouletteSessionDto>.Ok(dto);
     }
@@ -872,4 +945,5 @@ public class RouletteRuntimeService(
     private static string CleanUsername(string value, string fallback) => Limit(string.IsNullOrWhiteSpace(value) ? fallback : value.Trim(), 80);
     private static string Limit(string value, int max) => value[..Math.Min(value.Length, max)];
     private static string? LimitNullable(string? value, int max) => string.IsNullOrWhiteSpace(value) ? null : Limit(value.Trim(), max);
+    private static bool IsUniqueViolation(DbUpdateException ex) => ex.InnerException is PostgresException { SqlState: PostgresErrorCodes.UniqueViolation };
 }

@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { RouletteWheel } from '../components/roulette/RouletteWheel';
 import { getRouletteCapabilities, getRouletteRoom, getStore, joinRouletteRoom, leaveRouletteRoom, reconnectRouletteRoom, resolveRoulettePendingAction, spinRoulette, startRouletteRoom, useRoulettePowerUp } from '../lib/api';
 import { joinRouletteGameSession, onActivitiesReconnected, onRouletteEvent } from '../lib/activitiesSignalR';
@@ -23,20 +23,34 @@ function PlayerToken({ player, current, pending }: { player: RoulettePlayer; cur
 }
 
 export function RouletteRoomPage() {
-  const { roomId = '' } = useParams(); const { identity } = useActivity(); const navigate = useNavigate();
+  const { roomId = '' } = useParams(); const { identity } = useActivity(); const navigate = useNavigate(); const location = useLocation();
   const [room, setRoom] = useState<RouletteRoom | null>(null); const [inventory, setInventory] = useState<PowerUpStoreItem[]>([]); const [balance, setBalance] = useState(0); const [busy, setBusy] = useState(false); const [error, setError] = useState(''); const [event, setEvent] = useState(''); const [now, setNow] = useState(Date.now()); const [spinning, setSpinning] = useState(false); const [flash, setFlash] = useState(''); const [spinOrder, setSpinOrder] = useState<RoulettePlayer[] | null>(null); const [spinSelectedIndex, setSpinSelectedIndex] = useState<number | null>(null);
   const [capabilities, setCapabilities] = useState<RouletteRuntimeCapabilities>({ runtimeVersion: 'legacy', supportsWalletBets: true, supportsPowerUps: true, supportsReconnect: false });
   const resolvingRef = useRef(false);
   const spinningRef = useRef(false);
   const queuedRoomRef = useRef<RouletteRoom | null>(null);
+  const entryMessageShownRef = useRef(false);
+  const reconnectRestoreInFlightRef = useRef(false);
   const load = async () => { if (!identity || !roomId) return; try { const value = await getRouletteRoom(identity.accessToken, roomId, identity.guildId, identity.channelId); if (spinningRef.current) queuedRoomRef.current = value; else setRoom(value); try { const store = await getStore(identity.accessToken, identity.guildId); setInventory(store.items); setBalance(store.balance); } catch { /* Keep room usable if store refresh fails. */ } } catch (e) { setError(e instanceof Error ? e.message : 'تعذر تحميل الغرفة.'); } };
   useEffect(() => { void load(); }, [identity, roomId]);
+  useEffect(() => {
+    if (entryMessageShownRef.current) return;
+    const state = location.state as { entryMode?: 'InitialCreate' | 'InitialJoin' | 'InitialLoad' | 'Reconnect' | 'RefreshRestore' } | null;
+    if (state?.entryMode === 'InitialCreate') {
+      entryMessageShownRef.current = true;
+      setEvent('تم إنشاء الغرفة بنجاح');
+    } else if (state?.entryMode === 'InitialJoin') {
+      entryMessageShownRef.current = true;
+      setEvent('تم الانضمام للتحدي');
+    }
+  }, [location.state]);
   useEffect(() => { if (!identity) return; getRouletteCapabilities(identity.accessToken, identity.guildId).then(setCapabilities).catch(() => undefined); }, [identity]);
   useEffect(() => {
     if (!identity || !roomId || !capabilities.supportsReconnect) return;
     let active = true;
-    const reconnect = async () => {
-      if (!active) return;
+    const restoreAfterReconnect = async () => {
+      if (!active || reconnectRestoreInFlightRef.current) return;
+      reconnectRestoreInFlightRef.current = true;
       try {
         const snapshot = await reconnectRouletteRoom(identity.accessToken, roomId, identity.guildId, identity.channelId);
         if (!active) return;
@@ -45,14 +59,18 @@ export function RouletteRoomPage() {
         setEvent(snapshot.status === 'Completed' ? 'تمت استعادة نتيجة اللعبة.' : 'تمت استعادة الاتصال بالغرفة.');
       } catch (e) {
         if (active) setError(e instanceof Error ? e.message : 'تعذر استعادة الاتصال بالغرفة.');
+      } finally {
+        reconnectRestoreInFlightRef.current = false;
       }
     };
-    const offReconnect = onActivitiesReconnected(reconnect);
+    const offReconnect = onActivitiesReconnected(restoreAfterReconnect);
     const offEvent = onRouletteEvent(roomId, evt => {
       const snapshot = (evt as { payload?: RouletteRoom }).payload;
       if (snapshot?.id === roomId && !spinningRef.current) setRoom(snapshot);
     });
-    reconnect();
+    void joinRouletteGameSession(roomId).catch(e => {
+      if (active) setError(e instanceof Error ? e.message : 'تعذر الاتصال بتحديثات الروليت المباشرة.');
+    });
     return () => { active = false; offReconnect(); offEvent(); };
   }, [identity, roomId, capabilities.supportsReconnect]);
   useEffect(() => { const id = window.setInterval(() => setNow(Date.now()), 1000); return () => window.clearInterval(id); }, []);

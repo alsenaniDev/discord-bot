@@ -71,6 +71,44 @@ public sealed class RouletteRuntimeFlowTests(PostgreSqlFixture pg) : IClassFixtu
     }
 
     [DockerFact]
+    public async Task Valid_second_player_join_succeeds_from_consumed_intent()
+    {
+        await using var setup = pg.CreateActivitiesContext();
+        var seed = await SeedWaitingRoomAsync(setup);
+        await using var db = pg.CreateActivitiesContext();
+        var service = Service(db);
+
+        var prepared = await service.PrepareJoinAsync(seed.GameSessionId, new PrepareRouletteJoinRequest { GuildDiscordId = GuildId, ChannelDiscordId = ChannelId, UserDiscordId = OtherId, Username = "نايف" });
+        var intent = await service.ConsumePendingIntentAsync(GuildId, ChannelId, OtherId);
+        var joined = await service.JoinSessionAsync(intent.Value!.GameSessionId, Scope(), User(OtherId, "نايف"));
+
+        prepared.Succeeded.Should().BeTrue();
+        intent.Succeeded.Should().BeTrue();
+        joined.Succeeded.Should().BeTrue();
+        joined.Value!.Players.Should().Contain(x => x.UserDiscordId == OtherId);
+    }
+
+    [DockerFact]
+    public async Task Concurrent_duplicate_join_returns_existing_membership_not_500()
+    {
+        await using var setup = pg.CreateActivitiesContext();
+        var seed = await SeedWaitingRoomAsync(setup);
+        await using var firstDb = pg.CreateActivitiesContext();
+        await using var secondDb = pg.CreateActivitiesContext();
+        var first = Service(firstDb);
+        var second = Service(secondDb);
+
+        var results = await Task.WhenAll(
+            first.JoinSessionAsync(seed.GameSessionId, Scope(), User(OtherId, "نايف")),
+            second.JoinSessionAsync(seed.GameSessionId, Scope(), User(OtherId, "نايف")));
+
+        results.Should().OnlyContain(x => x.Succeeded);
+        await using var verify = pg.CreateActivitiesContext();
+        var joinedCount = await verify.RoulettePlayers.CountAsync(x => x.RouletteGameSessionId == seed.Id && x.DiscordUserId == OtherId);
+        joinedCount.Should().Be(1);
+    }
+
+    [DockerFact]
     public async Task Only_player_leaves_room_without_500_and_duplicate_leave_is_idempotent()
     {
         await using var setup = pg.CreateActivitiesContext();

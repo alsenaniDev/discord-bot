@@ -14,6 +14,7 @@ const roulettePilotGuildIds = new Set(((import.meta.env.VITE_ACTIVITIES_ROULETTE
 const url = (path: string, base = configuredBase) => base === '/api' && path.startsWith('/api/') ? path : `${base}${path}`;
 let activitiesAccessToken: string | null = null;
 let activityRequestContext: Pick<RequestMeta, 'guildId' | 'channelId' | 'activityInstanceId'> = {};
+let pendingRouletteIntentFlight: { key: string; promise: Promise<PendingRouletteIntent | null> } | null = null;
 
 export interface ApiFailureDiagnostic {
   correlationId: string;
@@ -191,7 +192,18 @@ export const useRoulettePowerUp = (token: string, roomId: string, guildDiscordId
   return request<RouletteRoom>(`/api/games/activity/roulette/rooms/${roomId}/use-power-up`, token, { method: 'POST', body: JSON.stringify({ guildDiscordId, channelDiscordId, powerUpKey }) });
 };
 export const resolveRoulettePendingAction = (token: string, roomId: string, guildDiscordId: string, channelDiscordId: string) => rouletteRequest<RouletteRoom>(token, guildDiscordId, `/api/games/activity/roulette/rooms/${roomId}/resolve-pending-action`, `/api/roulette/sessions/${roomId}/resolve-pending-action`, { method: 'POST', body: rouletteScope(guildDiscordId, channelDiscordId) });
-export const consumePendingRouletteIntent = (token: string, guildDiscordId: string, channelDiscordId: string) => rouletteRequest<PendingRouletteIntent | null>(token, guildDiscordId, `/api/games/activity/roulette/pending-intent?guildDiscordId=${encodeURIComponent(guildDiscordId)}&channelDiscordId=${encodeURIComponent(channelDiscordId)}`, `/api/roulette/pending-intent?guildDiscordId=${encodeURIComponent(guildDiscordId)}&channelDiscordId=${encodeURIComponent(channelDiscordId)}`);
+export const consumePendingRouletteIntent = (token: string, guildDiscordId: string, channelDiscordId: string) => {
+  const key = `${guildDiscordId}:${channelDiscordId}`;
+  if (pendingRouletteIntentFlight?.key === key) return pendingRouletteIntentFlight.promise;
+  const promise = rouletteRequest<PendingRouletteIntent | null>(token, guildDiscordId, `/api/games/activity/roulette/pending-intent?guildDiscordId=${encodeURIComponent(guildDiscordId)}&channelDiscordId=${encodeURIComponent(channelDiscordId)}`, `/api/roulette/pending-intent?guildDiscordId=${encodeURIComponent(guildDiscordId)}&channelDiscordId=${encodeURIComponent(channelDiscordId)}`);
+  pendingRouletteIntentFlight = { key, promise };
+  const reset = () => {
+    if (pendingRouletteIntentFlight?.promise === promise) pendingRouletteIntentFlight = null;
+  };
+  promise.then(reset, reset);
+  return promise;
+};
+export const resetRouletteIntentSingleFlightForTests = () => { pendingRouletteIntentFlight = null; };
 export const getRouletteCapabilities = (token: string, guildDiscordId: string) =>
   rouletteRuntime(guildDiscordId) === 'activities'
     ? request<RouletteRuntimeCapabilities>('/api/roulette/capabilities', activitiesAccessToken ?? token, undefined, configuredActivitiesBase)
