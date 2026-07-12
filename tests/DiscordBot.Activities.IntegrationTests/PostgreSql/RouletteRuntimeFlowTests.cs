@@ -6,10 +6,12 @@ using DiscordBot.Activities.Application.Abstractions;
 using DiscordBot.Activities.Application.Models;
 using DiscordBot.Activities.Domain.Roulette;
 using DiscordBot.Activities.Infrastructure.Data;
+using DiscordBot.Activities.Infrastructure.Options;
 using DiscordBot.Activities.Infrastructure.Platform;
 using FluentAssertions;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging.Abstractions;
+using Microsoft.Extensions.Options;
 using Xunit;
 
 namespace DiscordBot.Activities.IntegrationTests.PostgreSql;
@@ -268,6 +270,70 @@ public sealed class RouletteRuntimeFlowTests(PostgreSqlFixture pg) : IClassFixtu
     }
 
     [DockerFact]
+    public async Task Previous_day_waiting_room_is_expired_and_not_returned_by_my_active()
+    {
+        await using var setup = pg.CreateActivitiesContext();
+        var hostId = UniqueSnowflake();
+        var otherId = UniqueSnowflake();
+        var seed = await SeedWaitingRoomAsync(setup, includeOtherPlayer: true, hostId: hostId, otherId: otherId);
+        await setup.RouletteGameSessions.Where(x => x.Id == seed.Id).ExecuteUpdateAsync(setters => setters
+            .SetProperty(x => x.ExpiresAtUtc, DateTimeOffset.UtcNow.AddDays(-1))
+            .SetProperty(x => x.UpdatedAtUtc, DateTimeOffset.UtcNow.AddDays(-1)));
+        await setup.GameSessions.Where(x => x.Id == seed.GameSessionId).ExecuteUpdateAsync(setters => setters.SetProperty(x => x.UpdatedAtUtc, DateTimeOffset.UtcNow.AddDays(-1)));
+        await using var db = pg.CreateActivitiesContext();
+        var service = Service(db);
+
+        var result = await service.GetMyActiveSessionAsync(GuildId, ChannelId, hostId);
+
+        result.Succeeded.Should().BeTrue();
+        result.Value!.HasRoom.Should().BeFalse();
+        result.Value.ResumeAllowed.Should().BeFalse();
+        var stored = await db.RouletteGameSessions.AsNoTracking().SingleAsync(x => x.Id == seed.Id);
+        stored.Status.Should().Be(RouletteRuntimeStates.Expired);
+    }
+
+    [DockerFact]
+    public async Task Inactive_in_progress_room_is_abandoned_and_not_resumed()
+    {
+        await using var setup = pg.CreateActivitiesContext();
+        var hostId = UniqueSnowflake();
+        var otherId = UniqueSnowflake();
+        var seed = await SeedWaitingRoomAsync(setup, includeOtherPlayer: true, hostId: hostId, otherId: otherId);
+        await setup.RouletteGameSessions.Where(x => x.Id == seed.Id).ExecuteUpdateAsync(setters => setters
+            .SetProperty(x => x.Status, RouletteRuntimeStates.BettingOpen)
+            .SetProperty(x => x.StartedAtUtc, DateTimeOffset.UtcNow.AddDays(-1))
+            .SetProperty(x => x.UpdatedAtUtc, DateTimeOffset.UtcNow.AddDays(-1)));
+        await setup.GameSessions.Where(x => x.Id == seed.GameSessionId).ExecuteUpdateAsync(setters => setters
+            .SetProperty(x => x.Status, RouletteRuntimeStates.BettingOpen)
+            .SetProperty(x => x.StartedAtUtc, DateTimeOffset.UtcNow.AddDays(-1))
+            .SetProperty(x => x.UpdatedAtUtc, DateTimeOffset.UtcNow.AddDays(-1)));
+        await using var db = pg.CreateActivitiesContext();
+        var service = Service(db, new RouletteRuntimeOptions { InProgressAbandonmentMinutes = 60, ResumeWindowMinutes = 120 });
+
+        var result = await service.GetMyActiveSessionAsync(GuildId, ChannelId, hostId);
+
+        result.Value!.HasRoom.Should().BeFalse();
+        var stored = await db.RouletteGameSessions.AsNoTracking().SingleAsync(x => x.Id == seed.Id);
+        stored.Status.Should().Be(RouletteRuntimeStates.Abandoned);
+    }
+
+    [DockerFact]
+    public async Task Expired_room_start_returns_structured_error_not_500()
+    {
+        await using var setup = pg.CreateActivitiesContext();
+        var seed = await SeedWaitingRoomAsync(setup, includeOtherPlayer: true);
+        await setup.RouletteGameSessions.Where(x => x.Id == seed.Id).ExecuteUpdateAsync(setters => setters.SetProperty(x => x.ExpiresAtUtc, DateTimeOffset.UtcNow.AddMinutes(-1)));
+        await using var db = pg.CreateActivitiesContext();
+        var service = Service(db);
+
+        var result = await service.StartSessionAsync(seed.GameSessionId, Scope(), HostId);
+
+        result.Succeeded.Should().BeFalse();
+        result.StatusCode.Should().Be(409);
+        result.Code.Should().Be("roulette_session_not_startable");
+    }
+
+    [DockerFact]
     public async Task Unauthorized_leave_returns_structured_404_not_500()
     {
         await using var setup = pg.CreateActivitiesContext();
@@ -295,13 +361,13 @@ public sealed class RouletteRuntimeFlowTests(PostgreSqlFixture pg) : IClassFixtu
         ActivityInstanceId = "instance-a"
     };
 
-    private static RouletteRuntimeService Service(ActivitiesDbContext db) => new(db, new FakePlatformApiClient(), new FakeRealtimePublisher(), NullLogger<RouletteRuntimeService>.Instance);
+    private static RouletteRuntimeService Service(ActivitiesDbContext db, RouletteRuntimeOptions? options = null) => new(db, new FakePlatformApiClient(), new FakeRealtimePublisher(), Options.Create(options ?? new RouletteRuntimeOptions()), NullLogger<RouletteRuntimeService>.Instance);
 
-    private static async Task<ActivityRouletteGameSession> SeedWaitingRoomAsync(ActivitiesDbContext db, bool includeOtherPlayer = false, string? thirdPlayerId = null)
+    private static async Task<ActivityRouletteGameSession> SeedWaitingRoomAsync(ActivitiesDbContext db, bool includeOtherPlayer = false, string? thirdPlayerId = null, string hostId = HostId, string otherId = OtherId)
     {
         var activity = new ActivitySessionEntity
         {
-            DiscordUserId = HostId,
+            DiscordUserId = hostId,
             Username = "محمد",
             DiscordGuildId = GuildId,
             DiscordChannelId = ChannelId,
@@ -314,7 +380,7 @@ public sealed class RouletteRuntimeFlowTests(PostgreSqlFixture pg) : IClassFixtu
         var roulette = new ActivityRouletteGameSession
         {
             GameSession = game,
-            HostUserDiscordId = HostId,
+            HostUserDiscordId = hostId,
             HostUsername = "محمد",
             Status = RouletteRuntimeStates.WaitingForPlayers,
             MinPlayers = 2,
@@ -326,8 +392,8 @@ public sealed class RouletteRuntimeFlowTests(PostgreSqlFixture pg) : IClassFixtu
             AnnouncementRequestedAtUtc = DateTimeOffset.UtcNow,
             AnnouncementNextAttemptAtUtc = DateTimeOffset.UtcNow
         };
-        roulette.Players.Add(new ActivityRoulettePlayer { DiscordUserId = HostId, Username = "محمد", IsHost = true, Position = 1, JoinedAtUtc = DateTimeOffset.UtcNow.AddSeconds(-10) });
-        if (includeOtherPlayer) roulette.Players.Add(new ActivityRoulettePlayer { DiscordUserId = OtherId, Username = "نايف", Position = 2, JoinedAtUtc = DateTimeOffset.UtcNow });
+        roulette.Players.Add(new ActivityRoulettePlayer { DiscordUserId = hostId, Username = "محمد", IsHost = true, Position = 1, JoinedAtUtc = DateTimeOffset.UtcNow.AddSeconds(-10) });
+        if (includeOtherPlayer) roulette.Players.Add(new ActivityRoulettePlayer { DiscordUserId = otherId, Username = "نايف", Position = 2, JoinedAtUtc = DateTimeOffset.UtcNow });
         if (!string.IsNullOrWhiteSpace(thirdPlayerId)) roulette.Players.Add(new ActivityRoulettePlayer { DiscordUserId = thirdPlayerId, Username = "سعود", Position = 3, JoinedAtUtc = DateTimeOffset.UtcNow.AddSeconds(1) });
         db.RouletteGameSessions.Add(roulette);
         await db.SaveChangesAsync();

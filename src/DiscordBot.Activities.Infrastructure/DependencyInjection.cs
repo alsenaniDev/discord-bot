@@ -16,6 +16,7 @@ public static class DependencyInjection
         services.Configure<DiscordActivityOptions>(configuration.GetSection(DiscordActivityOptions.SectionName));
         services.Configure<ActivitiesJwtOptions>(configuration.GetSection(ActivitiesJwtOptions.SectionName));
         services.Configure<PlatformApiOptions>(configuration.GetSection(PlatformApiOptions.SectionName));
+        services.Configure<RouletteRuntimeOptions>(configuration.GetSection(RouletteRuntimeOptions.SectionName));
 
         var connectionString = configuration.GetConnectionString("ActivitiesDatabase")
             ?? throw new InvalidOperationException("Connection string 'ActivitiesDatabase' not found.");
@@ -26,6 +27,7 @@ public static class DependencyInjection
         services.AddScoped<IRouletteRuntimeService, RouletteRuntimeService>();
         services.AddHostedService<RouletteWalletReconciliationService>();
         services.AddHostedService<RoulettePayoutReconciliationService>();
+        services.AddHostedService<RouletteLifecycleCleanupService>();
         services.AddHttpClient<IActivityAuthService, DiscordActivityAuthService>();
         services.AddHttpClient<IPlatformApiClient, PlatformApiClient>((provider, client) =>
         {
