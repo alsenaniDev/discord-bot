@@ -87,14 +87,18 @@ Edit `activity/DiscordBot.Activity/.env.local`:
 
 ```env
 VITE_DISCORD_CLIENT_ID=<discord-client-id>
-VITE_API_BASE_URL=https://localhost:5001
-VITE_PLATFORM_API_BASE_URL=https://localhost:5001
-VITE_ACTIVITIES_API_BASE_URL=https://localhost:7001
+VITE_API_BASE_URL=/api
+VITE_PLATFORM_API_BASE_URL=/api
+VITE_ACTIVITIES_API_BASE_URL=/activities-api
 VITE_ACTIVITIES_ROULETTE_PILOT_GUILD_IDS=<test-guild-discord-id>
 VITE_ENVIRONMENT=development
 ```
 
 Do not put the Discord client secret in frontend files.
+
+The Vite dev server proxies `/api` to `https://localhost:5001` and `/activities-api` to `https://localhost:7001`, matching production Discord URL mapping paths.
+
+See [local-game-testing.md](local-game-testing.md) for the full Roulette multiplayer checklist.
 
 ## Discord Developer Portal setup
 

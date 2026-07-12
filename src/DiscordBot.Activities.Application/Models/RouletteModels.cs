@@ -42,6 +42,8 @@ public sealed class MyActiveRouletteSessionDto
     public Guid? GameSessionId { get; set; }
     public string? Status { get; set; }
     public bool IsHost { get; set; }
+    public bool ResumeAllowed { get; set; }
+    public string? ResumeReason { get; set; }
 }
 
 public sealed class PendingRouletteIntentDto

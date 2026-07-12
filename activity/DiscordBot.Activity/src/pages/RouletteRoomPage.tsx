@@ -7,7 +7,7 @@ import { useActivity } from '../context/ActivityProvider';
 import type { PowerUpStoreItem, RoulettePlayer, RouletteRoom, RouletteRuntimeCapabilities } from '../types';
 import './RoulettePage.css';
 
-const statusText: Record<string, string> = { Waiting: 'بانتظار اللاعبين', InProgress: 'اللعبة جارية', Completed: 'اكتملت اللعبة', Cancelled: 'أُلغيت الغرفة', Expired: 'انتهت مدة الانضمام' };
+const statusText: Record<string, string> = { Waiting: 'بانتظار اللاعبين', InProgress: 'اللعبة جارية', Completed: 'اكتملت اللعبة', Cancelled: 'أُلغيت الغرفة', Expired: 'انتهت مدة الانضمام', Abandoned: 'أُغلقت بسبب عدم النشاط' };
 const displayName = (player?: RoulettePlayer | null, fallback = 'لاعب') => player?.displayName || player?.username || fallback;
 const initials = (value: string) => value.trim().slice(0, 2) || '؟';
 const powerClass = (key: string) => key === 'shield' ? 'shield' : key === 'reverse' ? 'reverse' : 'respin';

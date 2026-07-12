@@ -5,9 +5,11 @@ using DiscordBot.Activities.Application.Models;
 using DiscordBot.Activities.Domain.Entities;
 using DiscordBot.Activities.Domain.Roulette;
 using DiscordBot.Activities.Infrastructure.Data;
+using DiscordBot.Activities.Infrastructure.Options;
 using DiscordBot.Shared;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using Npgsql;
 
 namespace DiscordBot.Activities.Infrastructure.Platform;
@@ -16,12 +18,15 @@ public class RouletteRuntimeService(
     ActivitiesDbContext db,
     IPlatformApiClient platform,
     IRouletteRealtimePublisher realtime,
+    IOptions<RouletteRuntimeOptions> options,
     ILogger<RouletteRuntimeService> logger) : IRouletteRuntimeService
 {
     private const string GameKey = "roulette";
+    private readonly RouletteRuntimeOptions runtimeOptions = options.Value;
 
     public async Task<OperationResult<RouletteSessionDto>> CreateSessionAsync(CreateRouletteSessionRequest request, TrustedDiscordUser user, CancellationToken ct = default)
     {
+        await NormalizeLifecycleAsync(ct);
         var access = await ValidateAccessAsync(request.GuildDiscordId, request.ChannelDiscordId, user.DiscordUserId, ct);
         if (!access.Succeeded) return OperationResult<RouletteSessionDto>.Fail(access.Error!, access.StatusCode);
 
@@ -124,6 +129,7 @@ public class RouletteRuntimeService(
 
     public async Task<OperationResult<IReadOnlyList<RouletteSessionDto>>> GetOpenSessionsAsync(string guildDiscordId, string channelDiscordId, string userDiscordId, CancellationToken ct = default)
     {
+        await NormalizeLifecycleAsync(ct);
         var access = await ValidateAccessAsync(guildDiscordId, channelDiscordId, userDiscordId, ct);
         if (!access.Succeeded) return OperationResult<IReadOnlyList<RouletteSessionDto>>.Fail(access.Error!, access.StatusCode);
 
@@ -144,20 +150,23 @@ public class RouletteRuntimeService(
 
     public async Task<OperationResult<MyActiveRouletteSessionDto>> GetMyActiveSessionAsync(string guildDiscordId, string channelDiscordId, string userDiscordId, CancellationToken ct = default)
     {
+        await NormalizeLifecycleAsync(ct);
         var now = DateTimeOffset.UtcNow;
+        var resumeCutoff = now.AddMinutes(-Math.Max(1, runtimeOptions.ResumeWindowMinutes));
         var session = await db.RouletteGameSessions.AsNoTracking()
             .Include(x => x.GameSession)
             .Include(x => x.Players)
             .Where(x => x.GameSession.DiscordGuildId == guildDiscordId
                 && x.GameSession.DiscordChannelId == channelDiscordId
-                && ((x.Status == RouletteRuntimeStates.WaitingForPlayers && x.ExpiresAtUtc > now) || x.Status == RouletteRuntimeStates.BettingOpen)
-                && x.Players.Any(p => p.DiscordUserId == userDiscordId))
+                && ((x.Status == RouletteRuntimeStates.WaitingForPlayers && x.ExpiresAtUtc > now && x.UpdatedAtUtc > resumeCutoff) || (x.Status == RouletteRuntimeStates.BettingOpen && x.UpdatedAtUtc > resumeCutoff))
+                && x.Players.Any(p => p.DiscordUserId == userDiscordId && p.IsAlive)
+                && x.Players.Any(p => p.IsAlive))
             .OrderByDescending(x => x.UpdatedAtUtc)
             .FirstOrDefaultAsync(ct);
 
         return OperationResult<MyActiveRouletteSessionDto>.Ok(session is null
-            ? new MyActiveRouletteSessionDto { HasRoom = false }
-            : new MyActiveRouletteSessionDto { HasRoom = true, RoomId = session.GameSessionId, GameSessionId = session.GameSessionId, Status = session.Status, IsHost = session.HostUserDiscordId == userDiscordId });
+            ? new MyActiveRouletteSessionDto { HasRoom = false, ResumeAllowed = false, ResumeReason = "no_active_session" }
+            : new MyActiveRouletteSessionDto { HasRoom = true, RoomId = session.GameSessionId, GameSessionId = session.GameSessionId, Status = session.Status, IsHost = session.HostUserDiscordId == userDiscordId, ResumeAllowed = true, ResumeReason = session.Status == RouletteRuntimeStates.WaitingForPlayers ? "active_waiting_room" : "active_in_progress_room" });
     }
 
     public async Task<OperationResult<PendingRouletteIntentDto?>> ConsumePendingIntentAsync(string guildDiscordId, string channelDiscordId, string userDiscordId, CancellationToken ct = default)
@@ -217,6 +226,7 @@ public class RouletteRuntimeService(
 
     public async Task<OperationResult<RouletteSessionDto>> GetSessionAsync(Guid gameSessionId, string guildDiscordId, string channelDiscordId, string userDiscordId, CancellationToken ct = default)
     {
+        await NormalizeLifecycleAsync(ct);
         var session = await LoadByGameSessionAsync(gameSessionId, ct);
         var scope = ValidateScope(session, guildDiscordId, channelDiscordId);
         if (scope is not null) return OperationResult<RouletteSessionDto>.Fail(scope.Value.Message, scope.Value.StatusCode, scope.Value.ErrorCode);
@@ -226,6 +236,7 @@ public class RouletteRuntimeService(
 
     public async Task<OperationResult<RouletteSessionDto>> JoinSessionAsync(Guid gameSessionId, RouletteScopeRequest request, TrustedDiscordUser user, CancellationToken ct = default)
     {
+        await NormalizeLifecycleAsync(ct);
         var access = await ValidateAccessAsync(request.GuildDiscordId, request.ChannelDiscordId, user.DiscordUserId, ct);
         if (!access.Succeeded) return OperationResult<RouletteSessionDto>.Fail(access.Error!, access.StatusCode);
 
@@ -419,6 +430,7 @@ public class RouletteRuntimeService(
 
     public async Task<OperationResult<RouletteSessionDto>> StartSessionAsync(Guid gameSessionId, RouletteScopeRequest request, string userDiscordId, CancellationToken ct = default)
     {
+        await NormalizeLifecycleAsync(ct);
         await using var transaction = await db.Database.BeginTransactionAsync(ct);
         var session = await db.RouletteGameSessions.AsNoTracking()
             .Include(x => x.GameSession).ThenInclude(x => x.ActivitySession)
@@ -617,10 +629,12 @@ public class RouletteRuntimeService(
 
     public async Task<OperationResult<RouletteSessionDto>> ReconnectAsync(Guid gameSessionId, RouletteScopeRequest request, TrustedDiscordUser user, CancellationToken ct = default)
     {
+        await NormalizeLifecycleAsync(ct);
         var session = await LoadByGameSessionAsync(gameSessionId, ct);
         var scope = ValidateScope(session, request.GuildDiscordId, request.ChannelDiscordId, request.ActivityInstanceId);
         if (scope is not null) return OperationResult<RouletteSessionDto>.Fail(scope.Value.Message, scope.Value.StatusCode, scope.Value.ErrorCode);
-        if (!session!.Players.Any(x => x.DiscordUserId == user.DiscordUserId)) return OperationResult<RouletteSessionDto>.Fail("أنت غير منضم لهذه الجولة.", 403);
+        if (RouletteRuntimeStates.IsTerminal(session!.Status)) return OperationResult<RouletteSessionDto>.Fail("لم تعد هذه الغرفة قابلة للاستعادة.", 409, session.Status == RouletteRuntimeStates.Abandoned ? "roulette_stale_session" : "roulette_session_not_startable");
+        if (!session.Players.Any(x => x.DiscordUserId == user.DiscordUserId && x.IsAlive)) return OperationResult<RouletteSessionDto>.Fail("أنت غير منضم لهذه الجولة.", 403, "roulette_player_not_in_session");
         var activityPlayer = await db.ActivityPlayers.FirstOrDefaultAsync(x => x.ActivitySessionId == session.GameSession.ActivitySessionId && x.DiscordUserId == user.DiscordUserId, ct);
         if (activityPlayer is not null)
         {
@@ -772,7 +786,7 @@ public class RouletteRuntimeService(
             DiscordChannelId = request.ChannelDiscordId,
             UserDiscordId = request.UserDiscordId,
             Username = CleanUsername(request.Username, request.UserDiscordId),
-            ExpiresAtUtc = now.AddMinutes(5)
+            ExpiresAtUtc = now.AddMinutes(Math.Clamp(runtimeOptions.JoinIntentExpirationMinutes, 1, 30))
         };
         db.RouletteJoinIntents.Add(intent);
         await db.SaveChangesAsync(ct);
@@ -822,6 +836,59 @@ public class RouletteRuntimeService(
                 && x.GameSession.DiscordChannelId == channelDiscordId
                 && x.HostUserDiscordId == hostUserDiscordId
                 && ((x.Status == RouletteRuntimeStates.WaitingForPlayers && x.ExpiresAtUtc > now) || x.Status == RouletteRuntimeStates.BettingOpen), ct);
+    }
+
+    private async Task NormalizeLifecycleAsync(CancellationToken ct)
+    {
+        var now = DateTimeOffset.UtcNow;
+        var abandonmentCutoff = now.AddMinutes(-Math.Max(1, runtimeOptions.InProgressAbandonmentMinutes));
+
+        var expiredWaiting = await db.RouletteGameSessions
+            .Where(x => x.Status == RouletteRuntimeStates.WaitingForPlayers && x.ExpiresAtUtc <= now)
+            .ExecuteUpdateAsync(setters => setters
+                .SetProperty(x => x.Status, RouletteRuntimeStates.Expired)
+                .SetProperty(x => x.CompletedAtUtc, now)
+                .SetProperty(x => x.CurrentTurnUserDiscordId, (string?)null)
+                .SetProperty(x => x.UpdatedAtUtc, now), ct);
+
+        var expiredGameSessions = await db.GameSessions
+            .Where(x => x.Status == RouletteRuntimeStates.WaitingForPlayers
+                && x.Roulette != null
+                && x.Roulette.Status == RouletteRuntimeStates.Expired)
+            .ExecuteUpdateAsync(setters => setters
+                .SetProperty(x => x.Status, RouletteRuntimeStates.Expired)
+                .SetProperty(x => x.CompletedAtUtc, now)
+                .SetProperty(x => x.UpdatedAtUtc, now), ct);
+
+        var abandoned = await db.RouletteGameSessions
+            .Where(x => x.Status == RouletteRuntimeStates.BettingOpen && x.UpdatedAtUtc <= abandonmentCutoff)
+            .ExecuteUpdateAsync(setters => setters
+                .SetProperty(x => x.Status, RouletteRuntimeStates.Abandoned)
+                .SetProperty(x => x.CompletedAtUtc, now)
+                .SetProperty(x => x.CurrentTurnUserDiscordId, (string?)null)
+                .SetProperty(x => x.PendingTargetUserDiscordId, (string?)null)
+                .SetProperty(x => x.PendingActionStatus, "None")
+                .SetProperty(x => x.PendingActionExpiresAtUtc, (DateTimeOffset?)null)
+                .SetProperty(x => x.UpdatedAtUtc, now), ct);
+
+        var abandonedGameSessions = await db.GameSessions
+            .Where(x => x.Status == RouletteRuntimeStates.BettingOpen
+                && x.Roulette != null
+                && x.Roulette.Status == RouletteRuntimeStates.Abandoned)
+            .ExecuteUpdateAsync(setters => setters
+                .SetProperty(x => x.Status, RouletteRuntimeStates.Abandoned)
+                .SetProperty(x => x.CompletedAtUtc, now)
+                .SetProperty(x => x.UpdatedAtUtc, now), ct);
+
+        if (expiredWaiting + expiredGameSessions + abandoned + abandonedGameSessions > 0)
+        {
+            logger.LogInformation(
+                "Activities Roulette lifecycle normalized. ExpiredWaiting={ExpiredWaiting}, ExpiredGameSessions={ExpiredGameSessions}, Abandoned={Abandoned}, AbandonedGameSessions={AbandonedGameSessions}.",
+                expiredWaiting,
+                expiredGameSessions,
+                abandoned,
+                abandonedGameSessions);
+        }
     }
 
     private async Task<RouletteGameSession?> LoadByGameSessionAsync(Guid gameSessionId, CancellationToken ct)
