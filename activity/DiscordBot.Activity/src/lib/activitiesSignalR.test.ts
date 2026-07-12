@@ -7,12 +7,16 @@ class FakeConnection {
   state = 'Disconnected';
   handlers = new Map<string, Function>();
   reconnectHandler: Function | null = null;
+  reconnectingHandler: Function | null = null;
+  closeHandler: Function | null = null;
   starts = 0;
   invokes: Array<{ method: string; arg: string }> = [];
   accessTokenFactory?: () => string;
 
   on(name: string, handler: Function) { this.handlers.set(name, handler); }
   onreconnected(handler: Function) { this.reconnectHandler = handler; }
+  onreconnecting(handler: Function) { this.reconnectingHandler = handler; }
+  onclose(handler: Function) { this.closeHandler = handler; }
   async start() { this.state = 'Connected'; this.starts++; }
   async stop() { this.state = 'Disconnected'; }
   async invoke(method: string, arg: string) { this.invokes.push({ method, arg }); }
@@ -94,15 +98,33 @@ describe('activitiesSignalR', () => {
     expect(second).toHaveBeenCalledOnce();
   });
 
-  it('runs reconnect callbacks once after SignalR reconnection', async () => {
+  it('does not run reconnect callbacks during first connect or synthetic reconnected events', async () => {
+    setActivitiesAccessToken('jwt-token');
+    const mod = await import('./activitiesSignalR');
+    const restore = vi.fn();
+
+    const cleanup = mod.onActivitiesReconnected(restore);
+    await mod.connectActivitiesGameHub();
+    await instances[0].reconnectHandler?.();
+
+    expect(restore).not.toHaveBeenCalled();
+    expect(mod.getActivitiesConnectionLifecycle()).toMatchObject({ phase: 'connected', hasConnectedBefore: true });
+
+    cleanup();
+  });
+
+  it('runs reconnect callbacks once after a real SignalR reconnect cycle', async () => {
     setActivitiesAccessToken('jwt-token');
     const mod = await import('./activitiesSignalR');
     await mod.connectActivitiesGameHub();
     const restore = vi.fn();
 
     const cleanup = mod.onActivitiesReconnected(restore);
+    await instances[0].reconnectingHandler?.();
+    await instances[0].reconnectHandler?.();
     await instances[0].reconnectHandler?.();
     cleanup();
+    await instances[0].reconnectingHandler?.();
     await instances[0].reconnectHandler?.();
 
     expect(restore).toHaveBeenCalledOnce();
